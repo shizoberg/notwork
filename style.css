@@ -1,0 +1,183 @@
+:root {
+  --bg-main: #f8e98c;
+  --bg-panel: #fff7c2;
+  --bg-panel-alt: #f4df75;
+  --red-main: #ba1111;
+  --red-dark: #8d0f0f;
+  --text-main: #2c2211;
+  --border: #b89b33;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, Verdana, Tahoma, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-main);
+  background-color: var(--bg-main);
+  background-image: linear-gradient(180deg, #f9ef9f 0%, #f4da62 100%);
+}
+
+.page {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 14px 12px 90px;
+}
+
+.panel {
+  border: 2px solid var(--border);
+  background: var(--bg-panel);
+  padding: 14px 12px;
+  margin-bottom: 12px;
+}
+
+.hero {
+  text-align: center;
+  background: var(--bg-panel-alt);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0 0 8px;
+  color: var(--red-main);
+  font-weight: 700;
+}
+
+h1 {
+  font-size: 34px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+h2 {
+  font-size: 28px;
+}
+
+h3 {
+  font-size: 22px;
+}
+
+h4 {
+  font-size: 20px;
+}
+
+p {
+  margin: 0 0 8px;
+}
+
+.hero-subtitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--red-dark);
+}
+
+.hero-text {
+  font-size: 18px;
+}
+
+.steps-inline {
+  font-weight: 700;
+}
+
+.btn-primary {
+  display: inline-block;
+  background: var(--red-main);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 20px;
+  padding: 12px 16px;
+  border: 2px solid #760909;
+  margin-top: 10px;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: var(--red-dark);
+}
+
+.step-table {
+  display: grid;
+  gap: 10px;
+}
+
+.step-box {
+  border: 2px solid var(--border);
+  background: #fff9d6;
+  padding: 10px;
+}
+
+.service-list {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.service-list li {
+  margin-bottom: 4px;
+}
+
+.request {
+  text-align: center;
+}
+
+.contact p {
+  margin-bottom: 6px;
+}
+
+.footer {
+  text-align: center;
+  padding: 14px 12px 80px;
+  background: #f2d65e;
+  border-top: 2px solid var(--border);
+}
+
+.footer p {
+  margin: 0;
+  font-size: 15px;
+}
+
+.sticky-whatsapp {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1000;
+  display: inline-block;
+  text-decoration: none;
+  background: var(--red-main);
+  color: #fff;
+  font-weight: 700;
+  padding: 11px 16px;
+  border: 2px solid #760909;
+}
+
+.sticky-whatsapp:hover,
+.sticky-whatsapp:focus {
+  background: var(--red-dark);
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding: 20px 20px 90px;
+  }
+
+  .panel {
+    padding: 18px 16px;
+    margin-bottom: 14px;
+  }
+
+  .step-table {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
