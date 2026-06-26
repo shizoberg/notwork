@@ -77,10 +77,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "notwork — İzmir'de başarısızlık üzerine network" },
-      { name: "description", content: "notwork; deneyip de yapamadıklarımızı, bu deneyimlerden ne öğrendiğimizi ve nasıl başardığımızı paylaştığımız İzmir merkezli bir network eventi." },
-      { property: "og:title", content: "notwork — başarısızlık üzerine network" },
-      { property: "og:description", content: "İzmir'de deneyip yapamadıklarımızı, öğrendiklerimizi ve başarı hikâyelerimizi konuştuğumuz network eventi." },
+      { title: "notwork İzmir | Başarısızlık, Öğrenme ve Networking" },
+      { name: "description", content: "notwork, İzmir’de başarısızlıklardan çıkarılan derslerin ve başarıya dönüşen gerçek hikâyelerin paylaşıldığı sahne ve networking etkinliğidir." },
+      { name: "robots", content: "index, follow, max-image-preview:large" },
+      { name: "theme-color", content: "#8fcbd0" },
+      { property: "og:site_name", content: "notwork" },
+      { property: "og:locale", content: "tr_TR" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -96,7 +98,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="tr">
       <head>
         <HeadContent />
       </head>

@@ -5,14 +5,22 @@ import { SiteNav, SiteFooter } from "@/components/SiteNav";
 export const Route = createFileRoute("/community")({
   head: () => ({
     meta: [
-      { title: "Community · notwork — sunumunu gönder" },
-      { name: "description", content: "notwork sahnesine çıkmak istiyorsan deneyip yapamadığın, ardından öğrendiğin ve nasıl başardığın hikâyeyi buradan gönder." },
+      { title: "notwork Community | Hikâyeni Sahneye Taşı" },
+      { name: "description", content: "notwork sahnesine çıkmak için başarısızlıktan öğrendiğin ve başarıya dönüştürdüğün hikâyeni gönder; ekibimiz sana WhatsApp üzerinden ulaşsın." },
+      { property: "og:title", content: "notwork Community | Hikâyeni Sahneye Taşı" },
+      { property: "og:description", content: "Denedin, olmadı, öğrendin ve başardın. Şimdi hikâyeni notwork sahnesinde anlat." },
+      { property: "og:url", content: "https://notwork.me/community" },
+      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
+      { name: "twitter:title", content: "notwork Community | Hikâyeni Sahneye Taşı" },
+      { name: "twitter:description", content: "Hikâyeni gönder, notwork sahnesinde birlikte anlatalım." },
+      { name: "twitter:image", content: "https://notwork.me/notwork-social.jpg" },
     ],
+    links: [{ rel: "canonical", href: "https://notwork.me/community" }],
   }),
   component: Community,
 });
 
-const WHATSAPP_NUMBER = "905555555555"; // TODO: gerçek numarayla değiştir
+const WHATSAPP_NUMBER = "905457210929";
 
 function Community() {
   const [form, setForm] = useState({

@@ -1,24 +1,51 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import g1 from "@/assets/g1.jpg";
-import g2 from "@/assets/g2.jpg";
-import g3 from "@/assets/g3.jpg";
-import g4 from "@/assets/g4.jpg";
-import g5 from "@/assets/g5.jpg";
-import g6 from "@/assets/g6.jpg";
+import gallery2 from "@/assets/gallery/notwork-2.jpg";
+import gallery3 from "@/assets/gallery/notwork-3.jpg";
+import gallery4 from "@/assets/gallery/notwork-4.jpg";
+import gallery5 from "@/assets/gallery/notwork-5.jpg";
+import gallery6 from "@/assets/gallery/notwork-6.jpg";
+import gallery8 from "@/assets/gallery/notwork-8.jpg";
+import gallery9 from "@/assets/gallery/notwork-9.jpg";
+import gallery10 from "@/assets/gallery/notwork-10.jpg";
+import gallery12 from "@/assets/gallery/notwork-12.jpg";
+import gallery13 from "@/assets/gallery/notwork-13.jpg";
 import { SiteNav, SiteFooter } from "@/components/SiteNav";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "notwork — 14 Temmuz 2026 · Mahal Bomonti İzmir" },
-      { name: "description", content: "notwork; 14 Temmuz 2026'da Mahal Bomonti İzmir'de. 3–4 konuşmacı, 3 hayat kolu (kariyer, ilişki, macera) ve deneyip de yapamadıklarımızdan ne öğrendiğimizi paylaştığımız sahne." },
+      { title: "notwork İzmir | Başarısızlık, Öğrenme ve Networking" },
+      { name: "description", content: "notwork, İzmir’de başarısızlıklardan çıkarılan derslerin ve başarıya dönüşen gerçek hikâyelerin paylaşıldığı sahne ve networking etkinliğidir." },
+      { name: "keywords", content: "notwork, İzmir etkinlik, networking İzmir, başarısızlık hikâyeleri, girişimcilik etkinliği, Mahal Bomonti" },
+      { property: "og:title", content: "notwork İzmir | Uğraşıp da Olduramadıklarının Sahnesi" },
+      { property: "og:description", content: "Gerçek başarısızlıkları, çıkarılan dersleri ve başarıya dönüşen hikâyeleri İzmir’de birlikte dinliyoruz." },
+      { property: "og:url", content: "https://notwork.me/" },
+      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
+      { property: "og:image:width", content: "1080" },
+      { property: "og:image:height", content: "1080" },
+      { property: "og:image:alt", content: "notwork İzmir etkinliğinden katılımcılar" },
+      { name: "twitter:title", content: "notwork İzmir | Uğraşıp da Olduramadıklarının Sahnesi" },
+      { name: "twitter:description", content: "Başarısızlıklardan öğrenilenlerin ve başarıya dönüşen gerçek hikâyelerin sahnesi." },
+      { name: "twitter:image", content: "https://notwork.me/notwork-social.jpg" },
     ],
+    links: [{ rel: "canonical", href: "https://notwork.me/" }],
   }),
   component: Landing,
 });
 
-const gallery = [g1, g2, g3, g4, g5, g6];
+const gallery = [
+  gallery2,
+  gallery3,
+  gallery4,
+  gallery13,
+  gallery12,
+  gallery10,
+  gallery9,
+  gallery8,
+  gallery6,
+  gallery5,
+];
 
 const faq = [
   { q: "notwork tam olarak ne?", a: "İzmir'de düzenlenen, sadece deneyip de yapamadıklarımızı değil; bu başarısızlıklardan ne öğrendiğimizi ve nasıl başardığımızı paylaştığımız bir network eventi." },
@@ -282,8 +309,8 @@ function SubmitCTA() {
             <Link to="/community" className="inline-flex items-center justify-center px-6 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition">
               Sunumu gönder →
             </Link>
-            <a href="https://wa.me/905555555555" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center px-6 py-3.5 rounded-full border border-cream/30 text-cream font-medium hover:bg-cream/10 transition">
-              WhatsApp'tan yaz
+            <a href="https://wa.me/905457210929?text=Merhaba%20notwork%2C%20etkinlik%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum." target="_blank" rel="noreferrer" className="inline-flex items-center justify-center px-6 py-3.5 rounded-full border border-cream/30 text-cream font-medium hover:bg-cream/10 transition">
+              WhatsApp mesajı gönder
             </a>
           </div>
         </div>

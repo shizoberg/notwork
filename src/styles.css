@@ -4,7 +4,7 @@
 
 @font-face {
   font-family: "SwellTR";
-  src: url("/__l5e/assets-v1/34273d9e-8540-4f8c-a35b-46f1f8506f0f/SwellTR-Regular.otf") format("opentype");
+  src: url("./assets/SwellTR-Regular.otf") format("opentype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
