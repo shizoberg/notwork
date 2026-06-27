@@ -31,6 +31,7 @@ export const Route = createFileRoute("/community")({
 });
 
 const WHATSAPP_NUMBER = "905457210929";
+const CONTACT_EMAIL = "berkaktas@windowslive.com";
 
 function Community() {
   const [form, setForm] = useState({
@@ -42,17 +43,15 @@ function Community() {
     story: "",
     slidesUrl: "",
   });
-  const [submitState, setSubmitState] = useState<"idle" | "submitting" | "error">("idle");
-
   const set =
     (k: keyof typeof form) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitState("submitting");
-    const msg = `merhaba notwork! 👋
+    const subject = `notwork sunum başvurusu — ${form.name}`;
+    const body = `Merhaba notwork,
 
 İsim: ${form.name}
 Telefon: ${form.phone}
@@ -63,26 +62,11 @@ Sunum başlığı: ${form.title}
 Hikâye:
 ${form.story}
 
-Sunum linki: ${form.slidesUrl || "(henüz yok, yardım isterim)"}`;
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-
-    try {
-      const response = await fetch("/netlify-forms.html", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          "form-name": "notwork-community",
-          subject: `Yeni notwork sahne başvurusu: ${form.name}`,
-          ...form,
-        }).toString(),
-      });
-
-      if (!response.ok) throw new Error("Form gönderilemedi");
-      window.location.assign(url);
-    } catch {
-      setSubmitState("error");
-    }
+Sunum linki: ${form.slidesUrl || "(henüz yok)"}`;
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
+
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Merhaba, sunum göndermek istiyorum.")}`;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -103,13 +87,9 @@ Sunum linki: ${form.slidesUrl || "(henüz yok, yardım isterim)"}`;
 
         <section className="mx-auto max-w-3xl px-5 mt-10">
           <form
-            name="notwork-community"
-            method="POST"
-            data-netlify="true"
             onSubmit={onSubmit}
             className="rounded-3xl border border-border bg-card p-6 sm:p-10 shadow-[var(--shadow-card)] space-y-5"
           >
-            <input type="hidden" name="form-name" value="notwork-community" />
             <Field label="İsmin">
               <input
                 required
@@ -189,20 +169,23 @@ Sunum linki: ${form.slidesUrl || "(henüz yok, yardım isterim)"}`;
             <div className="pt-2 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
               <button
                 type="submit"
-                disabled={submitState === "submitting"}
-                className="inline-flex items-center justify-center px-6 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 disabled:cursor-wait disabled:opacity-60 transition shadow-[var(--shadow-soft)]"
+                className="inline-flex items-center justify-center px-6 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition shadow-[var(--shadow-soft)]"
               >
-                {submitState === "submitting" ? "Kaydediliyor..." : "WhatsApp'tan gönder →"}
+                E-posta ile gönder →
               </button>
-              <span className="text-xs text-muted-foreground">
-                Form gönderildiğinde WhatsApp'ta hazır bir mesaj açılır. Sen sadece "gönder"e bas.
-              </span>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center px-6 py-3.5 rounded-full border border-primary/50 text-foreground font-semibold hover:bg-primary/10 transition"
+              >
+                WhatsApp'tan ulaş
+              </a>
             </div>
-            {submitState === "error" && (
-              <p role="alert" className="text-sm text-destructive">
-                Cevapların kaydedilemedi. Lütfen bağlantını kontrol edip tekrar dene.
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              E-posta butonu cevaplarını hazır bir mail olarak açar. WhatsApp butonu doğrudan
+              iletişime geçmeni sağlar.
+            </p>
           </form>
 
           <div className="mt-10 rounded-2xl bg-primary/10 border border-primary/30 p-6 sm:p-8">
