@@ -413,7 +413,7 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
           layout.nodes[second].skills.includes(skill),
         );
         const sameGroup = layout.nodes[first].groupId === layout.nodes[second].groupId;
-        if (shared.length > 0 && (sameGroup || shared.length > 1)) {
+        if (shared.length > 0) {
           connections.push({ a: first, b: second, weight: shared.length });
         }
       }
@@ -446,6 +446,19 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
           viewBox={`0 0 ${width} ${layout.height}`}
           className="block"
         >
+          <defs>
+            <marker
+              id="network-arrow"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="5"
+              markerHeight="5"
+              orient="auto-start-reverse"
+            >
+              <path d="M 0 0 L 10 5 L 0 10 z" className="fill-primary/45" />
+            </marker>
+          </defs>
           {layout.clusters.map((cluster) => (
             <g key={cluster.group.id}>
               <circle
@@ -479,6 +492,7 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
                 x2={second.x}
                 y2={second.y}
                 stroke="currentColor"
+                markerEnd={sameGroup ? undefined : "url(#network-arrow)"}
                 className={
                   active ? "text-primary" : sameGroup ? "text-foreground/20" : "text-primary/15"
                 }

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as NetworkingRouteImport } from './routes/networking'
 import { Route as CommunityRouteImport } from './routes/community'
+import { Route as R14temmuzRouteImport } from './routes/14temmuz'
 import { Route as IndexRouteImport } from './routes/index'
 
 const NetworkingRoute = NetworkingRouteImport.update({
@@ -23,6 +24,11 @@ const CommunityRoute = CommunityRouteImport.update({
   path: '/community',
   getParentRoute: () => rootRouteImport,
 } as any)
+const R14temmuzRoute = R14temmuzRouteImport.update({
+  id: '/14temmuz',
+  path: '/14temmuz',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,30 +37,34 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/14temmuz': typeof R14temmuzRoute
   '/community': typeof CommunityRoute
   '/networking': typeof NetworkingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/14temmuz': typeof R14temmuzRoute
   '/community': typeof CommunityRoute
   '/networking': typeof NetworkingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/14temmuz': typeof R14temmuzRoute
   '/community': typeof CommunityRoute
   '/networking': typeof NetworkingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/community' | '/networking'
+  fullPaths: '/' | '/14temmuz' | '/community' | '/networking'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/community' | '/networking'
-  id: '__root__' | '/' | '/community' | '/networking'
+  to: '/' | '/14temmuz' | '/community' | '/networking'
+  id: '__root__' | '/' | '/14temmuz' | '/community' | '/networking'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  R14temmuzRoute: typeof R14temmuzRoute
   CommunityRoute: typeof CommunityRoute
   NetworkingRoute: typeof NetworkingRoute
 }
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CommunityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/14temmuz': {
+      id: '/14temmuz'
+      path: '/14temmuz'
+      fullPath: '/14temmuz'
+      preLoaderRoute: typeof R14temmuzRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  R14temmuzRoute: R14temmuzRoute,
   CommunityRoute: CommunityRoute,
   NetworkingRoute: NetworkingRoute,
 }
