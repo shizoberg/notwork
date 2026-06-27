@@ -89,6 +89,7 @@ function NetworkingPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [filter, setFilter] = useState("");
+  const [activeGroupId, setActiveGroupId] = useState("all");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -134,6 +135,34 @@ function NetworkingPage() {
         member.skills.some((skill) => skill.includes(query)),
     );
   }, [members, filter]);
+
+  const memberTabs = useMemo(
+    () => [
+      { id: "all", label: "Tümü", count: filtered.length },
+      ...roleGroups
+        .map((group) => ({
+          id: group.id,
+          label: group.label,
+          count: filtered.filter((member) => getRoleGroup(member).id === group.id).length,
+        }))
+        .filter((group) => group.count > 0),
+    ],
+    [filtered],
+  );
+
+  const visibleMembers = useMemo(
+    () =>
+      activeGroupId === "all"
+        ? filtered
+        : filtered.filter((member) => getRoleGroup(member).id === activeGroupId),
+    [activeGroupId, filtered],
+  );
+
+  useEffect(() => {
+    if (activeGroupId !== "all" && !memberTabs.some((tab) => tab.id === activeGroupId)) {
+      setActiveGroupId("all");
+    }
+  }, [activeGroupId, memberTabs]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -223,8 +252,33 @@ function NetworkingPage() {
             <span className="w-2 h-2 rounded-full bg-primary" />
             üyeler
           </h2>
+          <div
+            role="tablist"
+            aria-label="Üye kategorileri"
+            className="mb-5 flex gap-2 overflow-x-auto pb-2"
+          >
+            {memberTabs.map((tab) => {
+              const active = activeGroupId === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setActiveGroupId(tab.id)}
+                  className={`shrink-0 rounded-full border px-3.5 py-2 text-xs font-semibold transition ${
+                    active
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card text-foreground/65 hover:border-primary/50 hover:text-foreground"
+                  }`}
+                >
+                  {tab.label} · {tab.count}
+                </button>
+              );
+            })}
+          </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((member) => (
+            {visibleMembers.map((member) => (
               <div key={member.id} className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-baseline justify-between gap-2">
                   <div className="font-bold text-lg">{member.name}</div>
@@ -257,7 +311,7 @@ function NetworkingPage() {
                 )}
               </div>
             ))}
-            {filtered.length === 0 && !loading && (
+            {visibleMembers.length === 0 && !loading && (
               <div className="text-sm text-foreground/50">henüz kimse yok — ilk sen ekle.</div>
             )}
           </div>
@@ -378,96 +432,100 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
   }
 
   return (
-    <div
-      ref={wrapRef}
-      className="rounded-2xl border border-border bg-card overflow-hidden relative"
-      style={{ height: layout.height }}
-    >
-      <svg
-        width="100%"
-        height={layout.height}
-        viewBox={`0 0 ${width} ${layout.height}`}
-        className="block"
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[11px] text-foreground/60 shadow-sm backdrop-blur">
+        kaydırarak ağı gez
+      </div>
+      <div
+        ref={wrapRef}
+        className="h-[520px] max-h-[70vh] min-h-[420px] overflow-auto overscroll-contain sm:h-[620px]"
       >
-        {layout.clusters.map((cluster) => (
-          <g key={cluster.group.id}>
-            <circle
-              cx={cluster.centerX}
-              cy={cluster.centerY}
-              r={cluster.radius}
-              className="fill-primary/5 stroke-primary/30"
-              strokeWidth={1.25}
-              strokeDasharray="5 5"
-            />
-            <text
-              x={cluster.centerX}
-              y={cluster.centerY - cluster.radius - 14}
-              textAnchor="middle"
-              className="fill-foreground/70 text-[11px] font-bold uppercase tracking-wider"
-            >
-              {cluster.group.label} · {cluster.members.length}
-            </text>
-          </g>
-        ))}
-        {edges.map((edge, index) => {
-          const first = layout.nodes[edge.a];
-          const second = layout.nodes[edge.b];
-          const active = hover && (hover === first.id || hover === second.id);
-          const sameGroup = first.groupId === second.groupId;
-          return (
-            <line
-              key={index}
-              x1={first.x}
-              y1={first.y}
-              x2={second.x}
-              y2={second.y}
-              stroke="currentColor"
-              className={
-                active ? "text-primary" : sameGroup ? "text-foreground/20" : "text-primary/15"
-              }
-              strokeWidth={Math.min(3, 0.5 + edge.weight * 0.55)}
-            />
-          );
-        })}
-        {layout.nodes.map((node) => {
-          const active = hover === node.id;
-          const radius = 16 + Math.min(4, node.skills.length);
-          return (
-            <g
-              key={node.id}
-              transform={`translate(${node.x}, ${node.y})`}
-              onMouseEnter={() => setHover(node.id)}
-              onMouseLeave={() => setHover(null)}
-              className="cursor-pointer"
-            >
+        <svg
+          width="100%"
+          height={layout.height}
+          viewBox={`0 0 ${width} ${layout.height}`}
+          className="block"
+        >
+          {layout.clusters.map((cluster) => (
+            <g key={cluster.group.id}>
               <circle
-                r={radius}
-                className={active ? "fill-primary" : "fill-primary/15"}
-                stroke="currentColor"
-                strokeWidth={1.5}
+                cx={cluster.centerX}
+                cy={cluster.centerY}
+                r={cluster.radius}
+                className="fill-primary/5 stroke-primary/30"
+                strokeWidth={1.25}
+                strokeDasharray="5 5"
               />
               <text
+                x={cluster.centerX}
+                y={cluster.centerY - cluster.radius - 14}
                 textAnchor="middle"
-                dy="0.35em"
-                className={`text-[9px] font-bold ${active ? "fill-primary-foreground" : "fill-foreground"}`}
-                style={{ pointerEvents: "none" }}
+                className="fill-foreground/70 text-[11px] font-bold uppercase tracking-wider"
               >
-                {node.name}
+                {cluster.group.label} · {cluster.members.length}
               </text>
-              {active && (
+            </g>
+          ))}
+          {edges.map((edge, index) => {
+            const first = layout.nodes[edge.a];
+            const second = layout.nodes[edge.b];
+            const active = hover && (hover === first.id || hover === second.id);
+            const sameGroup = first.groupId === second.groupId;
+            return (
+              <line
+                key={index}
+                x1={first.x}
+                y1={first.y}
+                x2={second.x}
+                y2={second.y}
+                stroke="currentColor"
+                className={
+                  active ? "text-primary" : sameGroup ? "text-foreground/20" : "text-primary/15"
+                }
+                strokeWidth={Math.min(3, 0.5 + edge.weight * 0.55)}
+              />
+            );
+          })}
+          {layout.nodes.map((node) => {
+            const active = hover === node.id;
+            const radius = 16 + Math.min(4, node.skills.length);
+            return (
+              <g
+                key={node.id}
+                transform={`translate(${node.x}, ${node.y})`}
+                onMouseEnter={() => setHover(node.id)}
+                onMouseLeave={() => setHover(null)}
+                className="cursor-pointer"
+              >
+                <circle
+                  r={radius}
+                  className={active ? "fill-primary" : "fill-primary/15"}
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                />
                 <text
                   textAnchor="middle"
-                  y={radius + 13}
-                  className="text-[9px] fill-foreground/70"
+                  dy="0.35em"
+                  className={`text-[9px] font-bold ${active ? "fill-primary-foreground" : "fill-foreground"}`}
                   style={{ pointerEvents: "none" }}
                 >
-                  {node.title}
+                  {node.name}
                 </text>
-              )}
-            </g>
-          );
-        })}
-      </svg>
+                {active && (
+                  <text
+                    textAnchor="middle"
+                    y={radius + 13}
+                    className="text-[9px] fill-foreground/70"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {node.title}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
 
       {layout.nodes.length === 0 && (
         <div className="absolute inset-0 grid place-items-center text-foreground/50 text-sm">

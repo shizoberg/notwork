@@ -95,11 +95,9 @@ function Hero() {
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
 
         <h1 className="mt-3 font-display font-black tracking-[-0.05em] text-foreground text-balance break-keep text-[2.5rem] sm:text-5xl md:text-6xl lg:text-7xl leading-[0.85]">
-          başarıdan önce{" "}
+          Başarıdan Önce{" "}
           <br />
-          gelen deneyimleri{" "}
-          <br />
-          <span className="text-primary-deep">dinle</span>
+          <span className="text-primary-deep">Gelen Deneyimler</span>
         </h1>
 
       </div>

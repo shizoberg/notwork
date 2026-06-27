@@ -12,7 +12,7 @@ export function SiteNav() {
         <nav className="flex items-center gap-0.5 sm:gap-2 text-xs sm:text-sm font-medium">
           <a href="/#nedir" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">Nedir?</a>
           <a href="/#galeri" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">Galeri</a>
-          <Link to="/networking" className="px-2 sm:px-3 py-2 rounded-lg hover:bg-muted"><span className="sm:hidden">Ağ</span><span className="hidden sm:inline">Networking</span></Link>
+          <Link to="/networking" className="px-2 sm:px-3 py-2 rounded-lg hover:bg-muted"><span className="sm:hidden">Networking</span><span className="hidden sm:inline">Networking</span></Link>
           <Link to="/community" className="px-2 sm:px-3 py-2 rounded-lg hover:bg-muted"><span className="sm:hidden">Sunum Yap</span><span className="hidden sm:inline">Community</span></Link>
           <a
             href="https://www.biletimgo.com/etkinlik/notwork-14-temmuz-ugrasip-da-olmayanlar-28473"
