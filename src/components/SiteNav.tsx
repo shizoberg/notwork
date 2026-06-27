@@ -14,7 +14,7 @@ export function SiteNav() {
           <a href="/#galeri" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">Galeri</a>
           <Link to="/community" className="px-3 py-2 rounded-lg hover:bg-muted">Community</Link>
           <a
-            href="https://biletinial.com"
+            href="https://www.biletimgo.com/etkinlik/notwork-14-temmuz-ugrasip-da-olmayanlar-28473"
             target="_blank"
             rel="noreferrer"
             className="ml-1 px-4 py-2 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition"
