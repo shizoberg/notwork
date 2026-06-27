@@ -17,6 +17,67 @@ export const Route = createFileRoute("/networking")({
   component: NetworkingPage,
 });
 
+const roleGroups = [
+  {
+    id: "technology",
+    label: "Teknoloji & Veri",
+    keywords: ["yazılım", "developer", "veri", "react", "typescript", "python", "api", "excel"],
+  },
+  {
+    id: "design",
+    label: "Tasarım & Ürün",
+    keywords: ["tasarım", "mimar", "ux", "ui", "figma", "illüstr", "moda", "ürün"],
+  },
+  {
+    id: "content",
+    label: "İçerik & Sahne",
+    keywords: ["içerik", "fotoğraf", "video", "müzik", "sahne", "kurgu", "prodüksiyon"],
+  },
+  {
+    id: "marketing",
+    label: "Pazarlama & Satış",
+    keywords: ["pazarlama", "satış", "marka", "sosyal medya"],
+  },
+  {
+    id: "community",
+    label: "Topluluk & Etkinlik",
+    keywords: ["topluluk", "etkinlik", "organizasyon", "turizm", "seyahat"],
+  },
+  {
+    id: "business",
+    label: "Girişim & Strateji",
+    keywords: ["girişim", "finans", "strateji", "bütçe", "proje"],
+  },
+  {
+    id: "people",
+    label: "İnsan & Gelişim",
+    keywords: ["psikolog", "insan kaynakları", "eğitim", "kariyer", "işe alım", "empati"],
+  },
+  {
+    id: "other",
+    label: "Diğer Bağlamlar",
+    keywords: [],
+  },
+] as const;
+
+function getRoleGroup(member: Member) {
+  const title = member.title.toLocaleLowerCase("tr-TR");
+  const skills = member.skills.join(" ").toLocaleLowerCase("tr-TR");
+  return (
+    roleGroups.find(
+      (group) => group.id !== "other" && group.keywords.some((keyword) => title.includes(keyword)),
+    ) ||
+    roleGroups.find(
+      (group) => group.id !== "other" && group.keywords.some((keyword) => skills.includes(keyword)),
+    ) ||
+    roleGroups[roleGroups.length - 1]
+  );
+}
+
+function isEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 function NetworkingPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -182,7 +243,17 @@ function NetworkingPage() {
                   </div>
                 )}
                 {member.contact && (
-                  <div className="mt-3 text-xs text-foreground/60 truncate">{member.contact}</div>
+                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/70 pt-3 text-xs">
+                    <span className="text-foreground/60 truncate">{member.contact}</span>
+                    {isEmail(member.contact) && (
+                      <a
+                        href={`mailto:${member.contact}`}
+                        className="shrink-0 font-semibold text-primary-deep hover:text-primary transition"
+                      >
+                        mail gönder →
+                      </a>
+                    )}
+                  </div>
                 )}
               </div>
             ))}
@@ -218,48 +289,83 @@ function Field({
 
 function NetworkGraph({ members, loading }: { members: Member[]; loading: boolean }) {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ w: 800, h: 520 });
+  const [width, setWidth] = useState(320);
 
   useEffect(() => {
     if (!wrapRef.current) return;
+    const measure = () => {
+      if (wrapRef.current) {
+        setWidth(Math.max(320, wrapRef.current.getBoundingClientRect().width));
+      }
+    };
+    measure();
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        const width = Math.max(320, entry.contentRect.width);
-        const height = Math.max(360, Math.min(640, width * 0.62));
-        setSize({ w: width, h: height });
+        setWidth(Math.max(320, entry.contentRect.width));
       }
     });
     observer.observe(wrapRef.current);
-    return () => observer.disconnect();
-  }, []);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [loading]);
 
-  const nodes = useMemo(() => {
-    const count = members.length;
-    const centerX = size.w / 2;
-    const centerY = size.h / 2;
-    const radius = Math.min(size.w, size.h) / 2 - 60;
-    return members.map((member, index) => {
-      const angle = (index / Math.max(1, count)) * Math.PI * 2 - Math.PI / 2;
-      return {
-        ...member,
-        x: centerX + Math.cos(angle) * radius * (count > 1 ? 1 : 0),
-        y: centerY + Math.sin(angle) * radius * (count > 1 ? 1 : 0),
-      };
+  const groupedMembers = useMemo(
+    () =>
+      roleGroups
+        .map((group) => ({
+          group,
+          members: members.filter((member) => getRoleGroup(member).id === group.id),
+        }))
+        .filter((entry) => entry.members.length > 0),
+    [members],
+  );
+
+  const layout = useMemo(() => {
+    const columns = width < 560 ? 1 : width < 900 ? 2 : 3;
+    const cellHeight = width < 560 ? 230 : 250;
+    const cellWidth = width / columns;
+    const rows = Math.ceil(groupedMembers.length / columns);
+    const height = Math.max(360, rows * cellHeight + 20);
+    const clusters = groupedMembers.map((entry, groupIndex) => {
+      const centerX = (groupIndex % columns) * cellWidth + cellWidth / 2;
+      const centerY = Math.floor(groupIndex / columns) * cellHeight + cellHeight / 2 + 10;
+      const radius = Math.min(82, cellWidth * 0.33, cellHeight * 0.33);
+      return { ...entry, centerX, centerY, radius };
     });
-  }, [members, size]);
+    const nodes = clusters.flatMap((cluster) => {
+      const count = cluster.members.length;
+      const orbit = cluster.radius * 0.63;
+      return cluster.members.map((member, memberIndex) => {
+        const angle = (memberIndex / Math.max(1, count)) * Math.PI * 2 - Math.PI / 2;
+        return {
+          ...member,
+          groupId: cluster.group.id,
+          x: cluster.centerX + Math.cos(angle) * orbit * (count > 1 ? 1 : 0),
+          y: cluster.centerY + Math.sin(angle) * orbit * (count > 1 ? 1 : 0),
+        };
+      });
+    });
+    return { clusters, height, nodes };
+  }, [groupedMembers, width]);
 
   const edges = useMemo(() => {
     const connections: { a: number; b: number; weight: number }[] = [];
-    for (let first = 0; first < nodes.length; first += 1) {
-      for (let second = first + 1; second < nodes.length; second += 1) {
-        const shared = nodes[first].skills.filter((skill) => nodes[second].skills.includes(skill));
-        if (shared.length > 0) {
+    for (let first = 0; first < layout.nodes.length; first += 1) {
+      for (let second = first + 1; second < layout.nodes.length; second += 1) {
+        const shared = layout.nodes[first].skills.filter((skill) =>
+          layout.nodes[second].skills.includes(skill),
+        );
+        const sameGroup = layout.nodes[first].groupId === layout.nodes[second].groupId;
+        if (shared.length > 0 && (sameGroup || shared.length > 1)) {
           connections.push({ a: first, b: second, weight: shared.length });
         }
       }
     }
     return connections;
-  }, [nodes]);
+  }, [layout.nodes]);
 
   const [hover, setHover] = useState<string | null>(null);
 
@@ -275,13 +381,39 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
     <div
       ref={wrapRef}
       className="rounded-2xl border border-border bg-card overflow-hidden relative"
-      style={{ height: size.h }}
+      style={{ height: layout.height }}
     >
-      <svg width={size.w} height={size.h} className="block">
+      <svg
+        width="100%"
+        height={layout.height}
+        viewBox={`0 0 ${width} ${layout.height}`}
+        className="block"
+      >
+        {layout.clusters.map((cluster) => (
+          <g key={cluster.group.id}>
+            <circle
+              cx={cluster.centerX}
+              cy={cluster.centerY}
+              r={cluster.radius}
+              className="fill-primary/5 stroke-primary/30"
+              strokeWidth={1.25}
+              strokeDasharray="5 5"
+            />
+            <text
+              x={cluster.centerX}
+              y={cluster.centerY - cluster.radius - 14}
+              textAnchor="middle"
+              className="fill-foreground/70 text-[11px] font-bold uppercase tracking-wider"
+            >
+              {cluster.group.label} · {cluster.members.length}
+            </text>
+          </g>
+        ))}
         {edges.map((edge, index) => {
-          const first = nodes[edge.a];
-          const second = nodes[edge.b];
+          const first = layout.nodes[edge.a];
+          const second = layout.nodes[edge.b];
           const active = hover && (hover === first.id || hover === second.id);
+          const sameGroup = first.groupId === second.groupId;
           return (
             <line
               key={index}
@@ -290,14 +422,16 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
               x2={second.x}
               y2={second.y}
               stroke="currentColor"
-              className={active ? "text-primary" : "text-foreground/15"}
-              strokeWidth={Math.min(3, 0.6 + edge.weight * 0.6)}
+              className={
+                active ? "text-primary" : sameGroup ? "text-foreground/20" : "text-primary/15"
+              }
+              strokeWidth={Math.min(3, 0.5 + edge.weight * 0.55)}
             />
           );
         })}
-        {nodes.map((node) => {
+        {layout.nodes.map((node) => {
           const active = hover === node.id;
-          const radius = 22 + Math.min(14, node.skills.length * 2);
+          const radius = 16 + Math.min(4, node.skills.length);
           return (
             <g
               key={node.id}
@@ -315,25 +449,27 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
               <text
                 textAnchor="middle"
                 dy="0.35em"
-                className={`text-[11px] font-bold ${active ? "fill-primary-foreground" : "fill-foreground"}`}
+                className={`text-[9px] font-bold ${active ? "fill-primary-foreground" : "fill-foreground"}`}
                 style={{ pointerEvents: "none" }}
               >
                 {node.name}
               </text>
-              <text
-                textAnchor="middle"
-                y={radius + 14}
-                className="text-[10px] fill-foreground/60"
-                style={{ pointerEvents: "none" }}
-              >
-                {node.title}
-              </text>
+              {active && (
+                <text
+                  textAnchor="middle"
+                  y={radius + 13}
+                  className="text-[9px] fill-foreground/70"
+                  style={{ pointerEvents: "none" }}
+                >
+                  {node.title}
+                </text>
+              )}
             </g>
           );
         })}
       </svg>
 
-      {nodes.length === 0 && (
+      {layout.nodes.length === 0 && (
         <div className="absolute inset-0 grid place-items-center text-foreground/50 text-sm">
           henüz kimse yok — formdan ekle.
         </div>
