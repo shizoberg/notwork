@@ -4,21 +4,21 @@ import { Instagram, Youtube } from "lucide-react";
 export function SiteNav() {
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/70 border-b border-border/60">
-      <div className="mx-auto max-w-6xl px-5 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 font-brand text-xl">
+      <div className="mx-auto max-w-6xl px-3 sm:px-5 h-16 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2 font-brand text-lg sm:text-xl">
           <span className="inline-block w-2.5 h-2.5 rounded-full bg-primary" />
           <span>notwork</span>
         </Link>
-        <nav className="flex items-center gap-1 sm:gap-2 text-sm font-medium">
+        <nav className="flex items-center gap-0.5 sm:gap-2 text-xs sm:text-sm font-medium">
           <a href="/#nedir" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">Nedir?</a>
           <a href="/#galeri" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">Galeri</a>
-          <Link to="/networking" className="px-3 py-2 rounded-lg hover:bg-muted">Networking</Link>
-          <Link to="/community" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">Community</Link>
+          <Link to="/networking" className="px-2 sm:px-3 py-2 rounded-lg hover:bg-muted"><span className="sm:hidden">Ağ</span><span className="hidden sm:inline">Networking</span></Link>
+          <Link to="/community" className="px-2 sm:px-3 py-2 rounded-lg hover:bg-muted"><span className="sm:hidden">Sunum Yap</span><span className="hidden sm:inline">Community</span></Link>
           <a
             href="https://www.biletimgo.com/etkinlik/notwork-14-temmuz-ugrasip-da-olmayanlar-28473"
             target="_blank"
             rel="noreferrer"
-            className="ml-1 px-4 py-2 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition"
+            className="ml-0.5 sm:ml-1 px-3 sm:px-4 py-2 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition"
           >
             Bilet al
           </a>
