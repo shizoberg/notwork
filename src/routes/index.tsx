@@ -62,7 +62,6 @@ function Landing() {
       <main className="flex-1">
         <Hero />
         <Lesson />
-        <PhotosCTA />
         <Benefits />
         <Tracks />
         <Nedir />
@@ -100,6 +99,15 @@ function Hero() {
           <span className="text-primary-deep">Gelen Deneyimler</span>
         </h1>
 
+        <a
+          href="https://www.biletimgo.com/etkinlik/notwork-14-temmuz-ugrasip-da-olmayanlar-28473"
+          target="_blank"
+          rel="noreferrer"
+          className="mt-7 inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 font-semibold text-primary-foreground transition hover:opacity-90"
+        >
+          Bilet al
+        </a>
+
       </div>
     </section>
   );
@@ -114,20 +122,6 @@ function Lesson() {
         — işte bu hikayeleri dinleyeceksiniz.
       </p>
       <div className="mt-8 sm:mt-10 mx-auto h-px w-16 bg-border" />
-    </section>
-  );
-}
-
-function PhotosCTA() {
-  return (
-    <section className="mx-auto max-w-5xl px-4 sm:px-5 pt-2 sm:pt-4 pb-6 sm:pb-10 text-center">
-      <a
-        href="#galeri"
-        className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm sm:text-base font-semibold text-foreground/70 hover:border-primary/60 hover:text-primary transition"
-      >
-        <span className="inline-block w-2 h-2 rounded-full bg-primary blink" />
-        Etkinlik fotoğraflarını gör
-      </a>
     </section>
   );
 }
