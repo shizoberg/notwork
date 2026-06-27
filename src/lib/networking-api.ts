@@ -1,3 +1,5 @@
+import { createServerFn } from "@tanstack/react-start";
+
 export type Member = {
   id: string;
   name: string;
@@ -8,13 +10,75 @@ export type Member = {
 };
 
 const API_URL = "https://sheetdb.io/api/v1/lvy078ioydj26";
+const GOOGLE_SHEET_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/1DMXhbpGt-8gWviTlcc2uGa8vpWoJQwFdPuWkZCNV05s/gviz/tq?tqx=out:csv";
 
 type SheetRow = Record<string, string>;
 
-export async function listMembers(): Promise<Member[]> {
-  const response = await fetch(API_URL, { cache: "no-store" });
+function parseCsv(csv: string): SheetRow[] {
+  const records: string[][] = [];
+  let record: string[] = [];
+  let value = "";
+  let quoted = false;
+
+  for (let index = 0; index < csv.length; index += 1) {
+    const character = csv[index];
+    if (character === '"') {
+      if (quoted && csv[index + 1] === '"') {
+        value += '"';
+        index += 1;
+      } else {
+        quoted = !quoted;
+      }
+    } else if (character === "," && !quoted) {
+      record.push(value);
+      value = "";
+    } else if ((character === "\n" || character === "\r") && !quoted) {
+      if (character === "\r" && csv[index + 1] === "\n") index += 1;
+      record.push(value);
+      if (record.some(Boolean)) records.push(record);
+      record = [];
+      value = "";
+    } else {
+      value += character;
+    }
+  }
+
+  if (value || record.length > 0) {
+    record.push(value);
+    if (record.some(Boolean)) records.push(record);
+  }
+
+  const [headers = [], ...rows] = records;
+  return rows.map((row) =>
+    Object.fromEntries(headers.map((header, index) => [header.trim(), row[index] || ""])),
+  );
+}
+
+const fetchMemberRows = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    const response = await fetch(API_URL, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(4000),
+    });
+    if (response.ok) {
+      const rows = (await response.json()) as SheetRow[];
+      if (rows.length > 0) return rows;
+    }
+  } catch (error) {
+    void error;
+  }
+
+  const response = await fetch(GOOGLE_SHEET_CSV_URL, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(8000),
+  });
   if (!response.ok) throw new Error("Networking kayıtları alınamadı");
-  const rows = (await response.json()) as SheetRow[];
+  return parseCsv(await response.text());
+});
+
+export async function listMembers(): Promise<Member[]> {
+  const rows = await fetchMemberRows();
   return rows
     .map((row, index) => ({
       id: row.id?.trim() || `sheet-row-${index}`,
