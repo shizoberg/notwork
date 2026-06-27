@@ -7,16 +7,25 @@ export type Member = {
   createdAt: number;
 };
 
-const STORAGE_KEY = "notwork.networking.members.v1";
+const API_URL = "https://sheetdb.io/api/v1/lvy078ioydj26";
+
+type SheetRow = Record<string, string>;
 
 export async function listMembers(): Promise<Member[]> {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Member[]) : seed;
-  } catch {
-    return seed;
-  }
+  const response = await fetch(API_URL, { cache: "no-store" });
+  if (!response.ok) throw new Error("Networking kayıtları alınamadı");
+  const rows = (await response.json()) as SheetRow[];
+  return rows
+    .map((row, index) => ({
+      id: row.id?.trim() || `sheet-row-${index}`,
+      name: row.name?.trim() || "",
+      title: row.title?.trim() || "",
+      skills: parseSkills(row.skills || ""),
+      contact: row.contact?.trim() || undefined,
+      createdAt: Date.parse(row.createdAt || "") || 0,
+    }))
+    .filter((member) => member.name && member.title)
+    .reverse();
 }
 
 export async function addMember(input: Omit<Member, "id" | "createdAt">): Promise<Member> {
@@ -25,11 +34,23 @@ export async function addMember(input: Omit<Member, "id" | "createdAt">): Promis
     id: crypto.randomUUID(),
     createdAt: Date.now(),
   };
-  if (typeof window !== "undefined") {
-    const current = await listMembers();
-    const next = [member, ...current.filter((item) => item.id !== member.id)];
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  }
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      data: [
+        {
+          id: member.id,
+          name: member.name,
+          title: member.title,
+          skills: member.skills.join(", "),
+          contact: member.contact || "",
+          createdAt: new Date(member.createdAt).toISOString(),
+        },
+      ],
+    }),
+  });
+  if (!response.ok) throw new Error("Networking kaydı eklenemedi");
   return member;
 }
 
@@ -40,34 +61,3 @@ export function parseSkills(raw: string): string[] {
     .filter(Boolean)
     .slice(0, 8);
 }
-
-const seed: Member[] = [
-  {
-    id: "s1",
-    name: "Berk",
-    title: "yazılımcı",
-    skills: ["react", "typescript", "ui"],
-    createdAt: 0,
-  },
-  {
-    id: "s2",
-    name: "Ahmet",
-    title: "pazarlamacı",
-    skills: ["pazarlama", "marka", "ui"],
-    createdAt: 0,
-  },
-  {
-    id: "s3",
-    name: "Zeynep",
-    title: "tasarımcı",
-    skills: ["ui", "figma", "marka"],
-    createdAt: 0,
-  },
-  {
-    id: "s4",
-    name: "Deniz",
-    title: "girişimci",
-    skills: ["satış", "pazarlama"],
-    createdAt: 0,
-  },
-];

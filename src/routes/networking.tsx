@@ -28,12 +28,13 @@ function NetworkingPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [filter, setFilter] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    listMembers().then((items) => {
-      setMembers(items);
-      setLoading(false);
-    });
+    listMembers()
+      .then(setMembers)
+      .catch(() => setError("Networking kayıtları şu anda yüklenemiyor."))
+      .finally(() => setLoading(false));
   }, []);
 
   const set =
@@ -45,15 +46,21 @@ function NetworkingPage() {
     event.preventDefault();
     if (!form.name.trim() || !form.title.trim()) return;
     setSubmitting(true);
-    const created = await addMember({
-      name: form.name.trim().slice(0, 40),
-      title: form.title.trim().slice(0, 40),
-      skills: parseSkills(form.skills),
-      contact: form.contact.trim().slice(0, 80) || undefined,
-    });
-    setMembers((current) => [created, ...current]);
-    setForm({ name: "", title: "", skills: "", contact: "" });
-    setSubmitting(false);
+    setError("");
+    try {
+      await addMember({
+        name: form.name.trim().slice(0, 40),
+        title: form.title.trim().slice(0, 40),
+        skills: parseSkills(form.skills),
+        contact: form.contact.trim().slice(0, 80) || undefined,
+      });
+      setMembers(await listMembers());
+      setForm({ name: "", title: "", skills: "", contact: "" });
+    } catch {
+      setError("Kayıt eklenemedi. Lütfen tekrar dene.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const filtered = useMemo(() => {
@@ -116,7 +123,7 @@ function NetworkingPage() {
             />
             <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">
               <p className="text-xs text-foreground/50">
-                Bilgilerin topluluk ağına eklenir. İleride Google Docs ile senkronize olacak.
+                Bilgilerin ortak networking veritabanına eklenir ve ağda görünür.
               </p>
               <button
                 type="submit"
@@ -126,6 +133,11 @@ function NetworkingPage() {
                 {submitting ? "ekleniyor…" : "ağa ekle"}
               </button>
             </div>
+            {error && (
+              <p role="alert" className="sm:col-span-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
           </form>
         </section>
 
