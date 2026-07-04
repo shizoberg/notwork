@@ -87,12 +87,31 @@ function normalizeInstagramUsername(value: string) {
   return /^[a-zA-Z0-9._]+$/.test(username) ? username : "";
 }
 
+function normalizeLinkedinUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/^(https?:\/\/)?(www\.)?linkedin\.com\//i.test(trimmed)) {
+    return `https://${trimmed.replace(/^https?:\/\//i, "").replace(/\?.*$/, "")}`;
+  }
+  return /^[a-zA-Z0-9_-]+$/.test(trimmed) ? `https://www.linkedin.com/in/${trimmed}` : "";
+}
+
 function getContactDetails(value?: string) {
   if (!value) return {};
-  const email = value.match(/[^\s|]+@[^\s|]+\.[^\s|]+/)?.[0];
+  const fields = Object.fromEntries(
+    value.split(" || ").map((part) => {
+      const separator = part.indexOf(":");
+      return separator > 0
+        ? [part.slice(0, separator), part.slice(separator + 1)]
+        : ["legacy", part];
+    }),
+  );
+  const email = fields.email || value.match(/[^\s|]+@[^\s|]+\.[^\s|]+/)?.[0];
   const instagramMatch = value.match(/(?:^|[\s|])@([a-zA-Z0-9._]+)/);
-  const instagram = instagramMatch?.[1];
-  return { email, instagram };
+  const instagram = fields.instagram || instagramMatch?.[1];
+  const linkedin = fields.linkedin;
+  const about = fields.about;
+  return { about, email, instagram, linkedin };
 }
 
 function NetworkingPage() {
@@ -104,6 +123,8 @@ function NetworkingPage() {
     skills: "",
     email: "",
     instagram: "",
+    linkedin: "",
+    about: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [filter, setFilter] = useState("");
@@ -139,16 +160,41 @@ function NetworkingPage() {
       setError("Instagram kullanıcı adını @kullaniciadi şeklinde yaz.");
       return;
     }
+    const linkedin = normalizeLinkedinUrl(form.linkedin);
+    if (form.linkedin.trim() && !linkedin) {
+      setError("Geçerli bir LinkedIn profil bağlantısı veya kullanıcı adı yaz.");
+      return;
+    }
+    const about = form.about.trim().replace(/\s+/g, " ");
+    if (!about) {
+      setError("Topluluğa neden katılmak istediğini ve ne katabileceğini yaz.");
+      return;
+    }
     setSubmitting(true);
     try {
       await addMember({
         name: fullName.slice(0, 60),
         title: form.title.trim().slice(0, 40),
         skills: parseSkills(form.skills),
-        contact: [form.email.trim(), instagram ? `@${instagram}` : ""].filter(Boolean).join(" | "),
+        contact: [
+          `email:${form.email.trim()}`,
+          instagram ? `instagram:${instagram}` : "",
+          linkedin ? `linkedin:${linkedin}` : "",
+          `about:${about.replace(/\|\|/g, "|").slice(0, 140)}`,
+        ]
+          .filter(Boolean)
+          .join(" || "),
       });
       setMembers(await listMembers());
-      setForm({ name: "", title: "", skills: "", email: "", instagram: "" });
+      setForm({
+        name: "",
+        title: "",
+        skills: "",
+        email: "",
+        instagram: "",
+        linkedin: "",
+        about: "",
+      });
     } catch {
       setError("Kayıt eklenemedi. Lütfen tekrar dene.");
     } finally {
@@ -260,9 +306,32 @@ function NetworkingPage() {
               onChange={set("instagram")}
               autoComplete="off"
             />
+            <Field
+              className="sm:col-span-2"
+              label="LinkedIn (opsiyonel)"
+              placeholder="linkedin.com/in/kullaniciadi"
+              value={form.linkedin}
+              onChange={set("linkedin")}
+              autoComplete="url"
+            />
+            <TextArea
+              className="sm:col-span-2"
+              label="Neden bu toplulukta olmak istiyorsunuz? Topluluğa ne katabilirsiniz?*"
+              placeholder="Kısaca kendini, motivasyonunu ve topluluğa sunabileceğin katkıyı anlat."
+              value={form.about}
+              onChange={set("about")}
+              maxLength={140}
+              required
+            />
+            <div className="sm:col-span-2 -mt-2 text-right text-[11px] text-foreground/45">
+              {form.about.length}/140
+            </div>
             <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">
               <p className="text-xs text-foreground/50">
                 Bilgilerin ortak networking veritabanına eklenir ve ağda görünür.
+                <span className="mt-1 block font-semibold text-foreground/65">
+                  Etkinliklere ve organizasyonlara düzenli katılım sağlamanız çok önemlidir.
+                </span>
               </p>
               <button
                 type="submit"
@@ -368,7 +437,22 @@ function NetworkingPage() {
                         @{contact.instagram} →
                       </a>
                     )}
+                    {contact.linkedin && (
+                      <a
+                        href={contact.linkedin}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-semibold text-primary-deep transition hover:text-primary"
+                      >
+                        LinkedIn →
+                      </a>
+                    )}
                   </div>
+                  {contact.about && (
+                    <p className="mt-3 border-t border-border/70 pt-3 text-sm leading-relaxed text-foreground/65">
+                      {contact.about}
+                    </p>
+                  )}
                 </div>
               );
             })}
@@ -397,6 +481,26 @@ function Field({
       <input
         {...props}
         className="px-3 py-2.5 rounded-lg bg-background border border-border focus:border-primary outline-none text-sm"
+      />
+    </label>
+  );
+}
+
+function TextArea({
+  label,
+  className = "",
+  ...props
+}: {
+  label: string;
+  className?: string;
+} & React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <label className={`flex flex-col gap-1.5 ${className}`}>
+      <span className="text-xs text-foreground/60">{label}</span>
+      <textarea
+        {...props}
+        rows={4}
+        className="resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
       />
     </label>
   );
