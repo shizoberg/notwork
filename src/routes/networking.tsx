@@ -1,7 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
-import { addMember, listMembers, parseSkills, type Member } from "@/lib/networking-api";
+import {
+  addMember,
+  createUsername,
+  listMembers,
+  parseSkills,
+  type Member,
+  updateMember,
+} from "@/lib/networking-api";
 
 export const Route = createFileRoute("/networking")({
   head: () => ({
@@ -137,6 +144,10 @@ function NetworkingPage() {
     about: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [updateMode, setUpdateMode] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [editingUsername, setEditingUsername] = useState("");
+  const [notice, setNotice] = useState("");
   const [filter, setFilter] = useState("");
   const [activeGroupId, setActiveGroupId] = useState("all");
   const [error, setError] = useState("");
@@ -156,6 +167,7 @@ function NetworkingPage() {
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
+    setNotice("");
     const fullName = form.name.trim().replace(/\s+/g, " ");
     if (fullName.split(" ").length < 2) {
       setError("Lütfen adını ve soyadını birlikte yaz.");
@@ -182,7 +194,7 @@ function NetworkingPage() {
     }
     setSubmitting(true);
     try {
-      await addMember({
+      const memberData = {
         name: fullName.slice(0, 60),
         title: form.title.trim().slice(0, 40),
         skills: parseSkills(form.skills),
@@ -190,7 +202,18 @@ function NetworkingPage() {
         instagram: instagram || undefined,
         linkedin: linkedin || undefined,
         motivation: about.replace(/\|\|/g, "|").slice(0, 140),
-      });
+      };
+      if (editingUsername) {
+        await updateMember(editingUsername, memberData);
+        setNotice(`Bilgilerin güncellendi. Kullanıcı adın: ${editingUsername}`);
+      } else {
+        const username = createUsername(
+          fullName,
+          members.map((member) => member.username),
+        );
+        await addMember({ ...memberData, username });
+        setNotice(`Ağa eklendin. Bilgilerini güncellemek için kullanıcı adın: ${username}`);
+      }
       setMembers(await listMembers());
       setForm({
         name: "",
@@ -201,11 +224,39 @@ function NetworkingPage() {
         linkedin: "",
         about: "",
       });
+      setEditingUsername("");
+      setUsernameInput("");
     } catch {
-      setError("Kayıt eklenemedi. Lütfen tekrar dene.");
+      setError(
+        editingUsername
+          ? "Bilgiler güncellenemedi. Lütfen tekrar dene."
+          : "Kayıt eklenemedi. Lütfen tekrar dene.",
+      );
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const loadMemberForEditing = () => {
+    setError("");
+    setNotice("");
+    const username = usernameInput.trim().toLowerCase().replace(/^@/, "");
+    const member = members.find((item) => item.username === username);
+    if (!member) {
+      setError("Bu kullanıcı adıyla eşleşen bir kayıt bulunamadı.");
+      return;
+    }
+    setEditingUsername(member.username);
+    setForm({
+      name: member.name,
+      title: member.title,
+      skills: member.skills.join(", "),
+      email: member.email || "",
+      instagram: member.instagram ? `@${member.instagram}` : "",
+      linkedin: member.linkedin || "",
+      about: member.motivation || "",
+    });
+    setNotice(`${member.username} kaydı açıldı. Alanları değiştirip güncelleyebilirsin.`);
   };
 
   const filtered = useMemo(() => {
@@ -275,9 +326,53 @@ function NetworkingPage() {
             onSubmit={onSubmit}
             className="rounded-2xl border border-border bg-card p-5 sm:p-6 grid gap-4 sm:grid-cols-2"
           >
-            <div className="sm:col-span-2 text-sm font-semibold text-foreground/80">
-              Kendini ekle
+            <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-sm font-semibold text-foreground/80">
+                {editingUsername ? `${editingUsername} bilgilerini güncelle` : "Kendini ekle"}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (updateMode) {
+                    setEditingUsername("");
+                    setUsernameInput("");
+                    setForm({
+                      name: "",
+                      title: "",
+                      skills: "",
+                      email: "",
+                      instagram: "",
+                      linkedin: "",
+                      about: "",
+                    });
+                  }
+                  setUpdateMode((current) => !current);
+                  setError("");
+                  setNotice("");
+                }}
+                className="text-xs font-semibold text-primary hover:underline"
+              >
+                {updateMode ? "yeni kayıt formuna dön" : "verilerimi güncellemek istiyorum"}
+              </button>
             </div>
+            {updateMode && (
+              <div className="sm:col-span-2 grid gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4 sm:grid-cols-[1fr_auto] sm:items-end">
+                <Field
+                  label="Kullanıcı adın"
+                  placeholder="berkaktas"
+                  value={usernameInput}
+                  onChange={(event) => setUsernameInput(event.target.value)}
+                  autoComplete="username"
+                />
+                <button
+                  type="button"
+                  onClick={loadMemberForEditing}
+                  className="rounded-lg border border-primary px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary hover:text-primary-foreground"
+                >
+                  bilgilerimi getir
+                </button>
+              </div>
+            )}
             <Field
               label="Ad Soyad*"
               placeholder="Berk Aktaş"
@@ -348,9 +443,14 @@ function NetworkingPage() {
                 disabled={submitting}
                 className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition disabled:opacity-50"
               >
-                {submitting ? "ekleniyor…" : "ağa ekle"}
+                {submitting ? "kaydediliyor…" : editingUsername ? "bilgilerimi güncelle" : "ağa ekle"}
               </button>
             </div>
+            {notice && (
+              <p role="status" className="sm:col-span-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-semibold text-primary-deep">
+                {notice}
+              </p>
+            )}
             {error && (
               <p role="alert" className="sm:col-span-2 text-sm text-destructive">
                 {error}
@@ -414,6 +514,11 @@ function NetworkingPage() {
                     <div className="font-bold text-lg">{member.name}</div>
                     <div className="text-xs text-foreground/60">{member.title}</div>
                   </div>
+                  {member.username && (
+                    <div className="mt-1 text-[11px] font-semibold text-foreground/45">
+                      kullanıcı adı: {member.username}
+                    </div>
+                  )}
                   {member.skills.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {member.skills.map((skill) => (

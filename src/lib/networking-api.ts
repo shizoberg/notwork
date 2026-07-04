@@ -10,6 +10,7 @@ export type Member = {
   linkedin?: string;
   motivation?: string;
   contact?: string;
+  username: string;
   createdAt: number;
 };
 
@@ -94,6 +95,7 @@ export async function listMembers(): Promise<Member[]> {
       linkedin: row.linkedin?.trim() || undefined,
       motivation: row.motivation?.trim() || undefined,
       contact: row.contact?.trim() || undefined,
+      username: row.username?.trim().toLowerCase() || "",
       createdAt: Date.parse(row.createdAt || "") || 0,
     }))
     .filter((member) => member.name && member.title)
@@ -122,12 +124,55 @@ export async function addMember(input: Omit<Member, "id" | "createdAt">): Promis
           motivation: member.motivation || "",
           contact: "",
           createdAt: new Date(member.createdAt).toISOString(),
+          username: member.username,
         },
       ],
     }),
   });
   if (!response.ok) throw new Error("Networking kaydı eklenemedi");
   return member;
+}
+
+export async function updateMember(
+  username: string,
+  input: Omit<Member, "id" | "username" | "createdAt">,
+): Promise<void> {
+  const response = await fetch(`${API_URL}/username/${encodeURIComponent(username)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      data: {
+        name: input.name,
+        title: input.title,
+        skills: input.skills.join(", "),
+        email: input.email || "",
+        instagram: input.instagram || "",
+        linkedin: input.linkedin || "",
+        motivation: input.motivation || "",
+      },
+    }),
+  });
+  if (!response.ok) throw new Error("Networking kaydı güncellenemedi");
+}
+
+export function createUsername(name: string, existingUsernames: string[]): string {
+  const base = name
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .replace(/[^a-z0-9]+/g, "")
+    .slice(0, 28) || "notworker";
+  const used = new Set(existingUsernames.map((username) => username.toLowerCase()));
+  if (!used.has(base)) return base;
+  let suffix = 2;
+  while (used.has(`${base}${suffix}`)) suffix += 1;
+  return `${base}${suffix}`;
 }
 
 export function parseSkills(raw: string): string[] {
