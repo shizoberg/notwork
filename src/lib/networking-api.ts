@@ -5,6 +5,10 @@ export type Member = {
   name: string;
   title: string;
   skills: string[];
+  email?: string;
+  instagram?: string;
+  linkedin?: string;
+  motivation?: string;
   contact?: string;
   createdAt: number;
 };
@@ -85,6 +89,10 @@ export async function listMembers(): Promise<Member[]> {
       name: row.name?.trim() || "",
       title: row.title?.trim() || "",
       skills: parseSkills(row.skills || ""),
+      email: row.email?.trim() || undefined,
+      instagram: row.instagram?.trim().replace(/^@/, "") || undefined,
+      linkedin: row.linkedin?.trim() || undefined,
+      motivation: row.motivation?.trim() || undefined,
       contact: row.contact?.trim() || undefined,
       createdAt: Date.parse(row.createdAt || "") || 0,
     }))
@@ -108,7 +116,11 @@ export async function addMember(input: Omit<Member, "id" | "createdAt">): Promis
           name: member.name,
           title: member.title,
           skills: member.skills.join(", "),
-          contact: member.contact || "",
+          email: member.email || "",
+          instagram: member.instagram || "",
+          linkedin: member.linkedin || "",
+          motivation: member.motivation || "",
+          contact: "",
           createdAt: new Date(member.createdAt).toISOString(),
         },
       ],

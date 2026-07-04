@@ -114,6 +114,16 @@ function getContactDetails(value?: string) {
   return { about, email, instagram, linkedin };
 }
 
+function getMemberContact(member: Member) {
+  const legacy = getContactDetails(member.contact);
+  return {
+    email: member.email || legacy.email,
+    instagram: member.instagram || legacy.instagram,
+    linkedin: member.linkedin || legacy.linkedin,
+    about: member.motivation || legacy.about,
+  };
+}
+
 function NetworkingPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,14 +186,10 @@ function NetworkingPage() {
         name: fullName.slice(0, 60),
         title: form.title.trim().slice(0, 40),
         skills: parseSkills(form.skills),
-        contact: [
-          `email:${form.email.trim()}`,
-          instagram ? `instagram:${instagram}` : "",
-          linkedin ? `linkedin:${linkedin}` : "",
-          `about:${about.replace(/\|\|/g, "|").slice(0, 140)}`,
-        ]
-          .filter(Boolean)
-          .join(" || "),
+        email: form.email.trim(),
+        instagram: instagram || undefined,
+        linkedin: linkedin || undefined,
+        motivation: about.replace(/\|\|/g, "|").slice(0, 140),
       });
       setMembers(await listMembers());
       setForm({
@@ -210,6 +216,10 @@ function NetworkingPage() {
         member.name.toLowerCase().includes(query) ||
         member.title.toLowerCase().includes(query) ||
         member.skills.some((skill) => skill.includes(query)) ||
+        member.email?.toLowerCase().includes(query) ||
+        member.instagram?.toLowerCase().includes(query) ||
+        member.linkedin?.toLowerCase().includes(query) ||
+        member.motivation?.toLowerCase().includes(query) ||
         member.contact?.toLowerCase().includes(query),
     );
   }, [members, filter]);
@@ -397,7 +407,7 @@ function NetworkingPage() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {visibleMembers.map((member) => {
-              const contact = getContactDetails(member.contact);
+              const contact = getMemberContact(member);
               return (
                 <div key={member.id} className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-baseline justify-between gap-2">
