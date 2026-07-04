@@ -78,6 +78,23 @@ function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+function normalizeInstagramUsername(value: string) {
+  const username = value
+    .trim()
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+    .replace(/^@/, "")
+    .split(/[/?#\s]/)[0];
+  return /^[a-zA-Z0-9._]+$/.test(username) ? username : "";
+}
+
+function getContactDetails(value?: string) {
+  if (!value) return {};
+  const email = value.match(/[^\s|]+@[^\s|]+\.[^\s|]+/)?.[0];
+  const instagramMatch = value.match(/(?:^|[\s|])@([a-zA-Z0-9._]+)/);
+  const instagram = instagramMatch?.[1];
+  return { email, instagram };
+}
+
 function NetworkingPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,7 +102,8 @@ function NetworkingPage() {
     name: "",
     title: "",
     skills: "",
-    contact: "",
+    email: "",
+    instagram: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [filter, setFilter] = useState("");
@@ -106,18 +124,31 @@ function NetworkingPage() {
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!form.name.trim() || !form.title.trim()) return;
-    setSubmitting(true);
     setError("");
+    const fullName = form.name.trim().replace(/\s+/g, " ");
+    if (fullName.split(" ").length < 2) {
+      setError("Lütfen adını ve soyadını birlikte yaz.");
+      return;
+    }
+    if (!form.title.trim() || !isEmail(form.email.trim())) {
+      setError("Rolünü ve geçerli bir e-posta adresini yaz.");
+      return;
+    }
+    const instagram = normalizeInstagramUsername(form.instagram);
+    if (form.instagram.trim() && !instagram) {
+      setError("Instagram kullanıcı adını @kullaniciadi şeklinde yaz.");
+      return;
+    }
+    setSubmitting(true);
     try {
       await addMember({
-        name: form.name.trim().slice(0, 40),
+        name: fullName.slice(0, 60),
         title: form.title.trim().slice(0, 40),
         skills: parseSkills(form.skills),
-        contact: form.contact.trim().slice(0, 80) || undefined,
+        contact: [form.email.trim(), instagram ? `@${instagram}` : ""].filter(Boolean).join(" | "),
       });
       setMembers(await listMembers());
-      setForm({ name: "", title: "", skills: "", contact: "" });
+      setForm({ name: "", title: "", skills: "", email: "", instagram: "" });
     } catch {
       setError("Kayıt eklenemedi. Lütfen tekrar dene.");
     } finally {
@@ -132,7 +163,8 @@ function NetworkingPage() {
       (member) =>
         member.name.toLowerCase().includes(query) ||
         member.title.toLowerCase().includes(query) ||
-        member.skills.some((skill) => skill.includes(query)),
+        member.skills.some((skill) => skill.includes(query)) ||
+        member.contact?.toLowerCase().includes(query),
     );
   }, [members, filter]);
 
@@ -190,12 +222,20 @@ function NetworkingPage() {
             <div className="sm:col-span-2 text-sm font-semibold text-foreground/80">
               Kendini ekle
             </div>
-            <Field label="İsim*" placeholder="Berk" value={form.name} onChange={set("name")} />
+            <Field
+              label="Ad Soyad*"
+              placeholder="Berk Aktaş"
+              value={form.name}
+              onChange={set("name")}
+              autoComplete="name"
+              required
+            />
             <Field
               label="Sıfat / Rol*"
               placeholder="yazılımcı"
               value={form.title}
               onChange={set("title")}
+              required
             />
             <Field
               className="sm:col-span-2"
@@ -205,11 +245,20 @@ function NetworkingPage() {
               onChange={set("skills")}
             />
             <Field
-              className="sm:col-span-2"
-              label="İletişim (opsiyonel)"
-              placeholder="@instagram / linkedin / mail"
-              value={form.contact}
-              onChange={set("contact")}
+              label="E-posta*"
+              type="email"
+              placeholder="isim@eposta.com"
+              value={form.email}
+              onChange={set("email")}
+              autoComplete="email"
+              required
+            />
+            <Field
+              label="Instagram (opsiyonel)"
+              placeholder="@kullaniciadi"
+              value={form.instagram}
+              onChange={set("instagram")}
+              autoComplete="off"
             />
             <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">
               <p className="text-xs text-foreground/50">
@@ -278,39 +327,51 @@ function NetworkingPage() {
             })}
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleMembers.map((member) => (
-              <div key={member.id} className="rounded-xl border border-border bg-card p-4">
-                <div className="flex items-baseline justify-between gap-2">
-                  <div className="font-bold text-lg">{member.name}</div>
-                  <div className="text-xs text-foreground/60">{member.title}</div>
-                </div>
-                {member.skills.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {member.skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20"
-                      >
-                        {skill}
-                      </span>
-                    ))}
+            {visibleMembers.map((member) => {
+              const contact = getContactDetails(member.contact);
+              return (
+                <div key={member.id} className="rounded-xl border border-border bg-card p-4">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="font-bold text-lg">{member.name}</div>
+                    <div className="text-xs text-foreground/60">{member.title}</div>
                   </div>
-                )}
-                {member.contact && (
-                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/70 pt-3 text-xs">
-                    <span className="text-foreground/60 truncate">{member.contact}</span>
-                    {isEmail(member.contact) && (
+                  {member.skills.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {member.skills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70 pt-3 text-xs">
+                    {contact.email ? (
                       <a
-                        href={`mailto:${member.contact}`}
-                        className="shrink-0 font-semibold text-primary-deep hover:text-primary transition"
+                        href={`mailto:${contact.email}`}
+                        className="font-semibold text-primary-deep transition hover:text-primary"
                       >
-                        mail gönder →
+                        {contact.email}
+                      </a>
+                    ) : (
+                      <span className="text-foreground/40">e-posta eklenmedi</span>
+                    )}
+                    {contact.instagram && (
+                      <a
+                        href={`https://instagram.com/${contact.instagram}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-semibold text-primary-deep transition hover:text-primary"
+                      >
+                        @{contact.instagram} →
                       </a>
                     )}
                   </div>
-                )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
             {visibleMembers.length === 0 && !loading && (
               <div className="text-sm text-foreground/50">henüz kimse yok — ilk sen ekle.</div>
             )}
@@ -378,9 +439,11 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
   );
 
   const layout = useMemo(() => {
-    const columns = width < 560 ? 1 : width < 900 ? 2 : 3;
-    const cellHeight = width < 560 ? 230 : 250;
-    const cellWidth = width / columns;
+    const cellWidth = 280;
+    const cellHeight = 250;
+    const maxColumns = width < 560 ? 2 : 4;
+    const columns = Math.max(1, Math.min(groupedMembers.length, maxColumns));
+    const canvasWidth = Math.max(width, columns * cellWidth);
     const rows = Math.ceil(groupedMembers.length / columns);
     const height = Math.max(360, rows * cellHeight + 20);
     const clusters = groupedMembers.map((entry, groupIndex) => {
@@ -402,7 +465,7 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
         };
       });
     });
-    return { clusters, height, nodes };
+    return { canvasWidth, clusters, height, nodes };
   }, [groupedMembers, width]);
 
   const edges = useMemo(() => {
@@ -441,9 +504,9 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
         className="h-[520px] max-h-[70vh] min-h-[420px] overflow-auto overscroll-contain sm:h-[620px]"
       >
         <svg
-          width="100%"
+          width={layout.canvasWidth}
           height={layout.height}
-          viewBox={`0 0 ${width} ${layout.height}`}
+          viewBox={`0 0 ${layout.canvasWidth} ${layout.height}`}
           className="block"
         >
           <defs>
