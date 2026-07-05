@@ -22,13 +22,13 @@ const links = [
   {
     title: "İnteraktif Oyun MentiMeter",
     description: "Canlı oyuna katıl",
-    href: "https://www.menti.com/",
+    href: "https://www.menti.com/al2y33r8a21w",
     icon: Gamepad2,
   },
   {
     title: "WhatsApp Topluluğu",
     description: "Topluluğa katıl ve duyuruları takip et",
-    href: "https://wa.me/905457210929",
+    href: "https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE",
     icon: MessageCircle,
   },
 ];
