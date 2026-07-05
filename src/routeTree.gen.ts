@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as NetworkingRouteImport } from './routes/networking'
+import { Route as LinklerRouteImport } from './routes/linkler'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as R14temmuzRouteImport } from './routes/14temmuz'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +18,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const NetworkingRoute = NetworkingRouteImport.update({
   id: '/networking',
   path: '/networking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LinklerRoute = LinklerRouteImport.update({
+  id: '/linkler',
+  path: '/linkler',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommunityRoute = CommunityRouteImport.update({
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/14temmuz': typeof R14temmuzRoute
   '/community': typeof CommunityRoute
+  '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/14temmuz': typeof R14temmuzRoute
   '/community': typeof CommunityRoute
+  '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/14temmuz': typeof R14temmuzRoute
   '/community': typeof CommunityRoute
+  '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/14temmuz' | '/community' | '/networking'
+  fullPaths: '/' | '/14temmuz' | '/community' | '/linkler' | '/networking'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/14temmuz' | '/community' | '/networking'
-  id: '__root__' | '/' | '/14temmuz' | '/community' | '/networking'
+  to: '/' | '/14temmuz' | '/community' | '/linkler' | '/networking'
+  id: '__root__' | '/' | '/14temmuz' | '/community' | '/linkler' | '/networking'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   R14temmuzRoute: typeof R14temmuzRoute
   CommunityRoute: typeof CommunityRoute
+  LinklerRoute: typeof LinklerRoute
   NetworkingRoute: typeof NetworkingRoute
 }
 
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/networking'
       fullPath: '/networking'
       preLoaderRoute: typeof NetworkingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/linkler': {
+      id: '/linkler'
+      path: '/linkler'
+      fullPath: '/linkler'
+      preLoaderRoute: typeof LinklerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/community': {
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   R14temmuzRoute: R14temmuzRoute,
   CommunityRoute: CommunityRoute,
+  LinklerRoute: LinklerRoute,
   NetworkingRoute: NetworkingRoute,
 }
 export const routeTree = rootRouteImport
