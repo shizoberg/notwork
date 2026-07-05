@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import {
   addMember,
@@ -390,8 +390,6 @@ function NetworkingPage() {
           </p>
         </section>
 
-        <RecommendationFinder members={members} loading={loading} />
-
         <section className="mx-auto max-w-6xl px-5 pb-10">
           <form
             onSubmit={onSubmit}
@@ -544,6 +542,7 @@ function NetworkingPage() {
             />
           </div>
           <NetworkGraph members={filtered} loading={loading} />
+          <RecommendationFinder members={members} loading={loading} />
         </section>
 
         <section className="mx-auto max-w-6xl px-5 pb-20">
@@ -714,105 +713,80 @@ function RecommendationFinder({ members, loading }: { members: Member[]; loading
   };
 
   return (
-    <section className="mx-auto max-w-6xl px-5 pb-10">
-      <div className="overflow-hidden rounded-2xl border border-primary/30 bg-primary/5">
-        <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[0.8fr_1.2fr]">
-          <div>
-            <div className="text-xs font-bold uppercase tracking-[0.18em] text-primary-deep">
-              Akıllı eşleşme
-            </div>
-            <h2 className="mt-2 text-2xl font-black tracking-tight">
-              Mutlaka tanışman gerekenler
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-foreground/60">
-              Kullanıcı adını yaz; yetenek, rol ve tamamlayıcı iş alanlarına göre sana en uygun 5
-              kişiyi bulalım.
-            </p>
-            <div className="mt-5 flex gap-2">
-              <input
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") findMatches();
-                }}
-                placeholder="kullanıcı adın"
-                disabled={loading}
-                className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
-              />
-              <button
-                type="button"
-                onClick={findMatches}
-                disabled={loading}
-                className="shrink-0 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-              >
-                eşleşmelerimi bul
-              </button>
-            </div>
-            {message && <p className="mt-3 text-sm text-destructive">{message}</p>}
-            <p className="mt-4 text-[11px] leading-relaxed text-foreground/45">
-              Öneri modeli; ortak yetenekleri, tamamlayıcı meslek gruplarını, profil metinlerindeki
-              ortak temaları ve iletişim kurulabilirliğini puanlar.
-            </p>
-          </div>
-
-          <div className="grid gap-2.5">
-            {selectedMember ? (
-              recommendations.map((recommendation, index) => {
-                const contact = getMemberContact(recommendation.member);
-                return (
-                  <article
-                    key={recommendation.member.id}
-                    className="rounded-xl border border-border bg-card p-3.5"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-black text-primary-deep">
-                        {index + 1}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                          <h3 className="font-bold">{recommendation.member.name}</h3>
-                          <span className="text-xs text-foreground/50">
-                            {recommendation.member.title}
-                          </span>
-                        </div>
-                        <p className="mt-1.5 text-xs leading-relaxed text-foreground/60">
-                          {recommendation.reasons.join(" · ")}
-                        </p>
-                        <div className="mt-2 flex flex-wrap gap-3 text-xs font-semibold text-primary-deep">
-                          {contact.email && <a href={`mailto:${contact.email}`}>E-posta gönder</a>}
-                          {contact.linkedin && (
-                            <a href={contact.linkedin} target="_blank" rel="noreferrer">
-                              LinkedIn →
-                            </a>
-                          )}
-                          {contact.instagram && (
-                            <a
-                              href={`https://instagram.com/${contact.instagram}`}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              Instagram →
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })
-            ) : (
-              <div className="grid min-h-52 place-items-center rounded-xl border border-dashed border-primary/30 bg-background/45 p-6 text-center text-sm text-foreground/45">
-                Kullanıcı adını yazdığında kişisel eşleşmelerin burada görünecek.
-              </div>
-            )}
-          </div>
+    <div className="mt-3 overflow-hidden rounded-xl border border-primary/25 bg-primary/5 transition-all">
+      <div className="flex flex-col gap-2 p-2.5 sm:flex-row sm:items-center">
+        <div className="px-2 text-xs font-bold text-primary-deep sm:whitespace-nowrap">
+          Mutlaka tanışman gereken 5 kişiyi bul
         </div>
+        <input
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") findMatches();
+          }}
+          placeholder="kullanıcı adın"
+          disabled={loading}
+          className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+        />
+        <button
+          type="button"
+          onClick={findMatches}
+          disabled={loading}
+          className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+        >
+          eşleşmelerimi bul
+        </button>
       </div>
-    </section>
+      {message && <p className="border-t border-border px-4 py-2 text-sm text-destructive">{message}</p>}
+      {selectedMember && (
+        <div className="border-t border-primary/20 p-3 sm:p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="font-black">{selectedMember.name} için önerilen bağlantılar</h3>
+            <span className="text-[11px] text-foreground/45">
+              ortak yetenek + tamamlayıcı rol + ortak hedef
+            </span>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            {recommendations.map((recommendation, index) => {
+              const contact = getMemberContact(recommendation.member);
+              return (
+                <article key={recommendation.member.id} className="rounded-xl border border-border bg-card p-3">
+                  <div className="text-[10px] font-black text-primary-deep">#{index + 1}</div>
+                  <div className="mt-1 font-bold leading-tight">{recommendation.member.name}</div>
+                  <div className="mt-1 text-[11px] text-foreground/50">{recommendation.member.title}</div>
+                  <p className="mt-2 text-[11px] leading-relaxed text-foreground/60">
+                    {recommendation.reasons.join(" · ")}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold text-primary-deep">
+                    {contact.email && <a href={`mailto:${contact.email}`}>E-posta</a>}
+                    {contact.linkedin && <a href={contact.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>}
+                    {contact.instagram && <a href={`https://instagram.com/${contact.instagram}`} target="_blank" rel="noreferrer">Instagram</a>}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-[10px] text-foreground/40">
+            Öneriler profilindeki yetenekler, rolün, motivasyon metnin ve tamamlayıcı iş alanları puanlanarak oluşturulur.
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
 
 function NetworkGraph({ members, loading }: { members: Member[]; loading: boolean }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(320);
+  const [hover, setHover] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!wrapRef.current) return;
+    const observer = new ResizeObserver(([entry]) => setWidth(Math.max(320, entry.contentRect.width)));
+    observer.observe(wrapRef.current);
+    return () => observer.disconnect();
+  }, [loading]);
+
   const groupedMembers = useMemo(
     () =>
       roleGroups
@@ -824,32 +798,59 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
     [members],
   );
 
+  const layout = useMemo(() => {
+    const cellWidth = 360;
+    const cellHeight = 330;
+    const maxColumns = width < 700 ? 2 : 3;
+    const columns = Math.max(1, Math.min(groupedMembers.length, maxColumns));
+    const canvasWidth = Math.max(width, columns * cellWidth);
+    const rows = Math.ceil(groupedMembers.length / columns);
+    const height = Math.max(390, rows * cellHeight + 20);
+    const clusters = groupedMembers.map((entry, groupIndex) => ({
+      ...entry,
+      centerX: (groupIndex % columns) * cellWidth + cellWidth / 2,
+      centerY: Math.floor(groupIndex / columns) * cellHeight + cellHeight / 2 + 10,
+      radius: 128,
+    }));
+    const nodes = clusters.flatMap((cluster) =>
+      cluster.members.map((member, memberIndex) => {
+        let ringIndex = memberIndex;
+        let ringCount = Math.min(6, cluster.members.length);
+        let orbit = 56;
+        if (memberIndex >= 6) {
+          ringIndex = memberIndex - 6;
+          ringCount = Math.max(1, cluster.members.length - 6);
+          orbit = 96;
+        }
+        const angle = (ringIndex / ringCount) * Math.PI * 2 - Math.PI / 2;
+        return {
+          ...member,
+          groupId: cluster.group.id,
+          x: cluster.centerX + Math.cos(angle) * orbit * (cluster.members.length > 1 ? 1 : 0),
+          y: cluster.centerY + Math.sin(angle) * orbit * (cluster.members.length > 1 ? 1 : 0),
+        };
+      }),
+    );
+    return { canvasWidth, clusters, height, nodes };
+  }, [groupedMembers, width]);
+
   const edges = useMemo(() => {
-    const connections: { first: string; second: string; weight: number }[] = [];
-    for (let first = 0; first < groupedMembers.length; first += 1) {
-      for (let second = first + 1; second < groupedMembers.length; second += 1) {
-        const firstGroup = groupedMembers[first];
-        const secondGroup = groupedMembers[second];
-        const complementary = complementaryGroups[firstGroup.group.id]?.includes(
-          secondGroup.group.id,
-        );
-        let sharedConnections = 0;
-        for (const member of firstGroup.members) {
-          sharedConnections += secondGroup.members.filter((candidate) =>
-            member.skills.some((skill) => candidate.skills.includes(skill)),
-          ).length;
-        }
-        if (complementary || sharedConnections > 0) {
-          connections.push({
-            first: firstGroup.group.id,
-            second: secondGroup.group.id,
-            weight: Math.max(complementary ? 3 : 0, sharedConnections),
-          });
-        }
+    const connections = new Map<string, { first: number; second: number; weight: number }>();
+    layout.nodes.forEach((node, firstIndex) => {
+      const matches = getRecommendations(node, layout.nodes).slice(0, 2);
+      for (const match of matches) {
+        const secondIndex = layout.nodes.findIndex((candidate) => candidate.id === match.member.id);
+        if (secondIndex < 0) continue;
+        const [first, second] = [firstIndex, secondIndex].sort((a, b) => a - b);
+        const key = `${first}-${second}`;
+        const shared = layout.nodes[first].skills.filter((skill) =>
+          layout.nodes[second].skills.includes(skill),
+        ).length;
+        connections.set(key, { first, second, weight: 1 + shared });
       }
-    }
-    return connections;
-  }, [groupedMembers]);
+    });
+    return [...connections.values()];
+  }, [layout.nodes]);
 
   if (loading) {
     return (
@@ -860,62 +861,56 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-2 text-xs text-foreground/50">
-        <span>Kategori büyüklüğü üye yoğunluğunu gösterir.</span>
-        <span>{edges.length} potansiyel kategori bağlantısı</span>
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[11px] text-foreground/60 shadow-sm backdrop-blur">
+        kaydırarak ağı gez
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {groupedMembers.map((entry) => (
-          <article
-            key={entry.group.id}
-            className="relative overflow-hidden rounded-2xl border border-primary/20 bg-background p-4"
-          >
-            <div
-              className="absolute -right-5 -top-5 rounded-full bg-primary/10"
-              style={{
-                width: `${72 + Math.min(52, entry.members.length * 4)}px`,
-                height: `${72 + Math.min(52, entry.members.length * 4)}px`,
-              }}
-            />
-            <div className="relative">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-primary-deep">
-                {entry.group.label}
-              </div>
-              <div className="mt-1 text-3xl font-black">{entry.members.length}</div>
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {entry.members.slice(0, 4).map((member) => (
-                  <span
-                    key={member.id}
-                    className="max-w-full truncate rounded-full bg-primary/10 px-2 py-1 text-[11px] text-foreground/70"
-                  >
-                    {member.name}
-                  </span>
-                ))}
-                {entry.members.length > 4 && (
-                  <span className="rounded-full border border-border px-2 py-1 text-[11px] text-foreground/45">
-                    +{entry.members.length - 4} kişi
-                  </span>
+      <div ref={wrapRef} className="h-[540px] overflow-auto overscroll-contain sm:h-[650px]">
+        <svg width={layout.canvasWidth} height={layout.height} className="block">
+          <defs>
+            <marker id="network-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" className="fill-primary/40" />
+            </marker>
+          </defs>
+          {layout.clusters.map((cluster) => (
+            <g key={cluster.group.id}>
+              <circle cx={cluster.centerX} cy={cluster.centerY} r={cluster.radius} className="fill-primary/5 stroke-primary/30" strokeWidth={1.25} strokeDasharray="6 6" />
+              <text x={cluster.centerX} y={cluster.centerY - cluster.radius - 14} textAnchor="middle" className="fill-foreground/70 text-[11px] font-bold uppercase tracking-wider">
+                {cluster.group.label} · {cluster.members.length}
+              </text>
+            </g>
+          ))}
+          {edges.map((edge) => {
+            const first = layout.nodes[edge.first];
+            const second = layout.nodes[edge.second];
+            const active = hover === first.id || hover === second.id;
+            const crossGroup = first.groupId !== second.groupId;
+            return (
+              <line key={`${first.id}-${second.id}`} x1={first.x} y1={first.y} x2={second.x} y2={second.y} markerEnd={crossGroup ? "url(#network-arrow)" : undefined} className={active ? "stroke-primary" : crossGroup ? "stroke-primary/20" : "stroke-foreground/15"} strokeWidth={Math.min(2.5, 0.7 + edge.weight * 0.45)} />
+            );
+          })}
+          {layout.nodes.map((node) => {
+            const active = hover === node.id;
+            const firstName = node.name.split(" ")[0].slice(0, 10);
+            return (
+              <g key={node.id} transform={`translate(${node.x}, ${node.y})`} onMouseEnter={() => setHover(node.id)} onMouseLeave={() => setHover(null)} className="cursor-pointer">
+                <circle r={active ? 25 : 21} className={active ? "fill-primary stroke-primary-deep" : "fill-background stroke-primary/55"} strokeWidth={1.5} />
+                <text textAnchor="middle" dy="0.35em" className={`text-[8px] font-bold ${active ? "fill-primary-foreground" : "fill-foreground"}`} style={{ pointerEvents: "none" }}>
+                  {firstName}
+                </text>
+                {active && (
+                  <g style={{ pointerEvents: "none" }}>
+                    <rect x={-72} y={31} width={144} height={38} rx={8} className="fill-background stroke-border" />
+                    <text textAnchor="middle" y={46} className="fill-foreground text-[10px] font-bold">{node.name.slice(0, 22)}</text>
+                    <text textAnchor="middle" y={60} className="fill-foreground/60 text-[8px]">{node.title.slice(0, 28)}</text>
+                  </g>
                 )}
-              </div>
-              <div className="mt-4 border-t border-border pt-3 text-[11px] text-foreground/45">
-                {edges.filter(
-                  (edge) => edge.first === entry.group.id || edge.second === entry.group.id,
-                ).length}{" "}
-                bağlantılı alan
-              </div>
-            </div>
-          </article>
-        ))}
+              </g>
+            );
+          })}
+        </svg>
       </div>
-      {groupedMembers.length === 0 && (
-        <div className="grid min-h-48 place-items-center text-sm text-foreground/50">
-          henüz kimse yok — formdan ekle.
-        </div>
-      )}
-      <p className="mt-4 text-center text-[11px] text-foreground/40">
-        Tüm kişileri görmek ve kategoriye göre filtrelemek için aşağıdaki üye listesini kullan.
-      </p>
+      {layout.nodes.length === 0 && <div className="absolute inset-0 grid place-items-center text-sm text-foreground/50">henüz kimse yok — formdan ekle.</div>}
     </div>
   );
 }
