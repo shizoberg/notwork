@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import {
   addMember,
@@ -129,6 +129,75 @@ function getMemberContact(member: Member) {
     linkedin: member.linkedin || legacy.linkedin,
     about: member.motivation || legacy.about,
   };
+}
+
+const complementaryGroups: Record<string, string[]> = {
+  technology: ["design", "marketing", "business"],
+  design: ["technology", "marketing", "content"],
+  content: ["marketing", "community", "design"],
+  marketing: ["content", "business", "technology", "design"],
+  community: ["content", "people", "business"],
+  business: ["technology", "marketing", "people", "community"],
+  people: ["business", "community", "technology"],
+  other: ["business", "community", "marketing"],
+};
+
+const ignoredWords = new Set([
+  "ve",
+  "ile",
+  "bir",
+  "icin",
+  "için",
+  "olarak",
+  "uzmani",
+  "uzmanı",
+  "yonetimi",
+  "yönetimi",
+]);
+
+function profileWords(member: Member) {
+  return `${member.title} ${member.skills.join(" ")} ${member.motivation || ""}`
+    .toLocaleLowerCase("tr-TR")
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((word) => word.length > 3 && !ignoredWords.has(word));
+}
+
+function getRecommendations(member: Member, members: Member[]) {
+  const memberGroup = getRoleGroup(member);
+  const memberWords = new Set(profileWords(member));
+
+  return members
+    .filter((candidate) => candidate.id !== member.id)
+    .map((candidate) => {
+      const candidateGroup = getRoleGroup(candidate);
+      const sharedSkills = member.skills.filter((skill) => candidate.skills.includes(skill));
+      const sharedThemes = [...new Set(profileWords(candidate).filter((word) => memberWords.has(word)))]
+        .filter((word) => !sharedSkills.some((skill) => skill.includes(word)))
+        .slice(0, 2);
+      const complementary = complementaryGroups[memberGroup.id]?.includes(candidateGroup.id);
+      const sameGroup = memberGroup.id === candidateGroup.id;
+      let score = sharedSkills.length * 6 + sharedThemes.length * 2;
+      if (complementary) score += 8;
+      if (sameGroup) score += 4;
+      if (candidate.linkedin) score += 1;
+      if (candidate.motivation) score += 1;
+
+      const reasons: string[] = [];
+      if (complementary) {
+        reasons.push(`${memberGroup.label} ile ${candidateGroup.label} birbirini tamamlıyor`);
+      }
+      if (sharedSkills.length > 0) {
+        reasons.push(`Ortak alan: ${sharedSkills.slice(0, 2).join(", ")}`);
+      } else if (sharedThemes.length > 0) {
+        reasons.push(`Benzer hedefler: ${sharedThemes.join(", ")}`);
+      }
+      if (sameGroup && reasons.length < 2) reasons.push(`Aynı uzmanlık çevresinde çalışıyorsunuz`);
+      if (reasons.length === 0) reasons.push(`Farklı uzmanlıklar yeni bir iş birliği yaratabilir`);
+
+      return { member: candidate, reasons: reasons.slice(0, 2), score };
+    })
+    .sort((first, second) => second.score - first.score || first.member.name.localeCompare(second.member.name, "tr"))
+    .slice(0, 5);
 }
 
 function NetworkingPage() {
@@ -320,6 +389,8 @@ function NetworkingPage() {
             bağlan. Aynı yeteneği paylaşanlar ağda birbirine bağlanır.
           </p>
         </section>
+
+        <RecommendationFinder members={members} loading={loading} />
 
         <section className="mx-auto max-w-6xl px-5 pb-10">
           <form
@@ -621,31 +692,127 @@ function TextArea({
   );
 }
 
+function RecommendationFinder({ members, loading }: { members: Member[]; loading: boolean }) {
+  const [username, setUsername] = useState("");
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [message, setMessage] = useState("");
+  const recommendations = useMemo(
+    () => (selectedMember ? getRecommendations(selectedMember, members) : []),
+    [members, selectedMember],
+  );
+
+  const findMatches = () => {
+    const normalized = username.trim().toLowerCase().replace(/^@/, "");
+    const member = members.find((item) => item.username === normalized);
+    if (!member) {
+      setSelectedMember(null);
+      setMessage("Bu kullanıcı adıyla eşleşen bir kayıt bulunamadı.");
+      return;
+    }
+    setSelectedMember(member);
+    setMessage("");
+  };
+
+  return (
+    <section className="mx-auto max-w-6xl px-5 pb-10">
+      <div className="overflow-hidden rounded-2xl border border-primary/30 bg-primary/5">
+        <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-[0.18em] text-primary-deep">
+              Akıllı eşleşme
+            </div>
+            <h2 className="mt-2 text-2xl font-black tracking-tight">
+              Mutlaka tanışman gerekenler
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-foreground/60">
+              Kullanıcı adını yaz; yetenek, rol ve tamamlayıcı iş alanlarına göre sana en uygun 5
+              kişiyi bulalım.
+            </p>
+            <div className="mt-5 flex gap-2">
+              <input
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") findMatches();
+                }}
+                placeholder="kullanıcı adın"
+                disabled={loading}
+                className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+              />
+              <button
+                type="button"
+                onClick={findMatches}
+                disabled={loading}
+                className="shrink-0 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              >
+                eşleşmelerimi bul
+              </button>
+            </div>
+            {message && <p className="mt-3 text-sm text-destructive">{message}</p>}
+            <p className="mt-4 text-[11px] leading-relaxed text-foreground/45">
+              Öneri modeli; ortak yetenekleri, tamamlayıcı meslek gruplarını, profil metinlerindeki
+              ortak temaları ve iletişim kurulabilirliğini puanlar.
+            </p>
+          </div>
+
+          <div className="grid gap-2.5">
+            {selectedMember ? (
+              recommendations.map((recommendation, index) => {
+                const contact = getMemberContact(recommendation.member);
+                return (
+                  <article
+                    key={recommendation.member.id}
+                    className="rounded-xl border border-border bg-card p-3.5"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-black text-primary-deep">
+                        {index + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                          <h3 className="font-bold">{recommendation.member.name}</h3>
+                          <span className="text-xs text-foreground/50">
+                            {recommendation.member.title}
+                          </span>
+                        </div>
+                        <p className="mt-1.5 text-xs leading-relaxed text-foreground/60">
+                          {recommendation.reasons.join(" · ")}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-3 text-xs font-semibold text-primary-deep">
+                          {contact.email && <a href={`mailto:${contact.email}`}>E-posta gönder</a>}
+                          {contact.linkedin && (
+                            <a href={contact.linkedin} target="_blank" rel="noreferrer">
+                              LinkedIn →
+                            </a>
+                          )}
+                          {contact.instagram && (
+                            <a
+                              href={`https://instagram.com/${contact.instagram}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Instagram →
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })
+            ) : (
+              <div className="grid min-h-52 place-items-center rounded-xl border border-dashed border-primary/30 bg-background/45 p-6 text-center text-sm text-foreground/45">
+                Kullanıcı adını yazdığında kişisel eşleşmelerin burada görünecek.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function NetworkGraph({ members, loading }: { members: Member[]; loading: boolean }) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(320);
-
-  useEffect(() => {
-    if (!wrapRef.current) return;
-    const measure = () => {
-      if (wrapRef.current) {
-        setWidth(Math.max(320, wrapRef.current.getBoundingClientRect().width));
-      }
-    };
-    measure();
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setWidth(Math.max(320, entry.contentRect.width));
-      }
-    });
-    observer.observe(wrapRef.current);
-    window.addEventListener("resize", measure);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, [loading]);
-
   const groupedMembers = useMemo(
     () =>
       roleGroups
@@ -657,53 +824,32 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
     [members],
   );
 
-  const layout = useMemo(() => {
-    const cellWidth = 280;
-    const cellHeight = 250;
-    const maxColumns = width < 560 ? 2 : 4;
-    const columns = Math.max(1, Math.min(groupedMembers.length, maxColumns));
-    const canvasWidth = Math.max(width, columns * cellWidth);
-    const rows = Math.ceil(groupedMembers.length / columns);
-    const height = Math.max(360, rows * cellHeight + 20);
-    const clusters = groupedMembers.map((entry, groupIndex) => {
-      const centerX = (groupIndex % columns) * cellWidth + cellWidth / 2;
-      const centerY = Math.floor(groupIndex / columns) * cellHeight + cellHeight / 2 + 10;
-      const radius = Math.min(82, cellWidth * 0.33, cellHeight * 0.33);
-      return { ...entry, centerX, centerY, radius };
-    });
-    const nodes = clusters.flatMap((cluster) => {
-      const count = cluster.members.length;
-      const orbit = cluster.radius * 0.63;
-      return cluster.members.map((member, memberIndex) => {
-        const angle = (memberIndex / Math.max(1, count)) * Math.PI * 2 - Math.PI / 2;
-        return {
-          ...member,
-          groupId: cluster.group.id,
-          x: cluster.centerX + Math.cos(angle) * orbit * (count > 1 ? 1 : 0),
-          y: cluster.centerY + Math.sin(angle) * orbit * (count > 1 ? 1 : 0),
-        };
-      });
-    });
-    return { canvasWidth, clusters, height, nodes };
-  }, [groupedMembers, width]);
-
   const edges = useMemo(() => {
-    const connections: { a: number; b: number; weight: number }[] = [];
-    for (let first = 0; first < layout.nodes.length; first += 1) {
-      for (let second = first + 1; second < layout.nodes.length; second += 1) {
-        const shared = layout.nodes[first].skills.filter((skill) =>
-          layout.nodes[second].skills.includes(skill),
+    const connections: { first: string; second: string; weight: number }[] = [];
+    for (let first = 0; first < groupedMembers.length; first += 1) {
+      for (let second = first + 1; second < groupedMembers.length; second += 1) {
+        const firstGroup = groupedMembers[first];
+        const secondGroup = groupedMembers[second];
+        const complementary = complementaryGroups[firstGroup.group.id]?.includes(
+          secondGroup.group.id,
         );
-        const sameGroup = layout.nodes[first].groupId === layout.nodes[second].groupId;
-        if (shared.length > 0) {
-          connections.push({ a: first, b: second, weight: shared.length });
+        let sharedConnections = 0;
+        for (const member of firstGroup.members) {
+          sharedConnections += secondGroup.members.filter((candidate) =>
+            member.skills.some((skill) => candidate.skills.includes(skill)),
+          ).length;
+        }
+        if (complementary || sharedConnections > 0) {
+          connections.push({
+            first: firstGroup.group.id,
+            second: secondGroup.group.id,
+            weight: Math.max(complementary ? 3 : 0, sharedConnections),
+          });
         }
       }
     }
     return connections;
-  }, [layout.nodes]);
-
-  const [hover, setHover] = useState<string | null>(null);
+  }, [groupedMembers]);
 
   if (loading) {
     return (
@@ -714,120 +860,62 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[11px] text-foreground/60 shadow-sm backdrop-blur">
-        kaydırarak ağı gez
+    <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-2 text-xs text-foreground/50">
+        <span>Kategori büyüklüğü üye yoğunluğunu gösterir.</span>
+        <span>{edges.length} potansiyel kategori bağlantısı</span>
       </div>
-      <div
-        ref={wrapRef}
-        className="h-[520px] max-h-[70vh] min-h-[420px] overflow-auto overscroll-contain sm:h-[620px]"
-      >
-        <svg
-          width={layout.canvasWidth}
-          height={layout.height}
-          viewBox={`0 0 ${layout.canvasWidth} ${layout.height}`}
-          className="block"
-        >
-          <defs>
-            <marker
-              id="network-arrow"
-              viewBox="0 0 10 10"
-              refX="9"
-              refY="5"
-              markerWidth="5"
-              markerHeight="5"
-              orient="auto-start-reverse"
-            >
-              <path d="M 0 0 L 10 5 L 0 10 z" className="fill-primary/45" />
-            </marker>
-          </defs>
-          {layout.clusters.map((cluster) => (
-            <g key={cluster.group.id}>
-              <circle
-                cx={cluster.centerX}
-                cy={cluster.centerY}
-                r={cluster.radius}
-                className="fill-primary/5 stroke-primary/30"
-                strokeWidth={1.25}
-                strokeDasharray="5 5"
-              />
-              <text
-                x={cluster.centerX}
-                y={cluster.centerY - cluster.radius - 14}
-                textAnchor="middle"
-                className="fill-foreground/70 text-[11px] font-bold uppercase tracking-wider"
-              >
-                {cluster.group.label} · {cluster.members.length}
-              </text>
-            </g>
-          ))}
-          {edges.map((edge, index) => {
-            const first = layout.nodes[edge.a];
-            const second = layout.nodes[edge.b];
-            const active = hover && (hover === first.id || hover === second.id);
-            const sameGroup = first.groupId === second.groupId;
-            return (
-              <line
-                key={index}
-                x1={first.x}
-                y1={first.y}
-                x2={second.x}
-                y2={second.y}
-                stroke="currentColor"
-                markerEnd={sameGroup ? undefined : "url(#network-arrow)"}
-                className={
-                  active ? "text-primary" : sameGroup ? "text-foreground/20" : "text-primary/15"
-                }
-                strokeWidth={Math.min(3, 0.5 + edge.weight * 0.55)}
-              />
-            );
-          })}
-          {layout.nodes.map((node) => {
-            const active = hover === node.id;
-            const radius = 16 + Math.min(4, node.skills.length);
-            return (
-              <g
-                key={node.id}
-                transform={`translate(${node.x}, ${node.y})`}
-                onMouseEnter={() => setHover(node.id)}
-                onMouseLeave={() => setHover(null)}
-                className="cursor-pointer"
-              >
-                <circle
-                  r={radius}
-                  className={active ? "fill-primary" : "fill-primary/15"}
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                />
-                <text
-                  textAnchor="middle"
-                  dy="0.35em"
-                  className={`text-[9px] font-bold ${active ? "fill-primary-foreground" : "fill-foreground"}`}
-                  style={{ pointerEvents: "none" }}
-                >
-                  {node.name}
-                </text>
-                {active && (
-                  <text
-                    textAnchor="middle"
-                    y={radius + 13}
-                    className="text-[9px] fill-foreground/70"
-                    style={{ pointerEvents: "none" }}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {groupedMembers.map((entry) => (
+          <article
+            key={entry.group.id}
+            className="relative overflow-hidden rounded-2xl border border-primary/20 bg-background p-4"
+          >
+            <div
+              className="absolute -right-5 -top-5 rounded-full bg-primary/10"
+              style={{
+                width: `${72 + Math.min(52, entry.members.length * 4)}px`,
+                height: `${72 + Math.min(52, entry.members.length * 4)}px`,
+              }}
+            />
+            <div className="relative">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-primary-deep">
+                {entry.group.label}
+              </div>
+              <div className="mt-1 text-3xl font-black">{entry.members.length}</div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {entry.members.slice(0, 4).map((member) => (
+                  <span
+                    key={member.id}
+                    className="max-w-full truncate rounded-full bg-primary/10 px-2 py-1 text-[11px] text-foreground/70"
                   >
-                    {node.title}
-                  </text>
+                    {member.name}
+                  </span>
+                ))}
+                {entry.members.length > 4 && (
+                  <span className="rounded-full border border-border px-2 py-1 text-[11px] text-foreground/45">
+                    +{entry.members.length - 4} kişi
+                  </span>
                 )}
-              </g>
-            );
-          })}
-        </svg>
+              </div>
+              <div className="mt-4 border-t border-border pt-3 text-[11px] text-foreground/45">
+                {edges.filter(
+                  (edge) => edge.first === entry.group.id || edge.second === entry.group.id,
+                ).length}{" "}
+                bağlantılı alan
+              </div>
+            </div>
+          </article>
+        ))}
       </div>
-
-      {layout.nodes.length === 0 && (
-        <div className="absolute inset-0 grid place-items-center text-foreground/50 text-sm">
+      {groupedMembers.length === 0 && (
+        <div className="grid min-h-48 place-items-center text-sm text-foreground/50">
           henüz kimse yok — formdan ekle.
         </div>
       )}
+      <p className="mt-4 text-center text-[11px] text-foreground/40">
+        Tüm kişileri görmek ve kategoriye göre filtrelemek için aşağıdaki üye listesini kullan.
+      </p>
     </div>
   );
 }
