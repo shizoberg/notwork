@@ -66,6 +66,8 @@ function JulyFourteenth() {
             <a
               href={ticketUrl}
               data-analytics="ticket_click"
+              data-meta-event="ViewContent"
+              data-meta-content="notwork 14 Temmuz Bileti"
               target="_blank"
               rel="noreferrer"
               className="rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground transition hover:opacity-90"

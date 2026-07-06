@@ -19,5 +19,25 @@ export function MetaPixelTracker() {
     window.fbq?.("track", "PageView");
   }, [location.pathname]);
 
+  useEffect(() => {
+    const trackMetaEvent = (event: MouseEvent) => {
+      const element = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+        "[data-meta-event]",
+      );
+      if (!element) return;
+      const eventName = element.dataset.metaEvent;
+      if (!eventName) return;
+      window.fbq?.("track", eventName, {
+        content_name: element.dataset.metaContent || "notwork 14 Temmuz Bileti",
+        content_category: "Etkinlik Bileti",
+        content_type: "product",
+        content_ids: ["notwork-14-temmuz"],
+      });
+    };
+
+    document.addEventListener("click", trackMetaEvent);
+    return () => document.removeEventListener("click", trackMetaEvent);
+  }, []);
+
   return null;
 }
