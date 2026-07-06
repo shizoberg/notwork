@@ -101,6 +101,7 @@ function Hero() {
 
         <a
           href="https://www.biletimgo.com/etkinlik/notwork-14-temmuz-ugrasip-da-olmayanlar-28473"
+          data-analytics="ticket_click"
           target="_blank"
           rel="noreferrer"
           className="mt-7 inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 font-semibold text-primary-foreground transition hover:opacity-90"

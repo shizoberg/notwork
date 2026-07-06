@@ -65,6 +65,7 @@ function JulyFourteenth() {
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <a
               href={ticketUrl}
+              data-analytics="ticket_click"
               target="_blank"
               rel="noreferrer"
               className="rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground transition hover:opacity-90"
