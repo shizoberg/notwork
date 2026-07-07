@@ -66,9 +66,6 @@ const foodItems = [
     content:
       "140 gr burger köftesi, burger peyniri, karamelize soğan, Classic Smash sos, kornişon turşu ve baharatlı patates tava",
   },
-];
-
-const snackItems = [
   {
     name: "Peynirli Nachos",
     image: peynirliNachos,
@@ -134,7 +131,7 @@ const otherDrinks = [
   ["Damla Su 330 ml", 116, 93],
 ] as const;
 
-const categories = ["Yiyecekler", "Atıştırmalıklar", "Kokteyller", "İçecekler"] as const;
+const categories = ["Yiyecekler", "Kokteyller", "İçecekler"] as const;
 type Category = (typeof categories)[number];
 
 function Price({ original, discounted }: { original: number; discounted: number }) {
@@ -265,12 +262,7 @@ function LinksPage() {
 
               {activeCategory !== "İçecekler" && (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {(activeCategory === "Yiyecekler"
-                    ? foodItems
-                    : activeCategory === "Atıştırmalıklar"
-                      ? snackItems
-                      : cocktailItems
-                  ).map((item) => (
+                  {(activeCategory === "Yiyecekler" ? foodItems : cocktailItems).map((item) => (
                     <article
                       key={item.name}
                       className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm"
