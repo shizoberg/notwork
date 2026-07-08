@@ -31,7 +31,7 @@ export const Route = createFileRoute("/community")({
 });
 
 const WHATSAPP_NUMBER = "905457210929";
-const CONTACT_EMAIL = "berkaktas@windowslive.com";
+const CONTACT_EMAIL = "berk@carewithki.com";
 
 function Community() {
   const [form, setForm] = useState({
@@ -50,8 +50,10 @@ function Community() {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const subject = `notwork sunum başvurusu — ${form.name}`;
-    const body = `Merhaba notwork,
+    const subject = `notwork | Sunum talebi | ${form.name}`;
+    const body = `Merhaba,
+
+notwork etkinliğinde sunum yapmak için bilgilerimi iletiyorum.
 
 İsim: ${form.name}
 Telefon: ${form.phone}
@@ -62,7 +64,9 @@ Sunum başlığı: ${form.title}
 Hikâye:
 ${form.story}
 
-Sunum linki: ${form.slidesUrl || "(henüz yok)"}`;
+Sunum linki: ${form.slidesUrl || "(henüz yok)"}
+
+İyi çalışmalar.`;
     window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
@@ -183,8 +187,8 @@ Sunum linki: ${form.slidesUrl || "(henüz yok)"}`;
               </a>
             </div>
             <p className="text-xs text-muted-foreground">
-              E-posta butonu cevaplarını hazır bir mail olarak açar. WhatsApp butonu doğrudan
-              iletişime geçmeni sağlar.
+              E-posta butonu cevaplarını hazır bir mail olarak açar ve berk@carewithki.com adresine
+              gönderir. WhatsApp butonu doğrudan iletişime geçmeni sağlar.
             </p>
           </form>
 
