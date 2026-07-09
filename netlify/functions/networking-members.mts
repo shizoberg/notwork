@@ -72,16 +72,49 @@ function memberKey(member: Pick<MemberRow, "id" | "username">) {
   return `members/${member.username || member.id}.json`;
 }
 
+function backupKey(member: Pick<MemberRow, "id" | "username">) {
+  return `backups/latest/${member.username || member.id}.json`;
+}
+
+function immutableBackupKey(member: Pick<MemberRow, "id" | "username">, reason: string) {
+  const safeReason = reason.replace(/[^a-z0-9-]+/gi, "-").toLowerCase();
+  return `backups/immutable/${member.username || member.id}/${Date.now()}-${crypto.randomUUID()}-${safeReason}.json`;
+}
+
+async function backupMember(
+  store: ReturnType<typeof getStore>,
+  member: MemberRow,
+  reason: "seed" | "create" | "update" | "reconcile",
+) {
+  const immutableKey = immutableBackupKey(member, reason);
+  const payload = {
+    ...member,
+    backupReason: reason,
+    backedUpAt: new Date().toISOString(),
+  };
+  await Promise.all([
+    store.setJSON(backupKey(member), payload),
+    store.setJSON(immutableKey, payload),
+  ]);
+}
+
+async function backupMembers(
+  store: ReturnType<typeof getStore>,
+  members: MemberRow[],
+  reason: "seed" | "create" | "update" | "reconcile",
+) {
+  await Promise.all(members.map((member) => backupMember(store, member, reason)));
+}
+
 async function ensureSeeded(store: ReturnType<typeof getStore>) {
   const seeded = await store.get("meta/seeded-v1", { consistency: "strong" });
   if (seeded) return;
 
-  await Promise.all(
-    (seedMembers as MemberRow[])
-      .map((member) => normalizeMember(member))
-      .filter((member) => member.name && member.title && member.username)
-      .map((member) => store.setJSON(memberKey(member), member)),
-  );
+  const members = (seedMembers as MemberRow[])
+    .map((member) => normalizeMember(member))
+    .filter((member) => member.name && member.title && member.username);
+  await Promise.all(members.map((member) => store.setJSON(memberKey(member), member)));
+  await backupMembers(store, members, "seed");
   await store.set("meta/seeded-v1", new Date().toISOString());
 }
 
@@ -104,10 +137,19 @@ async function getRows(store: ReturnType<typeof getStore>) {
   return [...merged.values()];
 }
 
+async function ensureBackedUp(store: ReturnType<typeof getStore>) {
+  const backedUp = await store.get("meta/backed-up-v1", { consistency: "strong" });
+  if (backedUp) return;
+  const rows = await getRows(store);
+  await backupMembers(store, rows, "reconcile");
+  await store.set("meta/backed-up-v1", new Date().toISOString());
+}
+
 export default async (request: Request, _context: Context) => {
   const store = getStore({ name: "networking-members", consistency: "strong" });
 
   if (request.method === "GET") {
+    await ensureBackedUp(store);
     return Response.json(await getRows(store), { headers: { "cache-control": "no-store" } });
   }
 
@@ -119,7 +161,10 @@ export default async (request: Request, _context: Context) => {
     }
 
     await ensureSeeded(store);
-    await store.setJSON(memberKey(member), member);
+    await Promise.all([
+      store.setJSON(memberKey(member), member),
+      backupMember(store, member, "create"),
+    ]);
     return Response.json({ ok: true }, { status: 201 });
   }
 
@@ -132,7 +177,10 @@ export default async (request: Request, _context: Context) => {
     if (!existing) return new Response("Kayıt bulunamadı", { status: 404 });
 
     const member = normalizeMember({ ...input, username }, existing);
-    await store.setJSON(memberKey(member), member);
+    await Promise.all([
+      store.setJSON(memberKey(member), member),
+      backupMember(store, member, "update"),
+    ]);
     return Response.json({ ok: true });
   }
 
