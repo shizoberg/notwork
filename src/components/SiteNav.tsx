@@ -16,9 +16,6 @@ export function SiteNav() {
           <a href="/#galeri" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">
             Galeri
           </a>
-          <Link to="/legacy" className="px-1.5 sm:px-3 py-2 rounded-lg hover:bg-muted">
-            Legacy
-          </Link>
           <Link to="/networking" className="px-1.5 sm:px-3 py-2 rounded-lg hover:bg-muted">
             Networking
           </Link>
@@ -64,6 +61,12 @@ export function SiteFooter() {
               className="inline-flex w-fit text-sm font-semibold text-primary-deep hover:underline"
             >
               Sponsor olmak isteyenler için →
+            </Link>
+            <Link
+              to="/legacy"
+              className="inline-flex w-fit text-sm font-semibold text-primary-deep hover:underline"
+            >
+              notwork Legacy →
             </Link>
           </div>
           <div className="mt-5 flex items-center gap-2">

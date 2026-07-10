@@ -10,18 +10,18 @@ export const Route = createFileRoute("/legacy")({
       {
         name: "description",
         content:
-          "notwork Legacy; düzenli etkinliklere katılan, topluluğu geliştiren ve seçilen üyelerin özel yemeklere, private buluşmalara ve premium metal kartvizite davet edildiği üyelik deneyimidir.",
+          "notwork Legacy; düzenli etkinliklere katılan, topluluğu geliştiren ve seçilen üyelerin özel yemeklere, private buluşmalara ve özel network ağlarına davet edildiği üyelik deneyimidir.",
       },
       {
         name: "keywords",
         content:
-          "notwork legacy, notwork private etkinlik, notwork üyelik, İzmir özel networking, premium networking, metal kartvizit",
+          "notwork legacy, notwork private etkinlik, notwork üyelik, İzmir özel networking, premium networking, özel network ağları",
       },
       { property: "og:title", content: "notwork Legacy" },
       {
         property: "og:description",
         content:
-          "Seçilmiş notwork üyeleri için private toplanmalar, özel yemekler ve premium metal kartvizit deneyimi.",
+          "Seçilmiş notwork üyeleri için private toplanmalar, özel yemekler ve özel network ağları deneyimi.",
       },
       { property: "og:url", content: "https://notwork.me/legacy" },
       { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
@@ -43,7 +43,7 @@ const principles = [
   "Düzenli etkinliğe katılan ve topluluğu geliştiren üyeler seçilir.",
   "Üyelik yıllık abonelik modeliyle ilerler.",
   "Özel yemekler ve private notwork toplanmaları düzenlenir.",
-  "Üyelere özel notwork premium metal kartvizit verilir.",
+  "Üyeler özel network ağlarına ve seçilmiş tanışma çevrelerine dahil edilir.",
 ];
 
 function LegacyPage() {
@@ -105,10 +105,10 @@ function LegacyPage() {
           </article>
           <article className="rounded-3xl border border-[#d4af37]/25 bg-[#14100a] p-6">
             <div className="text-sm font-bold uppercase tracking-[0.25em] text-[#d4af37]">03</div>
-            <h2 className="mt-5 text-2xl font-black">Metal kartvizit</h2>
+            <h2 className="mt-5 text-2xl font-black">Özel network ağları</h2>
             <p className="mt-3 leading-relaxed text-[#f4ead7]/65">
-              notwork Legacy üyelerine özel premium metal kartvizit verilir; üyelik hissi somut bir
-              objeye dönüşür.
+              notwork Legacy üyeleri seçilmiş tanışma çevrelerine, daha kapalı network ağlarına ve
+              doğru kişilerle tasarlanan özel bağlantı alanlarına dahil edilir.
             </p>
           </article>
         </section>
