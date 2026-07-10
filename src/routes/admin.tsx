@@ -13,6 +13,20 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -232,24 +246,159 @@ function AdminPage() {
           </div>
         </header>
 
-        <section className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-          <Metric icon={Users} label="Oturum" value={report.sessions} />
-          <Metric icon={Eye} label="Sayfa görüntüleme" value={report.pageViews} />
-          <Metric icon={Ticket} label="Bilet tıklaması" value={report.ticketClicks} highlight />
-          <Metric
-            icon={BarChart3}
-            label="Bilet dönüşümü"
-            value={`%${report.conversion}`}
-            highlight
-          />
-          <Metric icon={MousePointerClick} label="Toplam tıklama" value={report.clicks} />
-          <Metric icon={Activity} label="Ort. süre" value={`${report.averageTime} sn`} />
+        <section className="mt-7 overflow-hidden rounded-[2rem] border border-primary/25 bg-[radial-gradient(circle_at_top_left,rgba(143,203,208,0.22),transparent_34%),linear-gradient(135deg,hsl(var(--card)),hsl(var(--background)))] p-5 shadow-[var(--shadow-card)]">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.25em] text-primary-deep">
+                notwork analytics
+              </div>
+              <h2 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-5xl">
+                Trafik komuta merkezi
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm text-foreground/60">
+                Ziyaret, bilet tıklaması, buton davranışı ve sayfada geçirilen süreyi tek ekranda
+                takip et.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-background/70 px-4 py-3 text-sm">
+              <span className="text-foreground/45">Tarih aralığı</span>
+              <div className="font-black">{days} gün</div>
+            </div>
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+            <Metric icon={Users} label="Oturum" value={report.sessions} />
+            <Metric icon={Eye} label="Sayfa görüntüleme" value={report.pageViews} />
+            <Metric icon={Ticket} label="Bilet tıklaması" value={report.ticketClicks} highlight />
+            <Metric
+              icon={BarChart3}
+              label="Bilet dönüşümü"
+              value={`%${report.conversion}`}
+              highlight
+            />
+            <Metric icon={MousePointerClick} label="Toplam tıklama" value={report.clicks} />
+            <Metric icon={Activity} label="Ort. süre" value={`${report.averageTime} sn`} />
+          </div>
+        </section>
+
+        <section className="mt-6 grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
+          <ChartCard
+            title="Günlük trafik akışı"
+            description="Sayfa görüntüleme, oturum ve bilet ilgisi"
+          >
+            <ResponsiveContainer width="100%" height={290}>
+              <AreaChart data={report.timeline}>
+                <defs>
+                  <linearGradient id="views" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#8fcbd0" stopOpacity={0.45} />
+                    <stop offset="100%" stopColor="#8fcbd0" stopOpacity={0.02} />
+                  </linearGradient>
+                  <linearGradient id="tickets" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#d4af37" stopOpacity={0.45} />
+                    <stop offset="100%" stopColor="#d4af37" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="day" tickLine={false} axisLine={false} fontSize={11} />
+                <YAxis tickLine={false} axisLine={false} fontSize={11} />
+                <Tooltip contentStyle={{ borderRadius: 14, borderColor: "hsl(var(--border))" }} />
+                <Area
+                  type="monotone"
+                  dataKey="pageViews"
+                  name="Sayfa"
+                  stroke="#2f9aa5"
+                  fill="url(#views)"
+                  strokeWidth={2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="sessions"
+                  name="Oturum"
+                  stroke="#6a7ee8"
+                  fill="transparent"
+                  strokeWidth={2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="ticketClicks"
+                  name="Bilet"
+                  stroke="#d4af37"
+                  fill="url(#tickets)"
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Cihaz dağılımı" description="Mobil / tablet / desktop kırılımı">
+            <ResponsiveContainer width="100%" height={290}>
+              <PieChart>
+                <Pie
+                  data={report.devices}
+                  dataKey="value"
+                  nameKey="label"
+                  innerRadius={62}
+                  outerRadius={96}
+                  paddingAngle={4}
+                >
+                  {report.devices.map((entry, index) => (
+                    <Cell
+                      key={entry.label}
+                      fill={["#8fcbd0", "#d4af37", "#6a7ee8", "#ef7b7b"][index % 4]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ borderRadius: 14, borderColor: "hsl(var(--border))" }} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="grid gap-2">
+              {report.devices.map((device) => (
+                <div
+                  key={device.label}
+                  className="flex justify-between rounded-xl bg-muted/50 px-3 py-2 text-xs"
+                >
+                  <span>{device.label}</span>
+                  <strong>{device.value}</strong>
+                </div>
+              ))}
+            </div>
+          </ChartCard>
+        </section>
+
+        <section className="mt-6 grid gap-5 xl:grid-cols-3">
+          <ChartCard title="Buton takip paneli" description="En çok tıklanan CTA ve linkler">
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={report.buttonActions}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis
+                  dataKey="label"
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={10}
+                  interval={0}
+                  angle={-12}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis tickLine={false} axisLine={false} fontSize={11} />
+                <Tooltip contentStyle={{ borderRadius: 14, borderColor: "hsl(var(--border))" }} />
+                <Bar dataKey="value" radius={[10, 10, 0, 0]} fill="#8fcbd0" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+          <ReportList title="En çok görüntülenen sayfalar" rows={report.topPages} />
+          <ReportList title="Trafik kaynakları" rows={report.sources} />
         </section>
 
         <section className="mt-6 grid gap-5 lg:grid-cols-2">
-          <ReportList title="En çok görüntülenen sayfalar" rows={report.topPages} />
+          <ActionTable title="Buton ve CTA tıklamaları" events={report.buttonEvents} />
+          <ActionTable
+            title="Son form ve networking aksiyonları"
+            events={report.formAndNetworkEvents}
+          />
+        </section>
+
+        <section className="mt-6 grid gap-5 lg:grid-cols-2">
           <ReportList title="En çok kullanılan aksiyonlar" rows={report.topActions} />
-          <ReportList title="Trafik kaynakları" rows={report.sources} />
           <ReportList title="Kaydırma derinliği" rows={report.scrollDepth} suffix=" ulaşım" />
         </section>
 
@@ -543,6 +692,77 @@ function ChangeBox({ title, member }: { title: string; member: NetworkMember }) 
   );
 }
 
+function ChartCard({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-black">{title}</h2>
+          <p className="mt-1 text-xs text-foreground/45">{description}</p>
+        </div>
+        <div className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-deep">
+          live
+        </div>
+      </div>
+      {children}
+    </article>
+  );
+}
+
+function ActionTable({ title, events }: { title: string; events: AnalyticsEvent[] }) {
+  return (
+    <article className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="border-b border-border px-5 py-4">
+        <h2 className="font-black">{title}</h2>
+        <p className="mt-1 text-xs text-foreground/45">Son 20 kayıt</p>
+      </div>
+      <div className="max-h-[360px] overflow-auto">
+        <table className="w-full min-w-[620px] text-left text-sm">
+          <thead className="sticky top-0 bg-muted text-xs text-foreground/50">
+            <tr>
+              <th className="px-4 py-3">Zaman</th>
+              <th className="px-4 py-3">Aksiyon</th>
+              <th className="px-4 py-3">Sayfa</th>
+              <th className="px-4 py-3">Hedef</th>
+            </tr>
+          </thead>
+          <tbody>
+            {events.slice(0, 20).map((event) => (
+              <tr key={event.id} className="border-t border-border/70">
+                <td className="whitespace-nowrap px-4 py-3 text-xs text-foreground/50">
+                  {new Date(event.timestamp).toLocaleString("tr-TR")}
+                </td>
+                <td className="px-4 py-3 font-semibold">
+                  {event.label || eventNames[event.type] || event.type}
+                </td>
+                <td className="px-4 py-3">{event.path}</td>
+                <td className="max-w-xs truncate px-4 py-3 text-foreground/55">
+                  {event.target || "—"}
+                </td>
+              </tr>
+            ))}
+            {events.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-4 py-8 text-center text-sm text-foreground/45">
+                  Henüz veri yok.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  );
+}
+
 function Metric({
   icon: Icon,
   label,
@@ -612,6 +832,14 @@ function buildReport(events: AnalyticsEvent[]) {
   ).size;
   const ticketClicks = count("ticket_click");
   const pageTimes = events.filter((event) => event.type === "page_time" && event.value > 0);
+  const buttonEvents = events.filter((event) => ["click", "ticket_click"].includes(event.type));
+  const formAndNetworkEvents = events.filter(
+    (event) =>
+      event.type === "form_submit" ||
+      event.path.includes("networking") ||
+      event.label.toLocaleLowerCase("tr-TR").includes("ağa ekle") ||
+      event.label.toLocaleLowerCase("tr-TR").includes("güncelle"),
+  );
   return {
     sessions,
     pageViews: count("page_view"),
@@ -637,6 +865,16 @@ function buildReport(events: AnalyticsEvent[]) {
       events.filter((event) => event.type === "scroll_depth"),
       (event) => `${event.value}%`,
     ),
+    devices: grouped(
+      events.filter((event) => event.device),
+      (event) => event.device,
+    ).map(([label, value]) => ({ label, value })),
+    buttonActions: grouped(buttonEvents, (event) => event.label || event.target || "Buton").map(
+      ([label, value]) => ({ label: label.slice(0, 18), value }),
+    ),
+    buttonEvents,
+    formAndNetworkEvents,
+    timeline: buildTimeline(events),
   };
 }
 
@@ -647,4 +885,24 @@ function grouped(
   const values = new Map<string, number>();
   for (const event of events) values.set(key(event), (values.get(key(event)) || 0) + 1);
   return [...values.entries()].sort((first, second) => second[1] - first[1]).slice(0, 8);
+}
+
+function buildTimeline(events: AnalyticsEvent[]) {
+  const days = new Map<
+    string,
+    { day: string; pageViews: number; sessions: number; ticketClicks: number; clicks: number }
+  >();
+  for (const event of events) {
+    const day = new Date(event.timestamp).toLocaleDateString("tr-TR", {
+      day: "2-digit",
+      month: "2-digit",
+    });
+    const row = days.get(day) || { day, pageViews: 0, sessions: 0, ticketClicks: 0, clicks: 0 };
+    if (event.type === "page_view") row.pageViews += 1;
+    if (event.type === "session_start") row.sessions += 1;
+    if (event.type === "ticket_click") row.ticketClicks += 1;
+    if (event.type === "click" || event.type === "ticket_click") row.clicks += 1;
+    days.set(day, row);
+  }
+  return [...days.values()].reverse();
 }
