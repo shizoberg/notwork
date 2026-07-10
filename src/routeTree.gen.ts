@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SponsorRouteImport } from './routes/sponsor'
 import { Route as NetworkingRouteImport } from './routes/networking'
 import { Route as LinklerRouteImport } from './routes/linkler'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -16,6 +17,11 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as R14temmuzRouteImport } from './routes/14temmuz'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SponsorRoute = SponsorRouteImport.update({
+  id: '/sponsor',
+  path: '/sponsor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NetworkingRoute = NetworkingRouteImport.update({
   id: '/networking',
   path: '/networking',
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
+  '/sponsor': typeof SponsorRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
+  '/sponsor': typeof SponsorRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +79,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
+  '/sponsor': typeof SponsorRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,8 +90,16 @@ export interface FileRouteTypes {
     | '/community'
     | '/linkler'
     | '/networking'
+    | '/sponsor'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/14temmuz' | '/admin' | '/community' | '/linkler' | '/networking'
+  to:
+    | '/'
+    | '/14temmuz'
+    | '/admin'
+    | '/community'
+    | '/linkler'
+    | '/networking'
+    | '/sponsor'
   id:
     | '__root__'
     | '/'
@@ -91,6 +108,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/linkler'
     | '/networking'
+    | '/sponsor'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -100,10 +118,18 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   LinklerRoute: typeof LinklerRoute
   NetworkingRoute: typeof NetworkingRoute
+  SponsorRoute: typeof SponsorRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sponsor': {
+      id: '/sponsor'
+      path: '/sponsor'
+      fullPath: '/sponsor'
+      preLoaderRoute: typeof SponsorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/networking': {
       id: '/networking'
       path: '/networking'
@@ -156,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   LinklerRoute: LinklerRoute,
   NetworkingRoute: NetworkingRoute,
+  SponsorRoute: SponsorRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

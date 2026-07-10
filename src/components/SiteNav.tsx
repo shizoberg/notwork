@@ -16,6 +16,12 @@ export function SiteNav() {
           <a href="/#galeri" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">
             Galeri
           </a>
+          <Link
+            to="/sponsor"
+            className="px-2 sm:px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline"
+          >
+            Sponsor
+          </Link>
           <Link to="/networking" className="px-2 sm:px-3 py-2 rounded-lg hover:bg-muted">
             <span className="sm:hidden">Networking</span>
             <span className="hidden sm:inline">Networking</span>
@@ -54,6 +60,12 @@ export function SiteFooter() {
             >
               Toplantı için e-posta gönder
             </a>
+            <Link
+              to="/sponsor"
+              className="inline-flex w-fit text-sm font-semibold text-primary-deep hover:underline"
+            >
+              Sponsor olmak isteyenler için →
+            </Link>
           </div>
           <div className="mt-5 flex items-center gap-2">
             <a
