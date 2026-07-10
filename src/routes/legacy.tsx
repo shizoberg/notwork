@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SiteFooter, SiteNav } from "@/components/SiteNav";
 
 const legacyMailUrl =
   "mailto:berk@carewithki.com?subject=notwork%20legacy%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum";
@@ -50,7 +49,6 @@ const principles = [
 function LegacyPage() {
   return (
     <div className="min-h-screen bg-[#080705] text-[#f4ead7]">
-      <SiteNav />
       <main>
         <section className="relative overflow-hidden px-5 py-16 sm:py-24">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.28),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(143,203,208,0.12),transparent_28%)]" />
@@ -131,7 +129,22 @@ function LegacyPage() {
           </div>
         </section>
       </main>
-      <SiteFooter />
+      <footer className="border-t border-[#d4af37]/20 px-5 py-8">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 text-sm text-[#f4ead7]/55 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="font-brand text-2xl text-[#d4af37]">notwork legacy</div>
+            <div className="mt-1">private invitation system · İzmir</div>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <a href="/" className="hover:text-[#d4af37]">
+              notwork ana sayfa
+            </a>
+            <a href={legacyMailUrl} className="hover:text-[#d4af37]">
+              e-posta ile bilgi al
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
