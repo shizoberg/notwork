@@ -40,7 +40,10 @@ export async function listMembers(): Promise<Member[]> {
       createdAt: Date.parse(String(row.createdAt || "")) || 0,
     }))
     .filter((member) => member.name && member.title)
-    .reverse();
+    .sort(
+      (first, second) =>
+        second.createdAt - first.createdAt || second.name.localeCompare(first.name, "tr"),
+    );
 }
 
 export async function addMember(input: Omit<Member, "id" | "createdAt">): Promise<Member> {
