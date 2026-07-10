@@ -80,7 +80,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "notwork İzmir | Başarısızlık, Öğrenme ve Networking" },
-      { name: "description", content: "notwork, İzmir’de başarısızlıklardan çıkarılan derslerin ve başarıya dönüşen gerçek hikâyelerin paylaşıldığı sahne ve networking etkinliğidir." },
+      {
+        name: "description",
+        content:
+          "notwork İzmir, başarısızlık hikâyeleri, öğrenme deneyimleri ve güçlü networking bağlantılarını bir araya getiren topluluk ve etkinlik serisidir.",
+      },
+      {
+        name: "keywords",
+        content:
+          "notwork İzmir, İzmir networking, notwork networking, İzmir etkinlik, başarısızlık hikâyeleri, girişimcilik İzmir",
+      },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { name: "theme-color", content: "#8fcbd0" },
       { property: "og:site_name", content: "notwork" },
@@ -88,9 +97,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-    ],
+    links: [{ rel: "stylesheet", href: appCss }],
   }),
   shellComponent: RootShell,
   component: RootComponent,

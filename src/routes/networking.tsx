@@ -13,13 +13,33 @@ import {
 export const Route = createFileRoute("/networking")({
   head: () => ({
     meta: [
-      { title: "Networking · notwork — kim ne yapıyor?" },
+      { title: "İzmir Networking Ağı | notwork" },
       {
         name: "description",
         content:
-          "notwork topluluğunun yetenek ağı. Kendi sıfatını ve yapabildiklerini ekle, ortak yeteneklere sahip insanlarla bağlan.",
+          "notwork İzmir networking ağına katıl; girişimci, yaratıcı, teknoloji ve topluluk profesyonelleriyle tanış, yeteneklerini paylaş ve doğru bağlantıları bul.",
       },
+      {
+        name: "keywords",
+        content:
+          "İzmir networking, notwork İzmir, notwork networking, İzmir iş ağı, İzmir girişimci ağı, networking etkinliği",
+      },
+      { property: "og:title", content: "İzmir Networking Ağı | notwork" },
+      {
+        property: "og:description",
+        content:
+          "notwork İzmir topluluğunda yeteneklerini paylaş, doğru kişilerle eşleş ve networking ağını büyüt.",
+      },
+      { property: "og:url", content: "https://notwork.me/networking" },
+      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
+      { name: "twitter:title", content: "İzmir Networking Ağı | notwork" },
+      {
+        name: "twitter:description",
+        content: "İzmir’de notwork networking ağına katıl, topluluk içinde doğru bağlantıları bul.",
+      },
+      { name: "twitter:image", content: "https://notwork.me/notwork-social.jpg" },
     ],
+    links: [{ rel: "canonical", href: "https://notwork.me/networking" }],
   }),
   component: NetworkingPage,
 });
