@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 
 const ticketUrl = "https://www.biletimgo.com/etkinlik/notwork-bir-tur-network-eventi-28473";
+const locationUrl = "https://maps.app.goo.gl/YfRXaqhTXdZS7W7n8";
 
 export const Route = createFileRoute("/14temmuz")({
   head: () => ({
@@ -28,17 +29,31 @@ const sections = [
   {
     number: "01",
     title: "Program",
-    text: "Kapı açılışı, sunum saatleri ve networking akışı burada yayınlanacak.",
+    text: "Yaklaşık 2.30 saat sürecek akışta interaktif sahne, 4 sunucu ve networking free time bölümü olacak.",
+    items: ["İnteraktif sahne", "4 sunucu", "Networking free time", "Tahmini süre: 2.30 saat"],
   },
   {
     number: "02",
     title: "Konuşmacılar",
-    text: "Sahneye çıkacak isimleri ve anlatacakları deneyimleri bu alana ekleyeceğiz.",
+    text: "Sahnedeki 4 sunucu, uğraşıp da olmayanları ve oradan çıkan deneyimleri interaktif bir akışla paylaşacak.",
+    items: [
+      "Gerçek deneyimler",
+      "Kısa ve canlı anlatımlar",
+      "Seyirciyle etkileşim",
+      "Sahne sonrası tanışma alanı",
+    ],
   },
   {
     number: "03",
     title: "Etkinlik Günü",
-    text: "Canlı duyurular, önemli bağlantılar ve etkinlik içi güncellemeler burada olacak.",
+    text: "Giriş Mahal Bomonti ana kapısından olacaktır. Halkapınar metro / İZBAN durağından inerek kolayca gelebilirsiniz.",
+    items: [
+      "Adres: Halkapınar Mahallesi Şehitler Caddesi, 1558. Sk. No:2, 35170 Konak/İzmir",
+      "Konum Macfit Mahal Bomonti’yi gösterebilir; giriş kapısı tam onun oradadır.",
+      "Daha kolay ulaşım için aşağıdaki konum bağlantısını kullanın.",
+    ],
+    link: locationUrl,
+    linkLabel: "Konumu aç",
   },
 ];
 
@@ -90,9 +105,24 @@ function JulyFourteenth() {
               </div>
               <h2 className="mt-5 text-2xl font-bold">{section.title}</h2>
               <p className="mt-3 leading-relaxed text-foreground/60">{section.text}</p>
-              <div className="mt-8 border-t border-border pt-4 text-xs font-semibold uppercase tracking-wider text-foreground/40">
-                yakında güncellenecek
-              </div>
+              <ul className="mt-5 grid gap-2 text-sm text-foreground/65">
+                {section.items.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              {"link" in section && section.link && (
+                <a
+                  href={section.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-6 inline-flex rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                >
+                  {section.linkLabel}
+                </a>
+              )}
             </article>
           ))}
         </section>
