@@ -171,7 +171,9 @@ function getRecommendations(member: Member, members: Member[]) {
     .map((candidate) => {
       const candidateGroup = getRoleGroup(candidate);
       const sharedSkills = member.skills.filter((skill) => candidate.skills.includes(skill));
-      const sharedThemes = [...new Set(profileWords(candidate).filter((word) => memberWords.has(word)))]
+      const sharedThemes = [
+        ...new Set(profileWords(candidate).filter((word) => memberWords.has(word))),
+      ]
         .filter((word) => !sharedSkills.some((skill) => skill.includes(word)))
         .slice(0, 2);
       const complementary = complementaryGroups[memberGroup.id]?.includes(candidateGroup.id);
@@ -196,7 +198,10 @@ function getRecommendations(member: Member, members: Member[]) {
 
       return { member: candidate, reasons: reasons.slice(0, 2), score };
     })
-    .sort((first, second) => second.score - first.score || first.member.name.localeCompare(second.member.name, "tr"))
+    .sort(
+      (first, second) =>
+        second.score - first.score || first.member.name.localeCompare(second.member.name, "tr"),
+    )
     .slice(0, 5);
 }
 
@@ -274,7 +279,9 @@ function NetworkingPage() {
       };
       if (editingUsername) {
         await updateMember(editingUsername, memberData);
-        setNotice(`Bilgilerin güncellendi. Kullanıcı adın: ${editingUsername}`);
+        setNotice(
+          `Değişikliklerin onaya gönderildi. Admin onayladıktan sonra kartın güncellenecek. Kullanıcı adın: ${editingUsername}`,
+        );
       } else {
         const username = createUsername(
           fullName,
@@ -512,11 +519,18 @@ function NetworkingPage() {
                 disabled={submitting}
                 className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition disabled:opacity-50"
               >
-                {submitting ? "kaydediliyor…" : editingUsername ? "bilgilerimi güncelle" : "ağa ekle"}
+                {submitting
+                  ? "kaydediliyor…"
+                  : editingUsername
+                    ? "bilgilerimi güncelle"
+                    : "ağa ekle"}
               </button>
             </div>
             {notice && (
-              <p role="status" className="sm:col-span-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-semibold text-primary-deep">
+              <p
+                role="status"
+                className="sm:col-span-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-semibold text-primary-deep"
+              >
                 {notice}
               </p>
             )}
@@ -737,7 +751,9 @@ function RecommendationFinder({ members, loading }: { members: Member[]; loading
           eşleşmelerimi bul
         </button>
       </div>
-      {message && <p className="border-t border-border px-4 py-2 text-sm text-destructive">{message}</p>}
+      {message && (
+        <p className="border-t border-border px-4 py-2 text-sm text-destructive">{message}</p>
+      )}
       {selectedMember && (
         <div className="border-t border-primary/20 p-3 sm:p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -750,24 +766,42 @@ function RecommendationFinder({ members, loading }: { members: Member[]; loading
             {recommendations.map((recommendation, index) => {
               const contact = getMemberContact(recommendation.member);
               return (
-                <article key={recommendation.member.id} className="rounded-xl border border-border bg-card p-3">
+                <article
+                  key={recommendation.member.id}
+                  className="rounded-xl border border-border bg-card p-3"
+                >
                   <div className="text-[10px] font-black text-primary-deep">#{index + 1}</div>
                   <div className="mt-1 font-bold leading-tight">{recommendation.member.name}</div>
-                  <div className="mt-1 text-[11px] text-foreground/50">{recommendation.member.title}</div>
+                  <div className="mt-1 text-[11px] text-foreground/50">
+                    {recommendation.member.title}
+                  </div>
                   <p className="mt-2 text-[11px] leading-relaxed text-foreground/60">
                     {recommendation.reasons.join(" · ")}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold text-primary-deep">
                     {contact.email && <a href={`mailto:${contact.email}`}>E-posta</a>}
-                    {contact.linkedin && <a href={contact.linkedin} target="_blank" rel="noreferrer">LinkedIn</a>}
-                    {contact.instagram && <a href={`https://instagram.com/${contact.instagram}`} target="_blank" rel="noreferrer">Instagram</a>}
+                    {contact.linkedin && (
+                      <a href={contact.linkedin} target="_blank" rel="noreferrer">
+                        LinkedIn
+                      </a>
+                    )}
+                    {contact.instagram && (
+                      <a
+                        href={`https://instagram.com/${contact.instagram}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Instagram
+                      </a>
+                    )}
                   </div>
                 </article>
               );
             })}
           </div>
           <p className="mt-3 text-[10px] text-foreground/40">
-            Öneriler profilindeki yetenekler, rolün, motivasyon metnin ve tamamlayıcı iş alanları puanlanarak oluşturulur.
+            Öneriler profilindeki yetenekler, rolün, motivasyon metnin ve tamamlayıcı iş alanları
+            puanlanarak oluşturulur.
           </p>
         </div>
       )}
@@ -782,7 +816,9 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
 
   useEffect(() => {
     if (!wrapRef.current) return;
-    const observer = new ResizeObserver(([entry]) => setWidth(Math.max(320, entry.contentRect.width)));
+    const observer = new ResizeObserver(([entry]) =>
+      setWidth(Math.max(320, entry.contentRect.width)),
+    );
     observer.observe(wrapRef.current);
     return () => observer.disconnect();
   }, [loading]);
@@ -868,14 +904,34 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
       <div ref={wrapRef} className="h-[540px] overflow-auto overscroll-contain sm:h-[650px]">
         <svg width={layout.canvasWidth} height={layout.height} className="block">
           <defs>
-            <marker id="network-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <marker
+              id="network-arrow"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="5"
+              markerHeight="5"
+              orient="auto-start-reverse"
+            >
               <path d="M 0 0 L 10 5 L 0 10 z" className="fill-primary/40" />
             </marker>
           </defs>
           {layout.clusters.map((cluster) => (
             <g key={cluster.group.id}>
-              <circle cx={cluster.centerX} cy={cluster.centerY} r={cluster.radius} className="fill-primary/5 stroke-primary/30" strokeWidth={1.25} strokeDasharray="6 6" />
-              <text x={cluster.centerX} y={cluster.centerY - cluster.radius - 14} textAnchor="middle" className="fill-foreground/70 text-[11px] font-bold uppercase tracking-wider">
+              <circle
+                cx={cluster.centerX}
+                cy={cluster.centerY}
+                r={cluster.radius}
+                className="fill-primary/5 stroke-primary/30"
+                strokeWidth={1.25}
+                strokeDasharray="6 6"
+              />
+              <text
+                x={cluster.centerX}
+                y={cluster.centerY - cluster.radius - 14}
+                textAnchor="middle"
+                className="fill-foreground/70 text-[11px] font-bold uppercase tracking-wider"
+              >
                 {cluster.group.label} · {cluster.members.length}
               </text>
             </g>
@@ -886,23 +942,72 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
             const active = hover === first.id || hover === second.id;
             const crossGroup = first.groupId !== second.groupId;
             return (
-              <line key={`${first.id}-${second.id}`} x1={first.x} y1={first.y} x2={second.x} y2={second.y} markerEnd={crossGroup ? "url(#network-arrow)" : undefined} className={active ? "stroke-primary" : crossGroup ? "stroke-primary/20" : "stroke-foreground/15"} strokeWidth={Math.min(2.5, 0.7 + edge.weight * 0.45)} />
+              <line
+                key={`${first.id}-${second.id}`}
+                x1={first.x}
+                y1={first.y}
+                x2={second.x}
+                y2={second.y}
+                markerEnd={crossGroup ? "url(#network-arrow)" : undefined}
+                className={
+                  active
+                    ? "stroke-primary"
+                    : crossGroup
+                      ? "stroke-primary/20"
+                      : "stroke-foreground/15"
+                }
+                strokeWidth={Math.min(2.5, 0.7 + edge.weight * 0.45)}
+              />
             );
           })}
           {layout.nodes.map((node) => {
             const active = hover === node.id;
             const firstName = node.name.split(" ")[0].slice(0, 10);
             return (
-              <g key={node.id} transform={`translate(${node.x}, ${node.y})`} onMouseEnter={() => setHover(node.id)} onMouseLeave={() => setHover(null)} className="cursor-pointer">
-                <circle r={active ? 25 : 21} className={active ? "fill-primary stroke-primary-deep" : "fill-background stroke-primary/55"} strokeWidth={1.5} />
-                <text textAnchor="middle" dy="0.35em" className={`text-[8px] font-bold ${active ? "fill-primary-foreground" : "fill-foreground"}`} style={{ pointerEvents: "none" }}>
+              <g
+                key={node.id}
+                transform={`translate(${node.x}, ${node.y})`}
+                onMouseEnter={() => setHover(node.id)}
+                onMouseLeave={() => setHover(null)}
+                className="cursor-pointer"
+              >
+                <circle
+                  r={active ? 25 : 21}
+                  className={
+                    active
+                      ? "fill-primary stroke-primary-deep"
+                      : "fill-background stroke-primary/55"
+                  }
+                  strokeWidth={1.5}
+                />
+                <text
+                  textAnchor="middle"
+                  dy="0.35em"
+                  className={`text-[8px] font-bold ${active ? "fill-primary-foreground" : "fill-foreground"}`}
+                  style={{ pointerEvents: "none" }}
+                >
                   {firstName}
                 </text>
                 {active && (
                   <g style={{ pointerEvents: "none" }}>
-                    <rect x={-72} y={31} width={144} height={38} rx={8} className="fill-background stroke-border" />
-                    <text textAnchor="middle" y={46} className="fill-foreground text-[10px] font-bold">{node.name.slice(0, 22)}</text>
-                    <text textAnchor="middle" y={60} className="fill-foreground/60 text-[8px]">{node.title.slice(0, 28)}</text>
+                    <rect
+                      x={-72}
+                      y={31}
+                      width={144}
+                      height={38}
+                      rx={8}
+                      className="fill-background stroke-border"
+                    />
+                    <text
+                      textAnchor="middle"
+                      y={46}
+                      className="fill-foreground text-[10px] font-bold"
+                    >
+                      {node.name.slice(0, 22)}
+                    </text>
+                    <text textAnchor="middle" y={60} className="fill-foreground/60 text-[8px]">
+                      {node.title.slice(0, 28)}
+                    </text>
                   </g>
                 )}
               </g>
@@ -910,7 +1015,11 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
           })}
         </svg>
       </div>
-      {layout.nodes.length === 0 && <div className="absolute inset-0 grid place-items-center text-sm text-foreground/50">henüz kimse yok — formdan ekle.</div>}
+      {layout.nodes.length === 0 && (
+        <div className="absolute inset-0 grid place-items-center text-sm text-foreground/50">
+          henüz kimse yok — formdan ekle.
+        </div>
+      )}
     </div>
   );
 }

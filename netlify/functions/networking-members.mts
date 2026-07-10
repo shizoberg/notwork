@@ -30,6 +30,15 @@ type MemberInput = {
   username?: string;
 };
 
+type ChangeRequest = {
+  id: string;
+  username: string;
+  requestedAt: string;
+  status: "pending" | "approved" | "rejected";
+  current: MemberRow;
+  proposed: MemberRow;
+};
+
 function clean(value: unknown, maxLength: number) {
   return typeof value === "string"
     ? value
@@ -84,7 +93,7 @@ function immutableBackupKey(member: Pick<MemberRow, "id" | "username">, reason: 
 async function backupMember(
   store: ReturnType<typeof getStore>,
   member: MemberRow,
-  reason: "seed" | "create" | "update" | "reconcile",
+  reason: "seed" | "create" | "update" | "reconcile" | "delete" | "admin-update",
 ) {
   const immutableKey = immutableBackupKey(member, reason);
   const payload = {
@@ -104,6 +113,10 @@ async function backupMembers(
   reason: "seed" | "create" | "update" | "reconcile",
 ) {
   await Promise.all(members.map((member) => backupMember(store, member, reason)));
+}
+
+function changeRequestKey(request: Pick<ChangeRequest, "id">) {
+  return `change-requests/pending/${request.id}.json`;
 }
 
 async function ensureSeeded(store: ReturnType<typeof getStore>) {
@@ -177,11 +190,16 @@ export default async (request: Request, _context: Context) => {
     if (!existing) return new Response("Kayıt bulunamadı", { status: 404 });
 
     const member = normalizeMember({ ...input, username }, existing);
-    await Promise.all([
-      store.setJSON(memberKey(member), member),
-      backupMember(store, member, "update"),
-    ]);
-    return Response.json({ ok: true });
+    const changeRequest: ChangeRequest = {
+      id: crypto.randomUUID(),
+      username,
+      requestedAt: new Date().toISOString(),
+      status: "pending",
+      current: existing,
+      proposed: member,
+    };
+    await store.setJSON(changeRequestKey(changeRequest), changeRequest);
+    return Response.json({ ok: true, pendingApproval: true });
   }
 
   return new Response("Method not allowed", { status: 405 });
