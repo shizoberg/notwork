@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SponsorRouteImport } from './routes/sponsor'
 import { Route as NetworkingRouteImport } from './routes/networking'
 import { Route as LinklerRouteImport } from './routes/linkler'
+import { Route as LegacyRouteImport } from './routes/legacy'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as R14temmuzRouteImport } from './routes/14temmuz'
@@ -30,6 +31,11 @@ const NetworkingRoute = NetworkingRouteImport.update({
 const LinklerRoute = LinklerRouteImport.update({
   id: '/linkler',
   path: '/linkler',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegacyRoute = LegacyRouteImport.update({
+  id: '/legacy',
+  path: '/legacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommunityRoute = CommunityRouteImport.update({
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/14temmuz': typeof R14temmuzRoute
   '/admin': typeof AdminRoute
   '/community': typeof CommunityRoute
+  '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
   '/sponsor': typeof SponsorRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/14temmuz': typeof R14temmuzRoute
   '/admin': typeof AdminRoute
   '/community': typeof CommunityRoute
+  '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
   '/sponsor': typeof SponsorRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/14temmuz': typeof R14temmuzRoute
   '/admin': typeof AdminRoute
   '/community': typeof CommunityRoute
+  '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
   '/sponsor': typeof SponsorRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/14temmuz'
     | '/admin'
     | '/community'
+    | '/legacy'
     | '/linkler'
     | '/networking'
     | '/sponsor'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/14temmuz'
     | '/admin'
     | '/community'
+    | '/legacy'
     | '/linkler'
     | '/networking'
     | '/sponsor'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/14temmuz'
     | '/admin'
     | '/community'
+    | '/legacy'
     | '/linkler'
     | '/networking'
     | '/sponsor'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   R14temmuzRoute: typeof R14temmuzRoute
   AdminRoute: typeof AdminRoute
   CommunityRoute: typeof CommunityRoute
+  LegacyRoute: typeof LegacyRoute
   LinklerRoute: typeof LinklerRoute
   NetworkingRoute: typeof NetworkingRoute
   SponsorRoute: typeof SponsorRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/linkler'
       fullPath: '/linkler'
       preLoaderRoute: typeof LinklerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legacy': {
+      id: '/legacy'
+      path: '/legacy'
+      fullPath: '/legacy'
+      preLoaderRoute: typeof LegacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/community': {
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   R14temmuzRoute: R14temmuzRoute,
   AdminRoute: AdminRoute,
   CommunityRoute: CommunityRoute,
+  LegacyRoute: LegacyRoute,
   LinklerRoute: LinklerRoute,
   NetworkingRoute: NetworkingRoute,
   SponsorRoute: SponsorRoute,
