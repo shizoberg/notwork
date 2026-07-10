@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 
-const ticketUrl =
-  "https://www.biletimgo.com/etkinlik/notwork-14-temmuz-ugrasip-da-olmayanlar-28473";
+const ticketUrl = "https://www.biletimgo.com/etkinlik/notwork-bir-tur-network-eventi-28473";
 
 export const Route = createFileRoute("/14temmuz")({
   head: () => ({
