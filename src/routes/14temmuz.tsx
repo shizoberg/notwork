@@ -57,6 +57,39 @@ const sections = [
   },
 ];
 
+const speakers = [
+  {
+    name: "Şahika Akkuş",
+    talk: "Sevmediğimizden değil konuşamadığımızdan",
+    theme: "İlişki hikâyeleri",
+    quote:
+      "Başarısız ilişki hikayelerinin kahramanları kötü insanlar değildi. Çoğu zaman iyi niyetle davranan, birbirini anlamaya çalışan ama bunu nasıl yapacağını bilemeyen insanlardı.",
+    color: "bg-red-600",
+  },
+  {
+    name: "Tülay Tuğluer",
+    talk: "Yapay zeka yok artık! dedi.",
+    theme: "Kariyer dönüşümü",
+    quote: "Bir hayata kaç kariyer, farklı kariyer sığar?",
+    color: "bg-blue-700",
+  },
+  {
+    name: "Seda Çakmak",
+    talk: "Çıkış",
+    theme: "Konfor alanından çıkış",
+    quote:
+      "Balık kafasını sudan çıkardı. Ben fanustan. İkimiz de aynı şeyi gördük: dışarıda bir dünya var ve kimse hazır değil.",
+    color: "bg-blue-700",
+  },
+  {
+    name: "Caner Yücedağ",
+    talk: "Arada kaldığım her şey",
+    theme: "İş, aşk ve arkadaşlık",
+    quote: "İş, aşk ve arkadaşlık üçgeni arasında olduramadığım şeyler.",
+    color: "bg-red-600",
+  },
+];
+
 function JulyFourteenth() {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -125,6 +158,60 @@ function JulyFourteenth() {
               )}
             </article>
           ))}
+        </section>
+
+        <section className="mx-auto max-w-6xl px-5 pb-20">
+          <div className="mb-6 max-w-3xl">
+            <div className="text-sm font-bold uppercase tracking-[0.2em] text-primary-deep">
+              sunucular ve sunumlar
+            </div>
+            <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-5xl">
+              Bu etkinlikte kimlerin hikâyelerini dinleyeceğiz?
+            </h2>
+            <p className="mt-4 leading-relaxed text-foreground/60">
+              14 Temmuz notwork gecesinde dört farklı hikâye; ilişki, kariyer, çıkış ve arada
+              kalmışlık üzerinden sahneye taşınıyor.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {speakers.map((speaker) => (
+              <article
+                key={speaker.name}
+                className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm"
+              >
+                <div className="grid min-h-full sm:grid-cols-[0.38fr_1fr]">
+                  <div
+                    className={`${speaker.color} flex min-h-32 items-end justify-start p-5 text-primary-foreground`}
+                  >
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-[0.28em] opacity-75">
+                        sunucu
+                      </div>
+                      <div className="mt-2 text-2xl font-black leading-none">
+                        {speaker.name.split(" ").map((part) => (
+                          <span key={part} className="block">
+                            {part}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-5 sm:p-6">
+                    <div className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-deep">
+                      {speaker.theme}
+                    </div>
+                    <h3 className="mt-4 text-3xl font-black leading-tight tracking-[-0.03em]">
+                      {speaker.talk}
+                    </h3>
+                    <blockquote className="mt-5 border-l-4 border-primary pl-4 text-sm leading-relaxed text-foreground/65">
+                      “{speaker.quote}”
+                    </blockquote>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
         </section>
       </main>
       <SiteFooter />
