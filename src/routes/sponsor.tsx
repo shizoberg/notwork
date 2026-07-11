@@ -54,6 +54,34 @@ const sponsorBenefits = [
   },
 ];
 
+const sponsorshipTypes = [
+  {
+    title: "Etkinlik isim sponsorluğu",
+    tag: "not...marka / marka...notwork",
+    text: "Etkinlik ismini marka ile birlikte kurgularız. Örneğin not...marka veya marka...notwork formatıyla markanız etkinliğin ana hikâyesine yerleşir.",
+  },
+  {
+    title: "Etkinlik alanında sponsorluk",
+    tag: "mekân içi görünürlük",
+    text: "Etkinlik alanında stand, deneyim noktası, karşılama alanı veya networking içi marka görünürlüğü oluştururuz.",
+  },
+  {
+    title: "Ürün yerleştirme",
+    tag: "doğal deneyim",
+    text: "Ürününüzü sahne, masa, networking alanı veya içerik akışı içinde doğal ve dikkat çekici bir şekilde konumlandırırız.",
+  },
+  {
+    title: "Ürünü tanıtma",
+    tag: "demo / tadım / deneyim",
+    text: "Katılımcıların ürünü denediği, gördüğü veya kısa bir demo ile tanıdığı kontrollü bir deneyim akışı tasarlarız.",
+  },
+  {
+    title: "Markayı tanıtma",
+    tag: "hikâye ve bağlam",
+    text: "Markanızın kimliğini notwork kitlesine uygun bir hikâye, sahne anonsu, içerik veya etkinlik içi temas noktasıyla anlatırız.",
+  },
+];
+
 const verticalEvents = [
   {
     name: "notpharmacy",
@@ -103,6 +131,31 @@ function SponsorPage() {
                 Sponsor olmak istiyorum
               </a>
             </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-5 pb-14">
+          <div className="mb-5 max-w-3xl">
+            <div className="text-sm font-bold uppercase tracking-[0.2em] text-primary-deep">
+              sponsorluk türleri
+            </div>
+            <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] sm:text-5xl">
+              Markanız için doğru görünürlük modelini birlikte seçiyoruz.
+            </h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            {sponsorshipTypes.map((type) => (
+              <article
+                key={type.title}
+                className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+              >
+                <div className="mb-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary-deep">
+                  {type.tag}
+                </div>
+                <h3 className="text-xl font-black leading-tight">{type.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-foreground/60">{type.text}</p>
+              </article>
+            ))}
           </div>
         </section>
 
