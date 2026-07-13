@@ -257,20 +257,9 @@ const networkingVariants = {
     graphEmpty: "henüz etkinlik ağı boş — ilk community düğümünü sen ekle.",
     membersTitle: "14 Temmuz notwork ağı",
     membersEmpty: "henüz 14 Temmuz ağına kayıt yok — ilk sen ekle.",
-    shellClass:
-      "bg-[radial-gradient(circle_at_20%_0%,rgba(220,38,38,0.20),transparent_34%),radial-gradient(circle_at_90%_12%,rgba(37,99,235,0.17),transparent_30%),linear-gradient(135deg,#110b0d,#0b1020_55%,#160b0c)] text-white",
+    shellClass: "bg-background text-foreground",
     eventSource: "14temmuznetworking",
-    style: {
-      "--background": "oklch(0.15 0.03 255)",
-      "--foreground": "oklch(0.98 0.01 40)",
-      "--card": "oklch(0.19 0.035 255)",
-      "--border": "oklch(0.38 0.07 20 / 0.55)",
-      "--primary": "oklch(0.66 0.22 25)",
-      "--primary-deep": "oklch(0.78 0.18 28)",
-      "--primary-foreground": "oklch(0.99 0.01 40)",
-      "--muted": "oklch(0.22 0.03 255)",
-      "--muted-foreground": "oklch(0.78 0.02 255)",
-    } as React.CSSProperties,
+    style: undefined,
   },
 } as const;
 
@@ -625,6 +614,36 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
             )}
           </form>
         </section>
+
+        {config.eventSource && (
+          <section className="mx-auto max-w-6xl px-5 pb-10">
+            <div className="rounded-[2rem] border border-primary/25 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-6">
+              <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+                <div>
+                  <div className="text-xs font-black uppercase tracking-[0.24em] text-primary-deep">
+                    notwork community
+                  </div>
+                  <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] sm:text-3xl">
+                    Var olan topluluk haritası
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-foreground/60">
+                    Bu çerçeve genel notwork community ağını gösterir. 14 Temmuz’da kayıt olanlar
+                    bu büyük topluluğun içinde de yer alır.
+                  </p>
+                </div>
+                <div className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground/60">
+                  {members.length} kişi
+                </div>
+              </div>
+              <NetworkGraph
+                members={members}
+                loading={loading}
+                hint="notwork community ağını gez"
+                emptyText="community ağı henüz yüklenmedi."
+              />
+            </div>
+          </section>
+        )}
 
         <section className="mx-auto max-w-6xl px-5 pb-10">
           <div className="flex items-center justify-between gap-3 mb-4">
