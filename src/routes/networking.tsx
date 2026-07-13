@@ -733,8 +733,54 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
           </form>
         </section>
 
+        <section className="mx-auto max-w-6xl px-5 pb-10">
+          <div
+            className={
+              config.eventSource
+                ? "relative overflow-hidden rounded-[2rem] border border-primary/30 bg-[radial-gradient(circle_at_top_left,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_34%),var(--card)] p-4 shadow-[var(--shadow-soft)] before:absolute before:inset-x-6 before:top-0 before:h-px before:animate-pulse before:bg-primary/70 sm:p-6"
+                : ""
+            }
+          >
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h2 className="text-sm sm:text-lg font-semibold text-foreground/80 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-primary blink" />
+              {config.countLabel} — {scopedMembers.length} kişi
+            </h2>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {config.eventSource && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    document.getElementById("notwork-community-map")?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    })
+                  }
+                  className="rounded-full border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-bold text-primary-deep transition hover:bg-primary hover:text-primary-foreground"
+                >
+                  var olan topluluğu görmek için tıkla
+                </button>
+              )}
+              <input
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+                placeholder="ara: isim, sıfat, yetenek"
+                className="px-3 py-2 rounded-full bg-card border border-border text-sm w-44 sm:w-64"
+              />
+            </div>
+          </div>
+          <NetworkGraph
+            members={filtered}
+            loading={loading}
+            hint={config.graphHint}
+            emptyText={config.graphEmpty}
+          />
+          <RecommendationFinder members={scopedMembers} loading={loading} />
+          </div>
+        </section>
+
         {config.eventSource && (
-          <section className="mx-auto max-w-6xl px-5 pb-10">
+          <section id="notwork-community-map" className="scroll-mt-24 mx-auto max-w-6xl px-5 pb-10">
             <div className="rounded-[2rem] border border-primary/25 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-6">
               <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
                 <div>
@@ -762,36 +808,6 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
             </div>
           </section>
         )}
-
-        <section className="mx-auto max-w-6xl px-5 pb-10">
-          <div
-            className={
-              config.eventSource
-                ? "relative overflow-hidden rounded-[2rem] border border-primary/30 bg-[radial-gradient(circle_at_top_left,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_34%),var(--card)] p-4 shadow-[var(--shadow-soft)] before:absolute before:inset-x-6 before:top-0 before:h-px before:animate-pulse before:bg-primary/70 sm:p-6"
-                : ""
-            }
-          >
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <h2 className="text-sm sm:text-lg font-semibold text-foreground/80 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary blink" />
-              {config.countLabel} — {scopedMembers.length} kişi
-            </h2>
-            <input
-              value={filter}
-              onChange={(event) => setFilter(event.target.value)}
-              placeholder="ara: isim, sıfat, yetenek"
-              className="px-3 py-2 rounded-full bg-card border border-border text-sm w-44 sm:w-64"
-            />
-          </div>
-          <NetworkGraph
-            members={filtered}
-            loading={loading}
-            hint={config.graphHint}
-            emptyText={config.graphEmpty}
-          />
-          <RecommendationFinder members={scopedMembers} loading={loading} />
-          </div>
-        </section>
 
         <section className="mx-auto max-w-6xl px-5 pb-20">
           <h2 className="text-sm sm:text-lg font-semibold text-foreground/80 mb-4 flex items-center gap-2">
