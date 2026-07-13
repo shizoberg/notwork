@@ -3,6 +3,14 @@ import { useState } from "react";
 
 const prompts = [
   {
+    id: "about",
+    question: "notwork nedir?",
+    answer:
+      "notwork bir networking club’dır ama bildiğiniz türden değil. Burada hatalarımızı, yaptığımız yanlışları ve başarısızlıklarımızdan çıkardığımız derslerle bugün geldiğimiz noktaları konuşuyoruz. Kısacası fck-up nights diyebilirsiniz.",
+    cta: "Ana sayfayı incele",
+    href: "/",
+  },
+  {
     id: "network",
     question: "Network genişletmek mi istiyorsun?",
     answer:
@@ -30,7 +38,7 @@ const prompts = [
 
 export function NtwAssistant() {
   const [open, setOpen] = useState(false);
-  const [activeId, setActiveId] = useState<(typeof prompts)[number]["id"]>("network");
+  const [activeId, setActiveId] = useState<(typeof prompts)[number]["id"]>("about");
   const activePrompt = prompts.find((prompt) => prompt.id === activeId) || prompts[0];
 
   return (
