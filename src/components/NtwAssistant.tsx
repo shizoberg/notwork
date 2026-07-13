@@ -34,66 +34,76 @@ export function NtwAssistant() {
   const activePrompt = prompts.find((prompt) => prompt.id === activeId) || prompts[0];
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+    <>
       {open && (
-        <div className="w-[min(calc(100vw-2rem),360px)] overflow-hidden rounded-3xl border border-primary/25 bg-background/95 shadow-[var(--shadow-soft)] backdrop-blur-xl">
-          <div className="border-b border-border/70 bg-primary/10 p-4">
-            <div className="flex items-start gap-3">
-              <div className="h-12 w-12 shrink-0">
-                <NtwMascotSvg compact />
-              </div>
-              <div>
-                <div className="text-sm font-black text-foreground">selam ben ntw 👋</div>
-                <p className="mt-1 text-xs leading-relaxed text-foreground/60">
-                  Site içinde doğru yere hızlıca gidelim. Ne yapmak istiyorsun?
-                </p>
+        <button
+          type="button"
+          aria-label="ntw asistan arka planını kapat"
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-40 cursor-default bg-background/45 backdrop-blur-[3px] transition"
+        />
+      )}
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+        {open && (
+          <div className="w-[min(calc(100vw-2rem),360px)] overflow-hidden rounded-3xl border border-primary/35 bg-background/98 shadow-[0_24px_80px_-24px_color-mix(in_oklab,var(--primary)_65%,#000)] ring-1 ring-background/80 backdrop-blur-2xl">
+            <div className="border-b border-border/70 bg-primary/10 p-4">
+              <div className="flex items-start gap-3">
+                <div className="h-12 w-12 shrink-0">
+                  <NtwMascotSvg compact />
+                </div>
+                <div>
+                  <div className="text-sm font-black text-foreground">selam ben ntw 👋</div>
+                  <p className="mt-1 text-xs leading-relaxed text-foreground/60">
+                    Site içinde doğru yere hızlıca gidelim. Ne yapmak istiyorsun?
+                  </p>
+                </div>
               </div>
             </div>
+            <div className="grid gap-2 p-3">
+              {prompts.map((prompt) => {
+                const active = prompt.id === activeId;
+                return (
+                  <button
+                    key={prompt.id}
+                    type="button"
+                    onClick={() => setActiveId(prompt.id)}
+                    className={`rounded-2xl border px-3 py-2.5 text-left text-sm font-semibold transition ${
+                      active
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card text-foreground/70 hover:border-primary/50 hover:text-foreground"
+                    }`}
+                  >
+                    {prompt.question}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="border-t border-border/70 p-4">
+              <p className="text-sm leading-relaxed text-foreground/65">{activePrompt.answer}</p>
+              <Link
+                to={activePrompt.href}
+                className="mt-3 inline-flex rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground transition hover:opacity-90"
+              >
+                {activePrompt.cta}
+              </Link>
+            </div>
           </div>
-          <div className="grid gap-2 p-3">
-            {prompts.map((prompt) => {
-              const active = prompt.id === activeId;
-              return (
-                <button
-                  key={prompt.id}
-                  type="button"
-                  onClick={() => setActiveId(prompt.id)}
-                  className={`rounded-2xl border px-3 py-2.5 text-left text-sm font-semibold transition ${
-                    active
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-foreground/70 hover:border-primary/50 hover:text-foreground"
-                  }`}
-                >
-                  {prompt.question}
-                </button>
-              );
-            })}
-          </div>
-          <div className="border-t border-border/70 p-4">
-            <p className="text-sm leading-relaxed text-foreground/65">{activePrompt.answer}</p>
-            <Link
-              to={activePrompt.href}
-              className="mt-3 inline-flex rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground transition hover:opacity-90"
-            >
-              {activePrompt.cta}
-            </Link>
-          </div>
-        </div>
-      )}
+        )}
 
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        aria-label={open ? "ntw asistanı kapat" : "ntw asistanı aç"}
-        aria-expanded={open}
-        className="group relative h-20 w-20 rounded-full border border-primary/30 bg-background shadow-[var(--shadow-soft)] transition hover:-translate-y-1 hover:border-primary sm:h-24 sm:w-24"
-      >
-        <span className="absolute -left-2 -top-2 rounded-full bg-primary px-2 py-1 text-[10px] font-black text-primary-foreground shadow-md">
-          ntw
-        </span>
-        <NtwMascotSvg />
-      </button>
-    </div>
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          aria-label={open ? "ntw asistanı kapat" : "ntw asistanı aç"}
+          aria-expanded={open}
+          className="group relative h-20 w-20 rounded-full border border-primary/30 bg-background shadow-[var(--shadow-soft)] transition hover:-translate-y-1 hover:border-primary sm:h-24 sm:w-24"
+        >
+          <span className="absolute -left-2 -top-2 rounded-full bg-primary px-2 py-1 text-[10px] font-black text-primary-foreground shadow-md">
+            ntw
+          </span>
+          <NtwMascotSvg />
+        </button>
+      </div>
+    </>
   );
 }
 
