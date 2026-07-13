@@ -6,6 +6,7 @@ import {
   createUsername,
   listMembers,
   parseSkills,
+  saveMember,
   type Member,
   updateMember,
 } from "@/lib/networking-api";
@@ -245,8 +246,8 @@ const networkingVariants = {
   },
   july14: {
     eyebrow: "14 temmuz notwork community",
-    titlePrefix: "be a part of",
-    titleAccent: "notwork community",
+    titlePrefix: "bugün burada network'ünü",
+    titleAccent: "hızlıca geliştir.",
     intro:
       "Aynı salonda buluşan notwork community haritasına kendini ekle; etkinlikte tanışabileceğin insanları, rollerini ve ortak bağlamları canlı gör.",
     loadError: "14 Temmuz notwork ağı şu anda yüklenemiyor.",
@@ -267,6 +268,29 @@ type NetworkingVariant = keyof typeof networkingVariants;
 
 function NetworkingPage() {
   return <NetworkingExperience />;
+}
+
+function normalizeLookup(value: string) {
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .replace(/[^a-z0-9]+/g, "")
+    .trim();
+}
+
+function withEventSource(member: Member, eventSource: string): Member {
+  const marker = `event:${eventSource}`;
+  const contact = member.contact?.includes(marker)
+    ? member.contact
+    : [member.contact, marker].filter(Boolean).join(" || ");
+  return { ...member, contact };
 }
 
 export function NetworkingExperience({ variant = "general" }: { variant?: NetworkingVariant }) {
@@ -290,6 +314,9 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
   const [filter, setFilter] = useState("");
   const [activeGroupId, setActiveGroupId] = useState("all");
   const [error, setError] = useState("");
+  const [checkInQuery, setCheckInQuery] = useState("");
+  const [checkInMessage, setCheckInMessage] = useState("");
+  const [checkingIn, setCheckingIn] = useState(false);
 
   useEffect(() => {
     listMembers()
@@ -401,6 +428,49 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
     setNotice(`${member.username} kaydı açıldı. Alanları değiştirip güncelleyebilirsin.`);
   };
 
+  const addExistingToEvent = async () => {
+    if (!config.eventSource) return;
+    setError("");
+    setNotice("");
+    setCheckInMessage("");
+    const query = checkInQuery.trim().replace(/^@/, "");
+    if (!query) {
+      setCheckInMessage("Username veya ad soyad yazman yeterli.");
+      return;
+    }
+
+    const normalized = normalizeLookup(query);
+    const match =
+      members.find((member) => normalizeLookup(member.username) === normalized) ||
+      members.find((member) => normalizeLookup(member.name) === normalized);
+
+    if (!match) {
+      setCheckInMessage(
+        "Bu isim/username eski kayıtlarda yok. Aşağıdaki kısa formu doldur; seni 14 Temmuz ağına ekleyelim.",
+      );
+      setForm((current) => ({ ...current, name: query.includes(" ") ? query : current.name }));
+      return;
+    }
+
+    if (match.contact?.includes(`event:${config.eventSource}`)) {
+      setCheckInMessage(`${match.name} zaten 14 Temmuz ağına ekli. Kullanıcı adın: ${match.username}`);
+      return;
+    }
+
+    setCheckingIn(true);
+    try {
+      await saveMember(withEventSource(match, config.eventSource));
+      const nextMembers = await listMembers();
+      setMembers(nextMembers);
+      setCheckInQuery("");
+      setCheckInMessage(`${match.name} 14 Temmuz ağına eklendi. Hadi sahada bağ kurma zamanı.`);
+    } catch {
+      setCheckInMessage("Kayıt özel ağa eklenemedi. Bir kez daha dene.");
+    } finally {
+      setCheckingIn(false);
+    }
+  };
+
   const scopedMembers = useMemo(
     () =>
       config.eventSource
@@ -472,6 +542,51 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
             {config.intro}
           </p>
         </section>
+
+        {config.eventSource && (
+          <section className="mx-auto max-w-6xl px-5 pb-6">
+            <div className="rounded-2xl border border-primary/25 bg-primary/10 p-4 sm:p-5">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+                <div className="flex-1">
+                  <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
+                    hızlı giriş
+                  </div>
+                  <h2 className="mt-1 text-xl font-black tracking-[-0.03em]">
+                    Hesabın varsa username’ini yaz, seni 14 Temmuz ağına ekleyelim.
+                  </h2>
+                  <p className="mt-1 text-sm text-foreground/60">
+                    Username’i bilmiyorsan ad soyad yaz; eski kayıtlarla eşleştiririz. Eşleşme
+                    bulamazsak aşağıdaki formdan yeni kayıt açabilirsin.
+                  </p>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-[1fr_auto] lg:w-[430px]">
+                  <input
+                    value={checkInQuery}
+                    onChange={(event) => setCheckInQuery(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") addExistingToEvent();
+                    }}
+                    placeholder="username veya ad soyad"
+                    className="rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={addExistingToEvent}
+                    disabled={checkingIn}
+                    className="rounded-xl bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    {checkingIn ? "ekleniyor…" : "ağa ekle"}
+                  </button>
+                </div>
+              </div>
+              {checkInMessage && (
+                <p className="mt-3 rounded-xl bg-background/80 px-3 py-2 text-sm font-semibold text-primary-deep">
+                  {checkInMessage}
+                </p>
+              )}
+            </div>
+          </section>
+        )}
 
         <section className="mx-auto max-w-6xl px-5 pb-10">
           <form
@@ -649,9 +764,16 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
         )}
 
         <section className="mx-auto max-w-6xl px-5 pb-10">
+          <div
+            className={
+              config.eventSource
+                ? "relative overflow-hidden rounded-[2rem] border border-primary/30 bg-[radial-gradient(circle_at_top_left,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_34%),var(--card)] p-4 shadow-[var(--shadow-soft)] before:absolute before:inset-x-6 before:top-0 before:h-px before:animate-pulse before:bg-primary/70 sm:p-6"
+                : ""
+            }
+          >
           <div className="flex items-center justify-between gap-3 mb-4">
             <h2 className="text-sm sm:text-lg font-semibold text-foreground/80 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary" />
+              <span className="w-2 h-2 rounded-full bg-primary blink" />
               {config.countLabel} — {scopedMembers.length} kişi
             </h2>
             <input
@@ -668,6 +790,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
             emptyText={config.graphEmpty}
           />
           <RecommendationFinder members={scopedMembers} loading={loading} />
+          </div>
         </section>
 
         <section className="mx-auto max-w-6xl px-5 pb-20">

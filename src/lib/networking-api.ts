@@ -61,6 +61,15 @@ export async function addMember(input: Omit<Member, "id" | "createdAt">): Promis
   return member;
 }
 
+export async function saveMember(member: Member): Promise<void> {
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(member),
+  });
+  if (!response.ok) throw new Error("Networking kaydı güncellenemedi");
+}
+
 export async function updateMember(
   username: string,
   input: Omit<Member, "id" | "username" | "createdAt">,
