@@ -244,11 +244,11 @@ const networkingVariants = {
     style: undefined,
   },
   july14: {
-    eyebrow: "14 temmuz canlı community ağı",
-    titlePrefix: "14 Temmuz",
-    titleAccent: "notwork ağı",
+    eyebrow: "14 temmuz notwork community",
+    titlePrefix: "be a part of",
+    titleAccent: "notwork community",
     intro:
-      "Yarın aynı salonda buluşacak yaklaşık 100 kişilik notwork community haritası. Kendini ekle; etkinlikte tanışabileceğin insanları, rollerini ve ortak bağlamları canlı gör.",
+      "Aynı salonda buluşan notwork community haritasına kendini ekle; etkinlikte tanışabileceğin insanları, rollerini ve ortak bağlamları canlı gör.",
     loadError: "14 Temmuz notwork ağı şu anda yüklenemiyor.",
     formNote:
       "Bilgilerin hem 14 Temmuz etkinlik ağında hem de genel notwork networking veritabanında görünür.",
@@ -462,9 +462,12 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
             <span className="w-2 h-2 rounded-full bg-primary blink" />
             <span>{config.eyebrow}</span>
           </div>
-          <h1 className="text-4xl sm:text-6xl font-black tracking-[-0.04em] leading-[0.95]">
-            {config.titlePrefix} <span className="text-primary">{config.titleAccent}</span>
-          </h1>
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <h1 className="max-w-3xl text-4xl font-black tracking-[-0.04em] leading-[0.95] sm:text-6xl">
+              {config.titlePrefix} <span className="text-primary">{config.titleAccent}</span>
+            </h1>
+            {variant === "july14" && <NtwMascot />}
+          </div>
           <p className="mt-4 text-foreground/70 max-w-2xl text-base sm:text-lg">
             {config.intro}
           </p>
@@ -810,6 +813,101 @@ function TextArea({
         className="resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
       />
     </label>
+  );
+}
+
+function NtwMascot() {
+  return (
+    <div
+      aria-label="notwork community maskotu"
+      className="relative mx-auto h-32 w-32 shrink-0 sm:mx-0 sm:h-40 sm:w-40"
+    >
+      <div className="absolute inset-2 rounded-[36%_45%_38%_42%] bg-primary/20 blur-xl" />
+      <svg viewBox="0 0 160 160" role="img" className="relative h-full w-full drop-shadow-xl">
+        <defs>
+          <linearGradient id="ntwBody" x1="26" x2="130" y1="24" y2="145">
+            <stop offset="0" stopColor="#bfeff1" />
+            <stop offset="0.52" stopColor="#8fcbd0" />
+            <stop offset="1" stopColor="#5aa7ba" />
+          </linearGradient>
+          <linearGradient id="ntwScreen" x1="46" x2="120" y1="48" y2="94">
+            <stop offset="0" stopColor="#142643" />
+            <stop offset="1" stopColor="#1d315a" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M46 35c5-17 24-22 37-12 11-13 36-4 37 15 17 2 24 18 15 32 9 12 2 31-13 34-1 20-24 29-39 17-15 12-38 2-40-17-17-4-23-24-12-36-9-11-2-29 15-33Z"
+          fill="url(#ntwBody)"
+          stroke="#173f68"
+          strokeWidth="4"
+          strokeLinejoin="round"
+        />
+        <rect
+          x="39"
+          y="48"
+          width="83"
+          height="51"
+          rx="15"
+          fill="url(#ntwScreen)"
+          stroke="#0d203a"
+          strokeWidth="5"
+        />
+        <path
+          d="M59 64l13 12-13 12"
+          fill="none"
+          stroke="#b8fff5"
+          strokeWidth="7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M91 80h17"
+          stroke="#b8fff5"
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
+        <path
+          d="M51 104c-10 5-15 14-11 23 4 10 18 11 25 3"
+          fill="#74b7cf"
+          stroke="#173f68"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+        <path
+          d="M111 104c11 5 16 14 12 23-4 10-18 11-25 3"
+          fill="#74b7cf"
+          stroke="#173f68"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+        <path
+          d="M61 121c-5 11-1 21 11 21s17-10 13-21"
+          fill="#6eadc8"
+          stroke="#173f68"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+        <path
+          d="M91 121c-4 11 1 21 13 21s16-10 11-21"
+          fill="#6eadc8"
+          stroke="#173f68"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+        <rect x="59" y="103" width="45" height="20" rx="10" fill="#7fd3df" stroke="#173f68" strokeWidth="4" />
+        <text
+          x="81"
+          y="117"
+          textAnchor="middle"
+          fontSize="12"
+          fontWeight="900"
+          fill="#12324f"
+          letterSpacing="1.5"
+        >
+          ntw
+        </text>
+      </svg>
+    </div>
   );
 }
 
