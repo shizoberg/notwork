@@ -116,12 +116,10 @@ const beers = [
   ["Efes Pilsen Green 50 cl", 325, 260],
   ["Efes Pilsen Glutensiz 50 cl", 336, 269],
   ["Bomonti Filtresiz 50 cl", 325, 260],
-  ["Beck’s 33 cl", 336, 269],
   ["Miller 33 cl", 347, 278],
   ["Erdinger 33 cl", 396, 317],
   ["Amsterdam Navigator 50 cl", 396, 317],
   ["Duvel 33 cl", 462, 370],
-  ["Bud 33 cl", 330, 264],
   ["Corona 33 cl", 402, 322],
 ] as const;
 

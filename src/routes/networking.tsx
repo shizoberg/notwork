@@ -225,7 +225,63 @@ function getRecommendations(member: Member, members: Member[]) {
     .slice(0, 5);
 }
 
+const networkingVariants = {
+  general: {
+    eyebrow: "canlı yetenek ağı",
+    titlePrefix: "kim, ne",
+    titleAccent: "yapabiliyor?",
+    intro:
+      "notwork topluluğunun yetenek haritası. Kendini ekle, ortak yeteneklere sahip insanlarla bağlan. Aynı yeteneği paylaşanlar ağda birbirine bağlanır.",
+    loadError: "Networking kayıtları şu anda yüklenemiyor.",
+    formNote: "Bilgilerin ortak networking veritabanına eklenir ve ağda görünür.",
+    countLabel: "ağ",
+    graphHint: "kaydırarak ağı gez",
+    graphEmpty: "henüz kimse yok — formdan ekle.",
+    membersTitle: "üyeler",
+    membersEmpty: "henüz kimse yok — ilk sen ekle.",
+    shellClass: "bg-background text-foreground",
+    eventSource: "",
+    style: undefined,
+  },
+  july14: {
+    eyebrow: "14 temmuz canlı community ağı",
+    titlePrefix: "14 Temmuz",
+    titleAccent: "notwork ağı",
+    intro:
+      "Yarın aynı salonda buluşacak yaklaşık 100 kişilik notwork community haritası. Kendini ekle; etkinlikte tanışabileceğin insanları, rollerini ve ortak bağlamları canlı gör.",
+    loadError: "14 Temmuz notwork ağı şu anda yüklenemiyor.",
+    formNote:
+      "Bilgilerin hem 14 Temmuz etkinlik ağında hem de genel notwork networking veritabanında görünür.",
+    countLabel: "14 temmuz ağı",
+    graphHint: "salon ağını kaydırarak gez",
+    graphEmpty: "henüz etkinlik ağı boş — ilk community düğümünü sen ekle.",
+    membersTitle: "14 Temmuz notwork ağı",
+    membersEmpty: "henüz 14 Temmuz ağına kayıt yok — ilk sen ekle.",
+    shellClass:
+      "bg-[radial-gradient(circle_at_20%_0%,rgba(220,38,38,0.20),transparent_34%),radial-gradient(circle_at_90%_12%,rgba(37,99,235,0.17),transparent_30%),linear-gradient(135deg,#110b0d,#0b1020_55%,#160b0c)] text-white",
+    eventSource: "14temmuznetworking",
+    style: {
+      "--background": "oklch(0.15 0.03 255)",
+      "--foreground": "oklch(0.98 0.01 40)",
+      "--card": "oklch(0.19 0.035 255)",
+      "--border": "oklch(0.38 0.07 20 / 0.55)",
+      "--primary": "oklch(0.66 0.22 25)",
+      "--primary-deep": "oklch(0.78 0.18 28)",
+      "--primary-foreground": "oklch(0.99 0.01 40)",
+      "--muted": "oklch(0.22 0.03 255)",
+      "--muted-foreground": "oklch(0.78 0.02 255)",
+    } as React.CSSProperties,
+  },
+} as const;
+
+type NetworkingVariant = keyof typeof networkingVariants;
+
 function NetworkingPage() {
+  return <NetworkingExperience />;
+}
+
+export function NetworkingExperience({ variant = "general" }: { variant?: NetworkingVariant }) {
+  const config = networkingVariants[variant];
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
@@ -249,9 +305,9 @@ function NetworkingPage() {
   useEffect(() => {
     listMembers()
       .then(setMembers)
-      .catch(() => setError("Networking kayıtları şu anda yüklenemiyor."))
+      .catch(() => setError(config.loadError))
       .finally(() => setLoading(false));
-  }, []);
+  }, [config.loadError]);
 
   const set =
     (key: keyof typeof form) =>
@@ -296,6 +352,7 @@ function NetworkingPage() {
         instagram: instagram || undefined,
         linkedin: linkedin || undefined,
         motivation: about.replace(/\|\|/g, "|").slice(0, 140),
+        contact: config.eventSource ? `event:${config.eventSource}` : undefined,
       };
       if (editingUsername) {
         await updateMember(editingUsername, memberData);
@@ -355,10 +412,18 @@ function NetworkingPage() {
     setNotice(`${member.username} kaydı açıldı. Alanları değiştirip güncelleyebilirsin.`);
   };
 
+  const scopedMembers = useMemo(
+    () =>
+      config.eventSource
+        ? members.filter((member) => member.contact?.includes(`event:${config.eventSource}`))
+        : members,
+    [config.eventSource, members],
+  );
+
   const filtered = useMemo(() => {
     const query = filter.trim().toLowerCase();
-    if (!query) return members;
-    return members.filter(
+    if (!query) return scopedMembers;
+    return scopedMembers.filter(
       (member) =>
         member.name.toLowerCase().includes(query) ||
         member.title.toLowerCase().includes(query) ||
@@ -369,7 +434,7 @@ function NetworkingPage() {
         member.motivation?.toLowerCase().includes(query) ||
         member.contact?.toLowerCase().includes(query),
     );
-  }, [members, filter]);
+  }, [scopedMembers, filter]);
 
   const memberTabs = useMemo(
     () => [
@@ -400,20 +465,19 @@ function NetworkingPage() {
   }, [activeGroupId, memberTabs]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div className={`min-h-screen flex flex-col ${config.shellClass}`} style={config.style}>
       <SiteNav />
       <main className="flex-1">
         <section className="mx-auto max-w-6xl px-5 pt-10 sm:pt-16 pb-6">
           <div className="inline-flex items-center gap-2 text-xs sm:text-sm text-foreground/70 mb-4">
             <span className="w-2 h-2 rounded-full bg-primary blink" />
-            <span>canlı yetenek ağı</span>
+            <span>{config.eyebrow}</span>
           </div>
           <h1 className="text-4xl sm:text-6xl font-black tracking-[-0.04em] leading-[0.95]">
-            kim, ne <span className="text-primary">yapabiliyor?</span>
+            {config.titlePrefix} <span className="text-primary">{config.titleAccent}</span>
           </h1>
           <p className="mt-4 text-foreground/70 max-w-2xl text-base sm:text-lg">
-            notwork topluluğunun yetenek haritası. Kendini ekle, ortak yeteneklere sahip insanlarla
-            bağlan. Aynı yeteneği paylaşanlar ağda birbirine bağlanır.
+            {config.intro}
           </p>
         </section>
 
@@ -529,7 +593,7 @@ function NetworkingPage() {
             </div>
             <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">
               <p className="text-xs text-foreground/50">
-                Bilgilerin ortak networking veritabanına eklenir ve ağda görünür.
+                {config.formNote}
                 <span className="mt-1 block font-semibold text-foreground/65">
                   Etkinliklere ve organizasyonlara düzenli katılım sağlamanız çok önemlidir.
                 </span>
@@ -566,7 +630,7 @@ function NetworkingPage() {
           <div className="flex items-center justify-between gap-3 mb-4">
             <h2 className="text-sm sm:text-lg font-semibold text-foreground/80 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary" />
-              ağ — {members.length} kişi
+              {config.countLabel} — {scopedMembers.length} kişi
             </h2>
             <input
               value={filter}
@@ -575,14 +639,19 @@ function NetworkingPage() {
               className="px-3 py-2 rounded-full bg-card border border-border text-sm w-44 sm:w-64"
             />
           </div>
-          <NetworkGraph members={filtered} loading={loading} />
-          <RecommendationFinder members={members} loading={loading} />
+          <NetworkGraph
+            members={filtered}
+            loading={loading}
+            hint={config.graphHint}
+            emptyText={config.graphEmpty}
+          />
+          <RecommendationFinder members={scopedMembers} loading={loading} />
         </section>
 
         <section className="mx-auto max-w-6xl px-5 pb-20">
           <h2 className="text-sm sm:text-lg font-semibold text-foreground/80 mb-4 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary" />
-            üyeler
+            {config.membersTitle}
           </h2>
           <div
             role="tablist"
@@ -676,7 +745,7 @@ function NetworkingPage() {
               );
             })}
             {visibleMembers.length === 0 && !loading && (
-              <div className="text-sm text-foreground/50">henüz kimse yok — ilk sen ekle.</div>
+              <div className="text-sm text-foreground/50">{config.membersEmpty}</div>
             )}
           </div>
         </section>
@@ -829,7 +898,17 @@ function RecommendationFinder({ members, loading }: { members: Member[]; loading
   );
 }
 
-function NetworkGraph({ members, loading }: { members: Member[]; loading: boolean }) {
+function NetworkGraph({
+  members,
+  loading,
+  hint = "kaydırarak ağı gez",
+  emptyText = "henüz kimse yok — formdan ekle.",
+}: {
+  members: Member[];
+  loading: boolean;
+  hint?: string;
+  emptyText?: string;
+}) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(320);
   const [hover, setHover] = useState<string | null>(null);
@@ -919,7 +998,7 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
       <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[11px] text-foreground/60 shadow-sm backdrop-blur">
-        kaydırarak ağı gez
+        {hint}
       </div>
       <div ref={wrapRef} className="h-[540px] overflow-auto overscroll-contain sm:h-[650px]">
         <svg width={layout.canvasWidth} height={layout.height} className="block">
@@ -1037,7 +1116,7 @@ function NetworkGraph({ members, loading }: { members: Member[]; loading: boolea
       </div>
       {layout.nodes.length === 0 && (
         <div className="absolute inset-0 grid place-items-center text-sm text-foreground/50">
-          henüz kimse yok — formdan ekle.
+          {emptyText}
         </div>
       )}
     </div>
