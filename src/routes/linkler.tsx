@@ -181,6 +181,22 @@ function LinksPage() {
           <p className="mt-3 text-sm text-foreground/55">etkinlik bağlantıları</p>
         </header>
 
+        <section className="mx-auto mt-8 max-w-xl rounded-2xl border border-primary/25 bg-primary/10 p-4 text-center shadow-sm">
+          <p className="text-sm font-semibold leading-relaxed text-foreground/75">
+            Mahall Bomonti’ye bize katkılarından dolayı teşekkür ederiz. Destekleri için takip
+            etmenizi rica ederiz.
+          </p>
+          <a
+            href="https://www.instagram.com/mahallbomontiizmir/"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground transition hover:opacity-90"
+          >
+            Mahall Bomonti’yi takip et
+            <ExternalLink size={15} />
+          </a>
+        </section>
+
         <section className="mx-auto mt-10 grid max-w-xl gap-3">
           {links.map(({ title, description, href, icon: Icon }) => (
             <a
