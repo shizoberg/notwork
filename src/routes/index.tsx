@@ -124,6 +124,66 @@ const tracks = [
   },
 ];
 
+const pastEvents = [
+  {
+    date: "14 Temmuz 2026",
+    location: "Mahal Bomonti İzmir",
+    title: "14 Temmuz notwork İzmir",
+    text: "İnteraktif sahne, 4 sunucu, networking free time ve etkinlik günü topluluk ağıyla birlikte ilerleyen özel notwork gecesi.",
+    tags: ["Konuşmacılar", "Program", "Konum", "Networking ağı"],
+    href: "/14temmuz",
+    accent: "from-[#142643] via-[#111827] to-[#0f172a]",
+  },
+  {
+    date: "22 Mayıs",
+    location: "İstinyeArt İzmir",
+    title: "notwork · Mayıs buluşması",
+    text: "Kariyer ve üretim süreçlerinde olduramadıklarımızı, sonrasında kurulan yeni yolları konuştuğumuz samimi bir networking gecesi.",
+    tags: ["Kariyer", "Üretim", "Networking"],
+    accent: "from-[#173f68] via-[#265f73] to-[#8fcbd0]",
+  },
+  {
+    date: "10 Nisan",
+    location: "İstinyeArt İzmir",
+    title: "notwork · Nisan sahnesi",
+    text: "İletişim, iş birlikleri ve yeni başlangıçlar üzerine; hatalardan öğrenilenleri sahneye taşıyan bir akşam.",
+    tags: ["İletişim", "İş birliği", "Sahne"],
+    accent: "from-[#5f2a4f] via-[#8b2c5c] to-[#e3a3bf]",
+  },
+  {
+    date: "8 Mart",
+    location: "İstinyeArt İzmir",
+    title: "notwork · 8 Mart özel",
+    text: "Farklı hayat deneyimlerinden gelen cesaret, kırılma noktaları ve yeniden başlama hikâyeleriyle güçlü bir buluşma.",
+    tags: ["Deneyim", "Cesaret", "Topluluk"],
+    accent: "from-[#7f1d1d] via-[#b23b3b] to-[#f3a46b]",
+  },
+  {
+    date: "10 Şubat",
+    location: "İstinyeArt İzmir",
+    title: "notwork · Şubat gecesi",
+    text: "Yeni yılın ilk büyük adımlarında; yanlış kararlar, yarım kalan işler ve onları dönüştüren dersler konuşuldu.",
+    tags: ["Yeni başlangıç", "Dersler", "Bağlantı"],
+    accent: "from-[#1e3a8a] via-[#2563eb] to-[#93c5fd]",
+  },
+  {
+    date: "16 Ocak",
+    location: "İstinyeArt İzmir",
+    title: "notwork · Ocak buluşması",
+    text: "Planların tutmadığı, yolların değiştiği ve buna rağmen yeni kapıların açıldığı hikâyelerle yılın ritmi kuruldu.",
+    tags: ["Plan", "Dönüşüm", "Network"],
+    accent: "from-[#134e4a] via-[#0f766e] to-[#99f6e4]",
+  },
+  {
+    date: "8 Aralık",
+    location: "İstinyeArt İzmir",
+    title: "notwork · Aralık başlangıcı",
+    text: "notwork ruhunu taşıyan ilk buluşmalardan biri; başarısızlık hikâyeleriyle tanışmayı kolaylaştıran sıcak bir akşam.",
+    tags: ["Başlangıç", "Hikâye", "Tanışma"],
+    accent: "from-[#3f2d1f] via-[#8a5a32] to-[#f2c078]",
+  },
+];
+
 function Hero() {
   return (
     <section className="relative">
@@ -341,54 +401,71 @@ function PastEvents() {
         </p>
       </div>
 
-      <Link
-        to="/14temmuz"
-        className="group grid overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] md:grid-cols-[0.9fr_1.1fr]"
-      >
-        <div className="relative min-h-64 overflow-hidden bg-ink text-cream">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_32%),linear-gradient(135deg,#142643,#111827_58%,#0f172a)]" />
-          <div className="absolute -right-10 -top-12 h-40 w-40 rounded-full border-[28px] border-primary/25" />
-          <div className="absolute -bottom-16 left-8 h-44 w-44 rounded-full border-[32px] border-primary/15" />
-          <div className="relative flex h-full min-h-64 flex-col justify-between p-6 sm:p-8">
-            <div className="inline-flex w-fit rounded-full border border-cream/20 bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em]">
-              14 Temmuz 2026
-            </div>
-            <div>
-              <div className="text-sm font-bold uppercase tracking-[0.24em] text-primary">
-                Mahal Bomonti İzmir
+      <div className="-mx-5 overflow-x-auto px-5 pb-4 [scrollbar-width:thin]">
+        <div className="flex snap-x gap-4">
+          {pastEvents.map((event) => {
+            const card = (
+              <article className="group flex h-full min-h-[520px] w-[82vw] max-w-sm snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:w-[360px]">
+                <div className="relative min-h-56 overflow-hidden bg-ink text-cream">
+                  <div
+                    className={`absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_32%)] bg-gradient-to-br ${event.accent}`}
+                  />
+                  <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full border-[24px] border-primary/25" />
+                  <div className="absolute -bottom-14 left-8 h-40 w-40 rounded-full border-[28px] border-primary/15" />
+                  <div className="relative flex min-h-56 flex-col justify-between p-6">
+                    <div className="inline-flex w-fit rounded-full border border-cream/20 bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em]">
+                      {event.date}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-[0.24em] text-primary">
+                        {event.location}
+                      </div>
+                      <div className="mt-2 font-display text-4xl font-black leading-none tracking-[-0.05em]">
+                        notwork
+                        <br />
+                        gecesi
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="inline-flex w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-deep">
+                    Geçmiş event
+                  </div>
+                  <h3 className="mt-4 font-display text-2xl font-black tracking-[-0.04em]">
+                    {event.title}
+                  </h3>
+                  <p className="mt-4 flex-1 leading-relaxed text-muted-foreground">{event.text}</p>
+                  <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold">
+                    {event.tags.map((item) => (
+                      <span
+                        key={item}
+                        className="rounded-full border border-border bg-background px-3 py-1.5"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-7 inline-flex items-center gap-2 font-bold text-primary-deep">
+                    {event.href ? "Event sayfasına git" : "Arşiv kaydı"}
+                    {event.href && <span className="transition group-hover:translate-x-1">→</span>}
+                  </div>
+                </div>
+              </article>
+            );
+
+            return event.href ? (
+              <Link key={event.date} to={event.href} className="shrink-0">
+                {card}
+              </Link>
+            ) : (
+              <div key={event.date} className="shrink-0">
+                {card}
               </div>
-              <div className="mt-2 font-display text-4xl font-black leading-none tracking-[-0.05em] sm:text-5xl">
-                notwork
-                <br />
-                gecesi
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
-        <div className="p-6 sm:p-8">
-          <div className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-deep">
-            Etkinlik merkezi
-          </div>
-          <h3 className="mt-4 font-display text-3xl font-black tracking-[-0.04em] sm:text-4xl">
-            14 Temmuz notwork İzmir
-          </h3>
-          <p className="mt-4 max-w-xl leading-relaxed text-muted-foreground">
-            İnteraktif sahne, 4 sunucu, networking free time ve etkinlik günü topluluk ağıyla
-            birlikte ilerleyen özel notwork gecesi.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold">
-            {["Konuşmacılar", "Program", "Konum", "Networking ağı"].map((item) => (
-              <span key={item} className="rounded-full border border-border bg-background px-3 py-1.5">
-                {item}
-              </span>
-            ))}
-          </div>
-          <div className="mt-7 inline-flex items-center gap-2 font-bold text-primary-deep">
-            Event sayfasına git
-            <span className="transition group-hover:translate-x-1">→</span>
-          </div>
-        </div>
-      </Link>
+      </div>
     </section>
   );
 }
