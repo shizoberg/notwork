@@ -36,19 +36,20 @@ const sections = [
     title: "2. İşlediğimiz kişisel veriler",
     body: [
       "Ad soyad, e-posta adresi, Instagram kullanıcı adı, LinkedIn bağlantısı, kullanıcı adı, meslek/rol bilgisi, 140 karakterlik motivasyon metni, etkinlik ve sunum başvuru cevapları işlenebilir.",
-      "Site kullanımı sırasında sayfa görüntüleme, buton tıklama, form gönderimi, kaydırma derinliği, cihaz tipi, kampanya kaynağı ve çerez tercihi gibi teknik ve analitik bilgiler de tutulabilir.",
+      "Networking formunda verilen onay zamanı, site kullanımı sırasında sayfa görüntüleme, buton tıklama, form gönderimi, kaydırma derinliği, cihaz tipi, kampanya kaynağı ve çerez tercihi gibi teknik ve analitik bilgiler de tutulabilir.",
     ],
   },
   {
     title: "3. İşleme amaçları",
     body: [
-      "Kayıtları yönetmek, networking kartlarını ve topluluk ağını göstermek, kullanıcıların kendi bilgilerini güncellemesini sağlamak, etkinlik iletişimi kurmak, sunum/sponsor başvurularını değerlendirmek, site güvenliği ve performansını iyileştirmek için veriler işlenir.",
+      "Kayıtları yönetmek, networking kartlarını ve topluluk ağını göstermek, kullanıcıların kendi bilgilerini güncellemesini sağlamak, etkinlik iletişimi kurmak, etkinlik ve topluluk duyuruları için e-posta göndermek, sunum/sponsor başvurularını değerlendirmek, site güvenliği ve performansını iyileştirmek için veriler işlenir.",
+      "Networking ağına kayıt olan kullanıcılar; ad soyad, rol/sıfat, yetenekler, motivasyon metni ve paylaşmayı tercih ettikleri iletişim bağlantılarının topluluk içinde görünür olmasını onaylar.",
     ],
   },
   {
     title: "4. Hukuki sebepler",
     body: [
-      "Veriler; açık rıza, sözleşmenin kurulması veya ifası, hukuki yükümlülüklerin yerine getirilmesi ve notwork topluluğunun güvenli biçimde işletilmesine yönelik meşru menfaat kapsamında işlenebilir.",
+      "Veriler; açık rıza, sözleşmenin kurulması veya ifası, hukuki yükümlülüklerin yerine getirilmesi ve notwork topluluğunun güvenli biçimde işletilmesine yönelik meşru menfaat kapsamında işlenebilir. Networking kartlarının görünmesi ve e-posta iletişimi için kullanıcıdan form üzerinde açık onay alınır.",
     ],
   },
   {

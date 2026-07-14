@@ -10,6 +10,7 @@ export type Member = {
   contact?: string;
   username: string;
   createdAt: number;
+  consentAt?: string;
 };
 
 const API_URL = "/api/networking/members";
@@ -38,6 +39,7 @@ export async function listMembers(): Promise<Member[]> {
         .trim()
         .toLowerCase(),
       createdAt: Date.parse(String(row.createdAt || "")) || 0,
+      consentAt: String(row.consentAt || "").trim() || undefined,
     }))
     .filter((member) => member.name && member.title)
     .sort(

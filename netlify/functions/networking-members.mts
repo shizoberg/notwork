@@ -14,6 +14,7 @@ type MemberRow = {
   contact: string;
   createdAt: string;
   username: string;
+  consentAt: string;
 };
 
 type MemberInput = {
@@ -28,6 +29,7 @@ type MemberInput = {
   contact?: string;
   createdAt?: number | string;
   username?: string;
+  consentAt?: string;
 };
 
 type ChangeRequest = {
@@ -74,6 +76,7 @@ function normalizeMember(input: MemberInput, fallback?: Partial<MemberRow>): Mem
     contact: clean(input.contact, 240) || fallback?.contact || "",
     createdAt,
     username: clean(input.username, 80).toLowerCase() || fallback?.username || "",
+    consentAt: clean(input.consentAt, 40) || fallback?.consentAt || "",
   };
 }
 

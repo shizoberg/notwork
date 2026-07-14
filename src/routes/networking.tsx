@@ -305,6 +305,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
     instagram: "",
     linkedin: "",
     about: "",
+    consent: false,
   });
   const [submitting, setSubmitting] = useState(false);
   const [updateMode, setUpdateMode] = useState(false);
@@ -359,6 +360,10 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
       setError("Topluluğa neden katılmak istediğini ve ne katabileceğini yaz.");
       return;
     }
+    if (!form.consent) {
+      setError("Kayıt olmak için KVKK ve iletişim onay kutusunu işaretlemelisin.");
+      return;
+    }
     setSubmitting(true);
     try {
       const memberData = {
@@ -370,6 +375,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
         linkedin: linkedin || undefined,
         motivation: about.replace(/\|\|/g, "|").slice(0, 140),
         contact: config.eventSource ? `event:${config.eventSource}` : undefined,
+        consentAt: new Date().toISOString(),
       };
       if (editingUsername) {
         await updateMember(editingUsername, memberData);
@@ -393,6 +399,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
         instagram: "",
         linkedin: "",
         about: "",
+        consent: false,
       });
       setEditingUsername("");
       setUsernameInput("");
@@ -425,6 +432,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
       instagram: member.instagram ? `@${member.instagram}` : "",
       linkedin: member.linkedin || "",
       about: member.motivation || "",
+      consent: false,
     });
     setNotice(`${member.username} kaydı açıldı. Alanları değiştirip güncelleyebilirsin.`);
   };
@@ -441,6 +449,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
       instagram: member.instagram ? `@${member.instagram}` : "",
       linkedin: member.linkedin || "",
       about: member.motivation || "",
+      consent: false,
     });
     setSelectedMember(null);
     setNotice(`${member.username} kaydı açıldı. Alanları değiştirip güncelleyebilirsin.`);
@@ -636,6 +645,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                       instagram: "",
                       linkedin: "",
                       about: "",
+                      consent: false,
                     });
                   }
                   setUpdateMode((current) => !current);
@@ -723,6 +733,33 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
             <div className="sm:col-span-2 -mt-2 text-right text-[11px] text-foreground/45">
               {form.about.length}/140
             </div>
+            <label className="sm:col-span-2 flex gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm leading-relaxed text-foreground/70">
+              <input
+                type="checkbox"
+                checked={form.consent}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, consent: event.target.checked }))
+                }
+                required
+                className="mt-1 h-4 w-4 shrink-0 accent-primary"
+              />
+              <span>
+                Bilgilerimin notwork networking ağı içinde görünmesini, benimle etkinlik/topluluk
+                iletişimi için e-posta üzerinden iletişime geçilmesini ve{" "}
+                <a href="/kvkk" target="_blank" className="font-semibold text-primary-deep underline">
+                  KVKK Aydınlatma Metni
+                </a>{" "}
+                ile{" "}
+                <a
+                  href="/cerez-politikasi"
+                  target="_blank"
+                  className="font-semibold text-primary-deep underline"
+                >
+                  Çerez Politikası
+                </a>
+                ’nı okuduğumu/onayladığımı kabul ediyorum.
+              </span>
+            </label>
             <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">
               <p className="text-xs text-foreground/50">
                 {config.formNote}

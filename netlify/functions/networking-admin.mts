@@ -14,6 +14,7 @@ type MemberRow = {
   contact: string;
   createdAt: string;
   username: string;
+  consentAt: string;
 };
 
 type MemberInput = Partial<MemberRow> & {
@@ -78,6 +79,7 @@ function normalizeMember(input: MemberInput, fallback?: Partial<MemberRow>): Mem
     contact: clean(input.contact, 240) || fallback?.contact || "",
     createdAt: clean(input.createdAt, 40) || fallback?.createdAt || new Date().toISOString(),
     username: clean(input.username, 80).toLowerCase() || fallback?.username || "",
+    consentAt: clean(input.consentAt, 40) || fallback?.consentAt || "",
   };
 }
 
