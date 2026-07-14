@@ -183,8 +183,9 @@ function LinksPage() {
 
         <section className="mx-auto mt-8 max-w-xl rounded-2xl border border-primary/25 bg-primary/10 p-4 text-center shadow-sm">
           <p className="text-sm font-semibold leading-relaxed text-foreground/75">
-            Mahall Bomonti’ye bize katkılarından dolayı teşekkür ederiz. Destekleri için takip
-            etmenizi rica ederiz.
+            Mahal Bomonti İzmir’e bize katkılarından dolayı teşekkür ederiz. Destekleri için{" "}
+            <span className="font-black text-primary-deep">@mahallbomontiizmir</span> hesabını
+            takip etmenizi rica ederiz.
           </p>
           <a
             href="https://www.instagram.com/mahallbomontiizmir/"
@@ -192,7 +193,7 @@ function LinksPage() {
             rel="noreferrer"
             className="mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground transition hover:opacity-90"
           >
-            Mahall Bomonti’yi takip et
+            Mahal Bomonti İzmir’i takip et
             <ExternalLink size={15} />
           </a>
         </section>
