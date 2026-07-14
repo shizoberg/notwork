@@ -125,13 +125,13 @@ const tracks = [
 
 function Hero() {
   return (
-    <section id="bilet" className="relative">
+    <section className="relative">
       <div className="mx-auto max-w-5xl px-4 sm:px-5 pt-6 sm:pt-12 pb-10 sm:pb-16 text-center">
         <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-foreground/60">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary blink" />
-          <span>14 Temmuz 2026</span>
+          <span>Gelecek etkinlikler için bizi takip edin</span>
           <span className="w-1 h-1 rounded-full bg-foreground/20" />
-          <span>Mahal Bomonti İzmir</span>
+          <span>notwork İzmir</span>
         </div>
 
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
@@ -141,17 +141,29 @@ function Hero() {
           <span className="text-primary-deep">Gelen Deneyimler</span>
         </h1>
 
-        <a
-          href="https://www.biletimgo.com/etkinlik/notwork-14-temmuz-ugrasip-da-olmayanlar-28473"
-          data-analytics="ticket_click"
-          data-meta-event="ViewContent"
-          data-meta-content="notwork 14 Temmuz Bileti"
-          target="_blank"
-          rel="noreferrer"
-          className="mt-7 inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 font-semibold text-primary-foreground transition hover:opacity-90"
-        >
-          Bilet al
-        </a>
+        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+          Yeni notwork buluşmaları, bilet duyuruları ve topluluk haberleri için sosyal medya
+          hesaplarımızı takip edin.
+        </p>
+
+        <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+          <a
+            href="https://www.instagram.com/notwork.ntw/"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 font-semibold text-primary-foreground transition hover:opacity-90"
+          >
+            Instagram’da takip et
+          </a>
+          <a
+            href="https://www.youtube.com/@notwork-izmir"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center rounded-full border border-border bg-card px-7 py-3.5 font-semibold text-foreground transition hover:bg-muted"
+          >
+            YouTube’a göz at
+          </a>
+        </div>
       </div>
     </section>
   );
