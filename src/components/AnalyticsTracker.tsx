@@ -1,5 +1,10 @@
 import { useLocation } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import {
+  COOKIE_CONSENT_CHANGED_EVENT,
+  hasAnalyticsConsent,
+} from "@/lib/cookie-consent";
 
 type EventPayload = {
   type: "session_start" | "page_view" | "click" | "ticket_click" | "scroll_depth" | "page_time" | "form_submit";
@@ -46,17 +51,27 @@ function sendEvent(payload: EventPayload, beacon = false) {
 export function AnalyticsTracker() {
   const location = useLocation();
   const sessionStarted = useRef(false);
+  const [hasConsent, setHasConsent] = useState(false);
 
   useEffect(() => {
+    const syncConsent = () => setHasConsent(hasAnalyticsConsent());
+    syncConsent();
+    window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, syncConsent);
+    return () => window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, syncConsent);
+  }, []);
+
+  useEffect(() => {
+    if (!hasConsent) return;
     if (location.pathname.startsWith("/admin")) return;
     if (!sessionStarted.current) {
       sendEvent({ type: "session_start" });
       sessionStarted.current = true;
     }
     sendEvent({ type: "page_view", path: location.pathname });
-  }, [location.pathname]);
+  }, [hasConsent, location.pathname]);
 
   useEffect(() => {
+    if (!hasConsent) return;
     if (location.pathname.startsWith("/admin")) return;
     const startedAt = Date.now();
     const scrollMarks = new Set<number>();
@@ -109,7 +124,7 @@ export function AnalyticsTracker() {
       window.removeEventListener("pagehide", sendPageTime);
       sendPageTime();
     };
-  }, [location.pathname]);
+  }, [hasConsent, location.pathname]);
 
   return null;
 }

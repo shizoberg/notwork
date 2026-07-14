@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Instagram, Youtube } from "lucide-react";
 
+import { COOKIE_CONSENT_OPEN_EVENT } from "@/lib/cookie-consent";
+
 export function SiteNav() {
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/70 border-b border-border/60">
@@ -35,6 +37,9 @@ export function SiteNav() {
 export function SiteFooter() {
   const meetingMailUrl =
     "mailto:berk@carewithki.com?subject=notwork%20ekibi%20ile%20toplant%C4%B1%20almak%20istiyorum";
+  const openCookiePreferences = () => {
+    window.dispatchEvent(new Event(COOKIE_CONSENT_OPEN_EVENT));
+  };
 
   return (
     <footer className="border-t border-border/60 mt-20">
@@ -106,8 +111,23 @@ export function SiteFooter() {
           </div>
         </div>
       </div>
-      <div className="mx-auto max-w-6xl border-t border-border/60 px-5 py-5 text-xs text-muted-foreground">
-        © {new Date().getFullYear()} notwork
+      <div className="mx-auto flex max-w-6xl flex-col gap-3 border-t border-border/60 px-5 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <span>© {new Date().getFullYear()} notwork</span>
+        <div className="flex flex-wrap gap-3">
+          <Link to="/kvkk" className="hover:text-foreground hover:underline">
+            KVKK
+          </Link>
+          <Link to="/cerez-politikasi" className="hover:text-foreground hover:underline">
+            Çerez Politikası
+          </Link>
+          <button
+            type="button"
+            onClick={openCookiePreferences}
+            className="text-left hover:text-foreground hover:underline"
+          >
+            Çerezleri yönet
+          </button>
+        </div>
       </div>
     </footer>
   );

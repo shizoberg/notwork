@@ -13,7 +13,9 @@ import { Route as SponsorRouteImport } from './routes/sponsor'
 import { Route as NetworkingRouteImport } from './routes/networking'
 import { Route as LinklerRouteImport } from './routes/linkler'
 import { Route as LegacyRouteImport } from './routes/legacy'
+import { Route as KvkkRouteImport } from './routes/kvkk'
 import { Route as CommunityRouteImport } from './routes/community'
+import { Route as CerezPolitikasiRouteImport } from './routes/cerez-politikasi'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as R14temmuznetworkingRouteImport } from './routes/14temmuznetworking'
 import { Route as R14temmuzRouteImport } from './routes/14temmuz'
@@ -39,9 +41,19 @@ const LegacyRoute = LegacyRouteImport.update({
   path: '/legacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KvkkRoute = KvkkRouteImport.update({
+  id: '/kvkk',
+  path: '/kvkk',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CommunityRoute = CommunityRouteImport.update({
   id: '/community',
   path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CerezPolitikasiRoute = CerezPolitikasiRouteImport.update({
+  id: '/cerez-politikasi',
+  path: '/cerez-politikasi',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -70,7 +82,9 @@ export interface FileRoutesByFullPath {
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
   '/admin': typeof AdminRoute
+  '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
+  '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
@@ -81,7 +95,9 @@ export interface FileRoutesByTo {
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
   '/admin': typeof AdminRoute
+  '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
+  '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
@@ -93,7 +109,9 @@ export interface FileRoutesById {
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
   '/admin': typeof AdminRoute
+  '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
+  '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
@@ -106,7 +124,9 @@ export interface FileRouteTypes {
     | '/14temmuz'
     | '/14temmuznetworking'
     | '/admin'
+    | '/cerez-politikasi'
     | '/community'
+    | '/kvkk'
     | '/legacy'
     | '/linkler'
     | '/networking'
@@ -117,7 +137,9 @@ export interface FileRouteTypes {
     | '/14temmuz'
     | '/14temmuznetworking'
     | '/admin'
+    | '/cerez-politikasi'
     | '/community'
+    | '/kvkk'
     | '/legacy'
     | '/linkler'
     | '/networking'
@@ -128,7 +150,9 @@ export interface FileRouteTypes {
     | '/14temmuz'
     | '/14temmuznetworking'
     | '/admin'
+    | '/cerez-politikasi'
     | '/community'
+    | '/kvkk'
     | '/legacy'
     | '/linkler'
     | '/networking'
@@ -140,7 +164,9 @@ export interface RootRouteChildren {
   R14temmuzRoute: typeof R14temmuzRoute
   R14temmuznetworkingRoute: typeof R14temmuznetworkingRoute
   AdminRoute: typeof AdminRoute
+  CerezPolitikasiRoute: typeof CerezPolitikasiRoute
   CommunityRoute: typeof CommunityRoute
+  KvkkRoute: typeof KvkkRoute
   LegacyRoute: typeof LegacyRoute
   LinklerRoute: typeof LinklerRoute
   NetworkingRoute: typeof NetworkingRoute
@@ -177,11 +203,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kvkk': {
+      id: '/kvkk'
+      path: '/kvkk'
+      fullPath: '/kvkk'
+      preLoaderRoute: typeof KvkkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/community': {
       id: '/community'
       path: '/community'
       fullPath: '/community'
       preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cerez-politikasi': {
+      id: '/cerez-politikasi'
+      path: '/cerez-politikasi'
+      fullPath: '/cerez-politikasi'
+      preLoaderRoute: typeof CerezPolitikasiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -220,7 +260,9 @@ const rootRouteChildren: RootRouteChildren = {
   R14temmuzRoute: R14temmuzRoute,
   R14temmuznetworkingRoute: R14temmuznetworkingRoute,
   AdminRoute: AdminRoute,
+  CerezPolitikasiRoute: CerezPolitikasiRoute,
   CommunityRoute: CommunityRoute,
+  KvkkRoute: KvkkRoute,
   LegacyRoute: LegacyRoute,
   LinklerRoute: LinklerRoute,
   NetworkingRoute: NetworkingRoute,

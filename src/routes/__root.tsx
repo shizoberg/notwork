@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { AnalyticsTracker } from "../components/AnalyticsTracker";
+import { CookieConsent } from "../components/CookieConsent";
 import { MetaPixelTracker } from "../components/MetaPixelTracker";
 import { NtwAssistant } from "../components/NtwAssistant";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -111,22 +112,8 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="tr">
       <head>
         <HeadContent />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','2241293083369852');fbq('track','PageView');`,
-          }}
-        />
       </head>
       <body>
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            style={{ display: "none" }}
-            src="https://www.facebook.com/tr?id=2241293083369852&ev=PageView&noscript=1"
-            alt=""
-          />
-        </noscript>
         {children}
         <Scripts />
       </body>
@@ -144,6 +131,7 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <NtwAssistant />
+      <CookieConsent />
     </QueryClientProvider>
   );
 }
