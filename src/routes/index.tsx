@@ -96,6 +96,7 @@ function Landing() {
         <Benefits />
         <Tracks />
         <Nedir />
+        <PastEvents />
         <Gallery />
         <FAQ />
         <SubmitCTA />
@@ -318,6 +319,76 @@ function Nedir() {
           </div>
         ))}
       </div>
+    </section>
+  );
+}
+
+function PastEvents() {
+  return (
+    <section className="mx-auto max-w-6xl px-5 mt-20 sm:mt-28">
+      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
+            geçmiş eventler
+          </div>
+          <h2 className="mt-2 font-display font-bold text-3xl sm:text-5xl text-foreground">
+            Önceki notwork geceleri
+          </h2>
+        </div>
+        <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+          Geçmiş etkinliklerin programını, konuşmacılarını ve etkinlik sonrası bağlantılarını burada
+          topluyoruz.
+        </p>
+      </div>
+
+      <Link
+        to="/14temmuz"
+        className="group grid overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] md:grid-cols-[0.9fr_1.1fr]"
+      >
+        <div className="relative min-h-64 overflow-hidden bg-ink text-cream">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_32%),linear-gradient(135deg,#142643,#111827_58%,#0f172a)]" />
+          <div className="absolute -right-10 -top-12 h-40 w-40 rounded-full border-[28px] border-primary/25" />
+          <div className="absolute -bottom-16 left-8 h-44 w-44 rounded-full border-[32px] border-primary/15" />
+          <div className="relative flex h-full min-h-64 flex-col justify-between p-6 sm:p-8">
+            <div className="inline-flex w-fit rounded-full border border-cream/20 bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em]">
+              14 Temmuz 2026
+            </div>
+            <div>
+              <div className="text-sm font-bold uppercase tracking-[0.24em] text-primary">
+                Mahal Bomonti İzmir
+              </div>
+              <div className="mt-2 font-display text-4xl font-black leading-none tracking-[-0.05em] sm:text-5xl">
+                notwork
+                <br />
+                gecesi
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="p-6 sm:p-8">
+          <div className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-deep">
+            Etkinlik merkezi
+          </div>
+          <h3 className="mt-4 font-display text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+            14 Temmuz notwork İzmir
+          </h3>
+          <p className="mt-4 max-w-xl leading-relaxed text-muted-foreground">
+            İnteraktif sahne, 4 sunucu, networking free time ve etkinlik günü topluluk ağıyla
+            birlikte ilerleyen özel notwork gecesi.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold">
+            {["Konuşmacılar", "Program", "Konum", "Networking ağı"].map((item) => (
+              <span key={item} className="rounded-full border border-border bg-background px-3 py-1.5">
+                {item}
+              </span>
+            ))}
+          </div>
+          <div className="mt-7 inline-flex items-center gap-2 font-bold text-primary-deep">
+            Event sayfasına git
+            <span className="transition group-hover:translate-x-1">→</span>
+          </div>
+        </div>
+      </Link>
     </section>
   );
 }

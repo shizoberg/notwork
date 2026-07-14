@@ -317,6 +317,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
   const [checkInQuery, setCheckInQuery] = useState("");
   const [checkInMessage, setCheckInMessage] = useState("");
   const [checkingIn, setCheckingIn] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
   useEffect(() => {
     listMembers()
@@ -426,6 +427,29 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
       about: member.motivation || "",
     });
     setNotice(`${member.username} kaydı açıldı. Alanları değiştirip güncelleyebilirsin.`);
+  };
+
+  const startEditingMember = (member: Member) => {
+    setUpdateMode(true);
+    setEditingUsername(member.username);
+    setUsernameInput(member.username);
+    setForm({
+      name: member.name,
+      title: member.title,
+      skills: member.skills.join(", "),
+      email: member.email || "",
+      instagram: member.instagram ? `@${member.instagram}` : "",
+      linkedin: member.linkedin || "",
+      about: member.motivation || "",
+    });
+    setSelectedMember(null);
+    setNotice(`${member.username} kaydı açıldı. Alanları değiştirip güncelleyebilirsin.`);
+    window.setTimeout(() => {
+      document.getElementById("networking-form")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 50);
   };
 
   const addExistingToEvent = async () => {
@@ -590,6 +614,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
 
         <section className="mx-auto max-w-6xl px-5 pb-10">
           <form
+            id="networking-form"
             onSubmit={onSubmit}
             className="rounded-2xl border border-border bg-card p-5 sm:p-6 grid gap-4 sm:grid-cols-2"
           >
@@ -774,8 +799,13 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
             loading={loading}
             hint={config.graphHint}
             emptyText={config.graphEmpty}
+            onSelectMember={setSelectedMember}
           />
-          <RecommendationFinder members={scopedMembers} loading={loading} />
+          <RecommendationFinder
+            members={scopedMembers}
+            loading={loading}
+            onOpenMember={setSelectedMember}
+          />
           </div>
         </section>
 
@@ -804,6 +834,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                 loading={loading}
                 hint="notwork community ağını gez"
                 emptyText="community ağı henüz yüklenmedi."
+                onSelectMember={setSelectedMember}
               />
             </div>
           </section>
@@ -845,7 +876,13 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
               return (
                 <div key={member.id} className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-baseline justify-between gap-2">
-                    <div className="font-bold text-lg">{member.name}</div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMember(member)}
+                      className="text-left font-bold text-lg transition hover:text-primary-deep"
+                    >
+                      {member.name}
+                    </button>
                     <div className="text-xs text-foreground/60">{member.title}</div>
                   </div>
                   {member.username && (
@@ -902,6 +939,13 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                       {contact.about}
                     </p>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMember(member)}
+                    className="mt-3 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary-deep transition hover:bg-primary hover:text-primary-foreground"
+                  >
+                    bağlantılarını gör
+                  </button>
                 </div>
               );
             })}
@@ -911,6 +955,15 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
           </div>
         </section>
       </main>
+      {selectedMember && (
+        <MemberDetailModal
+          member={selectedMember}
+          members={scopedMembers.length > 0 ? scopedMembers : members}
+          onClose={() => setSelectedMember(null)}
+          onEdit={startEditingMember}
+          onOpenMember={setSelectedMember}
+        />
+      )}
       <SiteFooter />
     </div>
   );
@@ -1050,7 +1103,15 @@ function NtwMascot() {
   );
 }
 
-function RecommendationFinder({ members, loading }: { members: Member[]; loading: boolean }) {
+function RecommendationFinder({
+  members,
+  loading,
+  onOpenMember,
+}: {
+  members: Member[];
+  loading: boolean;
+  onOpenMember: (member: Member) => void;
+}) {
   const [username, setUsername] = useState("");
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [message, setMessage] = useState("");
@@ -1060,22 +1121,25 @@ function RecommendationFinder({ members, loading }: { members: Member[]; loading
   );
 
   const findMatches = () => {
-    const normalized = username.trim().toLowerCase().replace(/^@/, "");
-    const member = members.find((item) => item.username === normalized);
+    const normalized = normalizeLookup(username.trim().replace(/^@/, ""));
+    const member =
+      members.find((item) => normalizeLookup(item.username) === normalized) ||
+      members.find((item) => normalizeLookup(item.name) === normalized);
     if (!member) {
       setSelectedMember(null);
-      setMessage("Bu kullanıcı adıyla eşleşen bir kayıt bulunamadı.");
+      setMessage("Bu kullanıcı adı veya ad soyad ile eşleşen bir kayıt bulunamadı.");
       return;
     }
     setSelectedMember(member);
     setMessage("");
+    onOpenMember(member);
   };
 
   return (
     <div className="mt-3 overflow-hidden rounded-xl border border-primary/25 bg-primary/5 transition-all">
       <div className="flex flex-col gap-2 p-2.5 sm:flex-row sm:items-center">
         <div className="px-2 text-xs font-bold text-primary-deep sm:whitespace-nowrap">
-          Mutlaka tanışman gereken 5 kişiyi bul
+          Beni bul · bağlantılarımı göster
         </div>
         <input
           value={username}
@@ -1083,7 +1147,7 @@ function RecommendationFinder({ members, loading }: { members: Member[]; loading
           onKeyDown={(event) => {
             if (event.key === "Enter") findMatches();
           }}
-          placeholder="kullanıcı adın"
+          placeholder="username veya ad soyad"
           disabled={loading}
           className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
         />
@@ -1093,7 +1157,7 @@ function RecommendationFinder({ members, loading }: { members: Member[]; loading
           disabled={loading}
           className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
         >
-          eşleşmelerimi bul
+          beni bul
         </button>
       </div>
       {message && (
@@ -1124,6 +1188,13 @@ function RecommendationFinder({ members, loading }: { members: Member[]; loading
                     {recommendation.reasons.join(" · ")}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold text-primary-deep">
+                    <button
+                      type="button"
+                      onClick={() => onOpenMember(recommendation.member)}
+                      className="hover:underline"
+                    >
+                      Detay
+                    </button>
                     {contact.email && <a href={`mailto:${contact.email}`}>E-posta</a>}
                     {contact.linkedin && (
                       <a href={contact.linkedin} target="_blank" rel="noreferrer">
@@ -1159,11 +1230,13 @@ function NetworkGraph({
   loading,
   hint = "kaydırarak ağı gez",
   emptyText = "henüz kimse yok — formdan ekle.",
+  onSelectMember,
 }: {
   members: Member[];
   loading: boolean;
   hint?: string;
   emptyText?: string;
+  onSelectMember?: (member: Member) => void;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(320);
@@ -1324,6 +1397,7 @@ function NetworkGraph({
                 transform={`translate(${node.x}, ${node.y})`}
                 onMouseEnter={() => setHover(node.id)}
                 onMouseLeave={() => setHover(null)}
+                onClick={() => onSelectMember?.(node)}
                 className="cursor-pointer"
               >
                 <circle
@@ -1375,6 +1449,200 @@ function NetworkGraph({
           {emptyText}
         </div>
       )}
+    </div>
+  );
+}
+
+function MemberDetailModal({
+  member,
+  members,
+  onClose,
+  onEdit,
+  onOpenMember,
+}: {
+  member: Member;
+  members: Member[];
+  onClose: () => void;
+  onEdit: (member: Member) => void;
+  onOpenMember: (member: Member) => void;
+}) {
+  const contact = getMemberContact(member);
+  const recommendations = getRecommendations(member, members);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${member.name} bağlantı detayları`}
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-ink/45 p-3 backdrop-blur-sm sm:items-center sm:p-5"
+      onMouseDown={onClose}
+    >
+      <div
+        className="max-h-[92vh] w-full max-w-5xl overflow-auto rounded-[2rem] border border-border bg-background shadow-[0_30px_120px_-40px_rgba(10,25,35,0.55)]"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
+          <section className="bg-[radial-gradient(circle_at_top_left,color-mix(in_oklab,var(--primary)_28%,transparent),transparent_36%),var(--card)] p-5 sm:p-7">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-xs font-black uppercase tracking-[0.24em] text-primary-deep">
+                  kişi kartı
+                </div>
+                <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+                  {member.name}
+                </h2>
+                <p className="mt-2 text-sm font-semibold text-foreground/60">{member.title}</p>
+                {member.username && (
+                  <p className="mt-1 text-xs font-bold text-primary-deep">@{member.username}</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border bg-background text-lg font-black transition hover:bg-muted"
+                aria-label="Popup kapat"
+              >
+                ×
+              </button>
+            </div>
+
+            {member.skills.length > 0 && (
+              <div className="mt-5 flex flex-wrap gap-1.5">
+                {member.skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary-deep"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {contact.about && (
+              <p className="mt-5 rounded-2xl border border-border bg-background/70 p-4 text-sm leading-relaxed text-foreground/70">
+                {contact.about}
+              </p>
+            )}
+
+            <div className="mt-5 grid gap-2 text-sm">
+              {contact.email && (
+                <a
+                  href={`mailto:${contact.email}`}
+                  className="rounded-xl border border-border bg-background px-4 py-3 font-semibold text-primary-deep transition hover:border-primary/60"
+                >
+                  E-posta gönder · {contact.email}
+                </a>
+              )}
+              {contact.instagram && (
+                <a
+                  href={`https://instagram.com/${contact.instagram}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-xl border border-border bg-background px-4 py-3 font-semibold text-primary-deep transition hover:border-primary/60"
+                >
+                  Instagram · @{contact.instagram}
+                </a>
+              )}
+              {contact.linkedin && (
+                <a
+                  href={contact.linkedin}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-xl border border-border bg-background px-4 py-3 font-semibold text-primary-deep transition hover:border-primary/60"
+                >
+                  LinkedIn profiline git
+                </a>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onEdit(member)}
+              className="mt-5 w-full rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
+            >
+              bilgilerimi güncellemek istiyorum
+            </button>
+          </section>
+
+          <section className="p-5 sm:p-7">
+            <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+              <div>
+                <div className="text-xs font-black uppercase tracking-[0.24em] text-primary-deep">
+                  potansiyel bağlantılar
+                </div>
+                <h3 className="mt-2 text-2xl font-black tracking-[-0.03em]">
+                  Bu kişi kimlerle eşleşebilir?
+                </h3>
+              </div>
+              <span className="text-xs text-foreground/45">algoritmik öneri · 5 kişi</span>
+            </div>
+            <div className="mt-5 grid gap-3">
+              {recommendations.map((recommendation, index) => {
+                const recommendationContact = getMemberContact(recommendation.member);
+                return (
+                  <article
+                    key={recommendation.member.id}
+                    className="rounded-2xl border border-border bg-card p-4"
+                  >
+                    <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+                      <div>
+                        <div className="text-[10px] font-black text-primary-deep">
+                          #{index + 1}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onOpenMember(recommendation.member)}
+                          className="mt-1 text-left text-lg font-black transition hover:text-primary-deep"
+                        >
+                          {recommendation.member.name}
+                        </button>
+                        <div className="text-xs text-foreground/50">
+                          {recommendation.member.title}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-primary-deep">
+                        {recommendationContact.email && (
+                          <a href={`mailto:${recommendationContact.email}`}>E-posta</a>
+                        )}
+                        {recommendationContact.instagram && (
+                          <a
+                            href={`https://instagram.com/${recommendationContact.instagram}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Instagram
+                          </a>
+                        )}
+                        {recommendationContact.linkedin && (
+                          <a href={recommendationContact.linkedin} target="_blank" rel="noreferrer">
+                            LinkedIn
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm leading-relaxed text-foreground/60">
+                      {recommendation.reasons.join(" · ")}
+                    </p>
+                  </article>
+                );
+              })}
+            </div>
+            <p className="mt-4 text-xs leading-relaxed text-foreground/45">
+              Eşleşmeler; ortak yetenekler, tamamlayıcı rol grupları, benzer hedef kelimeleri ve
+              profil doluluğu üzerinden puanlanır.
+            </p>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }
