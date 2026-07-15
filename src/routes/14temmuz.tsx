@@ -249,6 +249,8 @@ function EventReviewsSection({
   reviews: EventReview[];
   ratingAverage: number;
 }) {
+  const [expandedReviews, setExpandedReviews] = useState<Record<string, boolean>>({});
+
   return (
     <section className="mx-auto max-w-6xl px-5 pb-20">
       <div className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:p-8">
@@ -285,30 +287,54 @@ function EventReviewsSection({
             </div>
             <div className="mt-6 -mx-2 overflow-x-auto px-2 pb-2 [scrollbar-width:thin]">
               <div className="flex gap-4">
-                {reviews.map((review) => (
-                  <article
-                    key={review.id}
-                    className="w-[82vw] max-w-sm shrink-0 overflow-hidden rounded-2xl border border-border bg-background sm:w-[340px]"
-                  >
-                    {review.photoDataUrl && (
-                      <img
-                        src={review.photoDataUrl}
-                        alt={`${review.eventTitle} değerlendirme fotoğrafı`}
-                        className="h-44 w-full object-cover"
-                        loading="lazy"
-                      />
-                    )}
-                    <div className="p-4">
-                      <div className="text-lg text-primary-deep">{renderStars(review.rating)}</div>
-                      <p className="mt-3 text-sm leading-relaxed text-foreground/70">
-                        “{review.comment}”
-                      </p>
-                      <div className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-foreground/45">
-                        {review.name || "notwork katılımcısı"}
+                {reviews.map((review) => {
+                  const isExpanded = !!expandedReviews[review.id];
+                  const canExpand = review.comment.length > 170;
+                  return (
+                    <article
+                      key={review.id}
+                      className={`flex w-[82vw] max-w-sm shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-background transition-all sm:w-[340px] ${
+                        isExpanded ? "h-auto" : "h-[430px]"
+                      }`}
+                    >
+                      {review.photoDataUrl && (
+                        <img
+                          src={review.photoDataUrl}
+                          alt={`${review.eventTitle} değerlendirme fotoğrafı`}
+                          className="h-44 w-full shrink-0 object-cover"
+                          loading="lazy"
+                        />
+                      )}
+                      <div className="flex flex-1 flex-col p-4">
+                        <div className="text-lg text-primary-deep">{renderStars(review.rating)}</div>
+                        <p
+                          className={`mt-3 text-sm leading-relaxed text-foreground/70 ${
+                            isExpanded ? "" : "line-clamp-6"
+                          }`}
+                        >
+                          “{review.comment}”
+                        </p>
+                        {canExpand && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedReviews((current) => ({
+                                ...current,
+                                [review.id]: !current[review.id],
+                              }))
+                            }
+                            className="mt-3 w-fit text-sm font-black text-primary-deep hover:underline"
+                          >
+                            {isExpanded ? "Daha az göster" : "Devamını oku"}
+                          </button>
+                        )}
+                        <div className="mt-auto pt-4 text-xs font-bold uppercase tracking-[0.18em] text-foreground/45">
+                          {review.name || "notwork katılımcısı"}
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  );
+                })}
               </div>
             </div>
           </>

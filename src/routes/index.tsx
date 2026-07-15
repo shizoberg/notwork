@@ -541,6 +541,7 @@ function renderEventStars(rating: number) {
 
 function EventReviewsFlow() {
   const [reviews, setReviews] = useState<EventReview[]>([]);
+  const [expandedReviews, setExpandedReviews] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     let active = true;
@@ -581,30 +582,52 @@ function EventReviewsFlow() {
         <div className="flex snap-x gap-4">
           {reviews.map((review) => {
             const event = eventMetaById[review.eventId];
+            const isExpanded = !!expandedReviews[review.id];
+            const canExpand = review.comment.length > 170;
             return (
               <article
                 key={review.id}
-                className="w-[82vw] max-w-sm shrink-0 snap-start overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] sm:w-[360px]"
+                className={`flex w-[82vw] max-w-sm shrink-0 snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition-all sm:w-[360px] ${
+                  isExpanded ? "h-auto" : "h-[460px]"
+                }`}
               >
                 {review.photoDataUrl && (
                   <img
                     src={review.photoDataUrl}
                     alt={`${review.eventTitle} yorumu`}
                     loading="lazy"
-                    className="h-44 w-full object-cover"
+                    className="h-44 w-full shrink-0 object-cover"
                   />
                 )}
-                <div className="p-5">
+                <div className="flex flex-1 flex-col p-5">
                   <div className="flex items-center justify-between gap-3">
                     <div className="text-lg text-primary-deep">{renderEventStars(review.rating)}</div>
                     <div className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-black text-primary-deep">
                       {event?.date || review.eventTitle}
                     </div>
                   </div>
-                  <p className="mt-4 min-h-24 text-base leading-relaxed text-foreground/75">
+                  <p
+                    className={`mt-4 text-base leading-relaxed text-foreground/75 ${
+                      isExpanded ? "" : "line-clamp-5"
+                    }`}
+                  >
                     “{review.comment}”
                   </p>
-                  <div className="mt-5 border-t border-border pt-4">
+                  {canExpand && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedReviews((current) => ({
+                          ...current,
+                          [review.id]: !current[review.id],
+                        }))
+                      }
+                      className="mt-3 w-fit text-sm font-black text-primary-deep hover:underline"
+                    >
+                      {isExpanded ? "Daha az göster" : "Devamını oku"}
+                    </button>
+                  )}
+                  <div className="mt-auto border-t border-border pt-4">
                     <div className="text-xs font-bold uppercase tracking-[0.18em] text-foreground/45">
                       {review.name || "notwork katılımcısı"}
                     </div>
