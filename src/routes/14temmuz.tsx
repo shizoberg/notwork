@@ -150,6 +150,8 @@ function JulyFourteenth() {
           </div>
         </section>
 
+        <EventReviewsSection reviews={reviews} ratingAverage={ratingAverage} />
+
         <section className="mx-auto grid max-w-6xl gap-4 px-5 pb-20 md:grid-cols-3">
           {sections.map((section) => (
             <article key={section.number} className="rounded-2xl border border-border bg-card p-6">
@@ -234,78 +236,89 @@ function JulyFourteenth() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 pb-20">
-          <div className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:p-8">
-            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-              <div>
-                <div className="text-sm font-bold uppercase tracking-[0.2em] text-primary-deep">
-                  etkinlik değerlendirmeleri
-                </div>
-                <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-5xl">
-                  14 Temmuz için gelen yorumlar
-                </h2>
-                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-foreground/60">
-                  Katılımcıların paylaştığı puanlar, fotoğraflar ve yorumlar burada görünür.
-                  Ekibe özel notlar bu alanda yayınlanmaz.
-                </p>
-              </div>
-              <a
-                href="/etkinlik-degerlendirme"
-                className="inline-flex w-fit rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
-              >
-                Değerlendirme yaz
-              </a>
-            </div>
-
-            {reviews.length > 0 ? (
-              <>
-                <div className="mt-6 flex flex-wrap items-center gap-3">
-                  <div className="rounded-full bg-primary/10 px-4 py-2 text-sm font-black text-primary-deep">
-                    {renderStars(Math.round(ratingAverage))} {ratingAverage.toFixed(1)}
-                  </div>
-                  <div className="text-sm font-semibold text-foreground/55">
-                    {reviews.length} değerlendirme
-                  </div>
-                </div>
-                <div className="mt-6 grid gap-4 md:grid-cols-3">
-                  {reviews.slice(0, 6).map((review) => (
-                    <article
-                      key={review.id}
-                      className="overflow-hidden rounded-2xl border border-border bg-background"
-                    >
-                      {review.photoDataUrl && (
-                        <img
-                          src={review.photoDataUrl}
-                          alt={`${review.eventTitle} değerlendirme fotoğrafı`}
-                          className="h-44 w-full object-cover"
-                          loading="lazy"
-                        />
-                      )}
-                      <div className="p-4">
-                        <div className="text-lg text-primary-deep">
-                          {renderStars(review.rating)}
-                        </div>
-                        <p className="mt-3 text-sm leading-relaxed text-foreground/70">
-                          “{review.comment}”
-                        </p>
-                        <div className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-foreground/45">
-                          {review.name || "notwork katılımcısı"}
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="mt-6 rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-5 text-sm leading-relaxed text-foreground/65">
-                Henüz değerlendirme yok. 14 Temmuz gecesine dair ilk yıldızı ve yorumu sen bırak.
-              </div>
-            )}
-          </div>
-        </section>
       </main>
       <SiteFooter />
     </div>
+  );
+}
+
+function EventReviewsSection({
+  reviews,
+  ratingAverage,
+}: {
+  reviews: EventReview[];
+  ratingAverage: number;
+}) {
+  return (
+    <section className="mx-auto max-w-6xl px-5 pb-20">
+      <div className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:p-8">
+        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div>
+            <div className="text-sm font-bold uppercase tracking-[0.2em] text-primary-deep">
+              etkinlik değerlendirmeleri
+            </div>
+            <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-5xl">
+              14 Temmuz için gelen yorumlar
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-foreground/60">
+              Katılımcıların paylaştığı puanlar, fotoğraflar ve yorumlar burada görünür. Ekibe özel
+              notlar bu alanda yayınlanmaz.
+            </p>
+          </div>
+          <a
+            href="/etkinlik-degerlendirme"
+            className="inline-flex w-fit rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
+          >
+            Değerlendirme yaz
+          </a>
+        </div>
+
+        {reviews.length > 0 ? (
+          <>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div className="rounded-full bg-primary/10 px-4 py-2 text-sm font-black text-primary-deep">
+                {renderStars(Math.round(ratingAverage))} {ratingAverage.toFixed(1)}
+              </div>
+              <div className="text-sm font-semibold text-foreground/55">
+                {reviews.length} değerlendirme
+              </div>
+            </div>
+            <div className="mt-6 -mx-2 overflow-x-auto px-2 pb-2 [scrollbar-width:thin]">
+              <div className="flex gap-4">
+                {reviews.map((review) => (
+                  <article
+                    key={review.id}
+                    className="w-[82vw] max-w-sm shrink-0 overflow-hidden rounded-2xl border border-border bg-background sm:w-[340px]"
+                  >
+                    {review.photoDataUrl && (
+                      <img
+                        src={review.photoDataUrl}
+                        alt={`${review.eventTitle} değerlendirme fotoğrafı`}
+                        className="h-44 w-full object-cover"
+                        loading="lazy"
+                      />
+                    )}
+                    <div className="p-4">
+                      <div className="text-lg text-primary-deep">{renderStars(review.rating)}</div>
+                      <p className="mt-3 text-sm leading-relaxed text-foreground/70">
+                        “{review.comment}”
+                      </p>
+                      <div className="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-foreground/45">
+                        {review.name || "notwork katılımcısı"}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="mt-6 rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-5 text-sm leading-relaxed text-foreground/65">
+            Henüz değerlendirme yok. 14 Temmuz gecesine dair ilk yıldızı ve yorumu sen bırak.
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 

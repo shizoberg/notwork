@@ -97,6 +97,7 @@ function Landing() {
         <Benefits />
         <Tracks />
         <Nedir />
+        <EventReviewsFlow />
         <PastEvents />
         <Gallery />
         <FAQ />
@@ -191,6 +192,8 @@ const pastEvents = [
     accent: "from-[#3f2d1f] via-[#8a5a32] to-[#f2c078]",
   },
 ];
+
+const eventMetaById = Object.fromEntries(pastEvents.map((event) => [event.id, event]));
 
 function Hero() {
   return (
@@ -440,7 +443,6 @@ function PastEvents() {
         <div className="flex snap-x gap-4">
           {pastEvents.map((event) => {
             const eventReviews = reviewsByEvent[event.id] || [];
-            const latestReview = eventReviews[0];
             const eventAverage = averageRating(eventReviews);
             const card = (
               <article className="group flex h-full min-h-[520px] w-[82vw] max-w-sm snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:w-[360px]">
@@ -487,11 +489,16 @@ function PastEvents() {
                       <div className="mt-1 text-xs font-semibold text-foreground/50">
                         {eventReviews.length} değerlendirme
                       </div>
-                      {latestReview && (
-                        <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-foreground/65">
-                          “{latestReview.comment}”
-                        </p>
-                      )}
+                      <div className="mt-3 grid max-h-28 gap-2 overflow-y-auto pr-1 [scrollbar-width:thin]">
+                        {eventReviews.slice(0, 4).map((review) => (
+                          <p
+                            key={review.id}
+                            className="rounded-xl bg-background/80 px-3 py-2 text-sm leading-relaxed text-foreground/65"
+                          >
+                            “{review.comment}”
+                          </p>
+                        ))}
+                      </div>
                     </div>
                   )}
                   <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold">
@@ -530,6 +537,89 @@ function PastEvents() {
 
 function renderEventStars(rating: number) {
   return "★".repeat(rating) + "☆".repeat(Math.max(0, 5 - rating));
+}
+
+function EventReviewsFlow() {
+  const [reviews, setReviews] = useState<EventReview[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    listEventReviews()
+      .then((items) => {
+        if (active) setReviews(items);
+      })
+      .catch(() => {
+        if (active) setReviews([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (reviews.length === 0) return null;
+
+  return (
+    <section className="mx-auto max-w-6xl px-5 mt-20 sm:mt-28">
+      <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
+            katılımcı yorumları
+          </div>
+          <h2 className="mt-2 font-display font-bold text-3xl sm:text-5xl text-foreground">
+            Etkinlikte ne söylendi?
+          </h2>
+        </div>
+        <Link
+          to="/etkinlik-degerlendirme"
+          className="inline-flex w-fit rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
+        >
+          Etkinlik yorumla
+        </Link>
+      </div>
+
+      <div className="-mx-5 overflow-x-auto px-5 pb-4 [scrollbar-width:thin]">
+        <div className="flex snap-x gap-4">
+          {reviews.map((review) => {
+            const event = eventMetaById[review.eventId];
+            return (
+              <article
+                key={review.id}
+                className="w-[82vw] max-w-sm shrink-0 snap-start overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] sm:w-[360px]"
+              >
+                {review.photoDataUrl && (
+                  <img
+                    src={review.photoDataUrl}
+                    alt={`${review.eventTitle} yorumu`}
+                    loading="lazy"
+                    className="h-44 w-full object-cover"
+                  />
+                )}
+                <div className="p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-lg text-primary-deep">{renderEventStars(review.rating)}</div>
+                    <div className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-black text-primary-deep">
+                      {event?.date || review.eventTitle}
+                    </div>
+                  </div>
+                  <p className="mt-4 min-h-24 text-base leading-relaxed text-foreground/75">
+                    “{review.comment}”
+                  </p>
+                  <div className="mt-5 border-t border-border pt-4">
+                    <div className="text-xs font-bold uppercase tracking-[0.18em] text-foreground/45">
+                      {review.name || "notwork katılımcısı"}
+                    </div>
+                    <div className="mt-1 text-sm font-semibold text-foreground">
+                      {event?.title || review.eventTitle}
+                    </div>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function Gallery() {
