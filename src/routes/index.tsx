@@ -414,7 +414,7 @@ function PastEvents() {
   }, []);
 
   return (
-    <section className="mx-auto max-w-6xl px-5 mt-20 sm:mt-28">
+    <section id="etkinlikler" className="mx-auto max-w-6xl scroll-mt-24 px-5 mt-20 sm:mt-28">
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
@@ -432,7 +432,7 @@ function PastEvents() {
           to="/etkinlik-degerlendirme"
           className="inline-flex w-fit rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
         >
-          Etkinlik değerlendir
+          Etkinlik yorumla
         </Link>
       </div>
 

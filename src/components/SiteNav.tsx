@@ -19,12 +19,16 @@ export function SiteNav() {
             Galeri
           </a>
           <Link to="/networking" className="px-1.5 sm:px-3 py-2 rounded-lg hover:bg-muted">
-            Networking
+            <span className="sm:hidden">Networking Ağı</span>
+            <span className="hidden sm:inline">Networking</span>
           </Link>
           <Link to="/sponsor" className="px-1.5 sm:px-3 py-2 rounded-lg hover:bg-muted">
             Sponsor
           </Link>
-          <Link to="/community" className="px-1.5 sm:px-3 py-2 rounded-lg hover:bg-muted">
+          <a href="/#etkinlikler" className="px-1.5 sm:hidden py-2 rounded-lg hover:bg-muted">
+            Etkinlikler
+          </a>
+          <Link to="/community" className="hidden px-1.5 py-2 rounded-lg hover:bg-muted sm:inline sm:px-3">
             <span className="sm:hidden">Sunum Yap</span>
             <span className="hidden sm:inline">Community</span>
           </Link>
