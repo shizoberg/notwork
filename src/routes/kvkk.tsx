@@ -36,6 +36,7 @@ const sections = [
     title: "2. İşlediğimiz kişisel veriler",
     body: [
       "Ad soyad, e-posta adresi, Instagram kullanıcı adı, LinkedIn bağlantısı, kullanıcı adı, meslek/rol bilgisi, 140 karakterlik motivasyon metni, etkinlik ve sunum başvuru cevapları işlenebilir.",
+      "Etkinlik değerlendirme formunda seçilen etkinlik, 5 yıldız puanı, paylaşılabilir yorum, yüklenen fotoğraf, ekibe özel not ve form onay bilgisi işlenebilir.",
       "Networking formunda verilen onay zamanı, site kullanımı sırasında sayfa görüntüleme, buton tıklama, form gönderimi, kaydırma derinliği, cihaz tipi, kampanya kaynağı ve çerez tercihi gibi teknik ve analitik bilgiler de tutulabilir.",
     ],
   },
@@ -44,12 +45,13 @@ const sections = [
     body: [
       "Kayıtları yönetmek, networking kartlarını ve topluluk ağını göstermek, kullanıcıların kendi bilgilerini güncellemesini sağlamak, etkinlik iletişimi kurmak, etkinlik ve topluluk duyuruları için e-posta göndermek, sunum/sponsor başvurularını değerlendirmek, site güvenliği ve performansını iyileştirmek için veriler işlenir.",
       "Networking ağına kayıt olan kullanıcılar; ad soyad, rol/sıfat, yetenekler, motivasyon metni ve paylaşmayı tercih ettikleri iletişim bağlantılarının topluluk içinde görünür olmasını onaylar.",
+      "Etkinlik değerlendirmelerinde verilen paylaşılabilir yorum, puan ve fotoğraflar geçmiş etkinlik kartlarında ve ilgili etkinlik sayfalarında yayınlanabilir. Ekibe özel not alanı yalnızca notwork ekibinin iç değerlendirmesi için kullanılır ve herkese açık alanlarda gösterilmez.",
     ],
   },
   {
     title: "4. Hukuki sebepler",
     body: [
-      "Veriler; açık rıza, sözleşmenin kurulması veya ifası, hukuki yükümlülüklerin yerine getirilmesi ve notwork topluluğunun güvenli biçimde işletilmesine yönelik meşru menfaat kapsamında işlenebilir. Networking kartlarının görünmesi ve e-posta iletişimi için kullanıcıdan form üzerinde açık onay alınır.",
+      "Veriler; açık rıza, sözleşmenin kurulması veya ifası, hukuki yükümlülüklerin yerine getirilmesi ve notwork topluluğunun güvenli biçimde işletilmesine yönelik meşru menfaat kapsamında işlenebilir. Networking kartlarının görünmesi, e-posta iletişimi ve etkinlik değerlendirmelerinin yayınlanması için kullanıcıdan form üzerinde açık onay alınır.",
     ],
   },
   {

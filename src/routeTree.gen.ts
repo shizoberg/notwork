@@ -14,6 +14,7 @@ import { Route as NetworkingRouteImport } from './routes/networking'
 import { Route as LinklerRouteImport } from './routes/linkler'
 import { Route as LegacyRouteImport } from './routes/legacy'
 import { Route as KvkkRouteImport } from './routes/kvkk'
+import { Route as EtkinlikDegerlendirmeRouteImport } from './routes/etkinlik-degerlendirme'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CerezPolitikasiRouteImport } from './routes/cerez-politikasi'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -44,6 +45,11 @@ const LegacyRoute = LegacyRouteImport.update({
 const KvkkRoute = KvkkRouteImport.update({
   id: '/kvkk',
   path: '/kvkk',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EtkinlikDegerlendirmeRoute = EtkinlikDegerlendirmeRouteImport.update({
+  id: '/etkinlik-degerlendirme',
+  path: '/etkinlik-degerlendirme',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommunityRoute = CommunityRouteImport.update({
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
+  '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
+  '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
+  '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cerez-politikasi'
     | '/community'
+    | '/etkinlik-degerlendirme'
     | '/kvkk'
     | '/legacy'
     | '/linkler'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cerez-politikasi'
     | '/community'
+    | '/etkinlik-degerlendirme'
     | '/kvkk'
     | '/legacy'
     | '/linkler'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cerez-politikasi'
     | '/community'
+    | '/etkinlik-degerlendirme'
     | '/kvkk'
     | '/legacy'
     | '/linkler'
@@ -166,6 +178,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CerezPolitikasiRoute: typeof CerezPolitikasiRoute
   CommunityRoute: typeof CommunityRoute
+  EtkinlikDegerlendirmeRoute: typeof EtkinlikDegerlendirmeRoute
   KvkkRoute: typeof KvkkRoute
   LegacyRoute: typeof LegacyRoute
   LinklerRoute: typeof LinklerRoute
@@ -208,6 +221,13 @@ declare module '@tanstack/react-router' {
       path: '/kvkk'
       fullPath: '/kvkk'
       preLoaderRoute: typeof KvkkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/etkinlik-degerlendirme': {
+      id: '/etkinlik-degerlendirme'
+      path: '/etkinlik-degerlendirme'
+      fullPath: '/etkinlik-degerlendirme'
+      preLoaderRoute: typeof EtkinlikDegerlendirmeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/community': {
@@ -262,6 +282,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CerezPolitikasiRoute: CerezPolitikasiRoute,
   CommunityRoute: CommunityRoute,
+  EtkinlikDegerlendirmeRoute: EtkinlikDegerlendirmeRoute,
   KvkkRoute: KvkkRoute,
   LegacyRoute: LegacyRoute,
   LinklerRoute: LinklerRoute,

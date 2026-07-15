@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import gallery2 from "@/assets/gallery/notwork-2.jpg";
 import gallery3 from "@/assets/gallery/notwork-3.jpg";
 import gallery4 from "@/assets/gallery/notwork-4.jpg";
@@ -11,6 +11,7 @@ import gallery10 from "@/assets/gallery/notwork-10.jpg";
 import gallery12 from "@/assets/gallery/notwork-12.jpg";
 import gallery13 from "@/assets/gallery/notwork-13.jpg";
 import { SiteNav, SiteFooter } from "@/components/SiteNav";
+import { averageRating, listEventReviews, type EventReview } from "@/lib/event-reviews";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -126,6 +127,7 @@ const tracks = [
 
 const pastEvents = [
   {
+    id: "14-temmuz-2026",
     date: "14 Temmuz 2026",
     location: "Mahal Bomonti İzmir",
     title: "14 Temmuz notwork İzmir",
@@ -135,6 +137,7 @@ const pastEvents = [
     accent: "from-[#142643] via-[#111827] to-[#0f172a]",
   },
   {
+    id: "22-mayis",
     date: "22 Mayıs",
     location: "İstinyeArt İzmir",
     title: "notwork · Mayıs buluşması",
@@ -143,6 +146,7 @@ const pastEvents = [
     accent: "from-[#173f68] via-[#265f73] to-[#8fcbd0]",
   },
   {
+    id: "10-nisan",
     date: "10 Nisan",
     location: "İstinyeArt İzmir",
     title: "notwork · Nisan sahnesi",
@@ -151,6 +155,7 @@ const pastEvents = [
     accent: "from-[#5f2a4f] via-[#8b2c5c] to-[#e3a3bf]",
   },
   {
+    id: "8-mart",
     date: "8 Mart",
     location: "İstinyeArt İzmir",
     title: "notwork · 8 Mart özel",
@@ -159,6 +164,7 @@ const pastEvents = [
     accent: "from-[#7f1d1d] via-[#b23b3b] to-[#f3a46b]",
   },
   {
+    id: "10-subat",
     date: "10 Şubat",
     location: "İstinyeArt İzmir",
     title: "notwork · Şubat gecesi",
@@ -167,6 +173,7 @@ const pastEvents = [
     accent: "from-[#1e3a8a] via-[#2563eb] to-[#93c5fd]",
   },
   {
+    id: "16-ocak",
     date: "16 Ocak",
     location: "İstinyeArt İzmir",
     title: "notwork · Ocak buluşması",
@@ -175,6 +182,7 @@ const pastEvents = [
     accent: "from-[#134e4a] via-[#0f766e] to-[#99f6e4]",
   },
   {
+    id: "8-aralik",
     date: "8 Aralık",
     location: "İstinyeArt İzmir",
     title: "notwork · Aralık başlangıcı",
@@ -384,6 +392,27 @@ function Nedir() {
 }
 
 function PastEvents() {
+  const [reviewsByEvent, setReviewsByEvent] = useState<Record<string, EventReview[]>>({});
+
+  useEffect(() => {
+    let active = true;
+    listEventReviews()
+      .then((reviews) => {
+        if (!active) return;
+        const grouped = reviews.reduce<Record<string, EventReview[]>>((acc, review) => {
+          acc[review.eventId] = [...(acc[review.eventId] || []), review];
+          return acc;
+        }, {});
+        setReviewsByEvent(grouped);
+      })
+      .catch(() => {
+        if (active) setReviewsByEvent({});
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <section className="mx-auto max-w-6xl px-5 mt-20 sm:mt-28">
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -399,11 +428,20 @@ function PastEvents() {
           Geçmiş etkinliklerin programını, konuşmacılarını ve etkinlik sonrası bağlantılarını burada
           topluyoruz.
         </p>
+        <Link
+          to="/etkinlik-degerlendirme"
+          className="inline-flex w-fit rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
+        >
+          Etkinlik değerlendir
+        </Link>
       </div>
 
       <div className="-mx-5 overflow-x-auto px-5 pb-4 [scrollbar-width:thin]">
         <div className="flex snap-x gap-4">
           {pastEvents.map((event) => {
+            const eventReviews = reviewsByEvent[event.id] || [];
+            const latestReview = eventReviews[0];
+            const eventAverage = averageRating(eventReviews);
             const card = (
               <article className="group flex h-full min-h-[520px] w-[82vw] max-w-sm snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:w-[360px]">
                 <div className="relative min-h-56 overflow-hidden bg-ink text-cream">
@@ -436,6 +474,26 @@ function PastEvents() {
                     {event.title}
                   </h3>
                   <p className="mt-4 flex-1 leading-relaxed text-muted-foreground">{event.text}</p>
+                  {eventReviews.length > 0 && (
+                    <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="text-lg tracking-tight text-primary-deep">
+                          {renderEventStars(Math.round(eventAverage))}
+                        </div>
+                        <div className="text-xs font-black text-primary-deep">
+                          {eventAverage.toFixed(1)} / 5
+                        </div>
+                      </div>
+                      <div className="mt-1 text-xs font-semibold text-foreground/50">
+                        {eventReviews.length} değerlendirme
+                      </div>
+                      {latestReview && (
+                        <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-foreground/65">
+                          “{latestReview.comment}”
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold">
                     {event.tags.map((item) => (
                       <span
@@ -468,6 +526,10 @@ function PastEvents() {
       </div>
     </section>
   );
+}
+
+function renderEventStars(rating: number) {
+  return "★".repeat(rating) + "☆".repeat(Math.max(0, 5 - rating));
 }
 
 function Gallery() {
