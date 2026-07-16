@@ -81,20 +81,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "notwork İzmir | Başarısızlık, Öğrenme ve Networking" },
+      { title: "notwork | İzmir Networking ve Başarısızlık Hikâyeleri" },
       {
         name: "description",
         content:
-          "notwork İzmir, başarısızlık hikâyeleri, öğrenme deneyimleri ve güçlü networking bağlantılarını bir araya getiren topluluk ve etkinlik serisidir.",
+          "notwork; İzmir’de başarısızlık hikâyeleri, öğrenme deneyimleri ve güçlü networking bağlantılarını bir araya getiren topluluk ve etkinlik serisidir.",
       },
       {
         name: "keywords",
         content:
-          "notwork İzmir, İzmir networking, notwork networking, İzmir etkinlik, başarısızlık hikâyeleri, girişimcilik İzmir",
+          "notwork, notwork İzmir, notwork.me, İzmir networking, notwork networking, İzmir etkinlik, başarısızlık hikâyeleri, girişimcilik İzmir",
       },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { name: "theme-color", content: "#8fcbd0" },
       { property: "og:site_name", content: "notwork" },
+      { property: "og:url", content: "https://notwork.me/" },
       { property: "og:locale", content: "tr_TR" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

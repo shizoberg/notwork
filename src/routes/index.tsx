@@ -16,16 +16,16 @@ import { averageRating, listEventReviews, type EventReview } from "@/lib/event-r
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "notwork İzmir | Başarısızlık Hikâyeleri ve Networking" },
+      { title: "notwork | İzmir Networking, Event ve Başarısızlık Hikâyeleri" },
       {
         name: "description",
         content:
-          "notwork İzmir; başarısızlık hikâyeleri, girişimcilik deneyimleri ve networking odaklı tanışma alanıyla İzmir’de güçlü bağlantılar kurduran etkinliktir.",
+          "notwork İzmir; başarısızlık hikâyeleri, girişimcilik deneyimleri ve networking odaklı tanışma alanıyla İzmir’de güçlü bağlantılar kurduran event ve topluluktur.",
       },
       {
         name: "keywords",
         content:
-          "notwork İzmir, İzmir networking, notwork networking, İzmir etkinlik, başarısızlık hikâyeleri, girişimcilik etkinliği, Mahal Bomonti",
+          "notwork, notwork İzmir, notwork.me, İzmir networking, networking event İzmir, notwork networking, İzmir etkinlik, başarısızlık hikâyeleri, girişimcilik etkinliği, Mahal Bomonti",
       },
       { property: "og:title", content: "notwork İzmir | Uğraşıp da Olduramadıklarının Sahnesi" },
       {
