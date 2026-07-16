@@ -208,14 +208,14 @@ function Hero() {
 
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
 
-        <h1 className="mt-3 font-display font-black tracking-[-0.05em] text-foreground text-balance break-keep text-[2.5rem] sm:text-5xl md:text-6xl lg:text-7xl leading-[0.85]">
-          Başarıdan Önce <br />
-          <span className="text-primary-deep">Gelen Deneyimler</span>
+        <h1 className="mt-3 font-display font-black tracking-[-0.05em] text-foreground text-balance break-keep text-[2.45rem] sm:text-5xl md:text-6xl lg:text-7xl leading-[0.85]">
+          f*ckup hikayelerinin anlatıldığı{" "}
+          <span className="text-primary-deep">networking club</span>
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-          Yeni notwork buluşmaları, bilet duyuruları ve topluluk haberleri için sosyal medya
-          hesaplarımızı takip edin.
+          Başarısızlık hikayelerinden çıkarılmış doğru dersler ve doğru bağlantılar ile notwork’e
+          katıl.
         </p>
 
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
