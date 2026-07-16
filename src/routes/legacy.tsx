@@ -49,6 +49,28 @@ const principles = [
 function LegacyPage() {
   return (
     <div className="min-h-screen bg-[#080705] text-[#f4ead7]">
+      <header className="sticky top-0 z-40 border-b border-[#d4af37]/20 bg-[#080705]/85 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
+          <a href="/" className="flex items-center gap-2 font-brand text-xl text-[#f4ead7]">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#d4af37]" />
+            <span>notwork</span>
+          </a>
+          <nav className="flex items-center gap-2 text-sm font-semibold">
+            <a
+              href="/"
+              className="rounded-full border border-[#d4af37]/25 px-4 py-2 text-[#f4ead7]/75 transition hover:border-[#d4af37]/60 hover:text-[#d4af37]"
+            >
+              Ana sayfa
+            </a>
+            <a
+              href="/networking"
+              className="hidden rounded-full border border-[#d4af37]/25 px-4 py-2 text-[#f4ead7]/75 transition hover:border-[#d4af37]/60 hover:text-[#d4af37] sm:inline-flex"
+            >
+              Networking
+            </a>
+          </nav>
+        </div>
+      </header>
       <main>
         <section className="relative overflow-hidden px-5 py-16 sm:py-24">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.28),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(143,203,208,0.12),transparent_28%)]" />
