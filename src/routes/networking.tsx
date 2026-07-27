@@ -1278,6 +1278,7 @@ function NetworkGraph({
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(320);
   const [hover, setHover] = useState<string | null>(null);
+  const [overview, setOverview] = useState(false);
 
   useEffect(() => {
     if (!wrapRef.current) return;
@@ -1363,11 +1364,31 @@ function NetworkGraph({
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
+      <button
+        type="button"
+        onClick={() => setOverview((current) => !current)}
+        className="absolute left-3 top-3 z-10 rounded-full border border-primary/30 bg-background/95 px-3 py-1.5 text-[11px] font-black text-primary-deep shadow-sm backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+      >
+        {overview ? "Yakın görünüm" : "Büyüt"}
+      </button>
       <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-full border border-border bg-background/90 px-3 py-1.5 text-[11px] text-foreground/60 shadow-sm backdrop-blur">
-        {hint}
+        {overview ? "tüm daireler görünür" : hint}
       </div>
-      <div ref={wrapRef} className="h-[540px] overflow-auto overscroll-contain sm:h-[650px]">
-        <svg width={layout.canvasWidth} height={layout.height} className="block">
+      <div
+        ref={wrapRef}
+        className={
+          overview
+            ? "h-[72vh] min-h-[520px] overflow-hidden p-3 pt-12"
+            : "h-[540px] overflow-auto overscroll-contain sm:h-[650px]"
+        }
+      >
+        <svg
+          width={overview ? "100%" : layout.canvasWidth}
+          height={overview ? "100%" : layout.height}
+          viewBox={overview ? `0 0 ${layout.canvasWidth} ${layout.height}` : undefined}
+          preserveAspectRatio="xMidYMid meet"
+          className="block"
+        >
           <defs>
             <marker
               id="network-arrow"
