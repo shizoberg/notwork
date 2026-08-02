@@ -235,22 +235,6 @@ function Hero() {
           >
             Bilet al
           </a>
-          <a
-            href="https://www.instagram.com/notwork.ntw/"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center rounded-full border border-border bg-card px-7 py-3.5 font-semibold text-foreground transition hover:bg-muted"
-          >
-            Instagram’da takip et
-          </a>
-          <a
-            href="https://www.youtube.com/@notwork-izmir"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center rounded-full border border-border bg-card px-7 py-3.5 font-semibold text-foreground transition hover:bg-muted"
-          >
-            YouTube’a göz at
-          </a>
         </div>
       </div>
     </section>
