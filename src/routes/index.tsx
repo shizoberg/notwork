@@ -13,6 +13,9 @@ import gallery13 from "@/assets/gallery/notwork-13.jpg";
 import { SiteNav, SiteFooter } from "@/components/SiteNav";
 import { averageRating, listEventReviews, type EventReview } from "@/lib/event-reviews";
 
+const augustTicketUrl =
+  "https://www.biletimgo.com/etkinlik/notwork-basarisizlik-hikayeleri-networking-club-29731";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -201,9 +204,9 @@ function Hero() {
       <div className="mx-auto max-w-5xl px-4 sm:px-5 pt-6 sm:pt-12 pb-10 sm:pb-16 text-center">
         <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-foreground/60">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary blink" />
-          <span>Gelecek etkinlikler için bizi takip edin</span>
+          <span>21 Ağustos networking eventi</span>
           <span className="w-1 h-1 rounded-full bg-foreground/20" />
-          <span>notwork İzmir</span>
+          <span>Rene Lokal</span>
         </div>
 
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
@@ -220,10 +223,23 @@ function Hero() {
 
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <a
-            href="https://www.instagram.com/notwork.ntw/"
+            href={augustTicketUrl}
+            data-analytics="ticket_click"
+            data-analytics-label="21 Ağustos Rene Lokal bilet al"
+            data-meta-event="ViewContent"
+            data-meta-content="notwork 21 Ağustos Rene Lokal Bileti"
+            data-meta-content-id="notwork-21-agustos-rene-lokal"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 font-semibold text-primary-foreground transition hover:opacity-90"
+          >
+            Bilet al
+          </a>
+          <a
+            href="https://www.instagram.com/notwork.ntw/"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center rounded-full border border-border bg-card px-7 py-3.5 font-semibold text-foreground transition hover:bg-muted"
           >
             Instagram’da takip et
           </a>

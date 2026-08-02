@@ -278,6 +278,19 @@ function AdminPage() {
             <Metric icon={MousePointerClick} label="Toplam tıklama" value={report.clicks} />
             <Metric icon={Activity} label="Ort. süre" value={`${report.averageTime} sn`} />
           </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <Metric
+              icon={Ticket}
+              label="14 Temmuz bilet tıklaması"
+              value={report.ticketClicksByEvent.july14}
+            />
+            <Metric
+              icon={Ticket}
+              label="21 Ağustos bilet tıklaması"
+              value={report.ticketClicksByEvent.august21}
+              highlight
+            />
+          </div>
         </section>
 
         <section className="mt-6 grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
@@ -831,6 +844,20 @@ function buildReport(events: AnalyticsEvent[]) {
     events.filter((event) => event.sessionId).map((event) => event.sessionId),
   ).size;
   const ticketClicks = count("ticket_click");
+  const ticketEvents = events.filter((event) => event.type === "ticket_click");
+  const ticketClicksByEvent = {
+    july14: ticketEvents.filter(
+      (event) =>
+        event.label.includes("14 Temmuz") ||
+        event.path.includes("14temmuz") ||
+        event.target.includes("notwork-bir-tur-network-eventi-28473"),
+    ).length,
+    august21: ticketEvents.filter(
+      (event) =>
+        event.label.includes("21 Ağustos") ||
+        event.target.includes("notwork-basarisizlik-hikayeleri-networking-club-29731"),
+    ).length,
+  };
   const pageTimes = events.filter((event) => event.type === "page_time" && event.value > 0);
   const buttonEvents = events.filter((event) => ["click", "ticket_click"].includes(event.type));
   const formAndNetworkEvents = events.filter(
@@ -844,6 +871,7 @@ function buildReport(events: AnalyticsEvent[]) {
     sessions,
     pageViews: count("page_view"),
     ticketClicks,
+    ticketClicksByEvent,
     conversion: sessions ? ((ticketClicks / sessions) * 100).toFixed(1) : "0.0",
     clicks: count("click") + ticketClicks,
     averageTime: pageTimes.length

@@ -88,7 +88,7 @@ export function MetaPixelTracker() {
         content_name: element.dataset.metaContent || "notwork 14 Temmuz Bileti",
         content_category: "Etkinlik Bileti",
         content_type: "product",
-        content_ids: ["notwork-14-temmuz"],
+        content_ids: [element.dataset.metaContentId || "notwork-ticket"],
       });
     };
 

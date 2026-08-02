@@ -133,8 +133,10 @@ function JulyFourteenth() {
             <a
               href={ticketUrl}
               data-analytics="ticket_click"
+              data-analytics-label="14 Temmuz Mahal Bomonti bilet al"
               data-meta-event="ViewContent"
               data-meta-content="notwork 14 Temmuz Bileti"
+              data-meta-content-id="notwork-14-temmuz"
               target="_blank"
               rel="noreferrer"
               className="rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground transition hover:opacity-90"

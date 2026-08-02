@@ -82,7 +82,12 @@ export function AnalyticsTracker() {
       );
       if (!element || element.closest("[data-analytics-ignore]")) return;
       const explicit = element.dataset.analytics;
-      const label = explicit || element.getAttribute("aria-label") || element.textContent || "";
+      const label =
+        element.dataset.analyticsLabel ||
+        explicit ||
+        element.getAttribute("aria-label") ||
+        element.textContent ||
+        "";
       const target = element instanceof HTMLAnchorElement ? element.href : "";
       sendEvent({
         type: explicit === "ticket_click" ? "ticket_click" : "click",
