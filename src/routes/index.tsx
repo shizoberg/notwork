@@ -231,7 +231,7 @@ function Hero() {
           katıl.
         </p>
 
-        <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+        <div className="mt-7 flex justify-center">
           <a
             href={augustTicketUrl}
             data-analytics="ticket_click"
@@ -241,7 +241,7 @@ function Hero() {
             data-meta-content-id="notwork-21-agustos-rene-lokal"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 font-semibold text-primary-foreground transition hover:opacity-90"
+            className="inline-flex w-fit items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 sm:px-6 sm:py-3"
           >
             Bilet al
           </a>
