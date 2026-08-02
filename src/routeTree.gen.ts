@@ -18,6 +18,7 @@ import { Route as EtkinlikDegerlendirmeRouteImport } from './routes/etkinlik-deg
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CerezPolitikasiRouteImport } from './routes/cerez-politikasi'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as R21agustosRouteImport } from './routes/21agustos'
 import { Route as R14temmuznetworkingRouteImport } from './routes/14temmuznetworking'
 import { Route as R14temmuzRouteImport } from './routes/14temmuz'
 import { Route as IndexRouteImport } from './routes/index'
@@ -67,6 +68,11 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const R21agustosRoute = R21agustosRouteImport.update({
+  id: '/21agustos',
+  path: '/21agustos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const R14temmuznetworkingRoute = R14temmuznetworkingRouteImport.update({
   id: '/14temmuznetworking',
   path: '/14temmuznetworking',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
+  '/21agustos': typeof R21agustosRoute
   '/admin': typeof AdminRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
+  '/21agustos': typeof R21agustosRoute
   '/admin': typeof AdminRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
+  '/21agustos': typeof R21agustosRoute
   '/admin': typeof AdminRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/'
     | '/14temmuz'
     | '/14temmuznetworking'
+    | '/21agustos'
     | '/admin'
     | '/cerez-politikasi'
     | '/community'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/'
     | '/14temmuz'
     | '/14temmuznetworking'
+    | '/21agustos'
     | '/admin'
     | '/cerez-politikasi'
     | '/community'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/'
     | '/14temmuz'
     | '/14temmuznetworking'
+    | '/21agustos'
     | '/admin'
     | '/cerez-politikasi'
     | '/community'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   R14temmuzRoute: typeof R14temmuzRoute
   R14temmuznetworkingRoute: typeof R14temmuznetworkingRoute
+  R21agustosRoute: typeof R21agustosRoute
   AdminRoute: typeof AdminRoute
   CerezPolitikasiRoute: typeof CerezPolitikasiRoute
   CommunityRoute: typeof CommunityRoute
@@ -251,6 +264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/21agustos': {
+      id: '/21agustos'
+      path: '/21agustos'
+      fullPath: '/21agustos'
+      preLoaderRoute: typeof R21agustosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/14temmuznetworking': {
       id: '/14temmuznetworking'
       path: '/14temmuznetworking'
@@ -279,6 +299,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   R14temmuzRoute: R14temmuzRoute,
   R14temmuznetworkingRoute: R14temmuznetworkingRoute,
+  R21agustosRoute: R21agustosRoute,
   AdminRoute: AdminRoute,
   CerezPolitikasiRoute: CerezPolitikasiRoute,
   CommunityRoute: CommunityRoute,

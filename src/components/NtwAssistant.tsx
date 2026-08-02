@@ -32,7 +32,7 @@ const prompts = [
     answer:
       "Yaklaşan etkinliklerin programını, bilet bağlantılarını ve topluluk linklerini hızlıca görebilirsin.",
     cta: "Etkinlik sayfasına git",
-    href: "/14temmuz",
+    href: "/21agustos",
   },
 ] as const;
 

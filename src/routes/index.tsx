@@ -131,6 +131,16 @@ const tracks = [
 
 const pastEvents = [
   {
+    id: "21-agustos-2026",
+    date: "21 Ağustos 2026",
+    location: "House of Rene Lokal",
+    title: "21 Ağustos notwork İzmir",
+    text: "Bornova Rene Lokal’de başarısızlık hikâyeleri, doğru dersler ve etkinlik sonrası networking akışıyla yeni notwork gecesi.",
+    tags: ["Bilet", "Rene Lokal", "Bornova", "Networking"],
+    href: "/21agustos",
+    accent: "from-[#0f2f35] via-[#2f9aa5] to-[#8fcbd0]",
+  },
+  {
     id: "14-temmuz-2026",
     date: "14 Temmuz 2026",
     location: "Mahal Bomonti İzmir",
@@ -421,15 +431,15 @@ function PastEvents() {
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
-            geçmiş eventler
+            etkinlikler
           </div>
           <h2 className="mt-2 font-display font-bold text-3xl sm:text-5xl text-foreground">
-            Önceki notwork geceleri
+            notwork geceleri
           </h2>
         </div>
         <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-          Geçmiş etkinliklerin programını, konuşmacılarını ve etkinlik sonrası bağlantılarını burada
-          topluyoruz.
+          Yaklaşan etkinliklerin bilet ve program bilgilerini, geçmiş etkinliklerin de arşivini
+          burada topluyoruz.
         </p>
         <Link
           to="/etkinlik-degerlendirme"
