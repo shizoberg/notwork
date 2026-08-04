@@ -131,16 +131,6 @@ const tracks = [
 
 const pastEvents = [
   {
-    id: "21-agustos-2026",
-    date: "21 Ağustos 2026",
-    location: "House of Rene Lokal",
-    title: "21 Ağustos notwork İzmir",
-    text: "Bornova Rene Lokal’de başarısızlık hikâyeleri, doğru dersler ve etkinlik sonrası networking akışıyla yeni notwork gecesi.",
-    tags: ["Bilet", "Rene Lokal", "Bornova", "Networking"],
-    href: "/21agustos",
-    accent: "from-[#0f2f35] via-[#2f9aa5] to-[#8fcbd0]",
-  },
-  {
     id: "14-temmuz-2026",
     date: "14 Temmuz 2026",
     location: "Mahal Bomonti İzmir",
@@ -207,6 +197,16 @@ const pastEvents = [
 ];
 
 const eventMetaById = Object.fromEntries(pastEvents.map((event) => [event.id, event]));
+
+const currentEvent = {
+  date: "21 Ağustos 2026",
+  location: "House of Rene Lokal",
+  title: "21 Ağustos notwork İzmir",
+  text: "Bornova Rene Lokal’de başarısızlık hikâyeleri, doğru dersler ve etkinlik sonrası networking akışıyla güncel notwork gecesi.",
+  tags: ["Bilet", "Rene Lokal", "Bornova", "Güncel event"],
+  href: "/21agustos",
+  accent: "from-[#0f2f35] via-[#2f9aa5] to-[#8fcbd0]",
+};
 
 function Hero() {
   return (
@@ -438,8 +438,8 @@ function PastEvents() {
           </h2>
         </div>
         <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-          Yaklaşan etkinliklerin bilet ve program bilgilerini, geçmiş etkinliklerin de arşivini
-          burada topluyoruz.
+          Güncel etkinliğin bilet ve program bilgilerini; geçmiş etkinliklerin de arşivini burada
+          topluyoruz.
         </p>
         <Link
           to="/etkinlik-degerlendirme"
@@ -448,6 +448,59 @@ function PastEvents() {
           Etkinlik yorumla
         </Link>
       </div>
+
+      <Link
+        to={currentEvent.href}
+        className="group mb-6 block overflow-hidden rounded-3xl border border-primary/30 bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/70 hover:shadow-[var(--shadow-soft)]"
+      >
+        <article className="grid md:grid-cols-[0.9fr_1.1fr]">
+          <div className="relative min-h-64 overflow-hidden bg-ink text-cream">
+            <div
+              className={`absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_32%)] bg-gradient-to-br ${currentEvent.accent}`}
+            />
+            <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full border-[24px] border-primary/25" />
+            <div className="absolute -bottom-14 left-8 h-40 w-40 rounded-full border-[28px] border-primary/15" />
+            <div className="relative flex min-h-64 flex-col justify-between p-6">
+              <div className="inline-flex w-fit rounded-full border border-cream/20 bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em]">
+                Güncel event
+              </div>
+              <div>
+                <div className="text-xs font-bold uppercase tracking-[0.24em] text-primary">
+                  {currentEvent.date} · {currentEvent.location}
+                </div>
+                <div className="mt-2 font-display text-5xl font-black leading-none tracking-[-0.05em]">
+                  21 Ağustos
+                  <br />
+                  notwork
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col justify-center p-6 sm:p-8">
+            <div className="inline-flex w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-deep">
+              Bilet ve program
+            </div>
+            <h3 className="mt-4 font-display text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+              {currentEvent.title}
+            </h3>
+            <p className="mt-4 leading-relaxed text-muted-foreground">{currentEvent.text}</p>
+            <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold">
+              {currentEvent.tags.map((item) => (
+                <span
+                  key={item}
+                  className="rounded-full border border-border bg-background px-3 py-1.5"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+            <div className="mt-7 inline-flex items-center gap-2 font-bold text-primary-deep">
+              Güncel event sayfasına git
+              <span className="transition group-hover:translate-x-1">→</span>
+            </div>
+          </div>
+        </article>
+      </Link>
 
       <div className="-mx-5 overflow-x-auto px-5 pb-4 [scrollbar-width:thin]">
         <div className="flex snap-x gap-4">
@@ -611,7 +664,9 @@ function EventReviewsFlow() {
                 )}
                 <div className="flex flex-1 flex-col p-5">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="text-lg text-primary-deep">{renderEventStars(review.rating)}</div>
+                    <div className="text-lg text-primary-deep">
+                      {renderEventStars(review.rating)}
+                    </div>
                     <div className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-black text-primary-deep">
                       {event?.date || review.eventTitle}
                     </div>
