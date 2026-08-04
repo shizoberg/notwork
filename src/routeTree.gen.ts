@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SponsorRouteImport } from './routes/sponsor'
 import { Route as NetworkingRouteImport } from './routes/networking'
+import { Route as NetworkStartupRouteImport } from './routes/network-startup'
 import { Route as LinklerRouteImport } from './routes/linkler'
 import { Route as LegacyRouteImport } from './routes/legacy'
 import { Route as KvkkRouteImport } from './routes/kvkk'
@@ -35,6 +36,11 @@ const SponsorRoute = SponsorRouteImport.update({
 const NetworkingRoute = NetworkingRouteImport.update({
   id: '/networking',
   path: '/networking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NetworkStartupRoute = NetworkStartupRouteImport.update({
+  id: '/network-startup',
+  path: '/network-startup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LinklerRoute = LinklerRouteImport.update({
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
+  '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/sponsor': typeof SponsorRoute
   '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
+  '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/sponsor': typeof SponsorRoute
   '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
+  '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/sponsor': typeof SponsorRoute
   '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/kvkk'
     | '/legacy'
     | '/linkler'
+    | '/network-startup'
     | '/networking'
     | '/sponsor'
     | '/21-agustos/eslesme'
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/kvkk'
     | '/legacy'
     | '/linkler'
+    | '/network-startup'
     | '/networking'
     | '/sponsor'
     | '/21-agustos/eslesme'
@@ -223,6 +234,7 @@ export interface FileRouteTypes {
     | '/kvkk'
     | '/legacy'
     | '/linkler'
+    | '/network-startup'
     | '/networking'
     | '/sponsor'
     | '/21-agustos/eslesme'
@@ -243,6 +255,7 @@ export interface RootRouteChildren {
   KvkkRoute: typeof KvkkRoute
   LegacyRoute: typeof LegacyRoute
   LinklerRoute: typeof LinklerRoute
+  NetworkStartupRoute: typeof NetworkStartupRoute
   NetworkingRoute: typeof NetworkingRoute
   SponsorRoute: typeof SponsorRoute
   R21AgustosEslesmeRoute: typeof R21AgustosEslesmeRoute
@@ -265,6 +278,13 @@ declare module '@tanstack/react-router' {
       path: '/networking'
       fullPath: '/networking'
       preLoaderRoute: typeof NetworkingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/network-startup': {
+      id: '/network-startup'
+      path: '/network-startup'
+      fullPath: '/network-startup'
+      preLoaderRoute: typeof NetworkStartupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/linkler': {
@@ -387,6 +407,7 @@ const rootRouteChildren: RootRouteChildren = {
   KvkkRoute: KvkkRoute,
   LegacyRoute: LegacyRoute,
   LinklerRoute: LinklerRoute,
+  NetworkStartupRoute: NetworkStartupRoute,
   NetworkingRoute: NetworkingRoute,
   SponsorRoute: SponsorRoute,
   R21AgustosEslesmeRoute: R21AgustosEslesmeRoute,
