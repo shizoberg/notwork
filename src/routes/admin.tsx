@@ -129,6 +129,8 @@ const adminTabs: Array<{ id: AdminTab; label: string; description: string }> = [
   { id: "networking", label: "Networking", description: "Genel topluluk ağı ve onaylar" },
 ];
 
+const adminUiVersion = "Admin v2 · 21 Ağustos demo";
+
 function AdminPage() {
   const [password, setPassword] = useState("");
   const [days, setDays] = useState(30);
@@ -306,6 +308,9 @@ function AdminPage() {
           <div>
             <div className="font-brand text-2xl">notwork</div>
             <h1 className="mt-2 text-3xl font-black">Admin paneli</h1>
+            <p className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
+              {adminUiVersion}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {[7, 30, 90].map((range) => (
