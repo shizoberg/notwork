@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { Config, Context } from "@netlify/functions";
 import {
+  getEventNetworkDatasetInfo,
   getEventNetworkStore,
   listRegistrations,
   type NetworkAdminInput,
@@ -23,7 +24,7 @@ export default async (request: Request, _context: Context) => {
     if (!validPassword(input.password)) return new Response("Yetkisiz erişim", { status: 401 });
     const store = getEventNetworkStore();
     return Response.json(
-      { registrations: await listRegistrations(store) },
+      { registrations: await listRegistrations(store), database: getEventNetworkDatasetInfo() },
       { headers: { "cache-control": "no-store, private" } },
     );
   } catch {

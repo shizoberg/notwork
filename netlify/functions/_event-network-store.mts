@@ -79,10 +79,37 @@ export type NetworkAdminInput = {
 
 const eventId = "21-agustos-2026";
 const storeName = "event-network";
+const defaultDatasetCode = "21agustos-demo";
+const liveDatasetCode = "21agustoscanli";
+const datasetCode =
+  process.env.EVENT_NETWORK_DATASET?.trim() ||
+  process.env.NETLIFY_EVENT_NETWORK_DATASET?.trim() ||
+  defaultDatasetCode;
+const datasetPrefix = `events/${datasetCode}/network`;
 const codeLetters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 
 export function getEventNetworkStore() {
   return getStore({ name: storeName, consistency: "strong" });
+}
+
+export function getEventNetworkDatasetInfo() {
+  return {
+    storeName,
+    datasetCode,
+    activeDatabaseCode: datasetCode,
+    demoDatabaseCode: defaultDatasetCode,
+    liveDatabaseCode: liveDatasetCode,
+    keyPrefix: datasetPrefix,
+    mode: datasetCode === liveDatasetCode ? "live" : "demo",
+  };
+}
+
+export async function resetDemoEventNetworkDataset(store: ReturnType<typeof getEventNetworkStore>) {
+  if (getEventNetworkDatasetInfo().mode !== "demo") {
+    throw new Error("Demo reset sadece demo database üzerinde çalışır");
+  }
+  const { blobs } = await store.list({ prefix: `${datasetPrefix}/` });
+  await Promise.all(blobs.map((blob) => store.delete(blob.key)));
 }
 
 export function clean(value: unknown, maxLength: number) {
@@ -104,31 +131,31 @@ export function hashToken(value: string) {
 }
 
 function profileKey(emailNormalized: string) {
-  return `events/21-agustos/network/profiles/${encodeURIComponent(emailNormalized)}.json`;
+  return `${datasetPrefix}/profiles/${encodeURIComponent(emailNormalized)}.json`;
 }
 
 function participantKey(participantId: string) {
-  return `events/21-agustos/network/participants/${participantId}.json`;
+  return `${datasetPrefix}/participants/${participantId}.json`;
 }
 
 function codeKey(publicCode: string) {
-  return `events/21-agustos/network/codes/${publicCode}.json`;
+  return `${datasetPrefix}/codes/${publicCode}.json`;
 }
 
 function tokenKey(tokenHash: string) {
-  return `events/21-agustos/network/tokens/${tokenHash}.json`;
+  return `${datasetPrefix}/tokens/${tokenHash}.json`;
 }
 
 function detailKey(participantId: string) {
-  return `events/21-agustos/network/details/${participantId}.json`;
+  return `${datasetPrefix}/details/${participantId}.json`;
 }
 
 function presenceKey(participantId: string) {
-  return `events/21-agustos/network/presence/${participantId}.json`;
+  return `${datasetPrefix}/presence/${participantId}.json`;
 }
 
 function matchCursorKey(participantId: string) {
-  return `events/21-agustos/network/match-cursors/${participantId}.json`;
+  return `${datasetPrefix}/match-cursors/${participantId}.json`;
 }
 
 function normalizeOffers(value: unknown) {
@@ -144,7 +171,7 @@ function isValidEmail(email: string) {
 }
 
 async function nextPublicCode(store: ReturnType<typeof getEventNetworkStore>) {
-  const { blobs } = await store.list({ prefix: "events/21-agustos/network/codes/" });
+  const { blobs } = await store.list({ prefix: `${datasetPrefix}/codes/` });
   const used = new Set(
     blobs
       .map((blob) => blob.key.split("/").pop()?.replace(".json", ""))
@@ -376,10 +403,7 @@ export async function getRegistrationByToken(
 }
 
 export async function listRegistrations(store: ReturnType<typeof getEventNetworkStore>) {
-  const rows = await getJsonRows<EventNetworkRegistration>(
-    store,
-    "events/21-agustos/network/participants/",
-  );
+  const rows = await getJsonRows<EventNetworkRegistration>(store, `${datasetPrefix}/participants/`);
   const uniqueRows = new Map<string, EventNetworkRegistration>();
   const usedCodes = new Set<string>();
   rows
@@ -508,16 +532,17 @@ export async function seedSampleRegistrations(
     needTag: string;
   }>,
 ) {
-  const registrations = await Promise.all(
-    samples.map((sample) =>
-      registerNetworkProfile(store, {
+  const registrations: EventNetworkRegistration[] = [];
+  for (const sample of samples) {
+    registrations.push(
+      await registerNetworkProfile(store, {
         ...sample,
         action: "register",
         eventConsent: true,
         generalNetworkOptIn: true,
         marketingOptIn: false,
       }),
-    ),
-  );
+    );
+  }
   return registrations;
 }

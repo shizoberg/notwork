@@ -2,10 +2,12 @@ import type { Config, Context } from "@netlify/functions";
 import { readFile } from "node:fs/promises";
 import {
   clean,
+  getEventNetworkDatasetInfo,
   getEventNetworkStore,
   getNextMatchGroup,
   getRegistrationByToken,
   registerNetworkProfile,
+  resetDemoEventNetworkDataset,
   seedSampleRegistrations,
   updatePresenceByToken,
   type NetworkInput,
@@ -83,6 +85,9 @@ export default async (request: Request, _context: Context) => {
     if (action === "seedSamples") {
       if (!isDemoSeedAllowed(request))
         return new Response("Demo seed şu anda kapalı", { status: 403 });
+      if (getEventNetworkDatasetInfo().mode !== "demo")
+        return new Response("Seed sadece demo database üzerinde çalışır", { status: 403 });
+      await resetDemoEventNetworkDataset(store);
       const registrations = await seedSampleRegistrations(store, await readSampleData());
       return json({ registrations }, { status: 201 });
     }

@@ -31,7 +31,7 @@ import {
 } from "recharts";
 import type { WordcloudAnswer, WordcloudQuestion, WordcloudResults } from "@/lib/event-wordcloud";
 import type { EventNetworkRegistration } from "@/lib/event-network";
-import { getEventNetworkAdmin } from "@/lib/event-network-api";
+import { getEventNetworkAdmin, seedEventNetworkSamples } from "@/lib/event-network-api";
 import { getWordcloudAdmin, updateWordcloudAdmin } from "@/lib/wordcloud-api";
 
 export const Route = createFileRoute("/admin")({
@@ -111,6 +111,24 @@ const eventNames: Record<string, string> = {
   form_submit: "Form gönderimi",
 };
 
+type AdminTab = "events" | "analytics" | "networking";
+
+type EventDatabaseInfo = {
+  storeName: string;
+  datasetCode: string;
+  activeDatabaseCode: string;
+  demoDatabaseCode: string;
+  liveDatabaseCode: string;
+  keyPrefix: string;
+  mode: "demo" | "live";
+};
+
+const adminTabs: Array<{ id: AdminTab; label: string; description: string }> = [
+  { id: "events", label: "21 Ağustos", description: "WordCloud, Match Lab ve event kayıtları" },
+  { id: "analytics", label: "Analiz", description: "Trafik, bilet ve aksiyon grafikleri" },
+  { id: "networking", label: "Networking", description: "Genel topluluk ağı ve onaylar" },
+];
+
 function AdminPage() {
   const [password, setPassword] = useState("");
   const [days, setDays] = useState(30);
@@ -127,8 +145,10 @@ function AdminPage() {
     useState<Partial<WordcloudQuestion>>(blankWordcloudQuestion);
   const [wordcloudMessage, setWordcloudMessage] = useState("");
   const [eventRegistrations, setEventRegistrations] = useState<EventNetworkRegistration[]>([]);
+  const [eventDatabase, setEventDatabase] = useState<EventDatabaseInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [activeAdminTab, setActiveAdminTab] = useState<AdminTab>("events");
 
   const loadNetwork = async (nextPassword = password) => {
     const response = await fetch("/api/networking/admin", {
@@ -152,6 +172,18 @@ function AdminPage() {
   const loadEventNetwork = async (nextPassword = password) => {
     const data = await getEventNetworkAdmin(nextPassword);
     setEventRegistrations(data.registrations);
+    setEventDatabase(data.database || null);
+  };
+
+  const seedEventNetwork = async () => {
+    setNetworkMessage("");
+    try {
+      await seedEventNetworkSamples();
+      await loadEventNetwork(password);
+      setNetworkMessage("21 Ağustos demo test verisi oluşturuldu.");
+    } catch (caught) {
+      setNetworkMessage(caught instanceof Error ? caught.message : "Demo test verisi eklenemedi.");
+    }
   };
 
   const wordcloudAction = async (
@@ -303,7 +335,32 @@ function AdminPage() {
           </div>
         </header>
 
-        <section className="mt-6 rounded-[2rem] border border-primary/25 bg-primary/10 p-5">
+        <nav className="mt-6 grid gap-3 lg:grid-cols-3">
+          {adminTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveAdminTab(tab.id)}
+              className={`rounded-[1.5rem] border p-4 text-left transition ${
+                activeAdminTab === tab.id
+                  ? "border-primary/50 bg-primary/12 shadow-[0_18px_50px_rgba(143,203,208,0.18)]"
+                  : "border-border bg-card hover:border-primary/30"
+              }`}
+            >
+              <span className="text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
+                Sekme
+              </span>
+              <span className="mt-1 block text-xl font-black">{tab.label}</span>
+              <span className="mt-1 block text-sm text-foreground/50">{tab.description}</span>
+            </button>
+          ))}
+        </nav>
+
+        <section
+          className={`mt-6 rounded-[2rem] border border-primary/25 bg-primary/10 p-5 ${
+            activeAdminTab === "events" ? "" : "hidden"
+          }`}
+        >
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="text-xs font-bold uppercase tracking-[0.22em] text-primary-deep">
@@ -335,7 +392,11 @@ function AdminPage() {
           </div>
         </section>
 
-        <section className="mt-7 overflow-hidden rounded-[2rem] border border-primary/25 bg-[radial-gradient(circle_at_top_left,rgba(143,203,208,0.22),transparent_34%),linear-gradient(135deg,hsl(var(--card)),hsl(var(--background)))] p-5 shadow-[var(--shadow-card)]">
+        <section
+          className={`mt-7 overflow-hidden rounded-[2rem] border border-primary/25 bg-[radial-gradient(circle_at_top_left,rgba(143,203,208,0.22),transparent_34%),linear-gradient(135deg,hsl(var(--card)),hsl(var(--background)))] p-5 shadow-[var(--shadow-card)] ${
+            activeAdminTab === "analytics" ? "" : "hidden"
+          }`}
+        >
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <div className="text-xs font-bold uppercase tracking-[0.25em] text-primary-deep">
@@ -382,7 +443,11 @@ function AdminPage() {
           </div>
         </section>
 
-        <section className="mt-6 grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
+        <section
+          className={`mt-6 grid gap-5 xl:grid-cols-[1.3fr_0.7fr] ${
+            activeAdminTab === "analytics" ? "" : "hidden"
+          }`}
+        >
           <ChartCard
             title="Günlük trafik akışı"
             description="Sayfa görüntüleme, oturum ve bilet ilgisi"
@@ -466,7 +531,11 @@ function AdminPage() {
           </ChartCard>
         </section>
 
-        <section className="mt-6 grid gap-5 xl:grid-cols-3">
+        <section
+          className={`mt-6 grid gap-5 xl:grid-cols-3 ${
+            activeAdminTab === "analytics" ? "" : "hidden"
+          }`}
+        >
           <ChartCard title="Buton takip paneli" description="En çok tıklanan CTA ve linkler">
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={report.buttonActions}>
@@ -491,7 +560,11 @@ function AdminPage() {
           <ReportList title="Trafik kaynakları" rows={report.sources} />
         </section>
 
-        <section className="mt-6 grid gap-5 lg:grid-cols-2">
+        <section
+          className={`mt-6 grid gap-5 lg:grid-cols-2 ${
+            activeAdminTab === "analytics" ? "" : "hidden"
+          }`}
+        >
           <ActionTable title="Buton ve CTA tıklamaları" events={report.buttonEvents} />
           <ActionTable
             title="Son form ve networking aksiyonları"
@@ -499,39 +572,54 @@ function AdminPage() {
           />
         </section>
 
-        <section className="mt-6 grid gap-5 lg:grid-cols-2">
+        <section
+          className={`mt-6 grid gap-5 lg:grid-cols-2 ${
+            activeAdminTab === "analytics" ? "" : "hidden"
+          }`}
+        >
           <ReportList title="En çok kullanılan aksiyonlar" rows={report.topActions} />
           <ReportList title="Kaydırma derinliği" rows={report.scrollDepth} suffix=" ulaşım" />
         </section>
 
-        <WordcloudAdmin
-          questions={wordcloudQuestions}
-          answers={wordcloudAnswers}
-          results={wordcloudResults}
-          draft={wordcloudDraft}
-          message={wordcloudMessage}
-          setDraft={setWordcloudDraft}
-          refresh={() => loadWordcloud(password)}
-          wordcloudAction={wordcloudAction}
-        />
+        <div className={activeAdminTab === "events" ? "" : "hidden"}>
+          <WordcloudAdmin
+            questions={wordcloudQuestions}
+            answers={wordcloudAnswers}
+            results={wordcloudResults}
+            draft={wordcloudDraft}
+            message={wordcloudMessage}
+            setDraft={setWordcloudDraft}
+            refresh={() => loadWordcloud(password)}
+            wordcloudAction={wordcloudAction}
+          />
 
-        <EventNetworkAdmin
-          registrations={eventRegistrations}
-          refresh={() => loadEventNetwork(password)}
-        />
+          <EventNetworkAdmin
+            registrations={eventRegistrations}
+            database={eventDatabase}
+            message={networkMessage}
+            refresh={() => loadEventNetwork(password)}
+            seedSamples={seedEventNetwork}
+          />
+        </div>
 
-        <NetworkingAdmin
-          members={members}
-          requests={requests}
-          draft={memberDraft}
-          editingUsername={editingUsername}
-          message={networkMessage}
-          setDraft={setMemberDraft}
-          setEditingUsername={setEditingUsername}
-          networkAction={networkAction}
-        />
+        <div className={activeAdminTab === "networking" ? "" : "hidden"}>
+          <NetworkingAdmin
+            members={members}
+            requests={requests}
+            draft={memberDraft}
+            editingUsername={editingUsername}
+            message={networkMessage}
+            setDraft={setMemberDraft}
+            setEditingUsername={setEditingUsername}
+            networkAction={networkAction}
+          />
+        </div>
 
-        <section className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
+        <section
+          className={`mt-6 overflow-hidden rounded-2xl border border-border bg-card ${
+            activeAdminTab === "analytics" ? "" : "hidden"
+          }`}
+        >
           <div className="border-b border-border px-5 py-4 font-bold">Son aksiyonlar</div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
@@ -975,10 +1063,16 @@ function WordcloudAdmin({
 
 function EventNetworkAdmin({
   registrations,
+  database,
+  message,
   refresh,
+  seedSamples,
 }: {
   registrations: EventNetworkRegistration[];
+  database: EventDatabaseInfo | null;
+  message: string;
   refresh: () => Promise<void>;
+  seedSamples: () => Promise<void>;
 }) {
   return (
     <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-card">
@@ -986,7 +1080,8 @@ function EventNetworkAdmin({
         <div>
           <h2 className="text-xl font-black">21 Ağustos network kayıtları</h2>
           <p className="mt-1 text-sm text-foreground/50">
-            Etkinlik kodu, yetkinlikler, ihtiyaç ve izin tercihleri.
+            Etkinlik kodu, yetkinlikler, ihtiyaç ve izin tercihleri. Şimdilik demo database ile
+            oynuyoruz.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -1000,12 +1095,55 @@ function EventNetworkAdmin({
           </a>
           <button
             type="button"
+            onClick={() => void seedSamples()}
+            className="rounded-full border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-bold text-primary-deep"
+          >
+            Demo test verisi oluştur
+          </button>
+          <button
+            type="button"
             onClick={() => void refresh()}
             className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
           >
             <RefreshCcw size={14} /> yenile
           </button>
         </div>
+      </div>
+      <div className="grid gap-3 border-b border-border bg-muted/35 p-5 md:grid-cols-3">
+        <DatabaseBadge
+          label="Anlık kullanılan database kodu"
+          value={database?.activeDatabaseCode || "21agustos-demo"}
+          highlight
+        />
+        <DatabaseBadge
+          label="Demo database"
+          value={database?.demoDatabaseCode || "21agustos-demo"}
+        />
+        <DatabaseBadge
+          label="Canlı gün açılacak database"
+          value={database?.liveDatabaseCode || "21agustoscanli"}
+        />
+        <div className="rounded-2xl border border-border bg-background p-4 text-xs text-foreground/55 md:col-span-3">
+          <div className="font-black text-foreground">Teknik store</div>
+          <div className="mt-1">
+            Store: <span className="font-bold">{database?.storeName || "event-network"}</span>
+          </div>
+          <div>
+            Prefix:{" "}
+            <span className="font-bold">
+              {database?.keyPrefix || "events/21agustos-demo/network"}
+            </span>
+          </div>
+          <div className="mt-2 text-primary-deep">
+            21 Ağustos gününde Netlify ENV `EVENT_NETWORK_DATASET=21agustoscanli` yapılınca canlı
+            database’e geçeriz.
+          </div>
+        </div>
+        {message ? (
+          <p className="rounded-2xl bg-primary/10 px-4 py-3 text-sm font-bold text-primary-deep md:col-span-3">
+            {message}
+          </p>
+        ) : null}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[980px] text-left text-sm">
@@ -1068,6 +1206,29 @@ function EventNetworkAdmin({
         </table>
       </div>
     </section>
+  );
+}
+
+function DatabaseBadge({
+  label,
+  value,
+  highlight = false,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border p-4 ${
+        highlight ? "border-primary/45 bg-primary/12" : "border-border bg-background"
+      }`}
+    >
+      <div className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/45">
+        {label}
+      </div>
+      <div className="mt-2 font-mono text-lg font-black text-primary-deep">{value}</div>
+    </div>
   );
 }
 

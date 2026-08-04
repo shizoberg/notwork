@@ -56,6 +56,15 @@ export type EventNetworkMatchGroup = {
 
 export type EventNetworkAdminPayload = {
   registrations: EventNetworkRegistration[];
+  database?: {
+    storeName: string;
+    datasetCode: string;
+    activeDatabaseCode: string;
+    demoDatabaseCode: string;
+    liveDatabaseCode: string;
+    keyPrefix: string;
+    mode: "demo" | "live";
+  };
 };
 
 export function cleanEventNetworkText(value: unknown, maxLength: number) {
