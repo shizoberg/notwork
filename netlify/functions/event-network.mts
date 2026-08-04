@@ -27,6 +27,10 @@ function isLocalRequest(request: Request) {
   );
 }
 
+function isDemoSeedAllowed(request: Request) {
+  return isLocalRequest(request) || process.env.DISABLE_EVENT_DEMO_SEED !== "true";
+}
+
 async function readSampleData() {
   const fileUrl = new URL("../data/21-agustos-network-sample.json", import.meta.url);
   return JSON.parse(await readFile(fileUrl, "utf8")) as Array<{
@@ -77,8 +81,8 @@ export default async (request: Request, _context: Context) => {
     }
 
     if (action === "seedSamples") {
-      if (!isLocalRequest(request))
-        return new Response("Seed sadece lokal ortamda çalışır", { status: 403 });
+      if (!isDemoSeedAllowed(request))
+        return new Response("Demo seed şu anda kapalı", { status: 403 });
       const registrations = await seedSampleRegistrations(store, await readSampleData());
       return json({ registrations }, { status: 201 });
     }
