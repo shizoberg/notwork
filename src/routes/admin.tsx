@@ -78,6 +78,23 @@ type ChangeRequest = {
   proposed: NetworkMember;
 };
 
+type StartupApplication = {
+  id: string;
+  createdAt: string;
+  name: string;
+  email: string;
+  phone: string;
+  projectName: string;
+  stage: string;
+  projectSummary: string;
+  need: string;
+  notification: {
+    recipients: string[];
+    status: "sent" | "not_configured" | "failed";
+    error?: string;
+  };
+};
+
 const blankMember: NetworkMember = {
   id: "",
   name: "",
@@ -111,7 +128,7 @@ const eventNames: Record<string, string> = {
   form_submit: "Form gönderimi",
 };
 
-type AdminTab = "events" | "analytics" | "networking";
+type AdminTab = "events" | "analytics" | "networking" | "applications";
 
 type EventDatabaseInfo = {
   storeName: string;
@@ -127,6 +144,7 @@ const adminTabs: Array<{ id: AdminTab; label: string; description: string }> = [
   { id: "events", label: "21 Ağustos", description: "WordCloud, Match Lab ve event kayıtları" },
   { id: "analytics", label: "Analiz", description: "Trafik, bilet ve aksiyon grafikleri" },
   { id: "networking", label: "Networking", description: "Genel topluluk ağı ve onaylar" },
+  { id: "applications", label: "Başvurular", description: "Network Startup proje başvuruları" },
 ];
 
 const adminUiVersion = "Admin v2 · 21 Ağustos demo";
@@ -137,6 +155,7 @@ function AdminPage() {
   const [events, setEvents] = useState<AnalyticsEvent[] | null>(null);
   const [members, setMembers] = useState<NetworkMember[]>([]);
   const [requests, setRequests] = useState<ChangeRequest[]>([]);
+  const [startupApplications, setStartupApplications] = useState<StartupApplication[]>([]);
   const [memberDraft, setMemberDraft] = useState<NetworkMember>(blankMember);
   const [editingUsername, setEditingUsername] = useState("");
   const [networkMessage, setNetworkMessage] = useState("");
@@ -175,6 +194,17 @@ function AdminPage() {
     const data = await getEventNetworkAdmin(nextPassword);
     setEventRegistrations(data.registrations);
     setEventDatabase(data.database || null);
+  };
+
+  const loadStartupApplications = async (nextPassword = password) => {
+    const response = await fetch("/api/startup-applications?action=list", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: nextPassword }),
+    });
+    if (!response.ok) throw new Error("Startup başvuruları alınamadı.");
+    const data = (await response.json()) as { applications: StartupApplication[] };
+    setStartupApplications(data.applications);
   };
 
   const seedEventNetwork = async () => {
@@ -247,6 +277,7 @@ function AdminPage() {
         loadNetwork(password),
         loadWordcloud(password),
         loadEventNetwork(password),
+        loadStartupApplications(password),
       ]);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Rapor alınamadı.");
@@ -340,7 +371,7 @@ function AdminPage() {
           </div>
         </header>
 
-        <nav className="mt-6 grid gap-3 lg:grid-cols-3">
+        <nav className="mt-6 grid gap-3 lg:grid-cols-4">
           {adminTabs.map((tab) => (
             <button
               key={tab.id}
@@ -620,6 +651,13 @@ function AdminPage() {
           />
         </div>
 
+        <div className={activeAdminTab === "applications" ? "" : "hidden"}>
+          <StartupApplicationsAdmin
+            applications={startupApplications}
+            refresh={() => loadStartupApplications(password)}
+          />
+        </div>
+
         <section
           className={`mt-6 overflow-hidden rounded-2xl border border-border bg-card ${
             activeAdminTab === "analytics" ? "" : "hidden"
@@ -662,6 +700,126 @@ function AdminPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+function StartupApplicationsAdmin({
+  applications,
+  refresh,
+}: {
+  applications: StartupApplication[];
+  refresh: () => Promise<void>;
+}) {
+  const notificationLabels: Record<StartupApplication["notification"]["status"], string> = {
+    sent: "mail gönderildi",
+    not_configured: "mail servisi ayarlı değil",
+    failed: "mail gönderilemedi",
+  };
+
+  return (
+    <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div>
+          <h2 className="text-xl font-black">Network Startup başvuruları</h2>
+          <p className="mt-1 text-sm text-foreground/50">
+            Formdan gelen projeler burada tutulur; bildirimler Berk maillerine gönderilir.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void refresh()}
+          className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+        >
+          <RefreshCcw size={14} /> yenile
+        </button>
+      </div>
+
+      <div className="grid gap-3 border-b border-border bg-muted/35 p-5 md:grid-cols-3">
+        <Metric icon={Users} label="Toplam başvuru" value={applications.length} highlight />
+        <Metric
+          icon={Check}
+          label="Mail bildirimi giden"
+          value={applications.filter((item) => item.notification.status === "sent").length}
+        />
+        <Metric
+          icon={Eye}
+          label="Bekleyen / panelde"
+          value={applications.filter((item) => item.notification.status !== "sent").length}
+        />
+      </div>
+
+      <div className="grid gap-4 p-5">
+        {applications.map((application) => (
+          <article
+            key={application.id}
+            className="rounded-2xl border border-border bg-background p-4"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="text-xs text-foreground/45">
+                  {new Date(application.createdAt).toLocaleString("tr-TR")}
+                </div>
+                <h3 className="mt-1 text-lg font-black">
+                  {application.projectName || "İsimsiz proje"}
+                </h3>
+                <p className="mt-1 text-sm font-bold">
+                  {application.name} ·{" "}
+                  <a className="text-primary-deep underline" href={`mailto:${application.email}`}>
+                    {application.email}
+                  </a>
+                </p>
+                {application.phone ? (
+                  <p className="mt-1 text-sm text-foreground/55">{application.phone}</p>
+                ) : null}
+              </div>
+              <div className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-black text-primary-deep">
+                {application.stage}
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <div className="rounded-xl bg-muted/60 p-3">
+                <div className="text-xs font-black uppercase tracking-[0.16em] text-foreground/45">
+                  Proje özeti
+                </div>
+                <p className="mt-2 whitespace-pre-line text-sm leading-6 text-foreground/70">
+                  {application.projectSummary}
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted/60 p-3">
+                <div className="text-xs font-black uppercase tracking-[0.16em] text-foreground/45">
+                  Aradığı destek
+                </div>
+                <p className="mt-2 whitespace-pre-line text-sm leading-6 text-foreground/70">
+                  {application.need || "Belirtilmedi."}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-foreground/50">
+              <span>
+                Bildirim:{" "}
+                <strong className="text-foreground">
+                  {notificationLabels[application.notification.status]}
+                </strong>
+              </span>
+              <span>{application.notification.recipients.join(" / ")}</span>
+            </div>
+            {application.notification.error ? (
+              <p className="mt-2 rounded-xl bg-destructive/10 p-3 text-xs text-destructive">
+                {application.notification.error}
+              </p>
+            ) : null}
+          </article>
+        ))}
+
+        {applications.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-foreground/45">
+            Henüz Network Startup başvurusu yok.
+          </div>
+        ) : null}
+      </div>
+    </section>
   );
 }
 

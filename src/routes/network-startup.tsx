@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 
-const contactEmail = "berk@kevitkin.com";
+const notificationEmails = ["berk@carewithki.com", "berkaktas@windowslive.com"];
 
 export const Route = createFileRoute("/network-startup")({
   head: () => ({
@@ -48,34 +48,42 @@ function NetworkStartupPage() {
     projectSummary: "",
     need: "",
   });
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [message, setMessage] = useState("");
 
   const set =
     (key: keyof typeof form) =>
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm((current) => ({ ...current, [key]: event.target.value }));
 
-  const onSubmit = (event: React.FormEvent) => {
+  const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const subject = `Network Startup | ${form.projectName || form.name}`;
-    const body = `Merhaba Berk,
+    setStatus("sending");
+    setMessage("");
 
-Network Startup için proje bilgilerimi iletiyorum.
+    try {
+      const response = await fetch("/api/startup-applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!response.ok) throw new Error(await response.text());
 
-İsim: ${form.name}
-E-posta: ${form.email}
-Telefon: ${form.phone || "(belirtilmedi)"}
-Proje adı: ${form.projectName || "(belirtilmedi)"}
-Aşama: ${form.stage}
-
-Projeyi kısaca anlatıyorum:
-${form.projectSummary}
-
-Şu anda en çok desteğe ihtiyaç duyduğum konu:
-${form.need || "(belirtilmedi)"}
-
-Online meet için görüşmek isterim.`;
-
-    window.location.href = `mailto:${contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      setStatus("sent");
+      setMessage("Başvurun alındı. Admin panele düştü; bildirim mailleri Berk’e yönlendirildi.");
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        projectName: "",
+        stage: "fikir",
+        projectSummary: "",
+        need: "",
+      });
+    } catch (caught) {
+      setStatus("error");
+      setMessage(caught instanceof Error ? caught.message : "Başvuru şu anda alınamadı.");
+    }
   };
 
   return (
@@ -205,13 +213,26 @@ Online meet için görüşmek isterim.`;
 
             <button
               type="submit"
+              disabled={status === "sending"}
               className="mt-6 w-full rounded-full bg-primary px-6 py-4 text-sm font-black text-primary-foreground shadow-[var(--shadow-soft)] transition hover:opacity-90"
             >
-              Projemi Berk’e e-posta olarak gönder
+              {status === "sending" ? "Başvuru gönderiliyor…" : "Projemi Berk’e gönder"}
             </button>
+            {message ? (
+              <p
+                className={`mt-3 rounded-2xl px-4 py-3 text-center text-xs font-bold leading-5 ${
+                  status === "error"
+                    ? "bg-destructive/10 text-destructive"
+                    : "bg-primary/10 text-primary-deep"
+                }`}
+              >
+                {message}
+              </p>
+            ) : null}
             <p className="mt-3 text-center text-xs leading-5 text-foreground/45">
-              Buton, bilgilerini hazır mail olarak açar. Gönderim adresi:{" "}
-              <span className="font-bold text-foreground">{contactEmail}</span>
+              Başvurular admin panele kaydedilir ve{" "}
+              <span className="font-bold text-foreground">{notificationEmails.join(" / ")}</span>{" "}
+              adreslerine bildirim olarak iletilir.
             </p>
           </form>
         </section>
