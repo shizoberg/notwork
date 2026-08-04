@@ -33,6 +33,21 @@ type EventNetworkRegistration = {
   accessToken?: string;
 };
 
+type NetworkMemberRow = {
+  id: string;
+  name: string;
+  title: string;
+  skills: string;
+  email: string;
+  instagram: string;
+  linkedin: string;
+  motivation: string;
+  contact: string;
+  createdAt: string;
+  username: string;
+  consentAt: string;
+};
+
 type EventNetworkPresence = "open" | "meeting" | "paused";
 
 type EventNetworkMatchMember = {
@@ -164,6 +179,80 @@ function normalizeOffers(value: unknown) {
     .map((item) => clean(item, 36).toLocaleLowerCase("tr-TR"))
     .filter(Boolean)
     .slice(0, 3);
+}
+
+function slugify(value: string) {
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 56);
+}
+
+function generalMemberKey(username: string) {
+  return `members/${username}.json`;
+}
+
+async function upsertGeneralNetworkingMember(registration: EventNetworkRegistration) {
+  if (!registration.profile.generalNetworkOptIn) return;
+
+  const store = getStore({ name: "networking-members", consistency: "strong" });
+  const baseUsername =
+    slugify(displayName(registration)) || `notwork-${registration.participant.publicCode}`;
+  let username = baseUsername;
+  const existing = (await store.get(generalMemberKey(username), {
+    type: "json",
+    consistency: "strong",
+  })) as NetworkMemberRow | null;
+
+  if (
+    existing &&
+    existing.email.toLocaleLowerCase("tr-TR") !== registration.profile.emailNormalized
+  ) {
+    username = `${baseUsername}-${hashToken(registration.profile.emailNormalized).slice(0, 4)}`;
+  }
+
+  const member: NetworkMemberRow = {
+    id: existing?.id || registration.profile.id,
+    name: displayName(registration),
+    title: registration.needTag
+      ? `21 Ağustos katılımcısı · ${registration.needTag}`
+      : "21 Ağustos notwork katılımcısı",
+    skills: registration.offers.join(", "),
+    email: registration.profile.email,
+    instagram: existing?.instagram || "",
+    linkedin: existing?.linkedin || "",
+    motivation: registration.needs,
+    contact: registration.profile.email,
+    createdAt: existing?.createdAt || registration.profile.createdAt,
+    username,
+    consentAt: registration.profile.updatedAt,
+  };
+
+  await Promise.all([
+    store.setJSON(generalMemberKey(username), member),
+    store.setJSON(`backups/latest/${username}.json`, {
+      ...member,
+      backupReason: "event-network-sync",
+      backedUpAt: new Date().toISOString(),
+    }),
+    store.setJSON(
+      `backups/immutable/${username}/${Date.now()}-${crypto.randomUUID()}-event-network-sync.json`,
+      {
+        ...member,
+        backupReason: "event-network-sync",
+        backedUpAt: new Date().toISOString(),
+      },
+    ),
+  ]);
 }
 
 function isValidEmail(email: string) {
@@ -323,6 +412,18 @@ export async function registerNetworkProfile(
   if (existing) {
     const accessToken = crypto.randomUUID();
     const accessTokenHash = hashToken(accessToken);
+    const profile: EventNetworkProfile = {
+      ...existing.profile,
+      firstName,
+      lastName,
+      email,
+      emailNormalized,
+      generalNetworkOptIn: Boolean(
+        input.generalNetworkOptIn || existing.profile.generalNetworkOptIn,
+      ),
+      marketingOptIn: Boolean(input.marketingOptIn || existing.profile.marketingOptIn),
+      updatedAt: now,
+    };
     const participant: EventParticipant = {
       ...existing.participant,
       accessTokenHash,
@@ -330,7 +431,11 @@ export async function registerNetworkProfile(
     };
     const registration: EventNetworkRegistration = {
       ...existing,
+      profile,
       participant,
+      offers,
+      needs,
+      needTag,
       accessToken,
     };
     const storedRegistration = { ...registration, accessToken: undefined };
@@ -338,8 +443,10 @@ export async function registerNetworkProfile(
     await Promise.all([
       store.setJSON(profileKey(emailNormalized), storedRegistration),
       store.setJSON(participantKey(participant.id), storedRegistration),
+      store.setJSON(detailKey(participant.id), { offers, needs, needTag, updatedAt: now }),
       store.set(tokenKey(accessTokenHash), participant.id),
     ]);
+    await upsertGeneralNetworkingMember(registration);
 
     return registration;
   }
@@ -385,6 +492,7 @@ export async function registerNetworkProfile(
     store.setJSON(codeKey(publicCode), participant.id),
     store.set(tokenKey(accessTokenHash), participant.id),
   ]);
+  await upsertGeneralNetworkingMember(registration);
 
   return registration;
 }

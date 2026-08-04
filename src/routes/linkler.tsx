@@ -1,7 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ExternalLink, MessageCircle, Network, Star, Vote } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowRight, Check, MessageCircle, Network, Star, UserRound, Vote } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import type { EventNetworkRegistration } from "@/lib/event-network";
+import { getEventNetworkMe, registerEventNetwork } from "@/lib/event-network-api";
+
+const tokenStorageKey = "notwork_21_agustos_network_token";
 
 export const Route = createFileRoute("/linkler")({
   head: () => ({
@@ -10,7 +14,7 @@ export const Route = createFileRoute("/linkler")({
       {
         name: "description",
         content:
-          "notwork 21 Ağustos etkinlik giriş sayfası: anket, Notworking Match Lab, WhatsApp ve etkinlik yorumu bağlantıları.",
+          "notwork 21 Ağustos etkinlik giriş sayfası: önce KVKK onaylı hızlı kayıt, sonra anket, Notworking Match Lab, WhatsApp ve etkinlik yorumu bağlantıları.",
       },
       { property: "og:title", content: "notwork 21 Ağustos linkler" },
       { property: "og:url", content: "https://notwork.me/linkler" },
@@ -19,6 +23,21 @@ export const Route = createFileRoute("/linkler")({
   }),
   component: LinksPage,
 });
+
+const offerSuggestions = [
+  "yazılım",
+  "tasarım",
+  "pazarlama",
+  "satış",
+  "finans",
+  "içerik",
+  "topluluk",
+  "girişim",
+  "yapay zeka",
+  "operasyon",
+];
+
+const needSuggestions = ["müşteri", "yatırım", "ekip", "mentor", "pazarlama", "fikir", "iş"];
 
 const eventLinks = [
   {
@@ -29,7 +48,7 @@ const eventLinks = [
   },
   {
     title: "Notworking Match Lab",
-    description: "Eşleşmeni gör, müsaitliğini seç ve yeni kişilerle tanış.",
+    description: "Kodunu gör, müsaitliğini seç ve eşleşmeni bul.",
     href: "/21-agustos/eslesme",
     icon: Network,
   },
@@ -50,19 +69,125 @@ const externalLinks = [
   },
 ];
 
+type LinkRegistrationForm = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  intro: string;
+  offers: string[];
+  customOffer: string;
+  needs: string;
+  needTag: string;
+  marketingOptIn: boolean;
+  eventConsent: boolean;
+  generalNetworkOptIn: boolean;
+};
+
 function LinksPage() {
-  const [hasConsent, setHasConsent] = useState(false);
-  const [showConsentWarning, setShowConsentWarning] = useState(false);
+  const [registration, setRegistration] = useState<EventNetworkRegistration | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [form, setForm] = useState<LinkRegistrationForm>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    intro: "",
+    offers: [] as string[],
+    customOffer: "",
+    needs: "",
+    needTag: "",
+    marketingOptIn: true,
+    eventConsent: false,
+    generalNetworkOptIn: false,
+  });
 
   useEffect(() => {
-    setHasConsent(localStorage.getItem("notwork-21-agustos-link-consent") === "true");
+    const token = localStorage.getItem(tokenStorageKey);
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
+    void getEventNetworkMe(token)
+      .then((data) => {
+        setRegistration(data);
+        setForm((current) => ({
+          ...current,
+          firstName: data.profile.firstName,
+          lastName: data.profile.lastName,
+          email: data.profile.email,
+          offers: data.offers,
+          needs: data.needs,
+          needTag: data.needTag,
+          marketingOptIn: data.profile.marketingOptIn,
+          generalNetworkOptIn: data.profile.generalNetworkOptIn,
+          eventConsent: true,
+        }));
+      })
+      .catch(() => localStorage.removeItem(tokenStorageKey))
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const updateConsent = (checked: boolean) => {
-    setHasConsent(checked);
-    setShowConsentWarning(false);
-    localStorage.setItem("notwork-21-agustos-link-consent", checked ? "true" : "false");
-  };
+  const canSubmit = useMemo(
+    () =>
+      Boolean(
+        form.firstName.trim() &&
+        form.lastName.trim() &&
+        form.email.includes("@") &&
+        form.intro.trim().length > 2 &&
+        form.needs.trim().length > 4 &&
+        form.offers.length > 0 &&
+        form.eventConsent &&
+        form.generalNetworkOptIn,
+      ),
+    [form],
+  );
+
+  function toggleOffer(offer: string) {
+    setForm((current) => {
+      const exists = current.offers.includes(offer);
+      const offers = exists
+        ? current.offers.filter((item) => item !== offer)
+        : [...current.offers, offer].slice(0, 3);
+      return { ...current, offers };
+    });
+  }
+
+  function addCustomOffer() {
+    const offer = form.customOffer.trim().toLocaleLowerCase("tr-TR");
+    if (!offer || form.offers.includes(offer)) return;
+    setForm({ ...form, offers: [...form.offers, offer].slice(0, 3), customOffer: "" });
+  }
+
+  async function submitRegistration() {
+    setIsSaving(true);
+    setMessage("");
+    try {
+      const needs = `Kendini tanıt: ${form.intro.trim()}\nNe istiyor: ${form.needs.trim()}`;
+      const data = await registerEventNetwork({
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        email: form.email.trim(),
+        offers: form.offers,
+        needs,
+        needTag: form.needTag || "networking",
+        generalNetworkOptIn: form.generalNetworkOptIn,
+        marketingOptIn: form.marketingOptIn,
+        eventConsent: form.eventConsent,
+      });
+
+      if (data.accessToken) localStorage.setItem(tokenStorageKey, data.accessToken);
+      setRegistration(data);
+      setMessage("Kayıt tamamlandı. Kodun hazır; şimdi anket veya Match Lab’e geçebilirsin.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Kayıt tamamlanamadı.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  const hasRegistration = Boolean(registration);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -79,28 +204,51 @@ function LinksPage() {
             </p>
           </header>
 
-          <section className="mt-5 rounded-[1.5rem] border border-primary/20 bg-primary/8 p-4 shadow-sm sm:p-5">
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={hasConsent}
-                onChange={(event) => updateConsent(event.target.checked)}
-                className="mt-1 h-5 w-5 rounded border-primary/40 accent-primary"
-              />
-              <span className="text-sm font-semibold leading-6 text-foreground/70">
-                <Link to="/kvkk" className="font-black text-primary-deep underline">
-                  KVKK Aydınlatma Metni
-                </Link>
-                ’ni okudum; etkinlik bağlantılarını kullanırken verdiğim bilgilerin ilgili akışlarda
-                işlenmesini ve paylaşılmasını onaylıyorum.
-              </span>
-            </label>
-            {showConsentWarning ? (
-              <p className="mt-3 rounded-2xl bg-primary/15 px-3 py-2 text-xs font-bold text-primary-deep">
-                Devam etmek için önce KVKK onay kutusunu işaretle.
+          {isLoading ? (
+            <section className="mt-5 rounded-[2rem] border border-primary/20 bg-card p-6 text-center text-sm font-bold text-foreground/55 shadow-sm">
+              Kayıt bilgilerin kontrol ediliyor…
+            </section>
+          ) : null}
+
+          {!isLoading && !hasRegistration ? (
+            <RegistrationGate
+              form={form}
+              setForm={setForm}
+              canSubmit={canSubmit}
+              isSaving={isSaving}
+              message={message}
+              toggleOffer={toggleOffer}
+              addCustomOffer={addCustomOffer}
+              submitRegistration={submitRegistration}
+            />
+          ) : null}
+
+          {hasRegistration && registration ? (
+            <section className="mt-5 rounded-[2rem] border border-primary/25 bg-primary/10 p-5 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
+                    Kayıt tamamlandı
+                  </p>
+                  <h1 className="mt-2 text-3xl font-black tracking-[-0.04em]">
+                    Merhaba {registration.profile.firstName}, kodun hazır.
+                  </h1>
+                </div>
+                <div className="rounded-3xl bg-primary px-5 py-3 text-4xl font-black tracking-[-0.08em] text-primary-foreground">
+                  {registration.participant.publicCode}
+                </div>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-foreground/60">
+                Bu kod Match Lab’de ve etkinlik içi eşleşmelerde seni bulmamızı sağlar. Aynı e-posta
+                ile tekrar girersen kayıt bilgilerini takip ederiz.
               </p>
-            ) : null}
-          </section>
+              {message ? (
+                <p className="mt-3 rounded-2xl bg-background/70 px-4 py-3 text-sm font-bold text-primary-deep">
+                  {message}
+                </p>
+              ) : null}
+            </section>
+          ) : null}
 
           <section className="mt-5 grid gap-3">
             {eventLinks.map(({ title, description, href, icon: Icon }) => (
@@ -108,16 +256,18 @@ function LinksPage() {
                 key={title}
                 href={href}
                 onClick={(event) => {
-                  if (!hasConsent) {
+                  if (!hasRegistration) {
                     event.preventDefault();
-                    setShowConsentWarning(true);
+                    setMessage(
+                      "Önce kısa kayıt ve KVKK onayını tamamla; sonra bu alana geçebilirsin.",
+                    );
                   }
                 }}
-                aria-disabled={!hasConsent}
+                aria-disabled={!hasRegistration}
                 className={`group flex items-center gap-3 rounded-[1.35rem] border bg-card p-3 shadow-sm transition sm:p-4 ${
-                  hasConsent
+                  hasRegistration
                     ? "border-primary/25 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-lg hover:shadow-primary/10"
-                    : "border-border opacity-75"
+                    : "border-border opacity-60"
                 }`}
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground sm:h-14 sm:w-14">
@@ -132,7 +282,7 @@ function LinksPage() {
                   </span>
                 </span>
                 <span className="shrink-0 rounded-full bg-primary px-3 py-2 text-[0.65rem] font-black uppercase tracking-[0.12em] text-primary-foreground sm:px-4">
-                  {hasConsent ? "Başla" : "Onayla"}
+                  {hasRegistration ? "Başla" : "Kayıt"}
                 </span>
               </a>
             ))}
@@ -157,7 +307,7 @@ function LinksPage() {
                   <span className="block font-bold">{title}</span>
                   <span className="mt-0.5 block text-xs text-foreground/50">{description}</span>
                 </span>
-                <ExternalLink
+                <ArrowRight
                   size={18}
                   className="shrink-0 text-foreground/35 transition group-hover:text-primary-deep"
                 />
@@ -166,12 +316,246 @@ function LinksPage() {
           </section>
 
           <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-5 text-foreground/45">
-            Demo sürecinde 21 Ağustos akışları test verisiyle denenebilir. Gerçek katılımcı
-            bilgilerinde KVKK onayı zorunludur.
+            Bu giriş ekranı etkinlik içi anket, Match Lab ve genel notwork networking ağı için
+            kullanılacak temel profilini oluşturur.
           </p>
         </div>
       </main>
       <SiteFooter />
     </div>
+  );
+}
+
+function RegistrationGate({
+  form,
+  setForm,
+  canSubmit,
+  isSaving,
+  message,
+  toggleOffer,
+  addCustomOffer,
+  submitRegistration,
+}: {
+  form: LinkRegistrationForm;
+  setForm: React.Dispatch<React.SetStateAction<LinkRegistrationForm>>;
+  canSubmit: boolean;
+  isSaving: boolean;
+  message: string;
+  toggleOffer: (offer: string) => void;
+  addCustomOffer: () => void;
+  submitRegistration: () => Promise<void>;
+}) {
+  return (
+    <section className="mt-5 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-xl shadow-primary/10 sm:p-6">
+      <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-primary-deep">
+        <UserRound className="h-4 w-4" />
+        önce hızlı kayıt
+      </div>
+      <h1 className="mt-4 text-3xl font-black leading-none tracking-[-0.04em] sm:text-4xl">
+        Kendini ekle, sonra anket veya Match Lab’e geç.
+      </h1>
+      <p className="mt-3 text-sm leading-6 text-foreground/60">
+        Match’in doğru çalışması için seni, ne aradığını ve neler yapabildiğini bilmemiz gerekiyor.
+        Aynı e-postayla tekrar girersen eski kaydını buluruz.
+      </p>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <QuickInput
+          label="Ad"
+          value={form.firstName}
+          onChange={(firstName) => setForm((current) => ({ ...current, firstName }))}
+        />
+        <QuickInput
+          label="Soyad"
+          value={form.lastName}
+          onChange={(lastName) => setForm((current) => ({ ...current, lastName }))}
+        />
+        <QuickInput
+          className="sm:col-span-2"
+          label="E-posta"
+          type="email"
+          value={form.email}
+          onChange={(email) => setForm((current) => ({ ...current, email }))}
+        />
+      </div>
+
+      <label className="mt-4 block text-sm font-bold">
+        Kendini tanıt
+        <textarea
+          value={form.intro}
+          onChange={(event) => setForm((current) => ({ ...current, intro: event.target.value }))}
+          rows={3}
+          maxLength={180}
+          placeholder="Kısaca sen kimsin, neyle uğraşıyorsun?"
+          className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
+        />
+      </label>
+
+      <div className="mt-4">
+        <h2 className="text-lg font-black">Neler yapabilirsin?</h2>
+        <p className="mt-1 text-xs text-foreground/50">
+          En fazla 3 konu seç; eşleşmede kullanılır.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {offerSuggestions.map((offer) => (
+            <button
+              key={offer}
+              type="button"
+              onClick={() => toggleOffer(offer)}
+              className={`rounded-full border px-3 py-2 text-sm font-bold ${
+                form.offers.includes(offer)
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-primary/20 bg-primary/5"
+              }`}
+            >
+              {offer}
+            </button>
+          ))}
+        </div>
+        <div className="mt-3 flex gap-2">
+          <input
+            value={form.customOffer}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, customOffer: event.target.value }))
+            }
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                addCustomOffer();
+              }
+            }}
+            maxLength={36}
+            placeholder="Başka konu"
+            className="min-w-0 flex-1 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none"
+          />
+          <button
+            type="button"
+            onClick={addCustomOffer}
+            className="rounded-2xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground"
+          >
+            Ekle
+          </button>
+        </div>
+      </div>
+
+      <label className="mt-4 block text-sm font-bold">
+        Ne istiyorsun?
+        <textarea
+          value={form.needs}
+          onChange={(event) => setForm((current) => ({ ...current, needs: event.target.value }))}
+          rows={4}
+          maxLength={220}
+          placeholder="Tanışmak istediğin kişi, aradığın destek, müşteri, ekip, fikir..."
+          className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
+        />
+      </label>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {needSuggestions.map((tag) => (
+          <button
+            key={tag}
+            type="button"
+            onClick={() => setForm((current) => ({ ...current, needTag: tag }))}
+            className={`rounded-full border px-3 py-2 text-sm font-bold ${
+              form.needTag === tag
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-primary/20 bg-primary/5"
+            }`}
+          >
+            {tag}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-5 grid gap-3">
+        <ConsentBox
+          checked={form.eventConsent}
+          onChange={(eventConsent) => setForm((current) => ({ ...current, eventConsent }))}
+          title="KVKK metnini okudum; etkinlik içi anket, Match Lab ve kod sistemi için bilgilerimin işlenmesini onaylıyorum."
+        />
+        <ConsentBox
+          checked={form.generalNetworkOptIn}
+          onChange={(generalNetworkOptIn) =>
+            setForm((current) => ({ ...current, generalNetworkOptIn }))
+          }
+          title="Profilimin notwork networking ağında görünmesini ve eşleşme için kullanılmasını onaylıyorum."
+        />
+        <ConsentBox
+          checked={form.marketingOptIn}
+          onChange={(marketingOptIn) => setForm((current) => ({ ...current, marketingOptIn }))}
+          title="Etkinlik ve topluluk duyurularını e-posta ile almak istiyorum."
+        />
+        <p className="text-xs leading-5 text-foreground/45">
+          Ayrıntılar için{" "}
+          <Link to="/kvkk" className="font-black text-primary-deep underline">
+            KVKK Aydınlatma Metni
+          </Link>
+          ’ni inceleyebilirsin.
+        </p>
+      </div>
+
+      {message ? (
+        <p className="mt-4 rounded-2xl bg-primary/10 px-4 py-3 text-sm font-bold text-primary-deep">
+          {message}
+        </p>
+      ) : null}
+
+      <button
+        type="button"
+        disabled={!canSubmit || isSaving}
+        onClick={() => void submitRegistration()}
+        className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-4 text-sm font-black text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {isSaving ? "Kayıt oluşturuluyor…" : "Kayıt ol ve linkleri aç"}
+        <Check className="h-4 w-4" />
+      </button>
+    </section>
+  );
+}
+
+function QuickInput({
+  label,
+  value,
+  onChange,
+  type = "text",
+  className = "",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  className?: string;
+}) {
+  return (
+    <label className={`block text-sm font-bold ${className}`}>
+      {label}
+      <input
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-base outline-none focus:border-primary"
+      />
+    </label>
+  );
+}
+
+function ConsentBox({
+  checked,
+  onChange,
+  title,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  title: string;
+}) {
+  return (
+    <label className="flex gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4 text-sm font-semibold leading-6">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="mt-1 h-5 w-5 shrink-0 accent-primary"
+      />
+      <span>{title}</span>
+    </label>
   );
 }

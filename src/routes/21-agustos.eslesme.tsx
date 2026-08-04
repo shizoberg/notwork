@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Loader2, RefreshCcw, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, Loader2, RefreshCcw, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import type {
@@ -10,7 +10,6 @@ import type {
 import {
   getEventNetworkMe,
   getEventNetworkMatch,
-  seedEventNetworkSamples,
   updateEventNetworkPresence,
 } from "@/lib/event-network-api";
 
@@ -33,7 +32,6 @@ function AugustMatchPage() {
   const [presence, setPresence] = useState<EventNetworkPresence>("open");
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "empty" | "paused">("idle");
   const [message, setMessage] = useState("");
-  const [seeding, setSeeding] = useState(false);
 
   const currentMember = useMemo(
     () => group?.members.find((member) => member.isCurrentUser) || null,
@@ -89,24 +87,6 @@ function AugustMatchPage() {
       await loadMatch(token);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Durum güncellenemedi.");
-    }
-  };
-
-  const startSample = async () => {
-    setSeeding(true);
-    setMessage("");
-    try {
-      const data = await seedEventNetworkSamples();
-      const sampleToken = data.registrations[0]?.accessToken;
-      if (!sampleToken) throw new Error("Sample token üretilemedi.");
-      setRegistration(data.registrations[0]);
-      localStorage.setItem(tokenStorageKey, sampleToken);
-      setToken(sampleToken);
-      await loadMatch(sampleToken);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Sample veri yüklenemedi.");
-    } finally {
-      setSeeding(false);
     }
   };
 
@@ -191,21 +171,15 @@ function AugustMatchPage() {
               {!token ? (
                 <div className="rounded-[2rem] border border-dashed border-[#8ee4e8]/50 bg-[#8ee4e8]/10 p-5">
                   <p className="text-sm leading-6 text-white/75">
-                    Test için sample kayıtları yükleyip demo eşleşme ekranını açabilirsin. Bu
-                    aksiyon sadece lokal ortamda çalışır.
+                    Match Lab’e girmeden önce QR giriş ekranında kendini tanıtman, ne istediğini ve
+                    neler yapabildiğini yazman gerekiyor. Sistem eşleşmeyi bu bilgilerle yapar.
                   </p>
-                  <button
-                    onClick={() => void startSample()}
-                    disabled={seeding}
-                    className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-[#8ee4e8] px-5 py-3 text-sm font-black text-[#071112] disabled:opacity-60"
+                  <Link
+                    to="/linkler"
+                    className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-[#8ee4e8] px-5 py-3 text-sm font-black text-[#071112]"
                   >
-                    {seeding ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Users className="h-4 w-4" />
-                    )}
-                    Sample veriyi yükle ve göster
-                  </button>
+                    Kayıt ekranına dön
+                  </Link>
                 </div>
               ) : null}
             </div>
@@ -304,10 +278,10 @@ function AugustMatchPage() {
                 {!token ? (
                   <div className="text-center">
                     <p className="text-sm text-white/60">
-                      Önce network kaydını tamamlaman gerekiyor.
+                      Önce QR giriş ekranında kısa kaydı tamamlaman gerekiyor.
                     </p>
                     <Link
-                      to="/21-agustos/network"
+                      to="/linkler"
                       className="mt-4 inline-flex rounded-full bg-white px-5 py-3 text-sm font-black text-[#071112]"
                     >
                       Kayıt ekranına git
