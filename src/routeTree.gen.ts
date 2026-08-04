@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StartupRouteImport } from './routes/startup'
 import { Route as SponsorRouteImport } from './routes/sponsor'
 import { Route as NetworkingRouteImport } from './routes/networking'
 import { Route as NetworkStartupRouteImport } from './routes/network-startup'
@@ -28,6 +29,11 @@ import { Route as R21AgustosSonuclarRouteImport } from './routes/21-agustos.sonu
 import { Route as R21AgustosNetworkRouteImport } from './routes/21-agustos.network'
 import { Route as R21AgustosEslesmeRouteImport } from './routes/21-agustos.eslesme'
 
+const StartupRoute = StartupRouteImport.update({
+  id: '/startup',
+  path: '/startup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SponsorRoute = SponsorRouteImport.update({
   id: '/sponsor',
   path: '/sponsor',
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/sponsor': typeof SponsorRoute
+  '/startup': typeof StartupRoute
   '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/sponsor': typeof SponsorRoute
+  '/startup': typeof StartupRoute
   '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/sponsor': typeof SponsorRoute
+  '/startup': typeof StartupRoute
   '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
     | '/network-startup'
     | '/networking'
     | '/sponsor'
+    | '/startup'
     | '/21-agustos/eslesme'
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/network-startup'
     | '/networking'
     | '/sponsor'
+    | '/startup'
     | '/21-agustos/eslesme'
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/network-startup'
     | '/networking'
     | '/sponsor'
+    | '/startup'
     | '/21-agustos/eslesme'
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
@@ -258,6 +270,7 @@ export interface RootRouteChildren {
   NetworkStartupRoute: typeof NetworkStartupRoute
   NetworkingRoute: typeof NetworkingRoute
   SponsorRoute: typeof SponsorRoute
+  StartupRoute: typeof StartupRoute
   R21AgustosEslesmeRoute: typeof R21AgustosEslesmeRoute
   R21AgustosNetworkRoute: typeof R21AgustosNetworkRoute
   R21AgustosSonuclarRoute: typeof R21AgustosSonuclarRoute
@@ -266,6 +279,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/startup': {
+      id: '/startup'
+      path: '/startup'
+      fullPath: '/startup'
+      preLoaderRoute: typeof StartupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sponsor': {
       id: '/sponsor'
       path: '/sponsor'
@@ -410,6 +430,7 @@ const rootRouteChildren: RootRouteChildren = {
   NetworkStartupRoute: NetworkStartupRoute,
   NetworkingRoute: NetworkingRoute,
   SponsorRoute: SponsorRoute,
+  StartupRoute: StartupRoute,
   R21AgustosEslesmeRoute: R21AgustosEslesmeRoute,
   R21AgustosNetworkRoute: R21AgustosNetworkRoute,
   R21AgustosSonuclarRoute: R21AgustosSonuclarRoute,

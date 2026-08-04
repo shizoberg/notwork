@@ -38,7 +38,7 @@ export const Route = createFileRoute("/network-startup")({
   component: NetworkStartupPage,
 });
 
-function NetworkStartupPage() {
+export function NetworkStartupPage() {
   const [form, setForm] = useState({
     name: "",
     email: "",
