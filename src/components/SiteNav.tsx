@@ -86,7 +86,7 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
           <Link to="/21-agustos/wordcloud" className={linkClass}>
             Anket
           </Link>
-          <Link to="/21-agustos/network" className={linkClass}>
+          <Link to="/21-agustos/eslesme" className={linkClass}>
             Match
           </Link>
           <a href="/etkinlik-degerlendirme?event=21-agustos-2026" className={primaryClass}>

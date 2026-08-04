@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ExternalLink, Gamepad2, MessageCircle, Network, Star, Vote } from "lucide-react";
+import { ExternalLink, MessageCircle, Network, Star, Vote } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/linkler")({
       {
         name: "description",
         content:
-          "notwork 21 Ağustos etkinlik giriş sayfası: anket, Notworking Match Lab, WhatsApp ve interaktif oyun bağlantıları.",
+          "notwork 21 Ağustos etkinlik giriş sayfası: anket, Notworking Match Lab, WhatsApp ve etkinlik yorumu bağlantıları.",
       },
       { property: "og:title", content: "notwork 21 Ağustos linkler" },
       { property: "og:url", content: "https://notwork.me/linkler" },
@@ -29,8 +29,8 @@ const eventLinks = [
   },
   {
     title: "Notworking Match Lab",
-    description: "Network kodunu oluştur, eşleşmeni bul ve yeni kişilerle tanış.",
-    href: "/21-agustos/network",
+    description: "Eşleşmeni gör, müsaitliğini seç ve yeni kişilerle tanış.",
+    href: "/21-agustos/eslesme",
     icon: Network,
   },
   {
@@ -42,12 +42,6 @@ const eventLinks = [
 ];
 
 const externalLinks = [
-  {
-    title: "İnteraktif Oyun MentiMeter",
-    description: "Canlı oyuna katıl",
-    href: "https://www.menti.com/al2y33r8a21w",
-    icon: Gamepad2,
-  },
   {
     title: "WhatsApp Topluluğu",
     description: "Topluluğa katıl ve duyuruları takip et",
