@@ -100,7 +100,7 @@ Online meet için görüşmek isterim.`;
 
             <article className="mt-8 rounded-[2rem] border border-primary/25 bg-primary/10 p-5 shadow-sm sm:p-7">
               <div className="text-xs font-black uppercase tracking-[0.2em] text-primary-deep">
-                Berk’in notu
+                Berk Aktaş — notwork kurucu ortağı
               </div>
               <div className="mt-4 space-y-4 text-sm leading-7 text-foreground/70 sm:text-base">
                 <p>
