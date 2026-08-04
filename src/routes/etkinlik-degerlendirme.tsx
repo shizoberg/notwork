@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { addEventReview } from "@/lib/event-reviews";
 
 const events = [
+  { id: "21-agustos-2026", title: "21 Ağustos notwork", location: "House of Rene Lokal" },
   { id: "14-temmuz-2026", title: "14 Temmuz notwork İzmir", location: "Mahal Bomonti İzmir" },
   { id: "22-mayis", title: "22 Mayıs notwork", location: "İstinyeArt İzmir" },
   { id: "10-nisan", title: "10 Nisan notwork", location: "İstinyeArt İzmir" },
@@ -45,7 +47,13 @@ async function imageToDataUrl(file: File) {
 }
 
 function EventReviewPage() {
-  const [eventId, setEventId] = useState("14-temmuz-2026");
+  const [eventId, setEventId] = useState(() => {
+    if (typeof window === "undefined") return "21-agustos-2026";
+    const requestedEvent = new URLSearchParams(window.location.search).get("event");
+    return events.some((event) => event.id === requestedEvent)
+      ? requestedEvent || "21-agustos-2026"
+      : "21-agustos-2026";
+  });
   const [name, setName] = useState("");
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -104,7 +112,9 @@ function EventReviewPage() {
         privateNote: privateNote.trim() || undefined,
         consent,
       });
-      setNotice("Değerlendirmen alındı. Yorumun etkinlik sayfasında görünecek, özel notun sadece ekibe iletildi.");
+      setNotice(
+        "Değerlendirmen alındı. Yorumun etkinlik sayfasında görünecek, özel notun sadece ekibe iletildi.",
+      );
       setName("");
       setRating(5);
       setComment("");
@@ -120,9 +130,16 @@ function EventReviewPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SiteNav />
+      <SiteNav variant="event" />
       <main>
         <section className="mx-auto max-w-5xl px-5 pb-10 pt-12 text-center sm:pt-16">
+          <Link
+            to="/linkler"
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-primary-deep shadow-sm"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Linklere geri dön
+          </Link>
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary-deep">
             <span className="h-2 w-2 rounded-full bg-primary blink" />
             düşüncelerini bizle paylaş
@@ -139,7 +156,10 @@ function EventReviewPage() {
         </section>
 
         <section className="mx-auto max-w-3xl px-5 pb-20">
-          <form onSubmit={onSubmit} className="grid gap-4 rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:p-7">
+          <form
+            onSubmit={onSubmit}
+            className="grid gap-4 rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:p-7"
+          >
             <label className="grid gap-1.5">
               <span className="text-xs font-semibold text-foreground/60">Etkinlik*</span>
               <select
@@ -195,7 +215,9 @@ function EventReviewPage() {
                 className="resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
                 required
               />
-              <span className="text-right text-[11px] text-foreground/40">{comment.length}/700</span>
+              <span className="text-right text-[11px] text-foreground/40">
+                {comment.length}/700
+              </span>
             </label>
 
             <label className="grid gap-1.5">
@@ -216,9 +238,7 @@ function EventReviewPage() {
             )}
 
             <label className="grid gap-1.5">
-              <span className="text-xs font-semibold text-foreground/60">
-                Ekibe özel notum
-              </span>
+              <span className="text-xs font-semibold text-foreground/60">Ekibe özel notum</span>
               <textarea
                 value={privateNote}
                 onChange={(event) => setPrivateNote(event.target.value.slice(0, 1000))}

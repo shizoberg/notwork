@@ -4,9 +4,11 @@ import {
   BarChart3,
   Check,
   Eye,
+  EyeOff,
   MousePointerClick,
   Pencil,
   Plus,
+  RefreshCcw,
   Ticket,
   Trash2,
   Users,
@@ -27,6 +29,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type { WordcloudAnswer, WordcloudQuestion, WordcloudResults } from "@/lib/event-wordcloud";
+import type { EventNetworkRegistration } from "@/lib/event-network";
+import { getEventNetworkAdmin } from "@/lib/event-network-api";
+import { getWordcloudAdmin, updateWordcloudAdmin } from "@/lib/wordcloud-api";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -86,6 +92,15 @@ const blankMember: NetworkMember = {
   username: "",
 };
 
+const blankWordcloudQuestion: Partial<WordcloudQuestion> = {
+  id: "",
+  order: 1,
+  title: "",
+  helper: "",
+  isActive: true,
+  maxAnswersPerSession: 1,
+};
+
 const eventNames: Record<string, string> = {
   session_start: "Oturum başladı",
   page_view: "Sayfa görüntülendi",
@@ -105,6 +120,13 @@ function AdminPage() {
   const [memberDraft, setMemberDraft] = useState<NetworkMember>(blankMember);
   const [editingUsername, setEditingUsername] = useState("");
   const [networkMessage, setNetworkMessage] = useState("");
+  const [wordcloudQuestions, setWordcloudQuestions] = useState<WordcloudQuestion[]>([]);
+  const [wordcloudAnswers, setWordcloudAnswers] = useState<WordcloudAnswer[]>([]);
+  const [wordcloudResults, setWordcloudResults] = useState<WordcloudResults | null>(null);
+  const [wordcloudDraft, setWordcloudDraft] =
+    useState<Partial<WordcloudQuestion>>(blankWordcloudQuestion);
+  const [wordcloudMessage, setWordcloudMessage] = useState("");
+  const [eventRegistrations, setEventRegistrations] = useState<EventNetworkRegistration[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -118,6 +140,37 @@ function AdminPage() {
     const data = (await response.json()) as { members: NetworkMember[]; requests: ChangeRequest[] };
     setMembers(data.members);
     setRequests(data.requests);
+  };
+
+  const loadWordcloud = async (nextPassword = password) => {
+    const data = await getWordcloudAdmin(nextPassword);
+    setWordcloudQuestions(data.questions);
+    setWordcloudAnswers(data.answers);
+    setWordcloudResults(data.results);
+  };
+
+  const loadEventNetwork = async (nextPassword = password) => {
+    const data = await getEventNetworkAdmin(nextPassword);
+    setEventRegistrations(data.registrations);
+  };
+
+  const wordcloudAction = async (
+    payload:
+      | { action: "saveQuestion"; question: Partial<WordcloudQuestion> }
+      | { action: "deleteQuestion"; questionId: string }
+      | { action: "toggleAnswer"; answerId: string; isVisible: boolean },
+  ) => {
+    setWordcloudMessage("");
+    try {
+      const data = await updateWordcloudAdmin(password, payload);
+      setWordcloudQuestions(data.questions);
+      setWordcloudAnswers(data.answers);
+      setWordcloudResults(data.results);
+      setWordcloudDraft(blankWordcloudQuestion);
+      setWordcloudMessage("WordCloud güncellendi.");
+    } catch (caught) {
+      setWordcloudMessage(caught instanceof Error ? caught.message : "WordCloud güncellenemedi.");
+    }
   };
 
   const networkAction = async (
@@ -156,7 +209,11 @@ function AdminPage() {
       const data = (await response.json()) as { events: AnalyticsEvent[] };
       setEvents(data.events);
       setDays(nextDays);
-      await loadNetwork(password);
+      await Promise.all([
+        loadNetwork(password),
+        loadWordcloud(password),
+        loadEventNetwork(password),
+      ]);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Rapor alınamadı.");
     } finally {
@@ -245,6 +302,38 @@ function AdminPage() {
             </button>
           </div>
         </header>
+
+        <section className="mt-6 rounded-[2rem] border border-primary/25 bg-primary/10 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.22em] text-primary-deep">
+                Event araçları
+              </div>
+              <h2 className="mt-1 text-2xl font-black tracking-[-0.03em]">21 Ağustos WordCloud</h2>
+              <p className="mt-1 text-sm text-foreground/60">
+                Soru akışı ve cevap moderasyonu artık bu genel admin panelinden yönetiliyor.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href="/21-agustos/wordcloud"
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full border border-primary/30 bg-background px-4 py-2 text-sm font-bold"
+              >
+                Test formu
+              </a>
+              <a
+                href="/21-agustos/sonuclar"
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+              >
+                Canlı ekran
+              </a>
+            </div>
+          </div>
+        </section>
 
         <section className="mt-7 overflow-hidden rounded-[2rem] border border-primary/25 bg-[radial-gradient(circle_at_top_left,rgba(143,203,208,0.22),transparent_34%),linear-gradient(135deg,hsl(var(--card)),hsl(var(--background)))] p-5 shadow-[var(--shadow-card)]">
           <div className="flex flex-wrap items-end justify-between gap-4">
@@ -414,6 +503,22 @@ function AdminPage() {
           <ReportList title="En çok kullanılan aksiyonlar" rows={report.topActions} />
           <ReportList title="Kaydırma derinliği" rows={report.scrollDepth} suffix=" ulaşım" />
         </section>
+
+        <WordcloudAdmin
+          questions={wordcloudQuestions}
+          answers={wordcloudAnswers}
+          results={wordcloudResults}
+          draft={wordcloudDraft}
+          message={wordcloudMessage}
+          setDraft={setWordcloudDraft}
+          refresh={() => loadWordcloud(password)}
+          wordcloudAction={wordcloudAction}
+        />
+
+        <EventNetworkAdmin
+          registrations={eventRegistrations}
+          refresh={() => loadEventNetwork(password)}
+        />
 
         <NetworkingAdmin
           members={members}
@@ -667,6 +772,301 @@ function NetworkingAdmin({
           </table>
         </div>
       </article>
+    </section>
+  );
+}
+
+function WordcloudAdmin({
+  questions,
+  answers,
+  results,
+  draft,
+  message,
+  setDraft,
+  refresh,
+  wordcloudAction,
+}: {
+  questions: WordcloudQuestion[];
+  answers: WordcloudAnswer[];
+  results: WordcloudResults | null;
+  draft: Partial<WordcloudQuestion>;
+  message: string;
+  setDraft: (question: Partial<WordcloudQuestion>) => void;
+  refresh: () => Promise<void>;
+  wordcloudAction: (
+    payload:
+      | { action: "saveQuestion"; question: Partial<WordcloudQuestion> }
+      | { action: "deleteQuestion"; questionId: string }
+      | { action: "toggleAnswer"; answerId: string; isVisible: boolean },
+  ) => Promise<void>;
+}) {
+  const visibleAnswers = answers.filter((answer) => answer.isVisible);
+
+  return (
+    <section className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+      <article className="rounded-2xl border border-border bg-card p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-black">21 Ağustos WordCloud soruları</h2>
+            <p className="mt-1 text-sm text-foreground/50">
+              Soruları buradan değiştir; cevap formu ve canlı ekran otomatik güncellenir.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-2 text-xs font-semibold"
+          >
+            <RefreshCcw size={14} /> yenile
+          </button>
+        </div>
+
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void wordcloudAction({ action: "saveQuestion", question: draft });
+          }}
+          className="mt-5 grid gap-3"
+        >
+          <AdminField
+            label="Sıra"
+            type="number"
+            min={1}
+            value={draft.order || 1}
+            onChange={(event) => setDraft({ ...draft, order: Number(event.target.value) })}
+            required
+          />
+          <AdminField
+            label="Soru"
+            value={draft.title || ""}
+            onChange={(event) => setDraft({ ...draft, title: event.target.value })}
+            placeholder="Örn: Bu gece hangi bağlantıyı arıyorsun?"
+            required
+          />
+          <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
+            Yardım metni
+            <textarea
+              value={draft.helper || ""}
+              onChange={(event) => setDraft({ ...draft, helper: event.target.value })}
+              rows={3}
+              className="rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+              placeholder="Katılımcıya kısa ipucu"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm font-semibold">
+            <input
+              type="checkbox"
+              checked={draft.isActive !== false}
+              onChange={(event) => setDraft({ ...draft, isActive: event.target.checked })}
+            />
+            Formda aktif göster
+          </label>
+          <button
+            type="submit"
+            className="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+          >
+            {draft.id ? "soruyu güncelle" : "test sorusu ekle"}
+          </button>
+          {message && <p className="text-sm font-semibold text-primary-deep">{message}</p>}
+        </form>
+      </article>
+
+      <article className="rounded-2xl border border-border bg-card p-5">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Metric icon={BarChart3} label="Soru" value={questions.length} />
+          <Metric icon={Eye} label="Görünür cevap" value={visibleAnswers.length} highlight />
+          <Metric
+            icon={EyeOff}
+            label="Gizli cevap"
+            value={answers.length - visibleAnswers.length}
+          />
+        </div>
+
+        <div className="mt-5 grid gap-3">
+          {questions.map((question) => (
+            <div key={question.id} className="rounded-xl border border-border bg-background p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="text-xs font-bold text-primary-deep">Soru {question.order}</div>
+                  <h3 className="mt-1 font-black">{question.title}</h3>
+                  <p className="mt-1 text-sm text-foreground/55">{question.helper}</p>
+                </div>
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-deep">
+                  {question.isActive ? "aktif" : "pasif"}
+                </span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDraft(question)}
+                  className="rounded-full border border-border px-3 py-1.5 text-xs font-bold"
+                >
+                  düzenle
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    void wordcloudAction({ action: "deleteQuestion", questionId: question.id })
+                  }
+                  className="rounded-full border border-destructive/30 px-3 py-1.5 text-xs font-bold text-destructive"
+                >
+                  sil
+                </button>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(results?.results[question.id] || []).slice(0, 8).map((word) => (
+                  <span
+                    key={word.text}
+                    className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary-deep"
+                  >
+                    {word.text}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </article>
+
+      <article className="overflow-hidden rounded-2xl border border-border bg-card lg:col-span-2">
+        <div className="border-b border-border px-5 py-4 font-bold">
+          WordCloud cevap moderasyonu · {answers.length}
+        </div>
+        <div className="max-h-[420px] overflow-auto">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="sticky top-0 bg-muted text-xs text-foreground/50">
+              <tr>
+                <th className="px-4 py-3">Cevap</th>
+                <th className="px-4 py-3">Soru</th>
+                <th className="px-4 py-3">Durum</th>
+                <th className="px-4 py-3">İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {answers.map((answer) => (
+                <tr key={answer.id} className="border-t border-border/70">
+                  <td className="px-4 py-3 font-bold">{answer.rawText}</td>
+                  <td className="px-4 py-3 text-foreground/55">{answer.questionId}</td>
+                  <td className="px-4 py-3">{answer.isVisible ? "görünür" : "gizli"}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void wordcloudAction({
+                          action: "toggleAnswer",
+                          answerId: answer.id,
+                          isVisible: !answer.isVisible,
+                        })
+                      }
+                      className="rounded-full border border-border px-3 py-1.5 text-xs font-bold"
+                    >
+                      {answer.isVisible ? "gizle" : "göster"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  );
+}
+
+function EventNetworkAdmin({
+  registrations,
+  refresh,
+}: {
+  registrations: EventNetworkRegistration[];
+  refresh: () => Promise<void>;
+}) {
+  return (
+    <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div>
+          <h2 className="text-xl font-black">21 Ağustos network kayıtları</h2>
+          <p className="mt-1 text-sm text-foreground/50">
+            Etkinlik kodu, yetkinlikler, ihtiyaç ve izin tercihleri.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <a
+            href="/21-agustos/network"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full border border-border px-3 py-2 text-xs font-bold"
+          >
+            Test kaydı aç
+          </a>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+          >
+            <RefreshCcw size={14} /> yenile
+          </button>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[980px] text-left text-sm">
+          <thead className="bg-muted text-xs text-foreground/50">
+            <tr>
+              <th className="px-4 py-3">Kod</th>
+              <th className="px-4 py-3">Katılımcı</th>
+              <th className="px-4 py-3">E-posta</th>
+              <th className="px-4 py-3">Yardım edebilir</th>
+              <th className="px-4 py-3">İhtiyaç</th>
+              <th className="px-4 py-3">İzinler</th>
+            </tr>
+          </thead>
+          <tbody>
+            {registrations.map((registration) => (
+              <tr key={registration.participant.id} className="border-t border-border/70">
+                <td className="px-4 py-3">
+                  <span className="rounded-xl bg-primary/10 px-3 py-2 font-black text-primary-deep">
+                    {registration.participant.publicCode}
+                  </span>
+                </td>
+                <td className="px-4 py-3 font-bold">
+                  {registration.profile.firstName} {registration.profile.lastName}
+                </td>
+                <td className="px-4 py-3">{registration.profile.email}</td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-1">
+                    {registration.offers.map((offer) => (
+                      <span
+                        key={offer}
+                        className="rounded-full bg-primary/10 px-2 py-1 text-xs font-bold text-primary-deep"
+                      >
+                        {offer}
+                      </span>
+                    ))}
+                  </div>
+                </td>
+                <td className="max-w-xs px-4 py-3 text-foreground/60">
+                  <div className="line-clamp-2">{registration.needs}</div>
+                  {registration.needTag ? (
+                    <div className="mt-1 text-xs font-bold text-primary-deep">
+                      #{registration.needTag}
+                    </div>
+                  ) : null}
+                </td>
+                <td className="px-4 py-3 text-xs text-foreground/55">
+                  <div>Genel ağ: {registration.profile.generalNetworkOptIn ? "evet" : "hayır"}</div>
+                  <div>E-posta: {registration.profile.marketingOptIn ? "evet" : "hayır"}</div>
+                </td>
+              </tr>
+            ))}
+            {registrations.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-8 text-center text-sm text-foreground/45">
+                  Henüz 21 Ağustos network kaydı yok.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

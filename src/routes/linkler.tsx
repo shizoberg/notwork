@@ -1,32 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
-import {
-  ChevronDown,
-  ExternalLink,
-  Gamepad2,
-  MessageCircle,
-  Percent,
-  Utensils,
-} from "lucide-react";
-import { useState } from "react";
-
-import aperolSpritz from "@/assets/menu/aperol-spritz.jpg";
-import baharatliPatates from "@/assets/menu/baharatli-patates.jpg";
-import chickenBurger from "@/assets/menu/chicken-burger.jpg";
-import classicDoubleSmash from "@/assets/menu/classic-double-smash.jpg";
-import longIslandIceTea from "@/assets/menu/long-island-ice-tea.jpg";
-import mojito from "@/assets/menu/mojito.jpg";
-import peynirliNachos from "@/assets/menu/peynirli-nachos.jpg";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ExternalLink, Gamepad2, MessageCircle, Network, Star, Vote } from "lucide-react";
+import { SiteFooter, SiteNav } from "@/components/SiteNav";
 
 export const Route = createFileRoute("/linkler")({
   head: () => ({
     meta: [
-      { title: "notwork Linkler | Oyun, WhatsApp ve Menü" },
+      { title: "notwork Linkler | 21 Ağustos Etkinlik Girişi" },
       {
         name: "description",
         content:
-          "notwork etkinlik bağlantıları, interaktif Mentimeter oyunu, WhatsApp ve özel indirimli menü.",
+          "notwork 21 Ağustos etkinlik giriş sayfası: anket, Notworking Match Lab, WhatsApp ve interaktif oyun bağlantıları.",
       },
-      { property: "og:title", content: "notwork linkler" },
+      { property: "og:title", content: "notwork 21 Ağustos linkler" },
       { property: "og:url", content: "https://notwork.me/linkler" },
     ],
     links: [{ rel: "canonical", href: "https://notwork.me/linkler" }],
@@ -34,7 +19,28 @@ export const Route = createFileRoute("/linkler")({
   component: LinksPage,
 });
 
-const links = [
+const eventLinks = [
+  {
+    title: "Anket",
+    description: "Sahnedeki WordCloud için kısa cevaplarını bırak.",
+    href: "/21-agustos/wordcloud",
+    icon: Vote,
+  },
+  {
+    title: "Notworking Match Lab",
+    description: "Network kodunu oluştur, eşleşmeni bul ve yeni kişilerle tanış.",
+    href: "/21-agustos/network",
+    icon: Network,
+  },
+  {
+    title: "Etkinlik Yorumu",
+    description: "21 Ağustos etkinliğini puanla; yorum ve fotoğraf ekle.",
+    href: "/etkinlik-degerlendirme?event=21-agustos-2026",
+    icon: Star,
+  },
+];
+
+const externalLinks = [
   {
     title: "İnteraktif Oyun MentiMeter",
     description: "Canlı oyuna katıl",
@@ -49,286 +55,105 @@ const links = [
   },
 ];
 
-const foodItems = [
-  {
-    name: "Chicken Burger",
-    image: chickenBurger,
-    originalPrice: 759,
-    discountPrice: 607,
-    content:
-      "120 gr tavuk, burger peyniri, iceberg, acılı Smash sos, Honey Glaze sos ve baharatlı patates tava",
-  },
-  {
-    name: "Classic Double Smash",
-    image: classicDoubleSmash,
-    originalPrice: 787,
-    discountPrice: 630,
-    content:
-      "140 gr burger köftesi, burger peyniri, karamelize soğan, Classic Smash sos, kornişon turşu ve baharatlı patates tava",
-  },
-  {
-    name: "Peynirli Nachos",
-    image: peynirliNachos,
-    originalPrice: 605,
-    discountPrice: 484,
-    content:
-      "Mozzarella ve burger peyniri, renkli biberler, soğan, Meksika fasulyesi, jalapeno; sour cream, salsa ve guacamole dip sos",
-  },
-  {
-    name: "Baharatlı Patates Tava",
-    image: baharatliPatates,
-    originalPrice: 473,
-    discountPrice: 378,
-    content: "Baharatlı patates tava",
-  },
-];
-
-const cocktailItems = [
-  {
-    name: "Aperol Spritz",
-    image: aperolSpritz,
-    originalPrice: 638,
-    discountPrice: 510,
-    content: "Aperol, prosecco ve soda",
-  },
-  {
-    name: "Long Island Ice Tea",
-    image: longIslandIceTea,
-    originalPrice: 638,
-    discountPrice: 510,
-    content:
-      "Absolut Vodka, Beefeater Gin, Casamigos Blanco, Havana Club, Triple Sec ve turunç kola (Bubble seçeneğiyle)",
-  },
-  {
-    name: "Mojito",
-    image: mojito,
-    originalPrice: 638,
-    discountPrice: 510,
-    content: "Havana Club, limon, şeker şurubu, soda ve nane",
-  },
-];
-
-const beers = [
-  ["Stella Artois 44 cl", 369, 295],
-  ["Belfast 50 cl", 325, 260],
-  ["Efes Pilsen 50 cl", 319, 255],
-  ["Efes Malt 50 cl", 325, 260],
-  ["Efes Pilsen Green 50 cl", 325, 260],
-  ["Efes Pilsen Glutensiz 50 cl", 336, 269],
-  ["Bomonti Filtresiz 50 cl", 325, 260],
-  ["Miller 33 cl", 347, 278],
-  ["Erdinger 33 cl", 396, 317],
-  ["Amsterdam Navigator 50 cl", 396, 317],
-  ["Duvel 33 cl", 462, 370],
-  ["Corona 33 cl", 402, 322],
-] as const;
-
-const otherDrinks = [
-  ["Kırmızı House Wine · Kadeh", 457, 366],
-  ["Beyaz House Wine · Kadeh", 457, 366],
-  ["Damla Su 330 ml", 116, 93],
-] as const;
-
-const categories = ["Yiyecekler", "Kokteyller", "İçecekler"] as const;
-type Category = (typeof categories)[number];
-
-function Price({ original, discounted }: { original: number; discounted: number }) {
-  return (
-    <div className="flex flex-wrap items-end gap-x-2 gap-y-1">
-      <span className="text-xl font-black text-primary-deep">{discounted} TL</span>
-      <span className="pb-0.5 text-xs text-foreground/40 line-through">{original} TL</span>
-      <span className="mt-1 rounded-full bg-primary px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.1em] text-primary-foreground">
-        %20 notwork özel indirim
-      </span>
-    </div>
-  );
-}
-
-function CompactMenuList({ items }: { items: ReadonlyArray<readonly [string, number, number]> }) {
-  return (
-    <div className="grid gap-2 sm:grid-cols-2">
-      {items.map(([name, original, discounted]) => (
-        <article
-          key={name}
-          className="relative flex items-center justify-between gap-3 rounded-xl border border-border bg-background/70 px-4 pb-3 pt-8"
-        >
-          <span className="absolute left-3 top-2 rounded-full bg-primary px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-primary-foreground">
-            %20 notwork özel indirim
-          </span>
-          <h4 className="text-sm font-bold leading-tight">{name}</h4>
-          <div className="shrink-0 text-right">
-            <p className="font-black text-primary-deep">{discounted} TL</p>
-            <p className="text-[10px] text-foreground/40 line-through">{original} TL</p>
-          </div>
-        </article>
-      ))}
-    </div>
-  );
-}
-
 function LinksPage() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<Category>("Yiyecekler");
-
   return (
-    <main className="min-h-screen bg-background px-5 py-10 text-foreground sm:py-16">
-      <div className="mx-auto max-w-4xl">
-        <header className="text-center">
-          <a href="/" className="inline-flex items-center gap-2 font-brand text-3xl">
-            <span className="h-3 w-3 rounded-full bg-primary" />
-            notwork
-          </a>
-          <p className="mt-3 text-sm text-foreground/55">etkinlik bağlantıları</p>
-        </header>
+    <div className="min-h-screen bg-background text-foreground">
+      <SiteNav variant="event" />
+      <main className="px-5 py-10 sm:py-16">
+        <div className="mx-auto max-w-4xl">
+          <header className="text-center">
+            <a href="/" className="inline-flex items-center gap-2 font-brand text-3xl">
+              <span className="h-3 w-3 rounded-full bg-primary" />
+              notwork
+            </a>
+            <p className="mt-3 text-sm font-semibold text-foreground/55">
+              21 Ağustos etkinlik giriş ekranı
+            </p>
+            <h1 className="mx-auto mt-5 max-w-2xl font-display text-4xl font-black leading-none tracking-[-0.05em] sm:text-6xl">
+              Anket mi, Notworking Match mi?
+            </h1>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-foreground/60">
+              Etkinlikte ihtiyacın olan bağlantıyı buradan seç. Anket cevapların sahneye düşer;
+              Match Lab ise seni etkinlik içindeki doğru kişilerle eşleştirir.
+            </p>
+          </header>
 
-        <section className="mx-auto mt-8 max-w-xl rounded-2xl border border-primary/25 bg-primary/10 p-4 text-center shadow-sm">
-          <p className="text-sm font-semibold leading-relaxed text-foreground/75">
-            Mahal Bomonti İzmir’e bize katkılarından dolayı teşekkür ederiz. Destekleri için{" "}
-            <span className="font-black text-primary-deep">@mahallbomontiizmir</span> hesabını
-            takip etmenizi rica ederiz.
-          </p>
-          <a
-            href="https://www.instagram.com/mahallbomontiizmir/"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground transition hover:opacity-90"
-          >
-            Mahal Bomonti İzmir’i takip et
-            <ExternalLink size={15} />
-          </a>
-        </section>
-
-        <section className="mx-auto mt-10 grid max-w-xl gap-3">
-          {links.map(({ title, description, href, icon: Icon }) => (
+          <section className="mx-auto mt-8 max-w-xl rounded-2xl border border-primary/25 bg-primary/10 p-4 text-center shadow-sm">
+            <p className="text-sm font-semibold leading-relaxed text-foreground/75">
+              Mahal Bomonti İzmir’e bize katkılarından dolayı teşekkür ederiz. Destekleri için{" "}
+              <span className="font-black text-primary-deep">@mahallbomontiizmir</span> hesabını
+              takip etmenizi rica ederiz.
+            </p>
             <a
-              key={title}
-              href={href}
+              href="https://www.instagram.com/mahallbomontiizmir/"
               target="_blank"
               rel="noreferrer"
-              className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
+              className="mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground transition hover:opacity-90"
             >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary-deep">
-                <Icon size={24} strokeWidth={1.8} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-bold">{title}</span>
-                <span className="mt-0.5 block text-xs text-foreground/50">{description}</span>
-              </span>
-              <ExternalLink
-                size={18}
-                className="shrink-0 text-foreground/35 transition group-hover:text-primary-deep"
-              />
+              Mahal Bomonti İzmir’i takip et
+              <ExternalLink size={15} />
             </a>
-          ))}
-        </section>
+          </section>
 
-        <section className="mt-5 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <button
-            type="button"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((current) => !current)}
-            className="flex w-full items-center gap-4 p-4 text-left transition hover:bg-muted/60"
-          >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary-deep">
-              <Utensils size={24} strokeWidth={1.8} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-bold">Menü</span>
-              <span className="mt-0.5 block text-xs text-foreground/50">
-                notwork misafirlerine özel %20 indirimli menü
-              </span>
-            </span>
-            <ChevronDown
-              size={20}
-              className={`shrink-0 text-foreground/45 transition-transform ${menuOpen ? "rotate-180" : ""}`}
-            />
-          </button>
-
-          {menuOpen && (
-            <div className="border-t border-border p-4 sm:p-6">
-              <div className="mb-5 flex items-start gap-3 rounded-xl bg-primary/10 p-4 text-primary-deep">
-                <Percent size={22} className="mt-0.5 shrink-0" />
-                <div>
-                  <p className="font-black">notwork özel indirim</p>
-                  <p className="mt-0.5 text-xs opacity-75">
-                    Aşağıdaki fiyatlara %20 indirim uygulanmıştır.
-                  </p>
-                </div>
-              </div>
-
-              <div
-                className="mb-5 flex gap-2 overflow-x-auto pb-1"
-                role="tablist"
-                aria-label="Menü kategorileri"
+          <section className="mx-auto mt-10 grid max-w-3xl gap-4 sm:grid-cols-3">
+            {eventLinks.map(({ title, description, href, icon: Icon }) => (
+              <a
+                key={title}
+                href={href}
+                className="group rounded-[2rem] border border-primary/25 bg-card p-5 shadow-sm transition hover:-translate-y-1 hover:border-primary/70 hover:shadow-xl hover:shadow-primary/10"
               >
-                {categories.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    role="tab"
-                    aria-selected={activeCategory === category}
-                    onClick={() => setActiveCategory(category)}
-                    className={`shrink-0 rounded-full px-4 py-2 text-xs font-black transition ${activeCategory === category ? "bg-foreground text-background" : "border border-border bg-background text-foreground/60 hover:border-primary"}`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
+                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground">
+                  <Icon size={28} strokeWidth={1.8} />
+                </span>
+                <span className="mt-6 block text-2xl font-black tracking-[-0.03em]">{title}</span>
+                <span className="mt-2 block text-sm leading-6 text-foreground/55">
+                  {description}
+                </span>
+                <span className="mt-5 inline-flex rounded-full bg-primary px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-primary-foreground">
+                  Başla
+                </span>
+              </a>
+            ))}
+          </section>
 
-              {activeCategory !== "İçecekler" && (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {(activeCategory === "Yiyecekler" ? foodItems : cocktailItems).map((item) => (
-                    <article
-                      key={item.name}
-                      className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm"
-                    >
-                      <div className="relative">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="aspect-square w-full object-cover"
-                          loading="lazy"
-                        />
-                        <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-primary-foreground shadow-sm">
-                          %20 özel indirim
-                        </span>
-                      </div>
-                      <div className="p-4">
-                        <h3 className="text-lg font-black">{item.name}</h3>
-                        <p className="mt-2 min-h-12 text-xs leading-relaxed text-foreground/55">
-                          {item.content}
-                        </p>
-                        <div className="mt-4">
-                          <Price original={item.originalPrice} discounted={item.discountPrice} />
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
+          <section className="mx-auto mt-8 grid max-w-xl gap-3">
+            <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-foreground/35">
+              Diğer bağlantılar
+            </p>
+            {externalLinks.map(({ title, description, href, icon: Icon }) => (
+              <a
+                key={title}
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
+              >
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary-deep">
+                  <Icon size={24} strokeWidth={1.8} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-bold">{title}</span>
+                  <span className="mt-0.5 block text-xs text-foreground/50">{description}</span>
+                </span>
+                <ExternalLink
+                  size={18}
+                  className="shrink-0 text-foreground/35 transition group-hover:text-primary-deep"
+                />
+              </a>
+            ))}
+          </section>
 
-              {activeCategory === "İçecekler" && (
-                <div className="grid gap-7">
-                  <section>
-                    <h3 className="mb-3 text-lg font-black">Şarap ve Alkolsüz İçecekler</h3>
-                    <CompactMenuList items={otherDrinks} />
-                  </section>
-                  <section>
-                    <h3 className="mb-3 text-lg font-black">Şişe Biralar</h3>
-                    <CompactMenuList items={beers} />
-                  </section>
-                </div>
-              )}
-
-              <p className="mt-5 text-center text-[10px] text-foreground/40">
-                Alkollü içecekler yalnızca 18 yaş ve üzeri misafirler içindir.
-              </p>
-            </div>
-          )}
-        </section>
-
-        <footer className="mt-10 text-center text-xs text-foreground/40">notwork · İzmir</footer>
-      </div>
-    </main>
+          <p className="mx-auto mt-8 max-w-2xl rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-center text-xs leading-5 text-foreground/55">
+            Etkinlik bağlantılarını kullanarak ilgili form akışlarında verdiğin bilgilerin
+            <Link to="/kvkk" className="mx-1 font-bold text-primary-deep underline">
+              KVKK Aydınlatma Metni
+            </Link>
+            kapsamında işlenebileceğini kabul etmiş olursun. Zorunlu izin gereken alanlarda ayrıca
+            onay kutusu gösterilir.
+          </p>
+        </div>
+      </main>
+      <SiteFooter />
+    </div>
   );
 }

@@ -1,0 +1,98 @@
+[
+  {
+    "firstName": "Ece",
+    "lastName": "Kara",
+    "email": "ece.kara@test.notwork.local",
+    "offers": ["marka", "içerik", "topluluk"],
+    "needs": "Podcast fikrimi düzenli bir içerik serisine çevirmek istiyorum",
+    "needTag": "içerik"
+  },
+  {
+    "firstName": "Mert",
+    "lastName": "Yılmaz",
+    "email": "mert.yilmaz@test.notwork.local",
+    "offers": ["yazılım", "yapay zeka", "otomasyon"],
+    "needs": "Yeni projem için kullanıcı testi yapacak kişiler arıyorum",
+    "needTag": "teknoloji"
+  },
+  {
+    "firstName": "Derya",
+    "lastName": "Aksoy",
+    "email": "derya.aksoy@test.notwork.local",
+    "offers": ["satış", "müşteri", "sunum"],
+    "needs": "LinkedIn içeriklerimi daha cesur yayınlamak istiyorum",
+    "needTag": "pazarlama"
+  },
+  {
+    "firstName": "Can",
+    "lastName": "Özdemir",
+    "email": "can.ozdemir@test.notwork.local",
+    "offers": ["finans", "yatırım", "strateji"],
+    "needs": "Girişim fikrimi basit bir finans modeline dökmek istiyorum",
+    "needTag": "finans"
+  },
+  {
+    "firstName": "Selin",
+    "lastName": "Arslan",
+    "email": "selin.arslan@test.notwork.local",
+    "offers": ["tasarım", "marka", "ürün"],
+    "needs": "Topluluk etkinlikleri için daha sıcak görsel dil arıyorum",
+    "needTag": "tasarım"
+  },
+  {
+    "firstName": "Bora",
+    "lastName": "Şahin",
+    "email": "bora.sahin@test.notwork.local",
+    "offers": ["hukuk", "sözleşme", "kvkk"],
+    "needs": "Kendi eğitim paketimi satışa açmadan önce yapıyı netleştirmek istiyorum",
+    "needTag": "satış"
+  },
+  {
+    "firstName": "Naz",
+    "lastName": "Demir",
+    "email": "naz.demir@test.notwork.local",
+    "offers": ["video", "reels", "hikaye"],
+    "needs": "YouTube fikrimi ilk üç video planına çevirmek istiyorum",
+    "needTag": "içerik"
+  },
+  {
+    "firstName": "Emir",
+    "lastName": "Koç",
+    "email": "emir.koc@test.notwork.local",
+    "offers": ["operasyon", "süreç", "ekip"],
+    "needs": "Küçük ekibimde görev dağılımını sadeleştirmek istiyorum",
+    "needTag": "operasyon"
+  },
+  {
+    "firstName": "İrem",
+    "lastName": "Aydın",
+    "email": "irem.aydin@test.notwork.local",
+    "offers": ["kariyer", "mentorluk", "iletişim"],
+    "needs": "Kariyer geçişimi anlatacak kısa bir hikaye kurmak istiyorum",
+    "needTag": "kariyer"
+  },
+  {
+    "firstName": "Tolga",
+    "lastName": "Ergin",
+    "email": "tolga.ergin@test.notwork.local",
+    "offers": ["etkinlik", "sponsorluk", "network"],
+    "needs": "Markam için doğru topluluk partnerlerini bulmak istiyorum",
+    "needTag": "sponsorluk"
+  },
+  {
+    "firstName": "Yasemin",
+    "lastName": "Polat",
+    "email": "yasemin.polat@test.notwork.local",
+    "offers": ["psikoloji", "eğitim", "atölye"],
+    "needs": "Atölyemi daha interaktif hale getirmek istiyorum",
+    "needTag": "eğitim"
+  },
+  {
+    "firstName": "Arda",
+    "lastName": "Keskin",
+    "email": "arda.keskin@test.notwork.local",
+    "offers": ["growth", "reklam", "analitik"],
+    "needs": "Yeni landing page için reklam metinlerini test etmek istiyorum",
+    "needTag": "pazarlama"
+  }
+]

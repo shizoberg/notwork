@@ -22,6 +22,10 @@ import { Route as R21agustosRouteImport } from './routes/21agustos'
 import { Route as R14temmuznetworkingRouteImport } from './routes/14temmuznetworking'
 import { Route as R14temmuzRouteImport } from './routes/14temmuz'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as R21AgustosWordcloudRouteImport } from './routes/21-agustos.wordcloud'
+import { Route as R21AgustosSonuclarRouteImport } from './routes/21-agustos.sonuclar'
+import { Route as R21AgustosNetworkRouteImport } from './routes/21-agustos.network'
+import { Route as R21AgustosEslesmeRouteImport } from './routes/21-agustos.eslesme'
 
 const SponsorRoute = SponsorRouteImport.update({
   id: '/sponsor',
@@ -88,6 +92,26 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const R21AgustosWordcloudRoute = R21AgustosWordcloudRouteImport.update({
+  id: '/21-agustos/wordcloud',
+  path: '/21-agustos/wordcloud',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const R21AgustosSonuclarRoute = R21AgustosSonuclarRouteImport.update({
+  id: '/21-agustos/sonuclar',
+  path: '/21-agustos/sonuclar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const R21AgustosNetworkRoute = R21AgustosNetworkRouteImport.update({
+  id: '/21-agustos/network',
+  path: '/21-agustos/network',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const R21AgustosEslesmeRoute = R21AgustosEslesmeRouteImport.update({
+  id: '/21-agustos/eslesme',
+  path: '/21-agustos/eslesme',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -103,6 +127,10 @@ export interface FileRoutesByFullPath {
   '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
   '/sponsor': typeof SponsorRoute
+  '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
+  '/21-agustos/network': typeof R21AgustosNetworkRoute
+  '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
+  '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +146,10 @@ export interface FileRoutesByTo {
   '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
   '/sponsor': typeof SponsorRoute
+  '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
+  '/21-agustos/network': typeof R21AgustosNetworkRoute
+  '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
+  '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +166,10 @@ export interface FileRoutesById {
   '/linkler': typeof LinklerRoute
   '/networking': typeof NetworkingRoute
   '/sponsor': typeof SponsorRoute
+  '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
+  '/21-agustos/network': typeof R21AgustosNetworkRoute
+  '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
+  '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +187,10 @@ export interface FileRouteTypes {
     | '/linkler'
     | '/networking'
     | '/sponsor'
+    | '/21-agustos/eslesme'
+    | '/21-agustos/network'
+    | '/21-agustos/sonuclar'
+    | '/21-agustos/wordcloud'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +206,10 @@ export interface FileRouteTypes {
     | '/linkler'
     | '/networking'
     | '/sponsor'
+    | '/21-agustos/eslesme'
+    | '/21-agustos/network'
+    | '/21-agustos/sonuclar'
+    | '/21-agustos/wordcloud'
   id:
     | '__root__'
     | '/'
@@ -181,6 +225,10 @@ export interface FileRouteTypes {
     | '/linkler'
     | '/networking'
     | '/sponsor'
+    | '/21-agustos/eslesme'
+    | '/21-agustos/network'
+    | '/21-agustos/sonuclar'
+    | '/21-agustos/wordcloud'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,6 +245,10 @@ export interface RootRouteChildren {
   LinklerRoute: typeof LinklerRoute
   NetworkingRoute: typeof NetworkingRoute
   SponsorRoute: typeof SponsorRoute
+  R21AgustosEslesmeRoute: typeof R21AgustosEslesmeRoute
+  R21AgustosNetworkRoute: typeof R21AgustosNetworkRoute
+  R21AgustosSonuclarRoute: typeof R21AgustosSonuclarRoute
+  R21AgustosWordcloudRoute: typeof R21AgustosWordcloudRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,6 +344,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/21-agustos/wordcloud': {
+      id: '/21-agustos/wordcloud'
+      path: '/21-agustos/wordcloud'
+      fullPath: '/21-agustos/wordcloud'
+      preLoaderRoute: typeof R21AgustosWordcloudRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/21-agustos/sonuclar': {
+      id: '/21-agustos/sonuclar'
+      path: '/21-agustos/sonuclar'
+      fullPath: '/21-agustos/sonuclar'
+      preLoaderRoute: typeof R21AgustosSonuclarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/21-agustos/network': {
+      id: '/21-agustos/network'
+      path: '/21-agustos/network'
+      fullPath: '/21-agustos/network'
+      preLoaderRoute: typeof R21AgustosNetworkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/21-agustos/eslesme': {
+      id: '/21-agustos/eslesme'
+      path: '/21-agustos/eslesme'
+      fullPath: '/21-agustos/eslesme'
+      preLoaderRoute: typeof R21AgustosEslesmeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -309,6 +389,10 @@ const rootRouteChildren: RootRouteChildren = {
   LinklerRoute: LinklerRoute,
   NetworkingRoute: NetworkingRoute,
   SponsorRoute: SponsorRoute,
+  R21AgustosEslesmeRoute: R21AgustosEslesmeRoute,
+  R21AgustosNetworkRoute: R21AgustosNetworkRoute,
+  R21AgustosSonuclarRoute: R21AgustosSonuclarRoute,
+  R21AgustosWordcloudRoute: R21AgustosWordcloudRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

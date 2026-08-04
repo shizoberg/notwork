@@ -3,7 +3,11 @@ import { Instagram, Youtube } from "lucide-react";
 
 import { COOKIE_CONSENT_OPEN_EVENT } from "@/lib/cookie-consent";
 
-export function SiteNav() {
+type SiteNavVariant = "default" | "event" | "eventDark";
+
+export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
+  if (variant !== "default") return <EventSiteNav variant={variant} />;
+
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/70 border-b border-border/60">
       <div className="mx-auto max-w-6xl px-2 sm:px-5 h-16 flex items-center justify-between">
@@ -28,10 +32,66 @@ export function SiteNav() {
           <a href="/#etkinlikler" className="px-1.5 sm:hidden py-2 rounded-lg hover:bg-muted">
             Etkinlikler
           </a>
-          <Link to="/community" className="hidden px-1.5 py-2 rounded-lg hover:bg-muted sm:inline sm:px-3">
+          <Link
+            to="/community"
+            className="hidden px-1.5 py-2 rounded-lg hover:bg-muted sm:inline sm:px-3"
+          >
             <span className="sm:hidden">Sunum Yap</span>
             <span className="hidden sm:inline">Community</span>
           </Link>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default"> }) {
+  const dark = variant === "eventDark";
+  const headerClass = dark
+    ? "sticky top-0 z-40 border-b border-white/10 bg-[#071112]/72 text-white shadow-[0_12px_50px_rgba(0,0,0,0.25)] backdrop-blur-xl"
+    : "sticky top-0 z-40 border-b border-primary/20 bg-background/78 text-foreground shadow-[0_12px_50px_rgba(113,204,210,0.12)] backdrop-blur-xl";
+  const linkClass = dark
+    ? "rounded-full px-3 py-2 text-xs font-black text-white/72 transition hover:bg-white/10 hover:text-white"
+    : "rounded-full px-3 py-2 text-xs font-black text-foreground/65 transition hover:bg-primary/10 hover:text-primary-deep";
+  const primaryClass = dark
+    ? "rounded-full bg-[#8ee4e8] px-4 py-2 text-xs font-black text-[#071112] shadow-[0_0_22px_rgba(142,228,232,0.28)]"
+    : "rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground shadow-[0_0_22px_rgba(113,204,210,0.2)]";
+
+  return (
+    <header className={headerClass}>
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-3 sm:px-5">
+        <Link to="/linkler" className="flex min-w-0 items-center gap-2">
+          <span className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20">
+            <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+            <span className="absolute inset-0 rounded-full border border-primary/40" />
+          </span>
+          <span className="min-w-0">
+            <span className="block font-brand text-lg leading-none">notwork</span>
+            <span
+              className={
+                dark
+                  ? "block truncate text-[10px] font-bold text-white/45"
+                  : "block truncate text-[10px] font-bold text-foreground/45"
+              }
+            >
+              21 Ağustos giriş
+            </span>
+          </span>
+        </Link>
+
+        <nav className="flex items-center gap-1 overflow-x-auto rounded-full border border-current/10 bg-current/[0.03] p-1">
+          <Link to="/linkler" className={linkClass}>
+            Linkler
+          </Link>
+          <Link to="/21-agustos/wordcloud" className={linkClass}>
+            Anket
+          </Link>
+          <Link to="/21-agustos/network" className={linkClass}>
+            Match
+          </Link>
+          <a href="/etkinlik-degerlendirme?event=21-agustos-2026" className={primaryClass}>
+            Yorumla
+          </a>
         </nav>
       </div>
     </header>

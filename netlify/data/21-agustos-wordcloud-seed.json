@@ -1,0 +1,65 @@
+{
+  "event": {
+    "eventId": "21-agustos-2026",
+    "title": "21 Ağustos notwork WordCloud",
+    "shortTitle": "21 Ağustos WordCloud",
+    "isOpen": true,
+    "allowEdit": true,
+    "updatedAt": "2026-08-04T00:00:00.000Z"
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "order": 1,
+      "title": "Başarısızlıktan öğrendiğin tek kelime ne?",
+      "helper": "Aklına gelen ilk net kelimeyi yaz.",
+      "isActive": true,
+      "maxAnswersPerSession": 1,
+      "updatedAt": "2026-08-04T00:00:00.000Z"
+    },
+    {
+      "id": "q2",
+      "order": 2,
+      "title": "Bugün hangi konuda bağlantı kurmak istiyorsun?",
+      "helper": "Örn: yatırım, tasarım, yazılım, topluluk, satış.",
+      "isActive": true,
+      "maxAnswersPerSession": 1,
+      "updatedAt": "2026-08-04T00:00:00.000Z"
+    },
+    {
+      "id": "q3",
+      "order": 3,
+      "title": "Bu gece senden geriye hangi enerji kalsın?",
+      "helper": "Tek kelime veya kısa bir ifade yazabilirsin.",
+      "isActive": true,
+      "maxAnswersPerSession": 1,
+      "updatedAt": "2026-08-04T00:00:00.000Z"
+    }
+  ],
+  "answers": [
+    { "questionId": "q1", "rawText": "Cesaret" },
+    { "questionId": "q1", "rawText": "cesaret" },
+    { "questionId": "q1", "rawText": "Sabır" },
+    { "questionId": "q1", "rawText": "deneyim" },
+    { "questionId": "q1", "rawText": "Özgüven" },
+    { "questionId": "q1", "rawText": "yeniden başlamak" },
+    { "questionId": "q1", "rawText": "risk" },
+    { "questionId": "q1", "rawText": "netlik" },
+    { "questionId": "q2", "rawText": "girişim" },
+    { "questionId": "q2", "rawText": "yazılım" },
+    { "questionId": "q2", "rawText": "tasarım" },
+    { "questionId": "q2", "rawText": "pazarlama" },
+    { "questionId": "q2", "rawText": "yatırım" },
+    { "questionId": "q2", "rawText": "topluluk" },
+    { "questionId": "q2", "rawText": "satış" },
+    { "questionId": "q2", "rawText": "ürün" },
+    { "questionId": "q3", "rawText": "samimiyet" },
+    { "questionId": "q3", "rawText": "merak" },
+    { "questionId": "q3", "rawText": "hareket" },
+    { "questionId": "q3", "rawText": "neşe" },
+    { "questionId": "q3", "rawText": "güven" },
+    { "questionId": "q3", "rawText": "bağlantı" },
+    { "questionId": "q3", "rawText": "ilham" },
+    { "questionId": "q3", "rawText": "cesaret" }
+  ]
+}

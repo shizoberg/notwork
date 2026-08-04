@@ -119,6 +119,12 @@ function AugustTwentyFirst() {
               Bilet al
             </a>
             <a
+              href="/21-agustos/network"
+              className="rounded-full border border-primary/30 bg-background px-6 py-3 font-semibold text-primary-deep transition hover:border-primary"
+            >
+              Network test kaydı
+            </a>
+            <a
               href={locationUrl}
               target="_blank"
               rel="noreferrer"
