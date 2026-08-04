@@ -2,8 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Loader2, RefreshCcw, Sparkles, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
-import type { EventNetworkMatchGroup, EventNetworkPresence } from "@/lib/event-network";
+import type {
+  EventNetworkMatchGroup,
+  EventNetworkPresence,
+  EventNetworkRegistration,
+} from "@/lib/event-network";
 import {
+  getEventNetworkMe,
   getEventNetworkMatch,
   seedEventNetworkSamples,
   updateEventNetworkPresence,
@@ -24,6 +29,7 @@ export const Route = createFileRoute("/21-agustos/eslesme")({
 function AugustMatchPage() {
   const [token, setToken] = useState("");
   const [group, setGroup] = useState<EventNetworkMatchGroup | null>(null);
+  const [registration, setRegistration] = useState<EventNetworkRegistration | null>(null);
   const [presence, setPresence] = useState<EventNetworkPresence>("open");
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "empty" | "paused">("idle");
   const [message, setMessage] = useState("");
@@ -46,6 +52,7 @@ function AugustMatchPage() {
       try {
         const result = await getEventNetworkMatch(nextToken);
         setPresence(result.presence);
+        setRegistration(result.registration);
         setGroup(result.group);
         setStatus(result.status === "ready" ? "ready" : result.status);
       } catch (error) {
@@ -59,7 +66,12 @@ function AugustMatchPage() {
   useEffect(() => {
     const savedToken = localStorage.getItem(tokenStorageKey) || "";
     setToken(savedToken);
-    if (savedToken) void loadMatch(savedToken);
+    if (savedToken) {
+      void getEventNetworkMe(savedToken)
+        .then(setRegistration)
+        .catch(() => setRegistration(null));
+      void loadMatch(savedToken);
+    }
   }, [loadMatch]);
 
   const updatePresence = async (nextPresence: EventNetworkPresence) => {
@@ -67,6 +79,8 @@ function AugustMatchPage() {
     setPresence(nextPresence);
     try {
       await updateEventNetworkPresence(token, nextPresence);
+      const currentRegistration = await getEventNetworkMe(token);
+      setRegistration(currentRegistration);
       if (nextPresence === "paused") {
         setStatus("paused");
         setGroup(null);
@@ -85,6 +99,7 @@ function AugustMatchPage() {
       const data = await seedEventNetworkSamples();
       const sampleToken = data.registrations[0]?.accessToken;
       if (!sampleToken) throw new Error("Sample token üretilemedi.");
+      setRegistration(data.registrations[0]);
       localStorage.setItem(tokenStorageKey, sampleToken);
       setToken(sampleToken);
       await loadMatch(sampleToken);
@@ -131,6 +146,23 @@ function AugustMatchPage() {
               </div>
 
               <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-4 backdrop-blur">
+                {registration ? (
+                  <div className="mb-4 rounded-[1.5rem] border border-[#8ee4e8]/30 bg-[#8ee4e8]/12 p-4">
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-[#8ee4e8]">
+                      Senin notwork kodun
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <span className="rounded-2xl bg-[#8ee4e8] px-5 py-3 text-4xl font-black tracking-[-0.06em] text-[#071112]">
+                        {registration.participant.publicCode}
+                      </span>
+                      <span className="text-sm font-semibold leading-5 text-white/65">
+                        {registration.profile.firstName} {registration.profile.lastName}
+                        <br />
+                        Eşleşmede bu kodla seni bulacaklar.
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-white/50">
                   Müsaitlik durumun
                 </p>
@@ -252,7 +284,7 @@ function AugustMatchPage() {
                         <span>
                           Sen: <strong className="text-white">{currentMember.name}</strong>
                         </span>
-                        <span className="font-black text-[#8ee4e8]">
+                        <span className="font-black text-[#8ee4e8] sm:hidden">
                           Kodun: {currentMember.publicCode}
                         </span>
                       </div>
