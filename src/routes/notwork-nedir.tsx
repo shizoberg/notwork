@@ -117,69 +117,75 @@ function NotworkNedirPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 pb-16 sm:pb-20">
-          <div className="grid gap-5 lg:grid-cols-2">
-            {explainerVideos.map((video) => (
-              <article
-                key={video.watchUrl}
-                className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-[var(--shadow-card)]"
-              >
-                <div className="aspect-video bg-ink">
-                  <iframe
-                    src={video.embedUrl}
-                    title={video.title}
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
-                <div className="p-6">
-                  <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
-                    video
+        <section className="mx-auto max-w-6xl px-5 pb-10 sm:pb-14">
+          <div className="-mx-5 overflow-x-auto px-5 pb-3 [scrollbar-width:thin]">
+            <div className="flex snap-x gap-4 lg:grid lg:grid-cols-2">
+              {explainerVideos.map((video) => (
+                <article
+                  key={video.watchUrl}
+                  className="w-[82vw] max-w-sm shrink-0 snap-start overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-[var(--shadow-card)] sm:w-[420px] lg:w-auto lg:max-w-none"
+                >
+                  <div className="aspect-video bg-ink">
+                    <iframe
+                      src={video.embedUrl}
+                      title={video.title}
+                      className="h-full w-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
                   </div>
-                  <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em]">
-                    {video.title}
-                  </h2>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{video.text}</p>
-                  <a
-                    href={video.watchUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-5 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground transition hover:opacity-90"
-                  >
-                    youtube’da aç
-                  </a>
-                </div>
-              </article>
-            ))}
+                  <div className="p-4 sm:p-5">
+                    <div className="text-[10px] font-black uppercase tracking-[0.22em] text-primary-deep">
+                      video
+                    </div>
+                    <h2 className="mt-2 font-display text-xl font-black tracking-[-0.04em] sm:text-2xl">
+                      {video.title}
+                    </h2>
+                    <p className="mt-2 line-clamp-3 text-xs leading-6 text-muted-foreground sm:text-sm">
+                      {video.text}
+                    </p>
+                    <a
+                      href={video.watchUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-4 inline-flex rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground transition hover:opacity-90"
+                    >
+                      youtube’da aç
+                    </a>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 pb-12">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {flow.map((item, index) => (
-              <div
-                key={item}
-                className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-card)]"
-              >
-                <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
-                  step {String(index + 1).padStart(2, "0")}
+        <section className="mx-auto max-w-6xl px-5 pb-8 sm:pb-10">
+          <div className="-mx-5 overflow-x-auto px-5 pb-3 [scrollbar-width:thin]">
+            <div className="flex snap-x gap-3">
+              {flow.map((item, index) => (
+                <div
+                  key={item}
+                  className="w-40 shrink-0 snap-start rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] sm:w-48"
+                >
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-primary-deep">
+                    step {String(index + 1).padStart(2, "0")}
+                  </div>
+                  <div className="mt-3 font-display text-xl font-black tracking-[-0.04em]">
+                    {item}
+                  </div>
                 </div>
-                <div className="mt-4 font-display text-2xl font-black tracking-[-0.04em]">
-                  {item}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 pb-16 sm:pb-20">
-          <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        <section className="mx-auto max-w-6xl px-5 pb-10 sm:pb-14">
+          <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
               <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
                 network anları
               </div>
-              <h2 className="mt-2 font-display text-4xl font-black tracking-[-0.05em] sm:text-5xl">
+              <h2 className="mt-2 font-display text-3xl font-black tracking-[-0.05em] sm:text-4xl">
                 insanlar hikayeden sonra tanışıyor
               </h2>
             </div>
@@ -188,18 +194,20 @@ function NotworkNedirPage() {
               güvenli, samimi ve bağlantıya açık bir oda.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            {networkMoments.map((image, index) => (
-              <img
-                key={image.alt}
-                src={image.src}
-                alt={image.alt}
-                loading="lazy"
-                className={`h-44 w-full rounded-3xl object-cover shadow-[var(--shadow-card)] sm:h-64 ${
-                  index === 0 ? "md:col-span-2" : ""
-                }`}
-              />
-            ))}
+          <div className="-mx-5 overflow-x-auto px-5 pb-3 [scrollbar-width:thin]">
+            <div className="flex snap-x gap-3">
+              {networkMoments.map((image, index) => (
+                <img
+                  key={image.alt}
+                  src={image.src}
+                  alt={image.alt}
+                  loading="lazy"
+                  className={`h-36 w-56 shrink-0 snap-start rounded-2xl object-cover shadow-[var(--shadow-card)] sm:h-44 sm:w-72 ${
+                    index === 0 ? "sm:w-[34rem]" : ""
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </section>
 
@@ -254,6 +262,7 @@ function NotworkNedirPage() {
                       </div>
                     </div>
                   ) : null}
+                  {index === 4 ? <MiniNetworkPreview /> : null}
                 </div>
               </article>
             ))}
@@ -288,5 +297,98 @@ function NotworkNedirPage() {
       </main>
       <SiteFooter />
     </div>
+  );
+}
+
+function MiniNetworkPreview() {
+  const nodes = [
+    { x: 18, y: 32, label: "tasarım" },
+    { x: 39, y: 20, label: "girişim" },
+    { x: 61, y: 35, label: "pazarlama" },
+    { x: 82, y: 23, label: "yazılım" },
+    { x: 27, y: 68, label: "içerik" },
+    { x: 51, y: 60, label: "satış" },
+    { x: 73, y: 72, label: "community" },
+  ];
+  const edges = [
+    [0, 1],
+    [1, 2],
+    [2, 3],
+    [0, 5],
+    [4, 5],
+    [5, 6],
+    [2, 6],
+    [1, 5],
+  ];
+
+  return (
+    <Link
+      to="/networking"
+      className="group mt-6 block overflow-hidden rounded-[1.5rem] border border-primary/25 bg-[radial-gradient(circle_at_top_left,color-mix(in_oklab,var(--primary)_20%,transparent),transparent_42%),var(--background)] p-4 transition hover:border-primary sm:p-5"
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="text-[11px] font-black uppercase tracking-[0.2em] text-primary-deep">
+            canlı ağ preview
+          </div>
+          <h3 className="mt-1 font-display text-2xl font-black tracking-[-0.04em]">
+            networking ağımızı uzaktan gör
+          </h3>
+        </div>
+        <span className="inline-flex w-fit rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground">
+          ağa git →
+        </span>
+      </div>
+      <div className="mt-4 rounded-2xl border border-border bg-card/80 p-2">
+        <svg
+          viewBox="0 0 100 82"
+          role="img"
+          aria-label="notwork networking ağı önizleme"
+          className="h-44 w-full sm:h-56"
+        >
+          <defs>
+            <linearGradient id="mini-network-line" x1="0" x2="1">
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.9" />
+            </linearGradient>
+          </defs>
+          {edges.map(([from, to]) => {
+            const first = nodes[from];
+            const second = nodes[to];
+            return (
+              <line
+                key={`${from}-${to}`}
+                x1={first.x}
+                y1={first.y}
+                x2={second.x}
+                y2={second.y}
+                stroke="url(#mini-network-line)"
+                strokeWidth="0.8"
+              />
+            );
+          })}
+          {nodes.map((node, index) => (
+            <g key={node.label} className="transition group-hover:scale-105">
+              <circle
+                cx={node.x}
+                cy={node.y}
+                r={index === 5 ? 6.5 : 5.2}
+                fill={index === 5 ? "hsl(var(--primary))" : "hsl(var(--card))"}
+                stroke="hsl(var(--primary))"
+                strokeWidth="1"
+              />
+              <text
+                x={node.x}
+                y={node.y + 11}
+                textAnchor="middle"
+                className="fill-foreground text-[3.4px] font-black"
+              >
+                {node.label}
+              </text>
+            </g>
+          ))}
+        </svg>
+      </div>
+    </Link>
   );
 }
