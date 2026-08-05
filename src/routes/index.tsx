@@ -96,7 +96,6 @@ function Landing() {
       <SiteNav />
       <main className="flex-1">
         <Hero />
-        <Lesson />
         <Benefits />
         <Tracks />
         <Nedir />
@@ -221,17 +220,15 @@ function Hero() {
 
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
 
-        <h1 className="mt-3 font-display font-black tracking-[-0.05em] text-foreground text-balance break-keep text-[2.45rem] sm:text-5xl md:text-6xl lg:text-7xl leading-[0.85]">
-          f*ckup hikayelerinin anlatıldığı{" "}
-          <span className="text-primary-deep">networking club</span>
+        <h1 className="mt-3 font-display font-black tracking-[-0.05em] text-foreground text-balance break-keep text-[4rem] sm:text-7xl md:text-8xl lg:text-9xl leading-[0.82]">
+          networking club
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-          Başarısızlık hikayelerinden çıkarılmış doğru dersler ve doğru bağlantılar ile notwork’e
-          katıl.
+          Başarısızlık hikayelerinden çıkarılmış doğru dersleri dinleyeceğin network club.
         </p>
 
-        <div className="mt-7 flex justify-center">
+        <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <a
             href={augustTicketUrl}
             data-analytics="ticket_click"
@@ -245,21 +242,14 @@ function Hero() {
           >
             Bilet al
           </a>
+          <Link
+            to="/notwork-nedir"
+            className="inline-flex w-fit items-center justify-center rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary-deep sm:px-6 sm:py-3"
+          >
+            notwork nedir?
+          </Link>
         </div>
       </div>
-    </section>
-  );
-}
-
-function Lesson() {
-  return (
-    <section className="mx-auto max-w-5xl px-4 sm:px-5 -mt-2 sm:-mt-4 mb-10 sm:mb-16 text-center">
-      <p className="mx-auto max-w-3xl text-foreground/70 text-lg sm:text-2xl md:text-3xl leading-snug font-medium">
-        Yapamadıklarımızdan çıkardığımız dersler ile{" "}
-        <span className="font-bold text-foreground">nasıl başardık</span> — işte bu hikayeleri
-        dinleyeceksiniz.
-      </p>
-      <div className="mt-8 sm:mt-10 mx-auto h-px w-16 bg-border" />
     </section>
   );
 }

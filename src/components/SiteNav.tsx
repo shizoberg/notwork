@@ -16,9 +16,12 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
           <span>notwork</span>
         </Link>
         <nav className="flex items-center gap-0.5 sm:gap-2 text-[11px] sm:text-sm font-medium">
-          <a href="/#nedir" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">
+          <Link
+            to="/notwork-nedir"
+            className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline"
+          >
             Nedir?
-          </a>
+          </Link>
           <a href="/#galeri" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">
             Galeri
           </a>

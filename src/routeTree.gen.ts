@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StartupRouteImport } from './routes/startup'
 import { Route as SponsorRouteImport } from './routes/sponsor'
+import { Route as NotworkNedirRouteImport } from './routes/notwork-nedir'
 import { Route as NetworkingRouteImport } from './routes/networking'
 import { Route as NetworkStartupRouteImport } from './routes/network-startup'
 import { Route as LinklerRouteImport } from './routes/linkler'
@@ -37,6 +38,11 @@ const StartupRoute = StartupRouteImport.update({
 const SponsorRoute = SponsorRouteImport.update({
   id: '/sponsor',
   path: '/sponsor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotworkNedirRoute = NotworkNedirRouteImport.update({
+  id: '/notwork-nedir',
+  path: '/notwork-nedir',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NetworkingRoute = NetworkingRouteImport.update({
@@ -139,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/linkler': typeof LinklerRoute
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
+  '/notwork-nedir': typeof NotworkNedirRoute
   '/sponsor': typeof SponsorRoute
   '/startup': typeof StartupRoute
   '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/linkler': typeof LinklerRoute
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
+  '/notwork-nedir': typeof NotworkNedirRoute
   '/sponsor': typeof SponsorRoute
   '/startup': typeof StartupRoute
   '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/linkler': typeof LinklerRoute
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
+  '/notwork-nedir': typeof NotworkNedirRoute
   '/sponsor': typeof SponsorRoute
   '/startup': typeof StartupRoute
   '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
     | '/linkler'
     | '/network-startup'
     | '/networking'
+    | '/notwork-nedir'
     | '/sponsor'
     | '/startup'
     | '/21-agustos/eslesme'
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
     | '/linkler'
     | '/network-startup'
     | '/networking'
+    | '/notwork-nedir'
     | '/sponsor'
     | '/startup'
     | '/21-agustos/eslesme'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/linkler'
     | '/network-startup'
     | '/networking'
+    | '/notwork-nedir'
     | '/sponsor'
     | '/startup'
     | '/21-agustos/eslesme'
@@ -269,6 +281,7 @@ export interface RootRouteChildren {
   LinklerRoute: typeof LinklerRoute
   NetworkStartupRoute: typeof NetworkStartupRoute
   NetworkingRoute: typeof NetworkingRoute
+  NotworkNedirRoute: typeof NotworkNedirRoute
   SponsorRoute: typeof SponsorRoute
   StartupRoute: typeof StartupRoute
   R21AgustosEslesmeRoute: typeof R21AgustosEslesmeRoute
@@ -291,6 +304,13 @@ declare module '@tanstack/react-router' {
       path: '/sponsor'
       fullPath: '/sponsor'
       preLoaderRoute: typeof SponsorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notwork-nedir': {
+      id: '/notwork-nedir'
+      path: '/notwork-nedir'
+      fullPath: '/notwork-nedir'
+      preLoaderRoute: typeof NotworkNedirRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/networking': {
@@ -429,6 +449,7 @@ const rootRouteChildren: RootRouteChildren = {
   LinklerRoute: LinklerRoute,
   NetworkStartupRoute: NetworkStartupRoute,
   NetworkingRoute: NetworkingRoute,
+  NotworkNedirRoute: NotworkNedirRoute,
   SponsorRoute: SponsorRoute,
   StartupRoute: StartupRoute,
   R21AgustosEslesmeRoute: R21AgustosEslesmeRoute,
