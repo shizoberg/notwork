@@ -1,5 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import gallery2 from "@/assets/gallery/notwork-2.jpg";
+import gallery3 from "@/assets/gallery/notwork-3.jpg";
+import gallery4 from "@/assets/gallery/notwork-4.jpg";
+import gallery6 from "@/assets/gallery/notwork-6.jpg";
+import gallery8 from "@/assets/gallery/notwork-8.jpg";
+import gallery13 from "@/assets/gallery/notwork-13.jpg";
 
 export const Route = createFileRoute("/notwork-nedir")({
   head: () => ({
@@ -66,6 +72,30 @@ const flow = [
   "community",
 ];
 
+const explainerVideos = [
+  {
+    title: "notwork’ü berk ve armağan anlatıyor",
+    text: "notwork’ün neden ortaya çıktığını, sahnede ne konuşulduğunu ve bu community hissinin nasıl kurulduğunu en kapsamlı videoda izleyebilirsin.",
+    embedUrl: "https://www.youtube.com/embed/vtzncdq4Jlk",
+    watchUrl: "https://www.youtube.com/watch?v=vtzncdq4Jlk",
+  },
+  {
+    title: "örnek sunum izle",
+    text: "notwork sahnesindeki tonu, hikaye anlatımını ve başarısızlıktan çıkarılan ders akışını görmek için örnek sunumu izleyebilirsin.",
+    embedUrl: "https://www.youtube.com/embed/uvTP_j3o76c",
+    watchUrl: "https://www.youtube.com/watch?v=uvTP_j3o76c",
+  },
+];
+
+const networkMoments = [
+  { src: gallery4, alt: "notwork etkinliğinde katılımcıların sahneye eşlik ettiği an" },
+  { src: gallery6, alt: "notwork networking anında mikrofonla konuşan katılımcı" },
+  { src: gallery8, alt: "notwork etkinliğinde masada sohbet eden katılımcılar" },
+  { src: gallery13, alt: "notwork etkinliğinde hikaye dinleyen katılımcılar" },
+  { src: gallery2, alt: "notwork etkinliğinde sunumu dinleyen katılımcı" },
+  { src: gallery3, alt: "notwork etkinliğinde mikrofon uzatılan katılımcı" },
+];
+
 function NotworkNedirPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -87,6 +117,44 @@ function NotworkNedirPage() {
           </div>
         </section>
 
+        <section className="mx-auto max-w-6xl px-5 pb-16 sm:pb-20">
+          <div className="grid gap-5 lg:grid-cols-2">
+            {explainerVideos.map((video) => (
+              <article
+                key={video.watchUrl}
+                className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-[var(--shadow-card)]"
+              >
+                <div className="aspect-video bg-ink">
+                  <iframe
+                    src={video.embedUrl}
+                    title={video.title}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
+                    video
+                  </div>
+                  <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em]">
+                    {video.title}
+                  </h2>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{video.text}</p>
+                  <a
+                    href={video.watchUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-5 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground transition hover:opacity-90"
+                  >
+                    youtube’da aç
+                  </a>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="mx-auto max-w-6xl px-5 pb-12">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {flow.map((item, index) => (
@@ -101,6 +169,36 @@ function NotworkNedirPage() {
                   {item}
                 </div>
               </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-5 pb-16 sm:pb-20">
+          <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            <div>
+              <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
+                network anları
+              </div>
+              <h2 className="mt-2 font-display text-4xl font-black tracking-[-0.05em] sm:text-5xl">
+                insanlar hikayeden sonra tanışıyor
+              </h2>
+            </div>
+            <p className="max-w-sm text-sm leading-7 text-muted-foreground">
+              etkinlik boyunca sahne, masa sohbetleri ve mikrofon anları aynı hissin parçası:
+              güvenli, samimi ve bağlantıya açık bir oda.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+            {networkMoments.map((image, index) => (
+              <img
+                key={image.alt}
+                src={image.src}
+                alt={image.alt}
+                loading="lazy"
+                className={`h-44 w-full rounded-3xl object-cover shadow-[var(--shadow-card)] sm:h-64 ${
+                  index === 0 ? "md:col-span-2" : ""
+                }`}
+              />
             ))}
           </div>
         </section>
