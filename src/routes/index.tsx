@@ -207,7 +207,26 @@ const currentEvent = {
   accent: "from-[#0f2f35] via-[#2f9aa5] to-[#8fcbd0]",
 };
 
+const heroTitleVariants = ["networking club", "notworking club", "network community"];
+
 function Hero() {
+  const [titleIndex, setTitleIndex] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const interval = window.setInterval(() => {
+      setIsTyping(true);
+      window.setTimeout(() => {
+        setTitleIndex((current) => (current + 1) % heroTitleVariants.length);
+        setIsTyping(false);
+      }, 180);
+    }, 2400);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
   return (
     <section className="relative">
       <div className="mx-auto max-w-5xl px-4 sm:px-5 pt-6 sm:pt-12 pb-10 sm:pb-16 text-center">
@@ -220,8 +239,17 @@ function Hero() {
 
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
 
-        <h1 className="mt-3 font-display font-black tracking-[-0.05em] text-foreground text-balance break-keep text-[4rem] sm:text-7xl md:text-8xl lg:text-9xl leading-[0.82]">
-          networking club
+        <h1
+          className="mt-3 font-display font-black tracking-[-0.05em] text-foreground text-balance break-keep text-[4rem] sm:text-7xl md:text-8xl lg:text-9xl leading-[0.82]"
+          aria-label={heroTitleVariants[titleIndex]}
+        >
+          <span
+            className={`inline-block min-h-[1.65em] transition duration-200 ease-out will-change-transform sm:min-h-[1.62em] md:min-h-[1.6em] ${
+              isTyping ? "translate-y-1 blur-[1px] opacity-30" : "translate-y-0 blur-0 opacity-100"
+            }`}
+          >
+            {heroTitleVariants[titleIndex]}
+          </span>
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
