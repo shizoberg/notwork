@@ -40,18 +40,31 @@ const steps = [
     text: "konuşmacılar uğraşıp olduramadıkları deneyimleri anlatıyor. asıl odak, o deneyimden çıkan doğru ders ve bugün geldikleri nokta.",
   },
   {
-    eyebrow: "03 · sistem",
-    title: "dinlemekten bağlantıya geçiyoruz",
-    text: "sunum sonrası networking alanı açılıyor. qr, match lab ve community kayıtlarıyla insanların birbirini daha kolay bulmasını sağlıyoruz.",
+    eyebrow: "03 · anket oyunu",
+    title: "salonu oyuna dahil ediyoruz",
+    text: "sunumlar başlamadan kısa bir interaktif anket oyunu oynuyoruz. herkes tek kelimelik cevaplar veriyor; sahnede oluşan ortak kelimeler salonun enerjisini görünür yapıyor.",
   },
   {
-    eyebrow: "04 · felsefe",
+    eyebrow: "04 · sistem",
+    title: "sizi eşleştiren bir yazılım kullanıyoruz",
+    text: "networking kısmında sadece rastgele tanıştırmıyoruz. kayıt olurken yazdığın ihtiyaçlar ve sunabileceklerin üzerinden seni konuşma ihtimali yüksek kişilerle eşleştiren kısa bir sistem kullanıyoruz.",
+  },
+  {
+    eyebrow: "05 · felsefe",
     title: "başarısızlık burada sosyal sermaye",
     text: "çünkü hatalar konuşulunca insanlar daha hızlı yakınlaşıyor. notwork, filtrelenmiş başarı hikayeleri yerine gerçek deneyimlerden bağ kurmayı seçiyor.",
   },
 ];
 
-const flow = ["karşılama", "ısınma", "hikayeler", "dersler", "networking", "community"];
+const flow = [
+  "karşılama",
+  "anket oyunu",
+  "hikayeler",
+  "dersler",
+  "match lab",
+  "networking",
+  "community",
+];
 
 function NotworkNedirPage() {
   return (
@@ -75,7 +88,7 @@ function NotworkNedirPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-5 pb-12">
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {flow.map((item, index) => (
               <div
                 key={item}
@@ -120,6 +133,27 @@ function NotworkNedirPage() {
                       <span className="rounded-2xl bg-primary/10 px-4 py-3 text-primary-deep">
                         macera
                       </span>
+                    </div>
+                  ) : null}
+                  {index === 3 ? (
+                    <div className="mt-6 grid gap-3 text-sm sm:grid-cols-[1fr_auto_1fr] sm:items-stretch">
+                      <div className="rounded-2xl border border-border bg-background p-4">
+                        <div className="text-[11px] font-black uppercase tracking-[0.18em] text-primary-deep">
+                          kişi a
+                        </div>
+                        <div className="mt-2 font-bold">sunabilir: tasarım, içerik</div>
+                        <div className="mt-1 text-muted-foreground">arıyor: müşteri, fikir</div>
+                      </div>
+                      <div className="flex items-center justify-center rounded-2xl bg-primary/10 px-4 py-3 text-xl font-black text-primary-deep">
+                        ↔
+                      </div>
+                      <div className="rounded-2xl border border-border bg-background p-4">
+                        <div className="text-[11px] font-black uppercase tracking-[0.18em] text-primary-deep">
+                          kişi b
+                        </div>
+                        <div className="mt-2 font-bold">sunabilir: müşteri ağı</div>
+                        <div className="mt-1 text-muted-foreground">arıyor: tasarım desteği</div>
+                      </div>
                     </div>
                   ) : null}
                 </div>
