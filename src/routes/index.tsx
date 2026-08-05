@@ -211,20 +211,49 @@ const heroTitleVariants = ["networking club", "notworking club", "network commun
 
 function Hero() {
   const [titleIndex, setTitleIndex] = useState(0);
-  const [isTyping, setIsTyping] = useState(false);
+  const [displayTitle, setDisplayTitle] = useState(heroTitleVariants[0]);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const interval = window.setInterval(() => {
-      setIsTyping(true);
-      window.setTimeout(() => {
-        setTitleIndex((current) => (current + 1) % heroTitleVariants.length);
-        setIsTyping(false);
-      }, 180);
-    }, 2400);
+    let timeoutId = 0;
+    let cancelled = false;
 
-    return () => window.clearInterval(interval);
+    const typeNextTitle = (currentIndex: number) => {
+      const currentTitle = heroTitleVariants[currentIndex];
+      const nextIndex = (currentIndex + 1) % heroTitleVariants.length;
+      const nextTitle = heroTitleVariants[nextIndex];
+
+      const erase = (length: number) => {
+        if (cancelled) return;
+        if (length <= 0) {
+          type(1, nextIndex, nextTitle);
+          return;
+        }
+        setDisplayTitle(currentTitle.slice(0, length));
+        timeoutId = window.setTimeout(() => erase(length - 1), 34);
+      };
+
+      const type = (length: number, nextTitleIndex: number, title: string) => {
+        if (cancelled) return;
+        setDisplayTitle(title.slice(0, length));
+        if (length >= title.length) {
+          setTitleIndex(nextTitleIndex);
+          timeoutId = window.setTimeout(() => typeNextTitle(nextTitleIndex), 2200);
+          return;
+        }
+        timeoutId = window.setTimeout(() => type(length + 1, nextTitleIndex, title), 58);
+      };
+
+      timeoutId = window.setTimeout(() => erase(currentTitle.length - 1), 1800);
+    };
+
+    typeNextTitle(0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
   }, []);
 
   return (
@@ -243,12 +272,9 @@ function Hero() {
           className="mt-3 font-display font-black tracking-[-0.05em] text-foreground text-balance break-keep text-[4rem] sm:text-7xl md:text-8xl lg:text-9xl leading-[0.82]"
           aria-label={heroTitleVariants[titleIndex]}
         >
-          <span
-            className={`inline-block min-h-[1.65em] transition duration-200 ease-out will-change-transform sm:min-h-[1.62em] md:min-h-[1.6em] ${
-              isTyping ? "translate-y-1 blur-[1px] opacity-30" : "translate-y-0 blur-0 opacity-100"
-            }`}
-          >
-            {heroTitleVariants[titleIndex]}
+          <span className="inline-block min-h-[1.65em] sm:min-h-[1.62em] md:min-h-[1.6em]">
+            {displayTitle}
+            <span className="ml-1 inline-block h-[0.78em] w-[0.08em] translate-y-[0.08em] animate-pulse rounded-full bg-primary align-baseline" />
           </span>
         </h1>
 
