@@ -56,9 +56,9 @@ function AugustNetworkPage() {
     const token = localStorage.getItem(tokenStorageKey);
     if (!token) return;
     void getEventNetworkMe(token)
-      .then(() => navigate({ to: "/21-agustos/eslesme", replace: true }))
+      .then((data) => setRegistration(data))
       .catch(() => localStorage.removeItem(tokenStorageKey));
-  }, [navigate]);
+  }, []);
 
   const steps = ["Bilgiler", "Yapabildiklerin", "İhtiyacın", "İzinler"];
   const canContinue = useMemo(() => {
@@ -100,7 +100,7 @@ function AugustNetworkPage() {
         eventConsent: form.eventConsent,
       });
       if (data.accessToken) localStorage.setItem(tokenStorageKey, data.accessToken);
-      await navigate({ to: "/21-agustos/eslesme", replace: true });
+      await navigate({ to: "/linkler", replace: true });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Kayıt tamamlanamadı.");
     } finally {

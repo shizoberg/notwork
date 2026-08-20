@@ -1085,6 +1085,23 @@ function WordcloudAdmin({
   ) => Promise<void>;
 }) {
   const visibleAnswers = answers.filter((answer) => answer.isVisible);
+  const [selectedQuestionId, setSelectedQuestionId] = useState("all");
+  const questionById = useMemo(
+    () => Object.fromEntries(questions.map((question) => [question.id, question])),
+    [questions],
+  );
+  const filteredAnswers = useMemo(
+    () =>
+      answers
+        .filter(
+          (answer) => selectedQuestionId === "all" || answer.questionId === selectedQuestionId,
+        )
+        .sort(
+          (first, second) =>
+            new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime(),
+        ),
+    [answers, selectedQuestionId],
+  );
 
   return (
     <section className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
@@ -1101,6 +1118,22 @@ function WordcloudAdmin({
             </p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
+            <a
+              href="/21-agustos/sonuclar"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 rounded-full bg-foreground px-3 py-2 text-xs font-black text-background"
+            >
+              canlı ekranı aç
+            </a>
+            <a
+              href="/21-agustos/wordcloud"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-2 text-xs font-black"
+            >
+              anket ekranı
+            </a>
             <button
               type="button"
               onClick={() => void wordcloudAction({ action: "seedLoadTest" })}
@@ -1233,8 +1266,49 @@ function WordcloudAdmin({
       </article>
 
       <article className="overflow-hidden rounded-2xl border border-border bg-card lg:col-span-2">
-        <div className="border-b border-border px-5 py-4 font-bold">
-          WordCloud cevap moderasyonu · {answers.length}
+        <div className="border-b border-border px-5 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="font-black">WordCloud cevapları · {filteredAnswers.length}</div>
+              <p className="mt-1 text-sm text-foreground/50">
+                Sunum anında cevapları burada temizle; gizlediğin cevap canlı ekrandan düşer.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-2 text-xs font-black text-primary-foreground"
+            >
+              <RefreshCcw size={14} /> cevapları yenile
+            </button>
+          </div>
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+            <button
+              type="button"
+              onClick={() => setSelectedQuestionId("all")}
+              className={`shrink-0 rounded-full px-3 py-2 text-xs font-black ${
+                selectedQuestionId === "all"
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border bg-background"
+              }`}
+            >
+              tüm cevaplar
+            </button>
+            {questions.map((question) => (
+              <button
+                key={question.id}
+                type="button"
+                onClick={() => setSelectedQuestionId(question.id)}
+                className={`shrink-0 rounded-full px-3 py-2 text-xs font-black ${
+                  selectedQuestionId === question.id
+                    ? "bg-primary text-primary-foreground"
+                    : "border border-border bg-background"
+                }`}
+              >
+                soru {question.order}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="max-h-[420px] overflow-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
@@ -1242,15 +1316,24 @@ function WordcloudAdmin({
               <tr>
                 <th className="px-4 py-3">Cevap</th>
                 <th className="px-4 py-3">Soru</th>
+                <th className="px-4 py-3">Zaman</th>
                 <th className="px-4 py-3">Durum</th>
                 <th className="px-4 py-3">İşlem</th>
               </tr>
             </thead>
             <tbody>
-              {answers.map((answer) => (
+              {filteredAnswers.map((answer) => (
                 <tr key={answer.id} className="border-t border-border/70">
                   <td className="px-4 py-3 font-bold">{answer.rawText}</td>
-                  <td className="px-4 py-3 text-foreground/55">{answer.questionId}</td>
+                  <td className="max-w-sm px-4 py-3 text-foreground/55">
+                    {questionById[answer.questionId]?.title || answer.questionId}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-foreground/45">
+                    {new Date(answer.createdAt).toLocaleTimeString("tr-TR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
                   <td className="px-4 py-3">{answer.isVisible ? "görünür" : "gizli"}</td>
                   <td className="px-4 py-3">
                     <button
@@ -1269,6 +1352,13 @@ function WordcloudAdmin({
                   </td>
                 </tr>
               ))}
+              {filteredAnswers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-sm text-foreground/45">
+                    Bu filtrede henüz cevap yok.
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
