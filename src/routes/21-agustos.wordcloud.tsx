@@ -3,11 +3,7 @@ import { ArrowLeft, Check, ChevronRight, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { cleanWordcloudAnswer, type WordcloudQuestion } from "@/lib/event-wordcloud";
-import {
-  createWordcloudSession,
-  getWordcloudBootstrap,
-  submitWordcloudAnswer,
-} from "@/lib/wordcloud-api";
+import { getWordcloudBootstrap, submitWordcloudAnswers } from "@/lib/wordcloud-api";
 
 const sessionStorageKey = "notwork_21_agustos_wordcloud_session";
 
@@ -30,6 +26,7 @@ function WordcloudParticipantPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const activeQuestion = questions[activeIndex];
   const progress = questions.length ? Math.round(((activeIndex + 1) / questions.length) * 100) : 0;
@@ -41,13 +38,9 @@ function WordcloudParticipantPage() {
       try {
         const existing =
           typeof window !== "undefined" ? localStorage.getItem(sessionStorageKey) || "" : "";
-        const [{ sessionId: nextSessionId }, bootstrap] = await Promise.all([
-          createWordcloudSession(existing),
-          getWordcloudBootstrap(existing),
-        ]);
+        const bootstrap = await getWordcloudBootstrap(existing);
         if (ignore) return;
-        localStorage.setItem(sessionStorageKey, nextSessionId);
-        setSessionId(nextSessionId);
+        setSessionId(existing);
         setQuestions(bootstrap.questions);
       } catch {
         if (!ignore) setMessage("WordCloud şu an yüklenemedi. Birazdan tekrar dene.");
@@ -67,7 +60,7 @@ function WordcloudParticipantPage() {
   );
 
   async function submitAnswer() {
-    if (!activeQuestion || !sessionId) return;
+    if (!activeQuestion) return;
     const cleaned = cleanWordcloudAnswer(answer);
     if (!cleaned) {
       setMessage("Tek kelime ya da kısa bir cevap yazman yeterli.");
@@ -77,20 +70,32 @@ function WordcloudParticipantPage() {
     setSaving(true);
     setMessage("");
     try {
-      await submitWordcloudAnswer({
-        sessionId,
-        questionId: activeQuestion.id,
-        answer: cleaned,
-      });
-      setSentQuestions((current) => ({ ...current, [activeQuestion.id]: cleaned }));
+      const nextSentQuestions = { ...sentQuestions, [activeQuestion.id]: cleaned };
+      setSentQuestions(nextSentQuestions);
       setAnswer("");
       const nextIndex = questions.findIndex(
-        (question, index) => index > activeIndex && !sentQuestions[question.id],
+        (question, index) => index > activeIndex && !nextSentQuestions[question.id],
       );
-      if (nextIndex >= 0) setActiveIndex(nextIndex);
-      else if (nextUnsentIndex >= 0 && nextUnsentIndex !== activeIndex)
-        setActiveIndex(nextUnsentIndex);
-      setMessage("Cevabın buluta eklendi ✨");
+      const allAnswered = questions.every((question) => nextSentQuestions[question.id]);
+      if (!allAnswered) {
+        if (nextIndex >= 0) setActiveIndex(nextIndex);
+        else if (nextUnsentIndex >= 0 && nextUnsentIndex !== activeIndex)
+          setActiveIndex(nextUnsentIndex);
+        setMessage("Cevabın hazır. Son soruda tek seferde buluta göndereceğiz.");
+        return;
+      }
+
+      const saved = await submitWordcloudAnswers({
+        sessionId,
+        answers: questions.map((question) => ({
+          questionId: question.id,
+          answer: nextSentQuestions[question.id],
+        })),
+      });
+      localStorage.setItem(sessionStorageKey, saved.sessionId);
+      setSessionId(saved.sessionId);
+      setSubmitted(true);
+      setMessage("Cevapların buluta eklendi ✨");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Cevap kaydedilemedi.");
     } finally {
@@ -173,9 +178,11 @@ function WordcloudParticipantPage() {
               >
                 {saving
                   ? "Ekleniyor..."
-                  : sentQuestions[activeQuestion.id]
-                    ? "Cevabı güncelle"
-                    : "Buluta ekle"}
+                  : questions.filter((question) => !sentQuestions[question.id]).length <= 1
+                    ? submitted
+                      ? "Cevapları güncelle"
+                      : "Buluta gönder"
+                    : "Sonraki soru"}
                 <ChevronRight className="h-5 w-5" />
               </button>
 
@@ -203,7 +210,7 @@ function WordcloudParticipantPage() {
               {message}
             </div>
           ) : null}
-          {isDone ? (
+          {isDone && submitted ? (
             <div className="mt-4 grid gap-3">
               <a
                 href="/21-agustos/sonuclar"

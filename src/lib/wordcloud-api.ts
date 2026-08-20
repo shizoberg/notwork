@@ -46,6 +46,19 @@ export async function submitWordcloudAnswer(input: {
   return response.json() as Promise<{ answer: WordcloudAnswer }>;
 }
 
+export async function submitWordcloudAnswers(input: {
+  sessionId?: string;
+  answers: Array<{ questionId: string; answer: string }>;
+}) {
+  const response = await fetch(apiUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "submit", ...input }),
+  });
+  if (!response.ok) throw new Error(await response.text());
+  return response.json() as Promise<{ sessionId: string; answers: WordcloudAnswer[] }>;
+}
+
 export async function getWordcloudResults(): Promise<WordcloudResults> {
   const response = await fetch(`${apiUrl}?action=results`, { cache: "no-store" });
   if (!response.ok) throw new Error("Sonuçlar alınamadı.");

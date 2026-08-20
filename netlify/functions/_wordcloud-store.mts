@@ -53,6 +53,7 @@ export type PublicInput = {
   sessionId?: string;
   questionId?: string;
   answer?: string;
+  answers?: Array<{ questionId?: string; answer?: string }>;
 };
 
 const eventId = "21-agustos-2026";
