@@ -69,6 +69,16 @@ export async function getEventNetworkMatch(accessToken: string) {
   }>;
 }
 
+export async function completeEventNetworkMatch(accessToken: string) {
+  const response = await fetch(apiUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "completeMatch", accessToken }),
+  });
+  if (!response.ok) throw new Error(await response.text());
+  return response.json() as Promise<{ ok: true; registration: EventNetworkRegistration }>;
+}
+
 export async function seedEventNetworkSamples() {
   const response = await fetch(apiUrl, {
     method: "POST",

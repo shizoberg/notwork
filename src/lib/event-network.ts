@@ -51,6 +51,7 @@ export type EventNetworkMatchGroup = {
   reason: string;
   members: EventNetworkMatchMember[];
   conversationPrompt: string;
+  conversationPrompts?: string[];
   generatedAt: string;
 };
 
