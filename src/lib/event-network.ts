@@ -42,6 +42,7 @@ export type EventNetworkMatchMember = {
   presence: EventNetworkPresence;
   isCurrentUser: boolean;
   isDone?: boolean;
+  isPhotoOwner?: boolean;
 };
 
 export type EventNetworkMatchGroup = {
@@ -53,6 +54,7 @@ export type EventNetworkMatchGroup = {
   members: EventNetworkMatchMember[];
   conversationPrompt: string;
   conversationPrompts?: string[];
+  photoOwnerParticipantId?: string;
   generatedAt: string;
 };
 

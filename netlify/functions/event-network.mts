@@ -48,7 +48,7 @@ async function readSampleData() {
 
 export default async (request: Request, _context: Context) => {
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
-  if (Number(request.headers.get("content-length") || 0) > 8_192) {
+  if (Number(request.headers.get("content-length") || 0) > 1_400_000) {
     return new Response("Payload too large", { status: 413 });
   }
 
@@ -84,7 +84,7 @@ export default async (request: Request, _context: Context) => {
     }
 
     if (action === "completeMatch") {
-      const result = await completeActiveMatchByToken(store, clean(input.accessToken, 100));
+      const result = await completeActiveMatchByToken(store, clean(input.accessToken, 100), input);
       if (!result) return new Response("Kayıt bulunamadı", { status: 404 });
       return json(result);
     }

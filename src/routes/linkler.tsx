@@ -242,6 +242,21 @@ function LinksPage() {
                 Bu kod Match Lab’de ve etkinlik içi eşleşmelerde seni bulmamızı sağlar. Aynı e-posta
                 ile tekrar girersen kayıt bilgilerini takip ederiz.
               </p>
+              <div className="mt-4 rounded-2xl border border-primary/20 bg-background/70 p-4">
+                <p className="text-sm font-black text-primary-deep">
+                  İlk etkinlik hissini ve ortam/selfie fotoğrafını da bekliyoruz.
+                </p>
+                <p className="mt-1 text-xs leading-5 text-foreground/55">
+                  Kısa yorumun etkinlik sonrası notwork sayfasında görünebilir; fotoğraf görevi
+                  Match Lab gruplarında rastgele bir kişiye atanır.
+                </p>
+                <a
+                  href="/etkinlik-degerlendirme?event=21-agustos-2026"
+                  className="mt-3 inline-flex rounded-full bg-primary px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-primary-foreground"
+                >
+                  ilk yorumumu bırak
+                </a>
+              </div>
               {message ? (
                 <p className="mt-3 rounded-2xl bg-background/70 px-4 py-3 text-sm font-bold text-primary-deep">
                   {message}

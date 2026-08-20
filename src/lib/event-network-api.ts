@@ -70,10 +70,26 @@ export async function getEventNetworkMatch(accessToken: string) {
 }
 
 export async function completeEventNetworkMatch(accessToken: string) {
+  return completeEventNetworkMatchWithReview(accessToken, {
+    rating: 5,
+    comment: "Match Lab görüşmesini tamamladım.",
+    consent: true,
+  });
+}
+
+export async function completeEventNetworkMatchWithReview(
+  accessToken: string,
+  review: {
+    rating: number;
+    comment: string;
+    photoDataUrl?: string;
+    consent: boolean;
+  },
+) {
   const response = await fetch(apiUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "completeMatch", accessToken }),
+    body: JSON.stringify({ action: "completeMatch", accessToken, ...review }),
   });
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<{

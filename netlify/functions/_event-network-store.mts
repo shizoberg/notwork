@@ -60,6 +60,7 @@ type EventNetworkMatchMember = {
   presence: EventNetworkPresence;
   isCurrentUser: boolean;
   isDone?: boolean;
+  isPhotoOwner?: boolean;
 };
 
 type EventNetworkMatchGroup = {
@@ -71,6 +72,7 @@ type EventNetworkMatchGroup = {
   members: EventNetworkMatchMember[];
   conversationPrompt: string;
   conversationPrompts?: string[];
+  photoOwnerParticipantId?: string;
   generatedAt: string;
 };
 
@@ -81,6 +83,7 @@ type StoredActiveMatch = {
   reason: string;
   participantIds: string[];
   conversationPrompts: string[];
+  photoOwnerParticipantId?: string;
   generatedAt: string;
   completedParticipantIds?: string[];
   completedAtByParticipantId?: Record<string, string>;
@@ -96,6 +99,10 @@ export type NetworkInput = {
   offers?: string[];
   needs?: string;
   needTag?: string;
+  rating?: number;
+  comment?: string;
+  photoDataUrl?: string;
+  consent?: boolean;
   eventConsent?: boolean;
   generalNetworkOptIn?: boolean;
   marketingOptIn?: boolean;
@@ -361,6 +368,53 @@ function pickIcebreakers(groupId: string) {
     .map((item) => item.question);
 }
 
+function pickPhotoOwnerParticipantId(groupId: string, participantIds: string[]) {
+  const index =
+    stableTieBreaker(groupId, participantIds.join(":"), participantIds.length) %
+    participantIds.length;
+  return participantIds[index];
+}
+
+async function saveMatchLabReview(
+  registration: EventNetworkRegistration,
+  input: NetworkInput,
+  requiresPhoto: boolean,
+) {
+  const rating = Math.round(Number(input.rating));
+  const comment = clean(input.comment, 700);
+  const photoDataUrl = clean(input.photoDataUrl, 1_100_000);
+
+  if (!input.consent) throw new Error("Yorum ve fotoğraf için KVKK onayı gerekli");
+  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+    throw new Error("Puan 1-5 arasında olmalı");
+  }
+  if (!comment) throw new Error("Etkinlik yorumu gerekli");
+  if (photoDataUrl && !photoDataUrl.startsWith("data:image/")) {
+    throw new Error("Geçersiz fotoğraf");
+  }
+  if (requiresPhoto && !photoDataUrl) {
+    throw new Error("Bu grupta fotoğraf görevi sende. Ortam veya selfie fotoğrafı eklemelisin.");
+  }
+
+  const now = new Date().toISOString();
+  const review = {
+    id: crypto.randomUUID(),
+    eventId: "21-agustos-2026",
+    eventTitle: "21 Ağustos notwork · House of Rene Lokal",
+    name: displayName(registration) || "notwork katılımcısı",
+    rating,
+    comment,
+    photoDataUrl,
+    privateNote: requiresPhoto
+      ? `Match Lab fotoğraf sorumlusu · kod: ${registration.participant.publicCode}`
+      : `Match Lab grup yorumu · kod: ${registration.participant.publicCode}`,
+    consentAt: now,
+    createdAt: now,
+  };
+  const reviewStore = getStore({ name: "event-reviews", consistency: "strong" });
+  await reviewStore.setJSON(`reviews/21-agustos-2026/${Date.now()}-${review.id}.json`, review);
+}
+
 async function getPresenceMap(
   store: ReturnType<typeof getEventNetworkStore>,
   rows: EventNetworkRegistration[],
@@ -382,6 +436,7 @@ function toMatchMember(
   presence: EventNetworkPresence,
   isCurrentUser: boolean,
   isDone = false,
+  isPhotoOwner = false,
 ): EventNetworkMatchMember {
   return {
     participantId: registration.participant.id,
@@ -393,6 +448,7 @@ function toMatchMember(
     presence,
     isCurrentUser,
     isDone,
+    isPhotoOwner,
   };
 }
 
@@ -481,10 +537,12 @@ async function buildActiveMatchGroup(
         presenceMap.get(registration.participant.id) || "meeting",
         registration.participant.id === current.participant.id,
         doneParticipantIds.has(registration.participant.id),
+        match.photoOwnerParticipantId === registration.participant.id,
       ),
     ),
     conversationPrompt: match.conversationPrompts[0] || icebreakerQuestions[0],
     conversationPrompts: match.conversationPrompts,
+    photoOwnerParticipantId: match.photoOwnerParticipantId,
     generatedAt: match.generatedAt,
   } satisfies EventNetworkMatchGroup;
 }
@@ -757,6 +815,7 @@ export async function getNextMatchGroup(
   const groupId = `match-${current.participant.id}-${nextRound}`;
   const prompts = pickIcebreakers(groupId);
   const participantIds = groupRegistrations.map((registration) => registration.participant.id);
+  const photoOwnerParticipantId = pickPhotoOwnerParticipantId(groupId, participantIds);
   const generatedAt = new Date().toISOString();
   const reason = buildReason(current, groupRegistrations);
   await Promise.all(
@@ -774,6 +833,7 @@ export async function getNextMatchGroup(
     reason,
     participantIds,
     conversationPrompts: prompts,
+    photoOwnerParticipantId,
     generatedAt,
     completedParticipantIds: [],
     completedAtByParticipantId: {},
@@ -791,10 +851,12 @@ export async function getNextMatchGroup(
         "meeting",
         registration.participant.id === current.participant.id,
         false,
+        photoOwnerParticipantId === registration.participant.id,
       ),
     ),
     conversationPrompt: prompts[0],
     conversationPrompts: prompts,
+    photoOwnerParticipantId,
     generatedAt,
   };
 
@@ -809,6 +871,7 @@ export async function getNextMatchGroup(
 export async function completeActiveMatchByToken(
   store: ReturnType<typeof getEventNetworkStore>,
   accessToken: string,
+  input: NetworkInput = {},
 ) {
   const registration = await getRegistrationByToken(store, accessToken);
   if (!registration) return null;
@@ -824,7 +887,22 @@ export async function completeActiveMatchByToken(
   }
 
   const now = new Date().toISOString();
-  const completedParticipantIds = new Set(activeMatch.completedParticipantIds || []);
+  const existingCompletedParticipantIds = new Set(activeMatch.completedParticipantIds || []);
+  if (existingCompletedParticipantIds.has(registration.participant.id)) {
+    const isAlreadyCompleted = activeMatch.participantIds.every((participantId) =>
+      existingCompletedParticipantIds.has(participantId),
+    );
+    return {
+      ok: true,
+      status: isAlreadyCompleted ? ("completed" as const) : ("waiting" as const),
+      registration,
+      completedCount: existingCompletedParticipantIds.size,
+      totalCount: activeMatch.participantIds.length,
+    };
+  }
+  const requiresPhoto = activeMatch.photoOwnerParticipantId === registration.participant.id;
+  await saveMatchLabReview(registration, input, requiresPhoto);
+  const completedParticipantIds = new Set(existingCompletedParticipantIds);
   completedParticipantIds.add(registration.participant.id);
   const updatedMatch: StoredActiveMatch = {
     ...activeMatch,
