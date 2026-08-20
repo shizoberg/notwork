@@ -48,7 +48,7 @@ const eventLinks = [
   },
   {
     title: "Notworking Match Lab",
-    description: "Kodunu gör, müsaitliğini seç ve eşleşmeni bul.",
+    description: "Kayıt bilgilerine göre üçlü grubunu gör ve tanışmayı başlat.",
     href: "/21-agustos/eslesme",
     icon: Network,
   },

@@ -43,6 +43,11 @@ function AugustMatchPage() {
     () => otherMembers.map((member) => member.publicCode).join(" · "),
     [otherMembers],
   );
+  const doneCount = useMemo(
+    () => group?.members.filter((member) => member.isDone).length || 0,
+    [group],
+  );
+  const currentMemberDone = Boolean(currentMember?.isDone);
 
   const loadMatch = useCallback(
     async (nextToken = token) => {
@@ -81,8 +86,13 @@ function AugustMatchPage() {
     setIsCompleting(true);
     setMessage("");
     try {
-      await completeEventNetworkMatch(token);
+      const result = await completeEventNetworkMatch(token);
       await loadMatch(token);
+      setMessage(
+        result.status === "completed"
+          ? "Grup 3/3 done yaptı. Yeni üçlü grup arayabilirsin."
+          : `Done alındı. Grup ${result.completedCount}/${result.totalCount} tamamlanınca dağılacak.`,
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Grup tamamlanamadı.");
     } finally {
@@ -97,17 +107,26 @@ function AugustMatchPage() {
         <section className="relative px-4 pb-12 pt-20 sm:px-8 sm:pt-24">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(113,204,210,0.24),transparent_32%),radial-gradient(circle_at_90%_18%,rgba(255,209,102,0.13),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.05),transparent_44%)]" />
           <div className="relative mx-auto max-w-3xl">
-            <div className="mb-5 flex items-center justify-between gap-3">
+            <div className="mb-6 flex items-center justify-center">
               <Link
                 to="/linkler"
-                className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-white/80 backdrop-blur transition hover:bg-white/15"
+                className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-white/80 backdrop-blur transition hover:bg-white/15"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Linklere dön
               </Link>
-              <span className="rounded-full border border-[#8ee4e8]/25 bg-[#8ee4e8]/10 px-3 py-2 text-[0.68rem] font-black tracking-[0.16em] text-[#8ee4e8]">
-                notwork.matchlab v1.0
+            </div>
+            <div className="mb-6 text-center">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#8ee4e8]/25 bg-[#8ee4e8]/10 px-4 py-2 text-[0.68rem] font-black uppercase tracking-[0.18em] text-[#8ee4e8]">
+                <Sparkles className="h-4 w-4" />
+                canlı üçlü eşleşme
               </span>
+              <h1 className="mt-4 text-5xl font-black leading-none tracking-[-0.08em] text-white sm:text-7xl">
+                notwork.matchlab
+              </h1>
+              <p className="mt-2 text-sm font-black uppercase tracking-[0.28em] text-white/40">
+                v1.0
+              </p>
             </div>
 
             <section className="rounded-[2.2rem] border border-white/12 bg-white/[0.08] p-4 shadow-[0_0_80px_rgba(113,204,210,0.18)] backdrop-blur-xl sm:p-6">
@@ -119,6 +138,9 @@ function AugustMatchPage() {
                     </p>
                     <p className="mt-1 text-sm font-bold text-white/70">
                       {registration.profile.firstName} {registration.profile.lastName}
+                    </p>
+                    <p className="mt-2 text-xs font-black uppercase tracking-[0.16em] text-white/40">
+                      {currentMemberDone ? "sen done yaptın" : "senin durumun bekliyor"}
                     </p>
                   </div>
                   <span className="rounded-2xl bg-[#8ee4e8] px-4 py-3 text-4xl font-black tracking-[-0.08em] text-[#071112]">
@@ -156,6 +178,9 @@ function AugustMatchPage() {
                     <p className="mt-4 text-sm font-bold leading-5 opacity-75">
                       Bu kodları mekânda bul, kısa tanışma yap ve bitince aşağıdaki butona bas.
                     </p>
+                    <p className="mt-3 inline-flex rounded-full bg-[#071112]/10 px-3 py-2 text-xs font-black uppercase tracking-[0.16em]">
+                      Grup durumu: {doneCount}/{group.groupSize} done
+                    </p>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -171,8 +196,14 @@ function AugustMatchPage() {
                             </p>
                             <h2 className="mt-2 text-xl font-black">{member.name}</h2>
                           </div>
-                          <span className="rounded-full bg-white/10 px-3 py-1 text-[0.68rem] font-black text-white/55">
-                            eşleşme
+                          <span
+                            className={`rounded-full px-3 py-1 text-[0.68rem] font-black ${
+                              member.isDone
+                                ? "bg-emerald-300 text-[#071112]"
+                                : "bg-white/10 text-white/55"
+                            }`}
+                          >
+                            {member.isDone ? "done" : "devam ediyor"}
                           </span>
                         </div>
                         <p className="mt-3 text-xs font-bold uppercase tracking-[0.12em] text-white/35">
@@ -203,11 +234,15 @@ function AugustMatchPage() {
                   <button
                     type="button"
                     onClick={() => void completeMatch()}
-                    disabled={isCompleting}
+                    disabled={isCompleting || currentMemberDone}
                     className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-4 text-sm font-black text-[#071112] transition hover:bg-[#8ee4e8] disabled:opacity-50"
                   >
                     <CheckCircle2 className="h-5 w-5" />
-                    {isCompleting ? "Grup tamamlanıyor..." : "Bu grup ile network done"}
+                    {isCompleting
+                      ? "Done kaydediliyor..."
+                      : currentMemberDone
+                        ? "Done alındı · diğerlerini bekliyoruz"
+                        : "Bu grup ile network done"}
                   </button>
 
                   {currentMember ? (

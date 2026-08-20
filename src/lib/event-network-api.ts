@@ -76,7 +76,13 @@ export async function completeEventNetworkMatch(accessToken: string) {
     body: JSON.stringify({ action: "completeMatch", accessToken }),
   });
   if (!response.ok) throw new Error(await response.text());
-  return response.json() as Promise<{ ok: true; registration: EventNetworkRegistration }>;
+  return response.json() as Promise<{
+    ok: true;
+    status: "waiting" | "completed";
+    registration: EventNetworkRegistration;
+    completedCount: number;
+    totalCount: number;
+  }>;
 }
 
 export async function seedEventNetworkSamples() {

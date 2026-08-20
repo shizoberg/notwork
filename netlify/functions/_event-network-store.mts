@@ -59,6 +59,7 @@ type EventNetworkMatchMember = {
   needTag: string;
   presence: EventNetworkPresence;
   isCurrentUser: boolean;
+  isDone?: boolean;
 };
 
 type EventNetworkMatchGroup = {
@@ -81,6 +82,8 @@ type StoredActiveMatch = {
   participantIds: string[];
   conversationPrompts: string[];
   generatedAt: string;
+  completedParticipantIds?: string[];
+  completedAtByParticipantId?: Record<string, string>;
 };
 
 export type NetworkInput = {
@@ -378,6 +381,7 @@ function toMatchMember(
   registration: EventNetworkRegistration,
   presence: EventNetworkPresence,
   isCurrentUser: boolean,
+  isDone = false,
 ): EventNetworkMatchMember {
   return {
     participantId: registration.participant.id,
@@ -388,6 +392,7 @@ function toMatchMember(
     needTag: registration.needTag,
     presence,
     isCurrentUser,
+    isDone,
   };
 }
 
@@ -455,6 +460,7 @@ async function buildActiveMatchGroup(
   current: EventNetworkRegistration,
   presenceMap: Map<string, EventNetworkPresence>,
 ) {
+  const doneParticipantIds = new Set(match.completedParticipantIds || []);
   const rows = (
     await Promise.all(
       match.participantIds.map((participantId) =>
@@ -474,6 +480,7 @@ async function buildActiveMatchGroup(
         registration,
         presenceMap.get(registration.participant.id) || "meeting",
         registration.participant.id === current.participant.id,
+        doneParticipantIds.has(registration.participant.id),
       ),
     ),
     conversationPrompt: match.conversationPrompts[0] || icebreakerQuestions[0],
@@ -692,12 +699,20 @@ export async function getNextMatchGroup(
       return first.tie - second.tie;
     });
 
-  const availableCandidates = [] as typeof candidates;
-  for (const candidate of candidates) {
-    if (!(await hasActiveMatch(store, candidate.row.participant.id))) {
-      availableCandidates.push(candidate);
-    }
-  }
+  const activeCandidateIds = await Promise.all(
+    candidates.map(async (candidate) => ({
+      participantId: candidate.row.participant.id,
+      isActive: await hasActiveMatch(store, candidate.row.participant.id),
+    })),
+  );
+  const activeCandidateIdSet = new Set(
+    activeCandidateIds
+      .filter((candidate) => candidate.isActive)
+      .map((candidate) => candidate.participantId),
+  );
+  const availableCandidates = candidates.filter(
+    (candidate) => !activeCandidateIdSet.has(candidate.row.participant.id),
+  );
 
   if (availableCandidates.length < 2) {
     return {
@@ -714,12 +729,30 @@ export async function getNextMatchGroup(
     availableCandidates.length,
   );
   const selected = availableCandidates.slice(0, groupSize - 1);
-  const groupRegistrations = [current, ...selected.map((candidate) => candidate.row)];
-  selected.forEach((candidate) => cursor.seen.add(candidate.row.participant.id));
+  const selectedAvailability = await Promise.all(
+    selected.map(async (candidate) => ({
+      candidate,
+      isActive: await hasActiveMatch(store, candidate.row.participant.id),
+    })),
+  );
+  const stillAvailableSelected = selectedAvailability
+    .filter((candidate) => !candidate.isActive)
+    .map((candidate) => candidate.candidate);
+  if (stillAvailableSelected.length < 2) {
+    return {
+      status: "empty",
+      registration: current,
+      presence: currentPresence,
+      group: null,
+    };
+  }
+  const finalSelected = stillAvailableSelected.slice(0, groupSize - 1);
+  const groupRegistrations = [current, ...finalSelected.map((candidate) => candidate.row)];
+  finalSelected.forEach((candidate) => cursor.seen.add(candidate.row.participant.id));
   await writeCursor(store, current.participant.id, nextRound, cursor.seen);
 
   const score = Math.round(
-    selected.reduce((total, candidate) => total + candidate.score, 0) / selected.length,
+    finalSelected.reduce((total, candidate) => total + candidate.score, 0) / finalSelected.length,
   );
   const groupId = `match-${current.participant.id}-${nextRound}`;
   const prompts = pickIcebreakers(groupId);
@@ -742,6 +775,8 @@ export async function getNextMatchGroup(
     participantIds,
     conversationPrompts: prompts,
     generatedAt,
+    completedParticipantIds: [],
+    completedAtByParticipantId: {},
   });
 
   const group: EventNetworkMatchGroup = {
@@ -755,6 +790,7 @@ export async function getNextMatchGroup(
         registration,
         "meeting",
         registration.participant.id === current.participant.id,
+        false,
       ),
     ),
     conversationPrompt: prompts[0],
@@ -776,14 +812,71 @@ export async function completeActiveMatchByToken(
 ) {
   const registration = await getRegistrationByToken(store, accessToken);
   if (!registration) return null;
+  const activeMatch = await getActiveMatch(store, registration.participant.id);
+  if (!activeMatch) {
+    return {
+      ok: true,
+      status: "completed" as const,
+      registration,
+      completedCount: 0,
+      totalCount: 0,
+    };
+  }
+
+  const now = new Date().toISOString();
+  const completedParticipantIds = new Set(activeMatch.completedParticipantIds || []);
+  completedParticipantIds.add(registration.participant.id);
+  const updatedMatch: StoredActiveMatch = {
+    ...activeMatch,
+    completedParticipantIds: [...completedParticipantIds],
+    completedAtByParticipantId: {
+      ...(activeMatch.completedAtByParticipantId || {}),
+      [registration.participant.id]: now,
+    },
+  };
+  const isGroupCompleted = updatedMatch.participantIds.every((participantId) =>
+    completedParticipantIds.has(participantId),
+  );
+
+  if (isGroupCompleted) {
+    await Promise.all([
+      ...updatedMatch.participantIds.map((participantId) =>
+        store.delete(activeMatchKey(participantId)),
+      ),
+      ...updatedMatch.participantIds.map((participantId) =>
+        store.setJSON(presenceKey(participantId), {
+          presence: "open",
+          updatedAt: now,
+        }),
+      ),
+      store.setJSON(`${datasetPrefix}/completed-matches/${updatedMatch.id}.json`, {
+        ...updatedMatch,
+        completedAt: now,
+      }),
+    ]);
+    return {
+      ok: true,
+      status: "completed" as const,
+      registration,
+      completedCount: updatedMatch.participantIds.length,
+      totalCount: updatedMatch.participantIds.length,
+    };
+  }
+
   await Promise.all([
-    store.delete(activeMatchKey(registration.participant.id)),
+    writeActiveMatch(store, updatedMatch),
     store.setJSON(presenceKey(registration.participant.id), {
-      presence: "open",
-      updatedAt: new Date().toISOString(),
+      presence: "meeting",
+      updatedAt: now,
     }),
   ]);
-  return { ok: true, registration };
+  return {
+    ok: true,
+    status: "waiting" as const,
+    registration,
+    completedCount: completedParticipantIds.size,
+    totalCount: updatedMatch.participantIds.length,
+  };
 }
 
 export async function seedSampleRegistrations(

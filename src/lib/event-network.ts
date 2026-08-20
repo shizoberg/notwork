@@ -41,6 +41,7 @@ export type EventNetworkMatchMember = {
   needTag: string;
   presence: EventNetworkPresence;
   isCurrentUser: boolean;
+  isDone?: boolean;
 };
 
 export type EventNetworkMatchGroup = {
