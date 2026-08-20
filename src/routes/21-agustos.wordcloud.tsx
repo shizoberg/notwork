@@ -85,6 +85,7 @@ function WordcloudParticipantPage() {
         return;
       }
 
+      await new Promise((resolve) => window.setTimeout(resolve, Math.random() * 900));
       const saved = await submitWordcloudAnswers({
         sessionId,
         answers: questions.map((question) => ({
