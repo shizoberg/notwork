@@ -57,10 +57,30 @@ export type PublicInput = {
 
 const eventId = "21-agustos-2026";
 const storeName = "event-wordcloud";
-const seededKey = "events/21-agustos/meta/seeded-v1";
+const defaultDatasetCode = "21agustos-demo";
+const liveDatasetCode = "21agustoscanli";
+const datasetCode =
+  process.env.WORDCLOUD_DATASET?.trim() ||
+  process.env.EVENT_WORDCLOUD_DATASET?.trim() ||
+  process.env.NETLIFY_WORDCLOUD_DATASET?.trim() ||
+  defaultDatasetCode;
+const datasetPrefix = `events/${datasetCode}/wordcloud`;
+const seededKey = `${datasetPrefix}/meta/seeded-v2`;
 
 export function getWordcloudStore() {
   return getStore({ name: storeName, consistency: "strong" });
+}
+
+export function getWordcloudDatasetInfo() {
+  return {
+    storeName,
+    datasetCode,
+    activeDatabaseCode: datasetCode,
+    demoDatabaseCode: defaultDatasetCode,
+    liveDatabaseCode: liveDatasetCode,
+    keyPrefix: datasetPrefix,
+    mode: datasetCode === liveDatasetCode ? ("live" as const) : ("demo" as const),
+  };
 }
 
 export function clean(value: unknown, maxLength: number) {
@@ -98,19 +118,23 @@ export function isBlockedAnswer(rawText: string, normalizedText = normalizeText(
 }
 
 export function questionKey(questionId: string) {
-  return `events/21-agustos/questions/${questionId}.json`;
+  return `${datasetPrefix}/questions/${questionId}.json`;
 }
 
 export function sessionKey(sessionId: string) {
-  return `events/21-agustos/sessions/${sessionId}.json`;
+  return `${datasetPrefix}/sessions/${sessionId}.json`;
 }
 
 export function answerKey(questionId: string, sessionId: string) {
-  return `events/21-agustos/answers/${questionId}/${sessionId}.json`;
+  return `${datasetPrefix}/answers/${questionId}/${sessionId}.json`;
 }
 
 export function adminActionKey() {
-  return `events/21-agustos/admin-actions/${Date.now()}-${crypto.randomUUID()}.json`;
+  return `${datasetPrefix}/admin-actions/${Date.now()}-${crypto.randomUUID()}.json`;
+}
+
+function configKey() {
+  return `${datasetPrefix}/config.json`;
 }
 
 export async function ensureSeeded(store = getWordcloudStore()) {
@@ -118,43 +142,74 @@ export async function ensureSeeded(store = getWordcloudStore()) {
   if (seeded) return;
 
   const seed = seedData as SeedData;
-  await store.setJSON("events/21-agustos/config.json", seed.event);
+  await store.setJSON(configKey(), seed.event);
   await Promise.all(
     seed.questions.map((question) => store.setJSON(questionKey(question.id), question)),
-  );
-  await Promise.all(
-    seed.answers.map((answer, index) => {
-      const sessionId = `seed-session-${String(index + 1).padStart(2, "0")}`;
-      const now = new Date(Date.parse("2026-08-04T00:00:00.000Z") + index * 1000).toISOString();
-      const row: WordcloudAnswer = {
-        id: crypto.randomUUID(),
-        eventId,
-        questionId: answer.questionId,
-        sessionId,
-        rawText: clean(answer.rawText, 60),
-        normalizedText: normalizeText(answer.rawText),
-        isVisible: true,
-        createdAt: now,
-        updatedAt: now,
-      };
-      return Promise.all([
-        store.setJSON(sessionKey(sessionId), {
-          id: sessionId,
-          eventId,
-          createdAt: now,
-          updatedAt: now,
-          source: "seed",
-        }),
-        store.setJSON(answerKey(row.questionId, sessionId), row),
-      ]);
-    }),
   );
   await store.set(seededKey, new Date().toISOString());
 }
 
+export async function resetDemoWordcloudDataset(store = getWordcloudStore()) {
+  if (getWordcloudDatasetInfo().mode !== "demo") {
+    throw new Error("WordCloud reset sadece demo database üzerinde çalışır");
+  }
+  const { blobs } = await store.list({ prefix: `${datasetPrefix}/` });
+  await Promise.all(blobs.map((blob) => store.delete(blob.key)));
+  await ensureSeeded(store);
+}
+
+export async function seedWordcloudLoadTest(store = getWordcloudStore(), participantCount = 100) {
+  if (getWordcloudDatasetInfo().mode !== "demo") {
+    throw new Error("Load test sadece demo database üzerinde çalışır");
+  }
+  await resetDemoWordcloudDataset(store);
+  const questions = await getQuestions(store);
+  const answerPools = [
+    ["cesaret", "network", "müşteri", "mentor", "pazarlama", "ekip", "fikir", "yatırım"],
+    ["iletişim", "odak", "sabır", "hata", "satış", "güven", "disiplin", "merak"],
+    ["bağlantı", "ilham", "deneyim", "ortaklık", "hikaye", "sahne", "öğrenme", "topluluk"],
+  ];
+  const nowMs = Date.now();
+  const jobs: Array<Promise<unknown>> = [];
+
+  for (let participantIndex = 0; participantIndex < participantCount; participantIndex += 1) {
+    const sessionId = `load-test-${String(participantIndex + 1).padStart(3, "0")}`;
+    const now = new Date(nowMs + participantIndex).toISOString();
+    jobs.push(
+      store.setJSON(sessionKey(sessionId), {
+        id: sessionId,
+        eventId,
+        createdAt: now,
+        updatedAt: now,
+        source: "load-test",
+      }),
+    );
+    questions.forEach((question, questionIndex) => {
+      const pool = answerPools[questionIndex % answerPools.length];
+      const rawText = pool[(participantIndex + questionIndex * 3) % pool.length];
+      const answer: WordcloudAnswer = {
+        id: crypto.randomUUID(),
+        eventId,
+        questionId: question.id,
+        sessionId,
+        rawText,
+        normalizedText: normalizeText(rawText),
+        isVisible: true,
+        createdAt: now,
+        updatedAt: now,
+      };
+      jobs.push(store.setJSON(answerKey(question.id, sessionId), answer));
+    });
+  }
+
+  await Promise.all(jobs);
+  await logAdminAction(store, "seedLoadTest", { participantCount, questions: questions.length });
+  return getResults(store);
+}
+
 export async function getEventConfig(store = getWordcloudStore()) {
   await ensureSeeded(store);
-  return (await store.get("events/21-agustos/config.json", {
+  return (await store.get(configKey(), {
     type: "json",
     consistency: "strong",
   })) as WordcloudEventConfig;
@@ -162,7 +217,7 @@ export async function getEventConfig(store = getWordcloudStore()) {
 
 export async function getQuestions(store = getWordcloudStore()) {
   await ensureSeeded(store);
-  const { blobs } = await store.list({ prefix: "events/21-agustos/questions/" });
+  const { blobs } = await store.list({ prefix: `${datasetPrefix}/questions/` });
   const rows = await Promise.all(
     blobs.map((blob) => store.get(blob.key, { type: "json", consistency: "strong" })),
   );
@@ -173,7 +228,7 @@ export async function getQuestions(store = getWordcloudStore()) {
 
 export async function getAnswers(store = getWordcloudStore()) {
   await ensureSeeded(store);
-  const { blobs } = await store.list({ prefix: "events/21-agustos/answers/" });
+  const { blobs } = await store.list({ prefix: `${datasetPrefix}/answers/` });
   const rows = await Promise.all(
     blobs.map((blob) => store.get(blob.key, { type: "json", consistency: "strong" })),
   );

@@ -110,7 +110,7 @@ export type NetworkInput = {
 
 export type NetworkAdminInput = {
   password?: string;
-  action?: "list";
+  action?: "list" | "resetDemo";
 };
 
 const eventId = "21-agustos-2026";

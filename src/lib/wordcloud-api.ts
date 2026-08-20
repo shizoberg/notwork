@@ -64,6 +64,15 @@ export async function getWordcloudAdmin(password: string) {
     questions: WordcloudQuestion[];
     answers: WordcloudAnswer[];
     results: WordcloudResults;
+    database?: {
+      storeName: string;
+      datasetCode: string;
+      activeDatabaseCode: string;
+      demoDatabaseCode: string;
+      liveDatabaseCode: string;
+      keyPrefix: string;
+      mode: "demo" | "live";
+    };
   }>;
 }
 
@@ -73,7 +82,9 @@ export async function updateWordcloudAdmin(
     | { action: "saveQuestion"; question: Partial<WordcloudQuestion> }
     | { action: "deleteQuestion"; questionId: string }
     | { action: "toggleAnswer"; answerId: string; isVisible: boolean }
-    | { action: "updateEvent"; event: Partial<WordcloudEventConfig> },
+    | { action: "updateEvent"; event: Partial<WordcloudEventConfig> }
+    | { action: "resetDemo" }
+    | { action: "seedLoadTest" },
 ) {
   const response = await fetch(adminUrl, {
     method: "POST",
@@ -86,5 +97,14 @@ export async function updateWordcloudAdmin(
     questions: WordcloudQuestion[];
     answers: WordcloudAnswer[];
     results: WordcloudResults;
+    database?: {
+      storeName: string;
+      datasetCode: string;
+      activeDatabaseCode: string;
+      demoDatabaseCode: string;
+      liveDatabaseCode: string;
+      keyPrefix: string;
+      mode: "demo" | "live";
+    };
   }>;
 }

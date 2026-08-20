@@ -7,9 +7,12 @@ import {
   getEventConfig,
   getQuestions,
   getResults,
+  getWordcloudDatasetInfo,
   getWordcloudStore,
   logAdminAction,
   questionKey,
+  resetDemoWordcloudDataset,
+  seedWordcloudLoadTest,
   upsertQuestion,
   type AdminInput,
 } from "./_wordcloud-store.mjs";
@@ -30,7 +33,7 @@ async function adminPayload(store: ReturnType<typeof getWordcloudStore>) {
     getAnswers(store),
     getResults(store),
   ]);
-  return { event, questions, answers, results };
+  return { event, questions, answers, results, database: getWordcloudDatasetInfo() };
 }
 
 export default async (request: Request, _context: Context) => {
@@ -63,7 +66,7 @@ export default async (request: Request, _context: Context) => {
         updatedAt: now,
       };
       await Promise.all([
-        store.setJSON("events/21-agustos/config.json", event),
+        store.setJSON(`${getWordcloudDatasetInfo().keyPrefix}/config.json`, event),
         logAdminAction(store, action, { event }),
       ]);
       return Response.json(await adminPayload(store), {
@@ -104,11 +107,26 @@ export default async (request: Request, _context: Context) => {
       };
       await Promise.all([
         store.setJSON(
-          `events/21-agustos/answers/${updated.questionId}/${updated.sessionId}.json`,
+          `${getWordcloudDatasetInfo().keyPrefix}/answers/${updated.questionId}/${updated.sessionId}.json`,
           updated,
         ),
         logAdminAction(store, action, { answerId, isVisible: updated.isVisible }),
       ]);
+      return Response.json(await adminPayload(store), {
+        headers: { "cache-control": "no-store, private" },
+      });
+    }
+
+    if (action === "resetDemo") {
+      await resetDemoWordcloudDataset(store);
+      await logAdminAction(store, action, {});
+      return Response.json(await adminPayload(store), {
+        headers: { "cache-control": "no-store, private" },
+      });
+    }
+
+    if (action === "seedLoadTest") {
+      await seedWordcloudLoadTest(store, 100);
       return Response.json(await adminPayload(store), {
         headers: { "cache-control": "no-store, private" },
       });

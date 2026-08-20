@@ -4,6 +4,7 @@ import {
   getEventNetworkDatasetInfo,
   getEventNetworkStore,
   listRegistrations,
+  resetDemoEventNetworkDataset,
   type NetworkAdminInput,
 } from "./_event-network-store.mjs";
 
@@ -23,6 +24,9 @@ export default async (request: Request, _context: Context) => {
     const input = (await request.json()) as NetworkAdminInput;
     if (!validPassword(input.password)) return new Response("Yetkisiz erişim", { status: 401 });
     const store = getEventNetworkStore();
+    if (input.action === "resetDemo") {
+      await resetDemoEventNetworkDataset(store);
+    }
     return Response.json(
       { registrations: await listRegistrations(store), database: getEventNetworkDatasetInfo() },
       { headers: { "cache-control": "no-store, private" } },

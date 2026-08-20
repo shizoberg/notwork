@@ -31,7 +31,11 @@ import {
 } from "recharts";
 import type { WordcloudAnswer, WordcloudQuestion, WordcloudResults } from "@/lib/event-wordcloud";
 import type { EventNetworkRegistration } from "@/lib/event-network";
-import { getEventNetworkAdmin, seedEventNetworkSamples } from "@/lib/event-network-api";
+import {
+  getEventNetworkAdmin,
+  resetEventNetworkDemo,
+  seedEventNetworkSamples,
+} from "@/lib/event-network-api";
 import { getWordcloudAdmin, updateWordcloudAdmin } from "@/lib/wordcloud-api";
 
 export const Route = createFileRoute("/admin")({
@@ -162,6 +166,7 @@ function AdminPage() {
   const [wordcloudQuestions, setWordcloudQuestions] = useState<WordcloudQuestion[]>([]);
   const [wordcloudAnswers, setWordcloudAnswers] = useState<WordcloudAnswer[]>([]);
   const [wordcloudResults, setWordcloudResults] = useState<WordcloudResults | null>(null);
+  const [wordcloudDatabase, setWordcloudDatabase] = useState<EventDatabaseInfo | null>(null);
   const [wordcloudDraft, setWordcloudDraft] =
     useState<Partial<WordcloudQuestion>>(blankWordcloudQuestion);
   const [wordcloudMessage, setWordcloudMessage] = useState("");
@@ -188,6 +193,7 @@ function AdminPage() {
     setWordcloudQuestions(data.questions);
     setWordcloudAnswers(data.answers);
     setWordcloudResults(data.results);
+    setWordcloudDatabase(data.database || null);
   };
 
   const loadEventNetwork = async (nextPassword = password) => {
@@ -218,11 +224,25 @@ function AdminPage() {
     }
   };
 
+  const resetEventNetwork = async () => {
+    setNetworkMessage("");
+    try {
+      const data = await resetEventNetworkDemo(password);
+      setEventRegistrations(data.registrations);
+      setEventDatabase(data.database || null);
+      setNetworkMessage("21 Ağustos MatchLab demo verisi sıfırlandı.");
+    } catch (caught) {
+      setNetworkMessage(caught instanceof Error ? caught.message : "Demo verisi sıfırlanamadı.");
+    }
+  };
+
   const wordcloudAction = async (
     payload:
       | { action: "saveQuestion"; question: Partial<WordcloudQuestion> }
       | { action: "deleteQuestion"; questionId: string }
-      | { action: "toggleAnswer"; answerId: string; isVisible: boolean },
+      | { action: "toggleAnswer"; answerId: string; isVisible: boolean }
+      | { action: "resetDemo" }
+      | { action: "seedLoadTest" },
   ) => {
     setWordcloudMessage("");
     try {
@@ -230,8 +250,15 @@ function AdminPage() {
       setWordcloudQuestions(data.questions);
       setWordcloudAnswers(data.answers);
       setWordcloudResults(data.results);
+      setWordcloudDatabase(data.database || null);
       setWordcloudDraft(blankWordcloudQuestion);
-      setWordcloudMessage("WordCloud güncellendi.");
+      setWordcloudMessage(
+        payload.action === "seedLoadTest"
+          ? "100 kişilik WordCloud test verisi oluşturuldu."
+          : payload.action === "resetDemo"
+            ? "WordCloud demo verisi sıfırlandı."
+            : "WordCloud güncellendi.",
+      );
     } catch (caught) {
       setWordcloudMessage(caught instanceof Error ? caught.message : "WordCloud güncellenemedi.");
     }
@@ -622,6 +649,7 @@ function AdminPage() {
             questions={wordcloudQuestions}
             answers={wordcloudAnswers}
             results={wordcloudResults}
+            database={wordcloudDatabase}
             draft={wordcloudDraft}
             message={wordcloudMessage}
             setDraft={setWordcloudDraft}
@@ -635,6 +663,7 @@ function AdminPage() {
             message={networkMessage}
             refresh={() => loadEventNetwork(password)}
             seedSamples={seedEventNetwork}
+            resetDemo={resetEventNetwork}
           />
         </div>
 
@@ -1031,6 +1060,7 @@ function WordcloudAdmin({
   questions,
   answers,
   results,
+  database,
   draft,
   message,
   setDraft,
@@ -1040,6 +1070,7 @@ function WordcloudAdmin({
   questions: WordcloudQuestion[];
   answers: WordcloudAnswer[];
   results: WordcloudResults | null;
+  database: EventDatabaseInfo | null;
   draft: Partial<WordcloudQuestion>;
   message: string;
   setDraft: (question: Partial<WordcloudQuestion>) => void;
@@ -1048,7 +1079,9 @@ function WordcloudAdmin({
     payload:
       | { action: "saveQuestion"; question: Partial<WordcloudQuestion> }
       | { action: "deleteQuestion"; questionId: string }
-      | { action: "toggleAnswer"; answerId: string; isVisible: boolean },
+      | { action: "toggleAnswer"; answerId: string; isVisible: boolean }
+      | { action: "resetDemo" }
+      | { action: "seedLoadTest" },
   ) => Promise<void>;
 }) {
   const visibleAnswers = answers.filter((answer) => answer.isVisible);
@@ -1062,14 +1095,34 @@ function WordcloudAdmin({
             <p className="mt-1 text-sm text-foreground/50">
               Soruları buradan değiştir; cevap formu ve canlı ekran otomatik güncellenir.
             </p>
+            <p className="mt-2 text-xs text-foreground/45">
+              Aktif DB: <span className="font-bold">{database?.activeDatabaseCode || "-"}</span> ·{" "}
+              {database?.mode === "live" ? "canlı" : "demo"}
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={() => void refresh()}
-            className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-2 text-xs font-semibold"
-          >
-            <RefreshCcw size={14} /> yenile
-          </button>
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => void wordcloudAction({ action: "seedLoadTest" })}
+              className="inline-flex items-center gap-1 rounded-full border border-primary/35 bg-primary/10 px-3 py-2 text-xs font-black text-primary-deep"
+            >
+              100 kişi test
+            </button>
+            <button
+              type="button"
+              onClick={() => void wordcloudAction({ action: "resetDemo" })}
+              className="inline-flex items-center gap-1 rounded-full border border-destructive/30 px-3 py-2 text-xs font-black text-destructive"
+            >
+              demo sıfırla
+            </button>
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-2 text-xs font-semibold"
+            >
+              <RefreshCcw size={14} /> yenile
+            </button>
+          </div>
         </div>
 
         <form
@@ -1230,12 +1283,14 @@ function EventNetworkAdmin({
   message,
   refresh,
   seedSamples,
+  resetDemo,
 }: {
   registrations: EventNetworkRegistration[];
   database: EventDatabaseInfo | null;
   message: string;
   refresh: () => Promise<void>;
   seedSamples: () => Promise<void>;
+  resetDemo: () => Promise<void>;
 }) {
   return (
     <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-card">
@@ -1262,6 +1317,13 @@ function EventNetworkAdmin({
             className="rounded-full border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-bold text-primary-deep"
           >
             Demo test verisi oluştur
+          </button>
+          <button
+            type="button"
+            onClick={() => void resetDemo()}
+            className="rounded-full border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs font-bold text-destructive"
+          >
+            Demo sıfırla
           </button>
           <button
             type="button"

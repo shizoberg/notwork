@@ -120,3 +120,13 @@ export async function getEventNetworkAdmin(password: string) {
   if (!response.ok) throw new Error("21 Ağustos network kayıtları alınamadı.");
   return response.json() as Promise<EventNetworkAdminPayload>;
 }
+
+export async function resetEventNetworkDemo(password: string) {
+  const response = await fetch(adminUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password, action: "resetDemo" }),
+  });
+  if (!response.ok) throw new Error(await response.text());
+  return response.json() as Promise<EventNetworkAdminPayload>;
+}
