@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, ChevronRight, Maximize2, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
@@ -33,6 +33,7 @@ export const Route = createFileRoute("/21-agustos/network")({
 });
 
 function AugustNetworkPage() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [registration, setRegistration] = useState<EventNetworkRegistration | null>(null);
   const [fullScreenCard, setFullScreenCard] = useState(false);
@@ -55,9 +56,9 @@ function AugustNetworkPage() {
     const token = localStorage.getItem(tokenStorageKey);
     if (!token) return;
     void getEventNetworkMe(token)
-      .then(setRegistration)
+      .then(() => navigate({ to: "/21-agustos/eslesme", replace: true }))
       .catch(() => localStorage.removeItem(tokenStorageKey));
-  }, []);
+  }, [navigate]);
 
   const steps = ["Bilgiler", "Yapabildiklerin", "İhtiyacın", "İzinler"];
   const canContinue = useMemo(() => {
@@ -99,7 +100,7 @@ function AugustNetworkPage() {
         eventConsent: form.eventConsent,
       });
       if (data.accessToken) localStorage.setItem(tokenStorageKey, data.accessToken);
-      setRegistration(data);
+      await navigate({ to: "/21-agustos/eslesme", replace: true });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Kayıt tamamlanamadı.");
     } finally {
