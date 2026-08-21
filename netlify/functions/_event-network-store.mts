@@ -115,12 +115,12 @@ export type NetworkAdminInput = {
 
 const eventId = "21-agustos-2026";
 const storeName = "event-network";
-const defaultDatasetCode = "21agustos-demo";
+const demoDatasetCode = "21agustos-demo";
 const liveDatasetCode = "21agustoscanli";
 const datasetCode =
   process.env.EVENT_NETWORK_DATASET?.trim() ||
   process.env.NETLIFY_EVENT_NETWORK_DATASET?.trim() ||
-  defaultDatasetCode;
+  liveDatasetCode;
 const datasetPrefix = `events/${datasetCode}/network`;
 const codeLetters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 
@@ -133,7 +133,7 @@ export function getEventNetworkDatasetInfo() {
     storeName,
     datasetCode,
     activeDatabaseCode: datasetCode,
-    demoDatabaseCode: defaultDatasetCode,
+    demoDatabaseCode: demoDatasetCode,
     liveDatabaseCode: liveDatasetCode,
     keyPrefix: datasetPrefix,
     mode: datasetCode === liveDatasetCode ? "live" : "demo",

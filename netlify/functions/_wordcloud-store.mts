@@ -58,13 +58,13 @@ export type PublicInput = {
 
 const eventId = "21-agustos-2026";
 const storeName = "event-wordcloud";
-const defaultDatasetCode = "21agustos-demo";
+const demoDatasetCode = "21agustos-demo";
 const liveDatasetCode = "21agustoscanli";
 const datasetCode =
   process.env.WORDCLOUD_DATASET?.trim() ||
   process.env.EVENT_WORDCLOUD_DATASET?.trim() ||
   process.env.NETLIFY_WORDCLOUD_DATASET?.trim() ||
-  defaultDatasetCode;
+  liveDatasetCode;
 const datasetPrefix = `events/${datasetCode}/wordcloud`;
 const seededKey = `${datasetPrefix}/meta/seeded-v2`;
 
@@ -77,7 +77,7 @@ export function getWordcloudDatasetInfo() {
     storeName,
     datasetCode,
     activeDatabaseCode: datasetCode,
-    demoDatabaseCode: defaultDatasetCode,
+    demoDatabaseCode: demoDatasetCode,
     liveDatabaseCode: liveDatasetCode,
     keyPrefix: datasetPrefix,
     mode: datasetCode === liveDatasetCode ? ("live" as const) : ("demo" as const),
