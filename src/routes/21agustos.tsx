@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { averageRating, listEventReviews, type EventReview } from "@/lib/event-reviews";
 
 const ticketUrl =
   "https://www.biletimgo.com/etkinlik/notwork-basarisizlik-hikayeleri-networking-club-29731";
@@ -86,6 +88,22 @@ const highlights = [
 ];
 
 function AugustTwentyFirst() {
+  const [reviews, setReviews] = useState<EventReview[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    listEventReviews("21-agustos-2026")
+      .then((items) => {
+        if (active) setReviews(items);
+      })
+      .catch(() => {
+        if (active) setReviews([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteNav />
@@ -176,6 +194,8 @@ function AugustTwentyFirst() {
           ))}
         </section>
 
+        <AugustReviews reviews={reviews} />
+
         <section className="mx-auto max-w-6xl px-5 pb-20">
           <div className="overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(circle_at_top_left,rgba(143,203,208,0.25),transparent_34%),linear-gradient(135deg,hsl(var(--card)),hsl(var(--background)))] p-6 shadow-[var(--shadow-card)] sm:p-10">
             <div className="text-sm font-bold uppercase tracking-[0.2em] text-primary-deep">
@@ -206,5 +226,100 @@ function AugustTwentyFirst() {
       </main>
       <SiteFooter />
     </div>
+  );
+}
+
+function renderStars(rating: number) {
+  return "★".repeat(rating) + "☆".repeat(Math.max(0, 5 - rating));
+}
+
+function AugustReviews({ reviews }: { reviews: EventReview[] }) {
+  const [expandedReviews, setExpandedReviews] = useState<Record<string, boolean>>({});
+  if (reviews.length === 0) return null;
+
+  const sortedReviews = [...reviews].sort((first, second) => {
+    const firstIsFeatured = first.name.toLocaleLowerCase("tr-TR").includes("yaren şen");
+    const secondIsFeatured = second.name.toLocaleLowerCase("tr-TR").includes("yaren şen");
+    if (firstIsFeatured !== secondIsFeatured) return firstIsFeatured ? -1 : 1;
+
+    const photoPriority = Number(Boolean(second.photoDataUrl)) - Number(Boolean(first.photoDataUrl));
+    if (photoPriority !== 0) return photoPriority;
+    return second.createdAt.localeCompare(first.createdAt);
+  });
+  const ratingAverage = averageRating(reviews);
+
+  return (
+    <section id="yorumlar" className="mx-auto max-w-6xl scroll-mt-24 px-5 pb-20">
+      <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <div className="text-sm font-bold uppercase tracking-[0.2em] text-primary-deep">
+            kullanıcı yorumları
+          </div>
+          <h2 className="mt-2 font-display text-3xl font-black tracking-[-0.04em] sm:text-5xl">
+            21 Ağustos gecesinden notlar
+          </h2>
+        </div>
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-bold text-primary-deep">
+          {ratingAverage.toFixed(1)} / 5 · {reviews.length} yorum
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {sortedReviews.map((review) => {
+          const isExpanded = !!expandedReviews[review.id];
+          const canExpand = review.comment.length > 170;
+          return (
+            <article
+              key={review.id}
+              className="overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)]"
+            >
+              {review.photoDataUrl && (
+                <img
+                  src={review.photoDataUrl}
+                  alt={`${review.name || "notwork katılımcısı"} yorumu`}
+                  loading="lazy"
+                  className="h-32 w-full object-cover object-center sm:h-44"
+                />
+              )}
+              <div className="p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-base text-primary-deep sm:text-lg">{renderStars(review.rating)}</div>
+                  <div className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-black text-primary-deep">
+                    21 Ağustos 2026
+                  </div>
+                </div>
+                <p
+                  className={`mt-3 text-sm leading-relaxed text-foreground/75 sm:text-base ${
+                    isExpanded ? "" : "line-clamp-4"
+                  }`}
+                >
+                  “{review.comment}”
+                </p>
+                {canExpand && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExpandedReviews((current) => ({
+                        ...current,
+                        [review.id]: !current[review.id],
+                      }))
+                    }
+                    className="mt-3 text-sm font-black text-primary-deep hover:underline"
+                  >
+                    {isExpanded ? "Daha az göster" : "Devamını oku"}
+                  </button>
+                )}
+                <div className="mt-5 border-t border-border pt-4">
+                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-foreground/45">
+                    {review.name || "notwork katılımcısı"}
+                  </div>
+                  <div className="mt-1 text-sm font-semibold text-foreground">21 Ağustos notwork İzmir</div>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
   );
 }

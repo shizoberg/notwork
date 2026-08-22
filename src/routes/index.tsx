@@ -572,13 +572,22 @@ function PastEvents() {
               </article>
             );
 
-            return event.href ? (
-              <Link key={event.date} to={event.href} className="shrink-0">
-                {card}
-              </Link>
-            ) : (
+            if (!event.href) {
+              return (
+                <div key={event.date} className="shrink-0">
+                  {card}
+                </div>
+              );
+            }
+
+            return (
               <div key={event.date} className="shrink-0">
-                {card}
+                <a href="#katilimci-yorumlari" className="block sm:hidden">
+                  {card}
+                </a>
+                <Link to={event.href} className="hidden sm:block">
+                  {card}
+                </Link>
               </div>
             );
           })}
@@ -622,7 +631,7 @@ function EventReviewsFlow() {
     return second.createdAt.localeCompare(first.createdAt);
   });
   return (
-    <section className="mx-auto max-w-6xl px-5 mt-20 sm:mt-28">
+    <section id="katilimci-yorumlari" className="mx-auto max-w-6xl scroll-mt-24 px-5 mt-20 sm:mt-28">
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
@@ -650,7 +659,7 @@ function EventReviewsFlow() {
               <article
                 key={review.id}
                 className={`flex w-[82vw] max-w-sm shrink-0 snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition-all sm:w-[360px] ${
-                  isExpanded ? "h-auto" : "h-[320px] sm:h-[440px]"
+                  isExpanded ? "h-auto" : "h-[350px] sm:h-[460px]"
                 }`}
               >
                 {review.photoDataUrl && (
@@ -658,7 +667,7 @@ function EventReviewsFlow() {
                     src={review.photoDataUrl}
                     alt={`${review.eventTitle} yorumu`}
                     loading="lazy"
-                    className="h-20 w-full shrink-0 object-cover sm:h-40"
+                    className="h-28 w-full shrink-0 object-cover object-center sm:h-44"
                   />
                 )}
                 <div className="flex flex-1 flex-col p-3.5 sm:p-5">
