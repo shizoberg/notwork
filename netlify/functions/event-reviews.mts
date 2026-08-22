@@ -1,5 +1,12 @@
 import { getStore } from "@netlify/blobs";
+import { createHash, timingSafeEqual } from "node:crypto";
 import type { Config, Context } from "@netlify/functions";
+
+type AdminInput = {
+  action?: "delete";
+  password?: string;
+  reviewId?: string;
+};
 
 type ReviewInput = {
   eventId?: string;
@@ -25,6 +32,8 @@ type ReviewRow = {
   createdAt: string;
 };
 
+const passwordHash = "bffc46786cfaa3b08499a75d77b037dff9a14f362ab183f72e2ea7bcce0454ee";
+
 const allowedEvents: Record<string, string> = {
   "21-agustos-2026": "21 Ağustos notwork · House of Rene Lokal",
   "14-temmuz-2026": "14 Temmuz notwork İzmir",
@@ -35,6 +44,13 @@ const allowedEvents: Record<string, string> = {
   "16-ocak": "16 Ocak notwork · İstinyeArt İzmir",
   "8-aralik": "8 Aralık notwork · İstinyeArt İzmir",
 };
+
+function validPassword(password: unknown) {
+  if (typeof password !== "string") return false;
+  const actual = Buffer.from(createHash("sha256").update(password).digest("hex"));
+  const expected = Buffer.from(passwordHash);
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
 
 function clean(value: unknown, maxLength: number) {
   return typeof value === "string"
@@ -48,6 +64,23 @@ function clean(value: unknown, maxLength: number) {
 function publicReview(review: ReviewRow) {
   const { privateNote: _privateNote, ...publicFields } = review;
   return publicFields;
+}
+
+async function deleteReview(store: ReturnType<typeof getStore>, reviewId: string) {
+  const { blobs } = await store.list({ prefix: "reviews/" });
+
+  for (const blob of blobs) {
+    const review = (await store.get(blob.key, {
+      type: "json",
+      consistency: "strong",
+    })) as ReviewRow | null;
+    if (review?.id === reviewId) {
+      await store.delete(blob.key);
+      return publicReview(review);
+    }
+  }
+
+  return null;
 }
 
 async function listReviews(store: ReturnType<typeof getStore>, eventId: string) {
@@ -79,7 +112,17 @@ export default async (request: Request, _context: Context) => {
   }
 
   try {
-    const input = (await request.json()) as ReviewInput;
+    const input = (await request.json()) as ReviewInput & AdminInput;
+
+    if (input.action === "delete") {
+      if (!validPassword(input.password)) return new Response("Yetkisiz erişim", { status: 401 });
+      const reviewId = clean(input.reviewId, 80);
+      if (!reviewId) return new Response("Yorum id gerekli", { status: 400 });
+      const deleted = await deleteReview(store, reviewId);
+      if (!deleted) return new Response("Yorum bulunamadı", { status: 404 });
+      return Response.json({ ok: true, deleted }, { headers: { "cache-control": "no-store" } });
+    }
+
     const eventId = clean(input.eventId, 60);
     const rating = Math.round(Number(input.rating));
     const comment = clean(input.comment, 700);

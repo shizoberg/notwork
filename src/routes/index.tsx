@@ -64,6 +64,8 @@ const gallery = [
   gallery5,
 ];
 
+const whatsappCommunityUrl = "https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE";
+
 const faq = [
   {
     q: "notwork tam olarak ne?",
@@ -284,6 +286,14 @@ function Hero() {
           >
             notwork nedir?
           </Link>
+          <a
+            href={whatsappCommunityUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex w-fit items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground transition hover:opacity-90 sm:px-6 sm:py-3"
+          >
+            WhatsApp duyuru kanalı
+          </a>
         </div>
       </div>
     </section>
@@ -484,8 +494,8 @@ function PastEvents() {
             const eventAverage = averageRating(eventReviews);
             const eventPhoto = eventReviews.find((review) => review.photoDataUrl)?.photoDataUrl;
             const card = (
-              <article className="group flex h-full min-h-[520px] w-[82vw] max-w-sm snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:w-[360px]">
-                <div className="relative min-h-56 overflow-hidden bg-ink text-cream">
+              <article className="group flex h-full min-h-[450px] w-[82vw] sm:min-h-[520px] max-w-sm snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:w-[360px]">
+                <div className="relative min-h-44 overflow-hidden bg-ink text-cream sm:min-h-56">
                   {eventPhoto && (
                     <img
                       src={eventPhoto}
@@ -500,7 +510,7 @@ function PastEvents() {
                   {eventPhoto && <div className="absolute inset-0 bg-ink/35" />}
                   <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full border-[24px] border-primary/25" />
                   <div className="absolute -bottom-14 left-8 h-40 w-40 rounded-full border-[28px] border-primary/15" />
-                  <div className="relative flex min-h-56 flex-col justify-between p-6">
+                  <div className="relative flex min-h-44 flex-col justify-between p-5 sm:min-h-56 sm:p-6">
                     <div className="inline-flex w-fit rounded-full border border-cream/20 bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em]">
                       {event.date}
                     </div>
@@ -516,7 +526,7 @@ function PastEvents() {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-1 flex-col p-6">
+                <div className="flex flex-1 flex-col p-5 sm:p-6">
                   <div className="inline-flex w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-deep">
                     Geçmiş event
                   </div>
@@ -525,7 +535,7 @@ function PastEvents() {
                   </h3>
                   <p className="mt-4 flex-1 leading-relaxed text-muted-foreground">{event.text}</p>
                   {eventReviews.length > 0 && (
-                    <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                    <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-3 sm:mt-5 sm:p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div className="text-lg tracking-tight text-primary-deep">
                           {renderEventStars(Math.round(eventAverage))}
@@ -537,7 +547,7 @@ function PastEvents() {
                       <div className="mt-1 text-xs font-semibold text-foreground/50">
                         {eventReviews.length} değerlendirme
                       </div>
-                      <div className="mt-3 grid max-h-28 gap-2 overflow-y-auto pr-1 [scrollbar-width:thin]">
+                      <div className="mt-3 grid max-h-20 gap-2 overflow-y-auto pr-1 [scrollbar-width:thin] sm:max-h-28">
                         {eventReviews.slice(0, 4).map((review) => (
                           <p
                             key={review.id}
@@ -607,6 +617,13 @@ function EventReviewsFlow() {
 
   if (reviews.length === 0) return null;
 
+  const sortedReviews = [...reviews].sort((first, second) => {
+    const photoPriority = Number(Boolean(second.photoDataUrl)) - Number(Boolean(first.photoDataUrl));
+    if (photoPriority !== 0) return photoPriority;
+    return second.createdAt.localeCompare(first.createdAt);
+  });
+  const previewPhotos = sortedReviews.filter((review) => review.photoDataUrl).slice(0, 4);
+
   return (
     <section className="mx-auto max-w-6xl px-5 mt-20 sm:mt-28">
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -626,9 +643,23 @@ function EventReviewsFlow() {
         </Link>
       </div>
 
+      {previewPhotos.length > 0 && (
+        <div className="mb-4 grid grid-cols-4 gap-2 sm:mb-6 sm:max-w-3xl">
+          {previewPhotos.map((review) => (
+            <img
+              key={`preview-${review.id}`}
+              src={review.photoDataUrl}
+              alt={`${review.eventTitle} fotoğraflı yorum`}
+              loading="lazy"
+              className="aspect-square w-full rounded-2xl border border-border object-cover shadow-[var(--shadow-card)]"
+            />
+          ))}
+        </div>
+      )}
+
       <div className="-mx-5 overflow-x-auto px-5 pb-4 [scrollbar-width:thin]">
         <div className="flex snap-x gap-4">
-          {reviews.map((review) => {
+          {sortedReviews.map((review) => {
             const event = eventMetaById[review.eventId];
             const isExpanded = !!expandedReviews[review.id];
             const canExpand = review.comment.length > 170;
@@ -636,7 +667,7 @@ function EventReviewsFlow() {
               <article
                 key={review.id}
                 className={`flex w-[82vw] max-w-sm shrink-0 snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition-all sm:w-[360px] ${
-                  isExpanded ? "h-auto" : "h-[460px]"
+                  isExpanded ? "h-auto" : "h-[390px] sm:h-[460px]"
                 }`}
               >
                 {review.photoDataUrl && (
@@ -644,10 +675,10 @@ function EventReviewsFlow() {
                     src={review.photoDataUrl}
                     alt={`${review.eventTitle} yorumu`}
                     loading="lazy"
-                    className="h-44 w-full shrink-0 object-cover"
+                    className="h-28 w-full shrink-0 object-cover sm:h-44"
                   />
                 )}
-                <div className="flex flex-1 flex-col p-5">
+                <div className="flex flex-1 flex-col p-4 sm:p-5">
                   <div className="flex items-center justify-between gap-3">
                     <div className="text-lg text-primary-deep">
                       {renderEventStars(review.rating)}
