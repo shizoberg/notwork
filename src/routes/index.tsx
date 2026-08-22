@@ -340,8 +340,8 @@ function Tracks() {
         <div className="flex items-center justify-center gap-2 mb-3">
           <span className="inline-block w-2 h-2 rounded-full bg-primary" />
           <span className="text-sm sm:text-lg font-bold text-foreground/80 uppercase tracking-[0.2em] leading-relaxed">
-            UĞRAŞIP YAPAMADILARIMIZI
-            <br />3 FARKLI AÇIDAN DİNLE
+            BAŞARISIZLIK HİKAYELERİ
+            <br />3 FARKLI AÇIDA
           </span>
         </div>
 
@@ -479,12 +479,7 @@ function PastEvents() {
         <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
           Geçmiş notwork gecelerinden hikâyeleri, yorumları ve etkinlik arşivini burada topluyoruz.
         </p>
-        <Link
-          to="/etkinlik-degerlendirme"
-          className="inline-flex w-fit rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
-        >
-          Etkinlik yorumla
-        </Link>
+
       </div>
 
       <div className="-mx-5 overflow-x-auto px-5 pb-4 [scrollbar-width:thin]">
@@ -618,12 +613,14 @@ function EventReviewsFlow() {
   if (reviews.length === 0) return null;
 
   const sortedReviews = [...reviews].sort((first, second) => {
+    const firstIsFeatured = first.name.toLocaleLowerCase("tr-TR").includes("yaren şen");
+    const secondIsFeatured = second.name.toLocaleLowerCase("tr-TR").includes("yaren şen");
+    if (firstIsFeatured !== secondIsFeatured) return firstIsFeatured ? -1 : 1;
+
     const photoPriority = Number(Boolean(second.photoDataUrl)) - Number(Boolean(first.photoDataUrl));
     if (photoPriority !== 0) return photoPriority;
     return second.createdAt.localeCompare(first.createdAt);
   });
-  const previewPhotos = sortedReviews.filter((review) => review.photoDataUrl).slice(0, 4);
-
   return (
     <section className="mx-auto max-w-6xl px-5 mt-20 sm:mt-28">
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -643,20 +640,6 @@ function EventReviewsFlow() {
         </Link>
       </div>
 
-      {previewPhotos.length > 0 && (
-        <div className="mb-4 grid grid-cols-4 gap-2 sm:mb-6 sm:max-w-3xl">
-          {previewPhotos.map((review) => (
-            <img
-              key={`preview-${review.id}`}
-              src={review.photoDataUrl}
-              alt={`${review.eventTitle} fotoğraflı yorum`}
-              loading="lazy"
-              className="aspect-square w-full rounded-2xl border border-border object-cover shadow-[var(--shadow-card)]"
-            />
-          ))}
-        </div>
-      )}
-
       <div className="-mx-5 overflow-x-auto px-5 pb-4 [scrollbar-width:thin]">
         <div className="flex snap-x gap-4">
           {sortedReviews.map((review) => {
@@ -667,7 +650,7 @@ function EventReviewsFlow() {
               <article
                 key={review.id}
                 className={`flex w-[82vw] max-w-sm shrink-0 snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition-all sm:w-[360px] ${
-                  isExpanded ? "h-auto" : "h-[390px] sm:h-[460px]"
+                  isExpanded ? "h-auto" : "h-[320px] sm:h-[440px]"
                 }`}
               >
                 {review.photoDataUrl && (
@@ -675,10 +658,10 @@ function EventReviewsFlow() {
                     src={review.photoDataUrl}
                     alt={`${review.eventTitle} yorumu`}
                     loading="lazy"
-                    className="h-28 w-full shrink-0 object-cover sm:h-44"
+                    className="h-20 w-full shrink-0 object-cover sm:h-40"
                   />
                 )}
-                <div className="flex flex-1 flex-col p-4 sm:p-5">
+                <div className="flex flex-1 flex-col p-3.5 sm:p-5">
                   <div className="flex items-center justify-between gap-3">
                     <div className="text-lg text-primary-deep">
                       {renderEventStars(review.rating)}
@@ -689,7 +672,7 @@ function EventReviewsFlow() {
                   </div>
                   <p
                     className={`mt-4 text-base leading-relaxed text-foreground/75 ${
-                      isExpanded ? "" : "line-clamp-5"
+                      isExpanded ? "" : "line-clamp-3 sm:line-clamp-5"
                     }`}
                   >
                     “{review.comment}”
@@ -708,7 +691,7 @@ function EventReviewsFlow() {
                       {isExpanded ? "Daha az göster" : "Devamını oku"}
                     </button>
                   )}
-                  <div className="mt-auto border-t border-border pt-4">
+                  <div className="mt-auto border-t border-border pt-3 sm:pt-4">
                     <div className="text-xs font-bold uppercase tracking-[0.18em] text-foreground/45">
                       {review.name || "notwork katılımcısı"}
                     </div>

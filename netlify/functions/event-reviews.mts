@@ -3,7 +3,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import type { Config, Context } from "@netlify/functions";
 
 type AdminInput = {
-  action?: "delete";
+  action?: "delete" | "removePhoto";
   password?: string;
   reviewId?: string;
 };
@@ -66,7 +66,7 @@ function publicReview(review: ReviewRow) {
   return publicFields;
 }
 
-async function deleteReview(store: ReturnType<typeof getStore>, reviewId: string) {
+async function findReviewBlob(store: ReturnType<typeof getStore>, reviewId: string) {
   const { blobs } = await store.list({ prefix: "reviews/" });
 
   for (const blob of blobs) {
@@ -74,13 +74,25 @@ async function deleteReview(store: ReturnType<typeof getStore>, reviewId: string
       type: "json",
       consistency: "strong",
     })) as ReviewRow | null;
-    if (review?.id === reviewId) {
-      await store.delete(blob.key);
-      return publicReview(review);
-    }
+    if (review?.id === reviewId) return { key: blob.key, review };
   }
 
   return null;
+}
+
+async function deleteReview(store: ReturnType<typeof getStore>, reviewId: string) {
+  const match = await findReviewBlob(store, reviewId);
+  if (!match) return null;
+  await store.delete(match.key);
+  return publicReview(match.review);
+}
+
+async function removeReviewPhoto(store: ReturnType<typeof getStore>, reviewId: string) {
+  const match = await findReviewBlob(store, reviewId);
+  if (!match) return null;
+  const updated = { ...match.review, photoDataUrl: "" };
+  await store.setJSON(match.key, updated);
+  return publicReview(updated);
 }
 
 async function listReviews(store: ReturnType<typeof getStore>, eventId: string) {
@@ -114,13 +126,16 @@ export default async (request: Request, _context: Context) => {
   try {
     const input = (await request.json()) as ReviewInput & AdminInput;
 
-    if (input.action === "delete") {
+    if (input.action === "delete" || input.action === "removePhoto") {
       if (!validPassword(input.password)) return new Response("Yetkisiz erişim", { status: 401 });
       const reviewId = clean(input.reviewId, 80);
       if (!reviewId) return new Response("Yorum id gerekli", { status: 400 });
-      const deleted = await deleteReview(store, reviewId);
-      if (!deleted) return new Response("Yorum bulunamadı", { status: 404 });
-      return Response.json({ ok: true, deleted }, { headers: { "cache-control": "no-store" } });
+      const result =
+        input.action === "delete"
+          ? await deleteReview(store, reviewId)
+          : await removeReviewPhoto(store, reviewId);
+      if (!result) return new Response("Yorum bulunamadı", { status: 404 });
+      return Response.json({ ok: true, review: result }, { headers: { "cache-control": "no-store" } });
     }
 
     const eventId = clean(input.eventId, 60);
