@@ -663,7 +663,7 @@ function EventReviewsFlow() {
                 )}
                 <div className="flex flex-1 flex-col p-3.5 sm:p-5">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="text-lg text-primary-deep">
+                    <div className="text-base text-primary-deep sm:text-lg">
                       {renderEventStars(review.rating)}
                     </div>
                     <div className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-black text-primary-deep">
@@ -671,7 +671,7 @@ function EventReviewsFlow() {
                     </div>
                   </div>
                   <p
-                    className={`mt-4 text-base leading-relaxed text-foreground/75 ${
+                    className={`mt-2 text-sm leading-relaxed text-foreground/75 sm:mt-4 sm:text-base ${
                       isExpanded ? "" : "line-clamp-3 sm:line-clamp-5"
                     }`}
                   >
