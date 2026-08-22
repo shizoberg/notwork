@@ -13,9 +13,6 @@ import gallery13 from "@/assets/gallery/notwork-13.jpg";
 import { SiteNav, SiteFooter } from "@/components/SiteNav";
 import { averageRating, listEventReviews, type EventReview } from "@/lib/event-reviews";
 
-const augustTicketUrl =
-  "https://www.biletimgo.com/etkinlik/notwork-basarisizlik-hikayeleri-networking-club-29731";
-
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -130,6 +127,16 @@ const tracks = [
 
 const pastEvents = [
   {
+    id: "21-agustos-2026",
+    date: "21 Ağustos 2026",
+    location: "House of Rene Lokal",
+    title: "21 Ağustos notwork İzmir",
+    text: "Rene Lokal’de başarısızlık hikâyeleri, MatchLab, WordCloud ve etkinlik sonrası networking akışıyla büyüyen notwork gecesi.",
+    tags: ["MatchLab", "WordCloud", "Rene Lokal", "Networking"],
+    href: "/21agustos",
+    accent: "from-[#0f2f35] via-[#2f9aa5] to-[#8fcbd0]",
+  },
+  {
     id: "14-temmuz-2026",
     date: "14 Temmuz 2026",
     location: "Mahal Bomonti İzmir",
@@ -197,16 +204,6 @@ const pastEvents = [
 
 const eventMetaById = Object.fromEntries(pastEvents.map((event) => [event.id, event]));
 
-const currentEvent = {
-  date: "21 Ağustos 2026",
-  location: "House of Rene Lokal",
-  title: "21 Ağustos notwork İzmir",
-  text: "Bornova Rene Lokal’de başarısızlık hikâyeleri, doğru dersler ve etkinlik sonrası networking akışıyla güncel notwork gecesi.",
-  tags: ["Bilet", "Rene Lokal", "Bornova", "Güncel event"],
-  href: "/21agustos",
-  accent: "from-[#0f2f35] via-[#2f9aa5] to-[#8fcbd0]",
-};
-
 const heroTitleVariants = ["networking club", "notworking club", "network community"];
 
 function Hero() {
@@ -261,9 +258,7 @@ function Hero() {
       <div className="mx-auto max-w-5xl px-4 sm:px-5 pt-6 sm:pt-12 pb-10 sm:pb-16 text-center">
         <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-foreground/60">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary blink" />
-          <span>21 Ağustos networking eventi</span>
-          <span className="w-1 h-1 rounded-full bg-foreground/20" />
-          <span>Rene Lokal</span>
+          <span>Etkinlik duyurusu yakında sizlerle olacak</span>
         </div>
 
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
@@ -283,19 +278,6 @@ function Hero() {
         </p>
 
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <a
-            href={augustTicketUrl}
-            data-analytics="ticket_click"
-            data-analytics-label="21 Ağustos Rene Lokal bilet al"
-            data-meta-event="ViewContent"
-            data-meta-content="notwork 21 Ağustos Rene Lokal Bileti"
-            data-meta-content-id="notwork-21-agustos-rene-lokal"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex w-fit items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 sm:px-6 sm:py-3"
-          >
-            Bilet al
-          </a>
           <Link
             to="/notwork-nedir"
             className="inline-flex w-fit items-center justify-center rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary-deep sm:px-6 sm:py-3"
@@ -396,28 +378,28 @@ function Nedir() {
   const items = [
     {
       n: "01",
-      t: "Denedik, olmadı, sonra ne oldu?",
-      d: "Her konuşmacı 10 dakikada deneyip de yapamadığı şeyi anlatır; ama asıl vurgu, bu deneyimden ne öğrendiği ve nasıl başardığı üzerinedir.",
+      t: "Başarısızlık hikayeleri dinleyeceksin.",
+      d: "Gerçek deneyimler, kısa sunumlar ve çıkarılan net dersler.",
     },
     {
       n: "02",
       t: "3 hayat kolu",
-      d: "Kariyer, ilişki ve macera başlıkları altında farklı alanlarda deneyim, başarısızlık, öğrenme ve başarı hikâyeleri dinleriz.",
+      d: "Kariyer, ilişki ve macera tarafında farklı hikâyeler.",
     },
     {
       n: "03",
-      t: "Önce ısınma oyunu",
-      d: "Sunumlardan önce mikrofonu seyirci arasında gezdirip interaktif bir oyun oynuyoruz; paylaşmak konusunda ısınıyoruz.",
+      t: "Isınma oyunu",
+      d: "Sahneye geçmeden önce interaktif mini oyun.",
     },
     {
       n: "04",
       t: "Sonra networking",
-      d: "Sunumlar bittiğinde gerçek anlamda tanışma ve sohbet vakti başlıyor; başarısızlık konuşulunca bağlar daha kolay kuruluyor.",
+      d: "Sunum sonrası tanışma ve doğru bağlantı zamanı.",
     },
   ];
   return (
-    <section id="nedir" className="mx-auto max-w-6xl px-5 mt-20 sm:mt-28">
-      <div className="flex items-end justify-between flex-wrap gap-4 mb-10">
+    <section id="nedir" className="mx-auto max-w-6xl px-5 mt-14 sm:mt-24">
+      <div className="flex items-end justify-between flex-wrap gap-3 mb-5 sm:mb-8">
         <div>
           <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
             Bir notwork eventinde
@@ -426,21 +408,24 @@ function Nedir() {
             Seni ne bekliyor?
           </h2>
         </div>
-        <p className="text-muted-foreground max-w-md">
-          Başarı hikâyelerinden yorulduysan doğru yerdesin. Burada konuşulan sadece denedik ve
-          olmadı değil; bu başarısızlıklardan ne öğrendiğimiz ve nasıl başardığımız.
+        <p className="text-sm text-muted-foreground max-w-sm sm:text-base">
+          Kısa hikâyeler, interaktif akış ve gerçek tanışmalar.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
         {items.map((i) => (
           <div
             key={i.n}
-            className="rounded-2xl border border-border bg-card p-6 hover:border-primary/60 hover:shadow-[var(--shadow-card)] transition"
+            className="rounded-2xl border border-border bg-card p-3 transition hover:border-primary/60 hover:shadow-[var(--shadow-card)] sm:p-5"
           >
-            <div className="font-display text-primary text-3xl font-bold">{i.n}</div>
-            <div className="mt-3 font-display font-semibold text-lg">{i.t}</div>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{i.d}</p>
+            <div className="font-display text-primary text-xl font-bold sm:text-3xl">{i.n}</div>
+            <div className="mt-2 font-display font-semibold text-sm leading-tight sm:text-lg">
+              {i.t}
+            </div>
+            <p className="mt-1.5 text-xs text-muted-foreground leading-snug sm:mt-2 sm:text-sm sm:leading-relaxed">
+              {i.d}
+            </p>
           </div>
         ))}
       </div>
@@ -482,8 +467,7 @@ function PastEvents() {
           </h2>
         </div>
         <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-          Güncel etkinliğin bilet ve program bilgilerini; geçmiş etkinliklerin de arşivini burada
-          topluyoruz.
+          Geçmiş notwork gecelerinden hikâyeleri, yorumları ve etkinlik arşivini burada topluyoruz.
         </p>
         <Link
           to="/etkinlik-degerlendirme"
@@ -493,70 +477,27 @@ function PastEvents() {
         </Link>
       </div>
 
-      <Link
-        to={currentEvent.href}
-        className="group mb-6 block overflow-hidden rounded-3xl border border-primary/30 bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/70 hover:shadow-[var(--shadow-soft)]"
-      >
-        <article className="grid md:grid-cols-[0.9fr_1.1fr]">
-          <div className="relative min-h-64 overflow-hidden bg-ink text-cream">
-            <div
-              className={`absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_32%)] bg-gradient-to-br ${currentEvent.accent}`}
-            />
-            <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full border-[24px] border-primary/25" />
-            <div className="absolute -bottom-14 left-8 h-40 w-40 rounded-full border-[28px] border-primary/15" />
-            <div className="relative flex min-h-64 flex-col justify-between p-6">
-              <div className="inline-flex w-fit rounded-full border border-cream/20 bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em]">
-                Güncel event
-              </div>
-              <div>
-                <div className="text-xs font-bold uppercase tracking-[0.24em] text-primary">
-                  {currentEvent.date} · {currentEvent.location}
-                </div>
-                <div className="mt-2 font-display text-5xl font-black leading-none tracking-[-0.05em]">
-                  21 Ağustos
-                  <br />
-                  notwork
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col justify-center p-6 sm:p-8">
-            <div className="inline-flex w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-deep">
-              Bilet ve program
-            </div>
-            <h3 className="mt-4 font-display text-3xl font-black tracking-[-0.04em] sm:text-4xl">
-              {currentEvent.title}
-            </h3>
-            <p className="mt-4 leading-relaxed text-muted-foreground">{currentEvent.text}</p>
-            <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold">
-              {currentEvent.tags.map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full border border-border bg-background px-3 py-1.5"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-            <div className="mt-7 inline-flex items-center gap-2 font-bold text-primary-deep">
-              Güncel event sayfasına git
-              <span className="transition group-hover:translate-x-1">→</span>
-            </div>
-          </div>
-        </article>
-      </Link>
-
       <div className="-mx-5 overflow-x-auto px-5 pb-4 [scrollbar-width:thin]">
         <div className="flex snap-x gap-4">
           {pastEvents.map((event) => {
             const eventReviews = reviewsByEvent[event.id] || [];
             const eventAverage = averageRating(eventReviews);
+            const eventPhoto = eventReviews.find((review) => review.photoDataUrl)?.photoDataUrl;
             const card = (
               <article className="group flex h-full min-h-[520px] w-[82vw] max-w-sm snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:w-[360px]">
                 <div className="relative min-h-56 overflow-hidden bg-ink text-cream">
+                  {eventPhoto && (
+                    <img
+                      src={eventPhoto}
+                      alt={`${event.title} etkinlik fotoğrafı`}
+                      loading="lazy"
+                      className="absolute inset-0 h-full w-full object-cover opacity-75 transition duration-500 group-hover:scale-105"
+                    />
+                  )}
                   <div
-                    className={`absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_32%)] bg-gradient-to-br ${event.accent}`}
+                    className={`absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_32%)] bg-gradient-to-br ${event.accent} ${eventPhoto ? "mix-blend-multiply" : ""}`}
                   />
+                  {eventPhoto && <div className="absolute inset-0 bg-ink/35" />}
                   <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full border-[24px] border-primary/25" />
                   <div className="absolute -bottom-14 left-8 h-40 w-40 rounded-full border-[28px] border-primary/15" />
                   <div className="relative flex min-h-56 flex-col justify-between p-6">
