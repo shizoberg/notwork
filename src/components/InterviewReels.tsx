@@ -82,12 +82,6 @@ export function InterviewReels({
               />
               <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-transparent to-transparent" />
               <div className="absolute bottom-3 left-3 right-3">
-                <div className="mb-2 inline-flex rounded-full bg-primary px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-primary-foreground">
-                  sesli aç
-                </div>
-                <div className="text-xs font-black uppercase tracking-[0.14em] text-white/80">
-                  {video.label || "röportaj"}
-                </div>
                 <div className="mt-1 text-sm font-black text-white">{video.title}</div>
               </div>
             </button>

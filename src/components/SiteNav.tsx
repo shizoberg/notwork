@@ -35,9 +35,12 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
           <Link to="/sponsor" className="px-1.5 sm:px-3 py-2 rounded-lg hover:bg-muted">
             Sponsor
           </Link>
-          <Link to="/etkinlikler" className="px-1.5 sm:hidden py-2 rounded-lg hover:bg-muted">
+          <a
+            href="/#katilimci-yorumlari"
+            className="px-1.5 sm:hidden py-2 rounded-lg hover:bg-muted"
+          >
             Etkinlikler
-          </Link>
+          </a>
           <Link
             to="/community"
             className="hidden px-1.5 py-2 rounded-lg hover:bg-muted sm:inline sm:px-3"
