@@ -572,22 +572,13 @@ function PastEvents() {
               </article>
             );
 
-            if (!event.href) {
-              return (
-                <div key={event.date} className="shrink-0">
-                  {card}
-                </div>
-              );
-            }
-
-            return (
+            return event.href ? (
+              <Link key={event.date} to={event.href} className="shrink-0">
+                {card}
+              </Link>
+            ) : (
               <div key={event.date} className="shrink-0">
-                <a href="#katilimci-yorumlari" className="block sm:hidden">
-                  {card}
-                </a>
-                <Link to={event.href} className="hidden sm:block">
-                  {card}
-                </Link>
+                {card}
               </div>
             );
           })}
