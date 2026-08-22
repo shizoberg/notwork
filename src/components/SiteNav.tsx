@@ -25,6 +25,9 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
           <a href="/#galeri" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">
             Galeri
           </a>
+          <Link to="/etkinlikler" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">
+            Etkinlikler
+          </Link>
           <Link to="/networking" className="px-1.5 sm:px-3 py-2 rounded-lg hover:bg-muted">
             <span className="sm:hidden">Networking Ağı</span>
             <span className="hidden sm:inline">Networking</span>
@@ -32,9 +35,9 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
           <Link to="/sponsor" className="px-1.5 sm:px-3 py-2 rounded-lg hover:bg-muted">
             Sponsor
           </Link>
-          <a href="/#etkinlikler" className="px-1.5 sm:hidden py-2 rounded-lg hover:bg-muted">
+          <Link to="/etkinlikler" className="px-1.5 sm:hidden py-2 rounded-lg hover:bg-muted">
             Etkinlikler
-          </a>
+          </Link>
           <Link
             to="/community"
             className="hidden px-1.5 py-2 rounded-lg hover:bg-muted sm:inline sm:px-3"

@@ -10,6 +10,7 @@ import gallery9 from "@/assets/gallery/notwork-9.jpg";
 import gallery10 from "@/assets/gallery/notwork-10.jpg";
 import gallery12 from "@/assets/gallery/notwork-12.jpg";
 import gallery13 from "@/assets/gallery/notwork-13.jpg";
+import { InterviewReels } from "@/components/InterviewReels";
 import { SiteNav, SiteFooter } from "@/components/SiteNav";
 import { averageRating, listEventReviews, type EventReview } from "@/lib/event-reviews";
 
@@ -99,6 +100,7 @@ function Landing() {
         <Tracks />
         <Nedir />
         <EventReviewsFlow />
+        <InterviewReels />
         <PastEvents />
         <Gallery />
         <FAQ />
@@ -479,7 +481,12 @@ function PastEvents() {
         <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
           Geçmiş notwork gecelerinden hikâyeleri, yorumları ve etkinlik arşivini burada topluyoruz.
         </p>
-
+        <Link
+          to="/etkinlikler"
+          className="inline-flex w-fit rounded-full border border-primary/30 bg-primary/10 px-5 py-3 text-sm font-black text-primary-deep transition hover:bg-primary hover:text-primary-foreground"
+        >
+          Tüm etkinlikleri gör
+        </Link>
       </div>
 
       <div className="-mx-5 overflow-x-auto px-5 pb-4 [scrollbar-width:thin]">
@@ -617,12 +624,16 @@ function EventReviewsFlow() {
     const secondIsFeatured = second.name.toLocaleLowerCase("tr-TR").includes("yaren şen");
     if (firstIsFeatured !== secondIsFeatured) return firstIsFeatured ? -1 : 1;
 
-    const photoPriority = Number(Boolean(second.photoDataUrl)) - Number(Boolean(first.photoDataUrl));
+    const photoPriority =
+      Number(Boolean(second.photoDataUrl)) - Number(Boolean(first.photoDataUrl));
     if (photoPriority !== 0) return photoPriority;
     return second.createdAt.localeCompare(first.createdAt);
   });
   return (
-    <section id="katilimci-yorumlari" className="mx-auto max-w-6xl scroll-mt-24 px-5 mt-20 sm:mt-28">
+    <section
+      id="katilimci-yorumlari"
+      className="mx-auto max-w-6xl scroll-mt-24 px-5 mt-20 sm:mt-28"
+    >
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">

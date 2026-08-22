@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { InterviewReels } from "@/components/InterviewReels";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { averageRating, listEventReviews, type EventReview } from "@/lib/event-reviews";
 
@@ -195,8 +196,13 @@ function AugustTwentyFirst() {
         </section>
 
         <AugustReviews reviews={reviews} />
+        <InterviewReels
+          title="21 Ağustos etkinlik röportajları"
+          eyebrow="etkinlik röportajları"
+          description="Rene Lokal gecesinden kısa katılımcı yorumları. Sessiz döner; tıklayınca sesli ve büyük açılır."
+        />
 
-        <section className="mx-auto max-w-6xl px-5 pb-20">
+        <section className="mx-auto max-w-6xl px-5 pb-20 mt-16 sm:mt-24">
           <div className="overflow-hidden rounded-3xl border border-primary/25 bg-[radial-gradient(circle_at_top_left,rgba(143,203,208,0.25),transparent_34%),linear-gradient(135deg,hsl(var(--card)),hsl(var(--background)))] p-6 shadow-[var(--shadow-card)] sm:p-10">
             <div className="text-sm font-bold uppercase tracking-[0.2em] text-primary-deep">
               konuşmacılar
@@ -242,7 +248,8 @@ function AugustReviews({ reviews }: { reviews: EventReview[] }) {
     const secondIsFeatured = second.name.toLocaleLowerCase("tr-TR").includes("yaren şen");
     if (firstIsFeatured !== secondIsFeatured) return firstIsFeatured ? -1 : 1;
 
-    const photoPriority = Number(Boolean(second.photoDataUrl)) - Number(Boolean(first.photoDataUrl));
+    const photoPriority =
+      Number(Boolean(second.photoDataUrl)) - Number(Boolean(first.photoDataUrl));
     if (photoPriority !== 0) return photoPriority;
     return second.createdAt.localeCompare(first.createdAt);
   });
@@ -283,7 +290,9 @@ function AugustReviews({ reviews }: { reviews: EventReview[] }) {
               )}
               <div className="p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-base text-primary-deep sm:text-lg">{renderStars(review.rating)}</div>
+                  <div className="text-base text-primary-deep sm:text-lg">
+                    {renderStars(review.rating)}
+                  </div>
                   <div className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-black text-primary-deep">
                     21 Ağustos 2026
                   </div>
@@ -313,7 +322,9 @@ function AugustReviews({ reviews }: { reviews: EventReview[] }) {
                   <div className="text-xs font-bold uppercase tracking-[0.18em] text-foreground/45">
                     {review.name || "notwork katılımcısı"}
                   </div>
-                  <div className="mt-1 text-sm font-semibold text-foreground">21 Ağustos notwork İzmir</div>
+                  <div className="mt-1 text-sm font-semibold text-foreground">
+                    21 Ağustos notwork İzmir
+                  </div>
                 </div>
               </div>
             </article>
