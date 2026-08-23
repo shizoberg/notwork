@@ -49,22 +49,55 @@ const roleGroups = [
   {
     id: "technology",
     label: "Teknoloji & Veri",
-    keywords: ["yazılım", "developer", "veri", "react", "typescript", "python", "api", "excel"],
+    keywords: [
+      "yazılım",
+      "developer",
+      "frontend",
+      "backend",
+      "fullstack",
+      "veri",
+      "data",
+      "react",
+      "typescript",
+      "python",
+      "api",
+      "excel",
+      "ai",
+      "yapay zeka",
+      "otomasyon",
+    ],
   },
   {
     id: "design",
     label: "Tasarım & Ürün",
-    keywords: ["tasarım", "mimar", "ux", "ui", "figma", "illüstr", "moda", "ürün"],
+    keywords: ["tasarım", "ux", "ui", "figma", "illüstr", "moda", "ürün", "product", "grafik"],
+  },
+  {
+    id: "architecture",
+    label: "Mimari & Mekân",
+    keywords: ["mimar", "mimarlık", "iç mimar", "mekan", "mekân", "tasarımı", "dekorasyon"],
   },
   {
     id: "content",
     label: "İçerik & Sahne",
-    keywords: ["içerik", "fotoğraf", "video", "müzik", "sahne", "kurgu", "prodüksiyon"],
+    keywords: [
+      "içerik",
+      "fotoğraf",
+      "fotoğrafçı",
+      "video",
+      "müzik",
+      "sahne",
+      "kurgu",
+      "prodüksiyon",
+      "youtuber",
+      "podcast",
+      "reklam",
+    ],
   },
   {
     id: "marketing",
     label: "Pazarlama & Satış",
-    keywords: ["pazarlama", "satış", "marka", "sosyal medya"],
+    keywords: ["pazarlama", "satış", "marka", "sosyal medya", "growth", "performans", "reklam"],
   },
   {
     id: "community",
@@ -74,12 +107,37 @@ const roleGroups = [
   {
     id: "business",
     label: "Girişim & Strateji",
-    keywords: ["girişim", "finans", "strateji", "bütçe", "proje"],
+    keywords: ["girişim", "startup", "strateji", "proje", "kurucu", "founder", "iş geliştirme"],
+  },
+  {
+    id: "finance",
+    label: "Finans & Operasyon",
+    keywords: ["finans", "muhasebe", "bütçe", "yatırım", "operasyon", "raporlama", "analiz"],
+  },
+  {
+    id: "health",
+    label: "Sağlık & İyi Oluş",
+    keywords: ["doktor", "hekim", "sağlık", "diyet", "fizyoterapi", "hemşire", "eczacı", "terapi"],
   },
   {
     id: "people",
     label: "İnsan & Gelişim",
-    keywords: ["psikolog", "insan kaynakları", "eğitim", "kariyer", "işe alım", "empati"],
+    keywords: [
+      "psikolog",
+      "insan kaynakları",
+      "ik",
+      "eğitim",
+      "kariyer",
+      "işe alım",
+      "koç",
+      "mentör",
+      "empati",
+    ],
+  },
+  {
+    id: "legal",
+    label: "Hukuk & Danışmanlık",
+    keywords: ["hukuk", "avukat", "danışman", "danışmanlık", "sözleşme", "kvkk"],
   },
   {
     id: "other",
@@ -89,17 +147,29 @@ const roleGroups = [
 ] as const;
 
 function getRoleGroup(member: Member) {
-  const title = member.title.toLocaleLowerCase("tr-TR");
-  const skills = member.skills.join(" ").toLocaleLowerCase("tr-TR");
+  const profile = normalizeSearchText(
+    `${member.title} ${member.skills.join(" ")} ${member.motivation || ""}`,
+  );
   return (
     roleGroups.find(
-      (group) => group.id !== "other" && group.keywords.some((keyword) => title.includes(keyword)),
-    ) ||
-    roleGroups.find(
-      (group) => group.id !== "other" && group.keywords.some((keyword) => skills.includes(keyword)),
-    ) ||
-    roleGroups[roleGroups.length - 1]
+      (group) =>
+        group.id !== "other" &&
+        group.keywords.some((keyword) => profile.includes(normalizeSearchText(keyword))),
+    ) || roleGroups[roleGroups.length - 1]
   );
+}
+
+function normalizeSearchText(value: string) {
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c");
 }
 
 function isEmail(value: string) {
@@ -153,15 +223,56 @@ function getMemberContact(member: Member) {
 }
 
 const complementaryGroups: Record<string, string[]> = {
-  technology: ["design", "marketing", "business"],
-  design: ["technology", "marketing", "content"],
-  content: ["marketing", "community", "design"],
+  technology: ["design", "marketing", "business", "finance"],
+  design: ["technology", "marketing", "content", "architecture"],
+  architecture: ["design", "business", "content", "marketing"],
+  content: ["marketing", "community", "design", "business"],
   marketing: ["content", "business", "technology", "design"],
-  community: ["content", "people", "business"],
-  business: ["technology", "marketing", "people", "community"],
-  people: ["business", "community", "technology"],
-  other: ["business", "community", "marketing"],
+  community: ["content", "people", "business", "marketing"],
+  business: ["technology", "marketing", "people", "finance", "legal"],
+  finance: ["business", "technology", "legal", "marketing"],
+  health: ["people", "content", "business", "marketing"],
+  people: ["business", "community", "technology", "health"],
+  legal: ["business", "finance", "technology", "community"],
+  other: ["business", "community", "marketing", "people"],
 };
+
+const eventBadges = [
+  {
+    source: "14temmuznetworking",
+    label: "14 Temmuz katılımcıları",
+  },
+  {
+    source: "21agustos",
+    label: "21 Ağustos katılımcıları",
+  },
+  {
+    source: "21-agustos",
+    label: "21 Ağustos katılımcıları",
+  },
+] as const;
+
+function getEventLabel(source: string) {
+  return eventBadges.find((badge) => badge.source === source)?.label || "notwork katılımcısı";
+}
+
+function getMemberEventBadges(member: Member) {
+  const raw = normalizeSearchText(
+    `${member.contact || ""} ${member.motivation || ""} ${member.title || ""}`,
+  );
+  const createdAt = member.createdAt ? new Date(member.createdAt) : null;
+  const isJuly14Registration =
+    createdAt?.getFullYear() === 2026 && createdAt.getMonth() === 6 && createdAt.getDate() === 14;
+  const isAugust21Registration =
+    createdAt?.getFullYear() === 2026 && createdAt.getMonth() === 7 && createdAt.getDate() === 21;
+
+  return eventBadges.filter((badge) => {
+    if (raw.includes(normalizeSearchText(`event:${badge.source}`))) return true;
+    if (badge.source === "14temmuznetworking" && isJuly14Registration) return true;
+    if (badge.source === "21agustos" && isAugust21Registration) return true;
+    return false;
+  });
+}
 
 const ignoredWords = new Set([
   "ve",
@@ -186,12 +297,15 @@ function profileWords(member: Member) {
 function getRecommendations(member: Member, members: Member[]) {
   const memberGroup = getRoleGroup(member);
   const memberWords = new Set(profileWords(member));
+  const memberEvents = getMemberEventBadges(member).map((badge) => badge.source);
 
   return members
     .filter((candidate) => candidate.id !== member.id)
     .map((candidate) => {
       const candidateGroup = getRoleGroup(candidate);
       const sharedSkills = member.skills.filter((skill) => candidate.skills.includes(skill));
+      const candidateEvents = getMemberEventBadges(candidate).map((badge) => badge.source);
+      const sharedEvents = candidateEvents.filter((event) => memberEvents.includes(event));
       const sharedThemes = [
         ...new Set(profileWords(candidate).filter((word) => memberWords.has(word))),
       ]
@@ -202,6 +316,9 @@ function getRecommendations(member: Member, members: Member[]) {
       let score = sharedSkills.length * 6 + sharedThemes.length * 2;
       if (complementary) score += 8;
       if (sameGroup) score += 4;
+      if (sharedEvents.length > 0) score += 3;
+      if (candidate.skills.length > 0 && member.skills.length > 0 && sharedSkills.length === 0)
+        score += 1;
       if (candidate.linkedin) score += 1;
       if (candidate.motivation) score += 1;
 
@@ -211,6 +328,8 @@ function getRecommendations(member: Member, members: Member[]) {
       }
       if (sharedSkills.length > 0) {
         reasons.push(`Ortak alan: ${sharedSkills.slice(0, 2).join(", ")}`);
+      } else if (sharedEvents.length > 0) {
+        reasons.push(`Aynı etkinlik geçmişi: ${getEventLabel(sharedEvents[0])}`);
       } else if (sharedThemes.length > 0) {
         reasons.push(`Benzer hedefler: ${sharedThemes.join(", ")}`);
       }
@@ -486,7 +605,9 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
     }
 
     if (match.contact?.includes(`event:${config.eventSource}`)) {
-      setCheckInMessage(`${match.name} zaten 14 Temmuz ağına ekli. Kullanıcı adın: ${match.username}`);
+      setCheckInMessage(
+        `${match.name} zaten 14 Temmuz ağına ekli. Kullanıcı adın: ${match.username}`,
+      );
       return;
     }
 
@@ -571,9 +692,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
             </h1>
             {variant === "july14" && <NtwMascot />}
           </div>
-          <p className="mt-4 text-foreground/70 max-w-2xl text-base sm:text-lg">
-            {config.intro}
-          </p>
+          <p className="mt-4 text-foreground/70 max-w-2xl text-base sm:text-lg">{config.intro}</p>
         </section>
 
         {config.eventSource && (
@@ -746,7 +865,11 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
               <span>
                 Bilgilerimin notwork networking ağı içinde görünmesini, benimle etkinlik/topluluk
                 iletişimi için e-posta üzerinden iletişime geçilmesini ve{" "}
-                <a href="/kvkk" target="_blank" className="font-semibold text-primary-deep underline">
+                <a
+                  href="/kvkk"
+                  target="_blank"
+                  className="font-semibold text-primary-deep underline"
+                >
                   KVKK Aydınlatma Metni
                 </a>{" "}
                 ile{" "}
@@ -803,46 +926,46 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                 : ""
             }
           >
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <h2 className="text-sm sm:text-lg font-semibold text-foreground/80 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary blink" />
-              {config.countLabel} — {scopedMembers.length} kişi
-            </h2>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {config.eventSource && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    document.getElementById("notwork-community-map")?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "start",
-                    })
-                  }
-                  className="rounded-full border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-bold text-primary-deep transition hover:bg-primary hover:text-primary-foreground"
-                >
-                  var olan topluluğu görmek için tıkla
-                </button>
-              )}
-              <input
-                value={filter}
-                onChange={(event) => setFilter(event.target.value)}
-                placeholder="ara: isim, sıfat, yetenek"
-                className="px-3 py-2 rounded-full bg-card border border-border text-sm w-44 sm:w-64"
-              />
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <h2 className="text-sm sm:text-lg font-semibold text-foreground/80 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary blink" />
+                {config.countLabel} — {scopedMembers.length} kişi
+              </h2>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {config.eventSource && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      document.getElementById("notwork-community-map")?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      })
+                    }
+                    className="rounded-full border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-bold text-primary-deep transition hover:bg-primary hover:text-primary-foreground"
+                  >
+                    var olan topluluğu görmek için tıkla
+                  </button>
+                )}
+                <input
+                  value={filter}
+                  onChange={(event) => setFilter(event.target.value)}
+                  placeholder="ara: isim, sıfat, yetenek"
+                  className="px-3 py-2 rounded-full bg-card border border-border text-sm w-44 sm:w-64"
+                />
+              </div>
             </div>
-          </div>
-          <NetworkGraph
-            members={filtered}
-            loading={loading}
-            hint={config.graphHint}
-            emptyText={config.graphEmpty}
-            onSelectMember={setSelectedMember}
-          />
-          <RecommendationFinder
-            members={scopedMembers}
-            loading={loading}
-            onOpenMember={setSelectedMember}
-          />
+            <NetworkGraph
+              members={filtered}
+              loading={loading}
+              hint={config.graphHint}
+              emptyText={config.graphEmpty}
+              onSelectMember={setSelectedMember}
+            />
+            <RecommendationFinder
+              members={scopedMembers}
+              loading={loading}
+              onOpenMember={setSelectedMember}
+            />
           </div>
         </section>
 
@@ -858,8 +981,8 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                     Var olan topluluk haritası
                   </h2>
                   <p className="mt-2 max-w-2xl text-sm leading-relaxed text-foreground/60">
-                    Bu çerçeve genel notwork community ağını gösterir. 14 Temmuz’da kayıt olanlar
-                    bu büyük topluluğun içinde de yer alır.
+                    Bu çerçeve genel notwork community ağını gösterir. 14 Temmuz’da kayıt olanlar bu
+                    büyük topluluğun içinde de yer alır.
                   </p>
                 </div>
                 <div className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground/60">
@@ -910,6 +1033,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {visibleMembers.map((member) => {
               const contact = getMemberContact(member);
+              const badges = getMemberEventBadges(member);
               return (
                 <div key={member.id} className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-baseline justify-between gap-2">
@@ -925,6 +1049,18 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                   {member.username && (
                     <div className="mt-1 text-[11px] font-semibold text-foreground/45">
                       kullanıcı adı: {member.username}
+                    </div>
+                  )}
+                  {badges.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {badges.map((badge) => (
+                        <span
+                          key={badge.source}
+                          className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-primary-deep"
+                        >
+                          {badge.label}
+                        </span>
+                      ))}
                     </div>
                   )}
                   {member.skills.length > 0 && (
@@ -1089,12 +1225,7 @@ function NtwMascot() {
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <path
-          d="M91 80h17"
-          stroke="#b8fff5"
-          strokeWidth="6"
-          strokeLinecap="round"
-        />
+        <path d="M91 80h17" stroke="#b8fff5" strokeWidth="6" strokeLinecap="round" />
         <path
           d="M51 104c-10 5-15 14-11 23 4 10 18 11 25 3"
           fill="#74b7cf"
@@ -1123,7 +1254,16 @@ function NtwMascot() {
           strokeWidth="4"
           strokeLinecap="round"
         />
-        <rect x="59" y="103" width="45" height="20" rx="10" fill="#7fd3df" stroke="#173f68" strokeWidth="4" />
+        <rect
+          x="59"
+          y="103"
+          width="45"
+          height="20"
+          rx="10"
+          fill="#7fd3df"
+          stroke="#173f68"
+          strokeWidth="4"
+        />
         <text
           x="81"
           y="117"
@@ -1301,9 +1441,9 @@ function NetworkGraph({
   );
 
   const layout = useMemo(() => {
-    const cellWidth = 360;
-    const cellHeight = 330;
-    const maxColumns = width < 700 ? 2 : 3;
+    const cellWidth = width < 700 ? 340 : 330;
+    const cellHeight = width < 700 ? 320 : 300;
+    const maxColumns = width < 700 ? 2 : width < 980 ? 3 : 4;
     const columns = Math.max(1, Math.min(groupedMembers.length, maxColumns));
     const canvasWidth = Math.max(width, columns * cellWidth);
     const rows = Math.ceil(groupedMembers.length / columns);
@@ -1312,17 +1452,22 @@ function NetworkGraph({
       ...entry,
       centerX: (groupIndex % columns) * cellWidth + cellWidth / 2,
       centerY: Math.floor(groupIndex / columns) * cellHeight + cellHeight / 2 + 10,
-      radius: 128,
+      radius: 112,
     }));
     const nodes = clusters.flatMap((cluster) =>
       cluster.members.map((member, memberIndex) => {
         let ringIndex = memberIndex;
-        let ringCount = Math.min(6, cluster.members.length);
-        let orbit = 56;
-        if (memberIndex >= 6) {
-          ringIndex = memberIndex - 6;
-          ringCount = Math.max(1, cluster.members.length - 6);
-          orbit = 96;
+        let ringCount = Math.min(8, cluster.members.length);
+        let orbit = 52;
+        if (memberIndex >= 8) {
+          ringIndex = memberIndex - 8;
+          ringCount = Math.max(1, Math.min(12, cluster.members.length - 8));
+          orbit = 88;
+        }
+        if (memberIndex >= 20) {
+          ringIndex = memberIndex - 20;
+          ringCount = Math.max(1, cluster.members.length - 20);
+          orbit = 120;
         }
         const angle = (ringIndex / ringCount) * Math.PI * 2 - Math.PI / 2;
         return {
@@ -1526,6 +1671,7 @@ function MemberDetailModal({
 }) {
   const contact = getMemberContact(member);
   const recommendations = getRecommendations(member, members);
+  const badges = getMemberEventBadges(member);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1560,6 +1706,18 @@ function MemberDetailModal({
                 <p className="mt-2 text-sm font-semibold text-foreground/60">{member.title}</p>
                 {member.username && (
                   <p className="mt-1 text-xs font-bold text-primary-deep">@{member.username}</p>
+                )}
+                {badges.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {badges.map((badge) => (
+                      <span
+                        key={badge.source}
+                        className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-primary-deep"
+                      >
+                        {badge.label}
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
               <button
@@ -1653,9 +1811,7 @@ function MemberDetailModal({
                   >
                     <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                       <div>
-                        <div className="text-[10px] font-black text-primary-deep">
-                          #{index + 1}
-                        </div>
+                        <div className="text-[10px] font-black text-primary-deep">#{index + 1}</div>
                         <button
                           type="button"
                           onClick={() => onOpenMember(recommendation.member)}
