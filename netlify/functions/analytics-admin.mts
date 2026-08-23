@@ -1,71 +1,59 @@
-import { createHash, timingSafeEqual } from "node:crypto";
-import { getStore } from "@netlify/blobs";
 import type { Config, Context } from "@netlify/functions";
-
-const passwordHash = "bffc46786cfaa3b08499a75d77b037dff9a14f362ab183f72e2ea7bcce0454ee";
-
-type StoredEvent = {
-  id: string;
-  timestamp: string;
-  type: string;
-  path: string;
-  sessionId: string;
-  label: string;
-  target: string;
-  value: number;
-  referrer: string;
-  source: string;
-  campaign: string;
-  device: string;
-};
-
-function validPassword(password: unknown) {
-  if (typeof password !== "string") return false;
-  const actual = Buffer.from(createHash("sha256").update(password).digest("hex"));
-  const expected = Buffer.from(passwordHash);
-  return actual.length === expected.length && timingSafeEqual(actual, expected);
-}
+import {
+  getDailySummary,
+  getDateKeys,
+  getRawAnalyticsDays,
+  loadRecentEvents,
+  summarizeDay,
+  utcDateKey,
+  validAnalyticsPassword,
+} from "./_analytics-store.mjs";
 
 export default async (request: Request, _context: Context) => {
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
   try {
     const { password, days = 30 } = (await request.json()) as { password?: string; days?: number };
-    if (!validPassword(password)) return new Response("Yetkisiz erişim", { status: 401 });
+    if (!validAnalyticsPassword(password)) return new Response("Yetkisiz erişim", { status: 401 });
 
     const safeDays = Math.max(1, Math.min(90, Number(days) || 30));
-    const cutoff = Date.now() - safeDays * 86_400_000;
-    const store = getStore({ name: "site-analytics", consistency: "strong" });
-    const { blobs } = await store.list();
-    const recent = blobs
-      .map((blob) => {
-        const timestamp = Number(blob.key.split("/")[1]?.split("-")[0]);
-        return { ...blob, timestamp };
-      })
-      .filter((blob) => Number.isFinite(blob.timestamp) && blob.timestamp >= cutoff)
-      .sort((first, second) => first.timestamp - second.timestamp)
-      .slice(-5_000);
+    const requestedDates = getDateKeys(safeDays);
+    const today = utcDateKey();
+    const rawDays = new Set(await getRawAnalyticsDays());
+    const completedDates = requestedDates.filter((date) => date !== today);
+    const storedSummaries = await Promise.all(
+      completedDates.map(async (date) => ({ date, summary: await getDailySummary(date) })),
+    );
+    const summaries = storedSummaries.flatMap(({ summary }) => (summary ? [summary] : []));
+    const missingDays = storedSummaries
+      .filter(({ date, summary }) => rawDays.has(date) && !summary)
+      .map(({ date }) => date);
 
-    const events: StoredEvent[] = [];
-    let skipped = 0;
-    for (let index = 0; index < recent.length; index += 50) {
-      const batch = recent.slice(index, index + 50);
-      const rows = await Promise.all(
-        batch.map(async (blob) => {
-          try {
-            return await store.get(blob.key, { type: "json", consistency: "strong" });
-          } catch {
-            skipped += 1;
-            return null;
-          }
-        }),
-      );
-      events.push(...(rows.filter(Boolean) as StoredEvent[]));
-    }
+    if (rawDays.has(today)) summaries.push(await summarizeDay(today));
+    summaries.sort((first, second) => first.date.localeCompare(second.date));
 
-    events.sort((first, second) => second.timestamp.localeCompare(first.timestamp));
+    const recent = await loadRecentEvents(requestedDates);
+    const coverage = {
+      from: requestedDates.at(-1) || today,
+      to: requestedDates[0] || today,
+      requestedDays: safeDays,
+      activityDays: summaries.length + missingDays.length,
+      readyDays: summaries.length,
+      missingDays,
+      isComplete: missingDays.length === 0,
+      generatedAt: new Date().toISOString(),
+    };
+
     return Response.json(
-      { events, days: safeDays, truncated: recent.length >= 5_000, skipped },
+      {
+        events: recent.events,
+        summaries,
+        days: safeDays,
+        missingDays,
+        coverage,
+        truncated: recent.truncated,
+        skipped: recent.skipped + summaries.reduce((total, summary) => total + summary.skipped, 0),
+      },
       { headers: { "cache-control": "no-store, private" } },
     );
   } catch {

@@ -14,7 +14,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -58,6 +58,56 @@ type AnalyticsEvent = {
   source: string;
   campaign: string;
   device: string;
+};
+
+type AnalyticsDailySummary = {
+  version: 1;
+  date: string;
+  updatedAt: string;
+  eventCount: number;
+  skipped: number;
+  counts: Record<string, number>;
+  sessionIds: string[];
+  ticketClicksByEvent: {
+    july14: number;
+    august21: number;
+  };
+  pageTimeTotal: number;
+  pageTimeCount: number;
+  topPages: Record<string, number>;
+  topActions: Record<string, number>;
+  sources: Record<string, number>;
+  scrollDepth: Record<string, number>;
+  devices: Record<string, number>;
+  buttonActions: Record<string, number>;
+};
+
+type AnalyticsCoverage = {
+  from: string;
+  to: string;
+  requestedDays: number;
+  activityDays: number;
+  readyDays: number;
+  missingDays: string[];
+  isComplete: boolean;
+  generatedAt: string;
+};
+
+type AnalyticsAdminResponse = {
+  events: AnalyticsEvent[];
+  summaries: AnalyticsDailySummary[];
+  days: number;
+  missingDays: string[];
+  coverage: AnalyticsCoverage;
+  truncated: boolean;
+  skipped: number;
+};
+
+type BackfillProgress = {
+  running: boolean;
+  completed: number;
+  total: number;
+  failed: number;
 };
 
 type NetworkMember = {
@@ -157,6 +207,15 @@ function AdminPage() {
   const [password, setPassword] = useState("");
   const [days, setDays] = useState(30);
   const [events, setEvents] = useState<AnalyticsEvent[] | null>(null);
+  const [dailySummaries, setDailySummaries] = useState<AnalyticsDailySummary[]>([]);
+  const [analyticsCoverage, setAnalyticsCoverage] = useState<AnalyticsCoverage | null>(null);
+  const [missingAnalyticsDays, setMissingAnalyticsDays] = useState<string[]>([]);
+  const [backfillProgress, setBackfillProgress] = useState<BackfillProgress>({
+    running: false,
+    completed: 0,
+    total: 0,
+    failed: 0,
+  });
   const [members, setMembers] = useState<NetworkMember[]>([]);
   const [requests, setRequests] = useState<ChangeRequest[]>([]);
   const [startupApplications, setStartupApplications] = useState<StartupApplication[]>([]);
@@ -175,6 +234,8 @@ function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeAdminTab, setActiveAdminTab] = useState<AdminTab>("events");
+  const backfillRunningRef = useRef(false);
+  const selectedDaysRef = useRef(days);
 
   const loadNetwork = async (nextPassword = password) => {
     const response = await fetch("/api/networking/admin", {
@@ -286,20 +347,83 @@ function AdminPage() {
     setNetworkMessage("İşlem tamamlandı.");
   };
 
+  const applyAnalyticsData = (data: AnalyticsAdminResponse) => {
+    setEvents(Array.isArray(data.events) ? data.events : []);
+    setDailySummaries(Array.isArray(data.summaries) ? data.summaries : []);
+    setAnalyticsCoverage(data.coverage || null);
+    setMissingAnalyticsDays(Array.isArray(data.missingDays) ? data.missingDays : []);
+  };
+
+  const fetchAnalytics = async (nextDays: number) => {
+    const response = await fetch("/api/analytics/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password, days: nextDays }),
+    });
+    if (response.status === 401) throw new Error("Şifre yanlış.");
+    if (!response.ok) throw new Error("Rapor şu anda alınamadı.");
+    return (await response.json()) as AnalyticsAdminResponse;
+  };
+
+  const backfillAnalytics = (daysToPrepare: string[]) => {
+    if (!daysToPrepare.length || backfillRunningRef.current) return;
+    backfillRunningRef.current = true;
+    setBackfillProgress({ running: true, completed: 0, total: daysToPrepare.length, failed: 0 });
+
+    void (async () => {
+      let completed = 0;
+      let failed = 0;
+      let nextMissingDays: string[] = [];
+      try {
+        for (let index = 0; index < daysToPrepare.length; index += 2) {
+          const batch = daysToPrepare.slice(index, index + 2);
+          const results = await Promise.allSettled(
+            batch.map(async (day) => {
+              const response = await fetch("/api/analytics/rollup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password, day }),
+              });
+              if (!response.ok) throw new Error(await response.text());
+            }),
+          );
+          completed += batch.length;
+          failed += results.filter((result) => result.status === "rejected").length;
+          setBackfillProgress({
+            running: true,
+            completed,
+            total: daysToPrepare.length,
+            failed,
+          });
+        }
+
+        const refreshed = await fetchAnalytics(selectedDaysRef.current);
+        applyAnalyticsData(refreshed);
+        nextMissingDays = failed === 0 ? refreshed.missingDays : [];
+        if (failed > 0) {
+          setError(
+            `${failed} günlük geçmiş veri hazırlanamadı. Analiz sekmesindeki tekrar dene butonunu kullanabilirsin.`,
+          );
+        }
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "Geçmiş analiz hazırlanamadı.");
+      } finally {
+        backfillRunningRef.current = false;
+        setBackfillProgress((current) => ({ ...current, running: false }));
+        if (nextMissingDays.length) backfillAnalytics(nextMissingDays);
+      }
+    })();
+  };
+
   const loadReport = async (nextDays = days) => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/analytics/admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password, days: nextDays }),
-      });
-      if (response.status === 401) throw new Error("Şifre yanlış.");
-      if (!response.ok) throw new Error("Rapor şu anda alınamadı.");
-      const data = (await response.json()) as { events?: AnalyticsEvent[] };
-      setEvents(Array.isArray(data.events) ? data.events : []);
+      const data = await fetchAnalytics(nextDays);
+      applyAnalyticsData(data);
+      selectedDaysRef.current = nextDays;
       setDays(nextDays);
+      backfillAnalytics(data.missingDays);
       const auxiliaryLoads = await Promise.allSettled([
         loadNetwork(password),
         loadWordcloud(password),
@@ -319,7 +443,7 @@ function AdminPage() {
     }
   };
 
-  const report = useMemo(() => buildReport(events || []), [events]);
+  const report = useMemo(() => buildReport(events || [], dailySummaries), [events, dailySummaries]);
 
   if (events === null) {
     return (
@@ -395,6 +519,9 @@ function AdminPage() {
               type="button"
               onClick={() => {
                 setEvents(null);
+                setDailySummaries([]);
+                setAnalyticsCoverage(null);
+                setMissingAnalyticsDays([]);
                 setPassword("");
               }}
               className="rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold"
@@ -424,6 +551,12 @@ function AdminPage() {
             </button>
           ))}
         </nav>
+
+        {error ? (
+          <div className="mt-5 rounded-2xl border border-destructive/25 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive">
+            {error}
+          </div>
+        ) : null}
 
         <section
           className={`mt-6 rounded-[2rem] border border-primary/25 bg-primary/10 p-5 ${
@@ -484,6 +617,57 @@ function AdminPage() {
               <div className="font-black">{days} gün</div>
             </div>
           </div>
+          {analyticsCoverage ? (
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-primary/25 bg-background/75 p-4">
+              <div>
+                <div className="text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
+                  Veri kapsamı
+                </div>
+                <p className="mt-1 text-sm font-bold">
+                  {formatAnalyticsDate(analyticsCoverage.from)} –{" "}
+                  {formatAnalyticsDate(analyticsCoverage.to)}
+                </p>
+                <p className="mt-1 text-xs text-foreground/55">
+                  {backfillProgress.running
+                    ? `Geçmiş veriler hazırlanıyor: ${backfillProgress.completed}/${backfillProgress.total} gün`
+                    : missingAnalyticsDays.length
+                      ? `${missingAnalyticsDays.length} aktif gün henüz hazırlanmadı.`
+                      : `${analyticsCoverage.activityDays} aktif gün eksiksiz raporlanıyor.`}
+                </p>
+              </div>
+              {backfillProgress.running ? (
+                <div className="w-full max-w-xs">
+                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary transition-[width]"
+                      style={{
+                        width: `${Math.round(
+                          (backfillProgress.completed / Math.max(1, backfillProgress.total)) * 100,
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                  {backfillProgress.failed > 0 ? (
+                    <p className="mt-1 text-right text-xs text-destructive">
+                      {backfillProgress.failed} gün tekrar denenecek
+                    </p>
+                  ) : null}
+                </div>
+              ) : missingAnalyticsDays.length ? (
+                <button
+                  type="button"
+                  onClick={() => backfillAnalytics(missingAnalyticsDays)}
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground"
+                >
+                  <RefreshCcw size={14} /> geçmiş veriyi hazırla
+                </button>
+              ) : (
+                <span className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-3 py-2 text-xs font-black text-primary-deep">
+                  <Check size={14} /> eksiksiz
+                </span>
+              )}
+            </div>
+          ) : null}
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
             <Metric icon={Users} label="Oturum" value={report.sessions} />
             <Metric icon={Eye} label="Sayfa görüntüleme" value={report.pageViews} />
@@ -634,7 +818,7 @@ function AdminPage() {
             activeAdminTab === "analytics" ? "" : "hidden"
           }`}
         >
-          <ActionTable title="Buton ve CTA tıklamaları" events={report.buttonEvents} />
+          <ActionTable title="Son buton ve CTA tıklamaları" events={report.buttonEvents} />
           <ActionTable
             title="Son form ve networking aksiyonları"
             events={report.formAndNetworkEvents}
@@ -698,7 +882,7 @@ function AdminPage() {
             activeAdminTab === "analytics" ? "" : "hidden"
           }`}
         >
-          <div className="border-b border-border px-5 py-4 font-bold">Son aksiyonlar</div>
+          <div className="border-b border-border px-5 py-4 font-bold">Son 100 aksiyon</div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="bg-muted/60 text-xs text-foreground/50">
@@ -1720,27 +1904,20 @@ function ReportList({
   );
 }
 
-function buildReport(events: AnalyticsEvent[]) {
-  const count = (type: string) => events.filter((event) => event.type === type).length;
-  const sessions = new Set(
-    events.filter((event) => event.sessionId).map((event) => event.sessionId),
-  ).size;
+function buildReport(events: AnalyticsEvent[], summaries: AnalyticsDailySummary[]) {
+  const count = (type: string) =>
+    summaries.reduce((total, summary) => total + (summary.counts[type] || 0), 0);
+  const sessions = new Set(summaries.flatMap((summary) => summary.sessionIds)).size;
   const ticketClicks = count("ticket_click");
-  const ticketEvents = events.filter((event) => event.type === "ticket_click");
-  const ticketClicksByEvent = {
-    july14: ticketEvents.filter(
-      (event) =>
-        event.label.includes("14 Temmuz") ||
-        event.path.includes("14temmuz") ||
-        event.target.includes("notwork-bir-tur-network-eventi-28473"),
-    ).length,
-    august21: ticketEvents.filter(
-      (event) =>
-        event.label.includes("21 Ağustos") ||
-        event.target.includes("notwork-basarisizlik-hikayeleri-networking-club-29731"),
-    ).length,
-  };
-  const pageTimes = events.filter((event) => event.type === "page_time" && event.value > 0);
+  const ticketClicksByEvent = summaries.reduce(
+    (totals, summary) => ({
+      july14: totals.july14 + summary.ticketClicksByEvent.july14,
+      august21: totals.august21 + summary.ticketClicksByEvent.august21,
+    }),
+    { july14: 0, august21: 0 },
+  );
+  const pageTimeTotal = summaries.reduce((total, summary) => total + summary.pageTimeTotal, 0);
+  const pageTimeCount = summaries.reduce((total, summary) => total + summary.pageTimeCount, 0);
   const buttonEvents = events.filter((event) => ["click", "ticket_click"].includes(event.type));
   const formAndNetworkEvents = events.filter(
     (event) =>
@@ -1756,63 +1933,68 @@ function buildReport(events: AnalyticsEvent[]) {
     ticketClicksByEvent,
     conversion: sessions ? ((ticketClicks / sessions) * 100).toFixed(1) : "0.0",
     clicks: count("click") + ticketClicks,
-    averageTime: pageTimes.length
-      ? Math.round(pageTimes.reduce((total, event) => total + event.value, 0) / pageTimes.length)
-      : 0,
-    topPages: grouped(
-      events.filter((event) => event.type === "page_view"),
-      (event) => event.path,
-    ),
-    topActions: grouped(
-      events.filter((event) => ["click", "ticket_click", "form_submit"].includes(event.type)),
-      (event) => event.label || event.type,
-    ),
-    sources: grouped(
-      events.filter((event) => event.type === "session_start"),
-      (event) => event.source || event.referrer || "Doğrudan",
-    ),
-    scrollDepth: grouped(
-      events.filter((event) => event.type === "scroll_depth"),
-      (event) => `${event.value}%`,
-    ),
-    devices: grouped(
-      events.filter((event) => event.device),
-      (event) => event.device,
-    ).map(([label, value]) => ({ label, value })),
-    buttonActions: grouped(buttonEvents, (event) => event.label || event.target || "Buton").map(
+    averageTime: pageTimeCount ? Math.round(pageTimeTotal / pageTimeCount) : 0,
+    topPages: topRows(mergeSummaryRecords(summaries, "topPages")),
+    topActions: topRows(mergeSummaryRecords(summaries, "topActions")),
+    sources: topRows(mergeSummaryRecords(summaries, "sources")),
+    scrollDepth: topRows(mergeSummaryRecords(summaries, "scrollDepth")),
+    devices: topRows(mergeSummaryRecords(summaries, "devices")).map(([label, value]) => ({
+      label,
+      value,
+    })),
+    buttonActions: topRows(mergeSummaryRecords(summaries, "buttonActions")).map(
       ([label, value]) => ({ label: label.slice(0, 18), value }),
     ),
     buttonEvents,
     formAndNetworkEvents,
-    timeline: buildTimeline(events),
+    timeline: summaries
+      .slice()
+      .sort((first, second) => first.date.localeCompare(second.date))
+      .map((summary) => ({
+        day: formatAnalyticsDateShort(summary.date),
+        pageViews: summary.counts.page_view || 0,
+        sessions: summary.counts.session_start || 0,
+        ticketClicks: summary.counts.ticket_click || 0,
+        clicks: (summary.counts.click || 0) + (summary.counts.ticket_click || 0),
+      })),
   };
 }
 
-function grouped(
-  events: AnalyticsEvent[],
-  key: (event: AnalyticsEvent) => string,
-): Array<[string, number]> {
-  const values = new Map<string, number>();
-  for (const event of events) values.set(key(event), (values.get(key(event)) || 0) + 1);
-  return [...values.entries()].sort((first, second) => second[1] - first[1]).slice(0, 8);
+type SummaryRecordKey =
+  | "topPages"
+  | "topActions"
+  | "sources"
+  | "scrollDepth"
+  | "devices"
+  | "buttonActions";
+
+function mergeSummaryRecords(summaries: AnalyticsDailySummary[], key: SummaryRecordKey) {
+  const merged: Record<string, number> = {};
+  for (const summary of summaries) {
+    for (const [label, value] of Object.entries(summary[key])) {
+      merged[label] = (merged[label] || 0) + value;
+    }
+  }
+  return merged;
 }
 
-function buildTimeline(events: AnalyticsEvent[]) {
-  const days = new Map<
-    string,
-    { day: string; pageViews: number; sessions: number; ticketClicks: number; clicks: number }
-  >();
-  for (const event of events) {
-    const day = new Date(event.timestamp).toLocaleDateString("tr-TR", {
-      day: "2-digit",
-      month: "2-digit",
-    });
-    const row = days.get(day) || { day, pageViews: 0, sessions: 0, ticketClicks: 0, clicks: 0 };
-    if (event.type === "page_view") row.pageViews += 1;
-    if (event.type === "session_start") row.sessions += 1;
-    if (event.type === "ticket_click") row.ticketClicks += 1;
-    if (event.type === "click" || event.type === "ticket_click") row.clicks += 1;
-    days.set(day, row);
-  }
-  return [...days.values()].reverse();
+function topRows(values: Record<string, number>): Array<[string, number]> {
+  return Object.entries(values)
+    .sort((first, second) => second[1] - first[1])
+    .slice(0, 8);
+}
+
+function formatAnalyticsDate(value: string) {
+  return new Date(`${value}T12:00:00.000Z`).toLocaleDateString("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatAnalyticsDateShort(value: string) {
+  return new Date(`${value}T12:00:00.000Z`).toLocaleDateString("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+  });
 }
