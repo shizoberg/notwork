@@ -1,6 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import {
-  ArrowRight,
   BrainCircuit,
   Check,
   CheckCircle2,
@@ -9,7 +8,6 @@ import {
   Layers3,
   LockKeyhole,
   MessageCircleQuestion,
-  Network,
   ScanLine,
   ShieldCheck,
   Sparkles,
@@ -136,16 +134,9 @@ function MatchLabPage() {
                 </p>
 
                 <div className="mt-7 flex flex-col gap-2.5 sm:flex-row">
-                  <Link
-                    to="/linkler"
-                    className="group inline-flex items-center justify-center gap-2 rounded-full bg-[#8ee4e8] px-6 py-3.5 font-black text-[#071213] transition hover:-translate-y-0.5"
-                  >
-                    etkinlik sistemine gir
-                    <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-                  </Link>
                   <a
                     href="#algoritma"
-                    className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-6 py-3.5 font-black text-white transition hover:bg-white/10"
+                    className="inline-flex items-center justify-center rounded-full bg-[#8ee4e8] px-6 py-3.5 font-black text-[#071213] transition hover:-translate-y-0.5"
                   >
                     nasıl çalışıyor?
                   </a>
@@ -324,20 +315,13 @@ function MatchLabPage() {
               doğru bağlantı bazen bir kod uzağında.
             </h2>
             <p className="mx-auto mt-4 max-w-xl leading-relaxed text-primary-foreground/70">
-              Match Lab’i notwork etkinliklerinde deneyimle; kodunu al, grubunu bul ve sohbete
-              başla.
+              Match Lab, yalnızca etkinlik günü paylaşılan özel bağlantı ve QR kod üzerinden
+              katılımcılara açılır.
             </p>
-            <div className="mt-7 flex flex-col justify-center gap-2.5 sm:flex-row">
-              <Link
-                to="/linkler"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#071213] px-6 py-3.5 font-black text-white"
-              >
-                sisteme gir
-                <Network className="h-4 w-4" />
-              </Link>
+            <div className="mt-7 flex justify-center">
               <Link
                 to="/community"
-                className="inline-flex items-center justify-center rounded-full border border-primary-foreground/20 bg-white/25 px-6 py-3.5 font-black"
+                className="inline-flex items-center justify-center rounded-full bg-[#071213] px-6 py-3.5 font-black text-white"
               >
                 community’yi keşfet
               </Link>
