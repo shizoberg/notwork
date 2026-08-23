@@ -18,7 +18,7 @@ import { createSeo } from "@/lib/seo";
 export const Route = createFileRoute("/")({
   head: () =>
     createSeo({
-      title: "notwork Network Club - İzmir Başarısızlık Hikâyeleri",
+      title: "notwork | Network Club ve Başarısızlık Hikâyeleri",
       description:
         "notwork, İzmir’de başarısızlık hikâyelerinin anlatıldığı bir network club. Gerçek deneyimleri dinle, doğru dersleri çıkar ve yeni bağlantılar kur.",
       path: "/",

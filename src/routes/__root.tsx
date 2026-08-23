@@ -81,7 +81,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "notwork Network Club - İzmir Başarısızlık Hikâyeleri" },
+      { title: "notwork | Network Club ve Başarısızlık Hikâyeleri" },
       {
         name: "description",
         content:
@@ -98,7 +98,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:url", content: "https://notwork.me/" },
       { property: "og:locale", content: "tr_TR" },
       { property: "og:type", content: "website" },
-      { property: "og:title", content: "notwork Network Club - İzmir" },
+      { property: "og:title", content: "notwork | Network Club ve Başarısızlık Hikâyeleri" },
       {
         property: "og:description",
         content:
