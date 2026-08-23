@@ -1,6 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { CalendarDays, Camera, MessageCircle, Play, Sparkles, Upload, Users } from "lucide-react";
-import { InterviewReels } from "@/components/InterviewReels";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 
 export const Route = createFileRoute("/community")({
@@ -42,33 +41,9 @@ const galleryImages = galleryImageOrder.map((imageNumber) => ({
   alt: `notwork community etkinlik fotoğrafı ${imageNumber}`,
 }));
 
-const communityVideos = [
-  {
-    src: "/community/community-roportaj.mp4",
-    title: "community yorumu",
-  },
-  {
-    src: "/interviews/21-agustos-roportaj-1.mp4",
-    title: "21 Ağustos röportajı 01",
-  },
-  {
-    src: "/interviews/21-agustos-roportaj-2.mp4",
-    title: "21 Ağustos röportajı 02",
-  },
-  {
-    src: "/interviews/21-agustos-roportaj-3.mp4",
-    title: "21 Ağustos röportajı 03",
-  },
-  {
-    src: "/interviews/21-agustos-roportaj-4.mp4",
-    title: "21 Ağustos röportajı 04",
-  },
-];
-
 const communityStats = [
   { value: "500+", label: "notwork community üyesi" },
   { value: "20+", label: "notwork buluşması" },
-  { value: "27", label: "community fotoğrafı" },
 ];
 
 const calendar = [
@@ -79,13 +54,14 @@ const calendar = [
   },
   {
     date: "her etkinlikte",
-    title: "Match Lab + networking",
-    text: "Katılımcılar kendini tanıtır, sistem doğru bağlantıları önerir ve sahada tanışma başlar.",
+    title: "ntw.match.lab v1.0",
+    text: "AI destekli eşleştirme sistemi; niyet, ihtiyaç ve katkı alanlarını okuyup doğru üçlü grupları önerir.",
+    to: "/match-lab" as const,
   },
   {
     date: "sonrasında",
-    title: "Röportajlar ve yorumlar",
-    text: "Etkinlikten çıkan hisleri, yorumları ve kısa videoları community arşivinde topluyoruz.",
+    title: "Fotoğraflar ve yorumlar",
+    text: "Etkinlikten çıkan hisleri, yorumları ve kareleri community arşivinde topluyoruz.",
   },
 ];
 
@@ -100,8 +76,8 @@ function Community() {
               notwork <span className="text-primary-deep">community</span>
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground sm:mt-6 sm:text-xl">
-              notwork; fotoğraflar, röportajlar, WhatsApp topluluğu ve networking ağıyla etkinlik
-              sonrasında da yaşayan bir community.
+              Doğru networkleri sıkıcı olmayan şekilde kurmak, başarısızlığın ve hata yapmanın
+              hayatta ne kadar önemli olduğunu birlikte hatırlamak için buradayız.
             </p>
             <div className="mt-5 flex flex-col gap-2.5 sm:mt-7 sm:flex-row sm:gap-3">
               <a
@@ -130,7 +106,7 @@ function Community() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 rounded-[1.5rem] border border-border bg-card/75 p-2.5 shadow-[var(--shadow-card)] backdrop-blur sm:gap-3 sm:rounded-[2rem] sm:p-4 lg:grid-cols-1">
+          <div className="grid grid-cols-2 gap-2 rounded-[1.5rem] border border-border bg-card/75 p-2.5 shadow-[var(--shadow-card)] backdrop-blur sm:gap-3 sm:rounded-[2rem] sm:p-4 lg:grid-cols-1">
             {communityStats.map((stat) => (
               <div key={stat.label} className="rounded-2xl bg-background p-3 sm:rounded-3xl sm:p-5">
                 <div className="font-display text-2xl font-black tracking-[-0.05em] text-primary-deep sm:text-4xl">
@@ -165,26 +141,19 @@ function Community() {
               {galleryImages.map((image, index) => (
                 <figure
                   key={image.src}
-                  className={`h-44 w-72 shrink-0 overflow-hidden rounded-[1.4rem] border border-border bg-card shadow-sm sm:h-56 ${index % 6 === 0 ? "sm:w-[28rem]" : "sm:w-80"}`}
+                  className="aspect-[4/5] w-44 shrink-0 overflow-hidden rounded-[1.4rem] border border-border bg-card shadow-sm sm:w-56"
                 >
                   <img
                     src={image.src}
                     alt={image.alt}
                     loading="lazy"
-                    className="h-full w-full object-cover object-center transition duration-500 hover:scale-105"
+                    className="h-full w-full object-contain object-center transition duration-500 hover:scale-105"
                   />
                 </figure>
               ))}
             </div>
           </div>
         </section>
-
-        <InterviewReels
-          title="community röportajları"
-          eyebrow="etkinlik sonrası"
-          description="Kısa yorumlar sessiz döner; tıklayınca videoyu büyütüp sesli izleyebilirsin."
-          videos={communityVideos}
-        />
 
         <section className="mx-auto grid max-w-6xl gap-5 px-5 pt-14 sm:pt-20 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-[2rem] border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:p-8">
@@ -198,15 +167,13 @@ function Community() {
               Yeni notwork geceleri, özel networking anları ve community duyuruları önce WhatsApp
               topluluğunda paylaşılır.
             </p>
-            <a
-              href={whatsappCommunityUrl}
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              to="/etkinlikler"
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 font-black text-primary-foreground"
             >
-              Duyuruları takip et
+              Takvimi görüntüle
               <Sparkles className="h-4 w-4" />
-            </a>
+            </Link>
           </div>
 
           <div className="grid gap-3">
@@ -222,6 +189,14 @@ function Community() {
                   {item.title}
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+                {"to" in item && (
+                  <Link
+                    to={item.to}
+                    className="mt-4 inline-flex rounded-full border border-primary/30 px-4 py-2 text-sm font-black hover:bg-primary/10"
+                  >
+                    sistemi incele
+                  </Link>
+                )}
               </article>
             ))}
           </div>

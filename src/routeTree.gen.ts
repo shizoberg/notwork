@@ -15,6 +15,7 @@ import { Route as SponsorRouteImport } from './routes/sponsor'
 import { Route as NotworkNedirRouteImport } from './routes/notwork-nedir'
 import { Route as NetworkingRouteImport } from './routes/networking'
 import { Route as NetworkStartupRouteImport } from './routes/network-startup'
+import { Route as MatchLabRouteImport } from './routes/match-lab'
 import { Route as LinklerRouteImport } from './routes/linkler'
 import { Route as LegacyRouteImport } from './routes/legacy'
 import { Route as KvkkRouteImport } from './routes/kvkk'
@@ -60,6 +61,11 @@ const NetworkingRoute = NetworkingRouteImport.update({
 const NetworkStartupRoute = NetworkStartupRouteImport.update({
   id: '/network-startup',
   path: '/network-startup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatchLabRoute = MatchLabRouteImport.update({
+  id: '/match-lab',
+  path: '/match-lab',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LinklerRoute = LinklerRouteImport.update({
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
+  '/match-lab': typeof MatchLabRoute
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/notwork-nedir': typeof NotworkNedirRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
+  '/match-lab': typeof MatchLabRoute
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/notwork-nedir': typeof NotworkNedirRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
+  '/match-lab': typeof MatchLabRoute
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/notwork-nedir': typeof NotworkNedirRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/kvkk'
     | '/legacy'
     | '/linkler'
+    | '/match-lab'
     | '/network-startup'
     | '/networking'
     | '/notwork-nedir'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/kvkk'
     | '/legacy'
     | '/linkler'
+    | '/match-lab'
     | '/network-startup'
     | '/networking'
     | '/notwork-nedir'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/kvkk'
     | '/legacy'
     | '/linkler'
+    | '/match-lab'
     | '/network-startup'
     | '/networking'
     | '/notwork-nedir'
@@ -304,6 +316,7 @@ export interface RootRouteChildren {
   KvkkRoute: typeof KvkkRoute
   LegacyRoute: typeof LegacyRoute
   LinklerRoute: typeof LinklerRoute
+  MatchLabRoute: typeof MatchLabRoute
   NetworkStartupRoute: typeof NetworkStartupRoute
   NetworkingRoute: typeof NetworkingRoute
   NotworkNedirRoute: typeof NotworkNedirRoute
@@ -358,6 +371,13 @@ declare module '@tanstack/react-router' {
       path: '/network-startup'
       fullPath: '/network-startup'
       preLoaderRoute: typeof NetworkStartupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/match-lab': {
+      id: '/match-lab'
+      path: '/match-lab'
+      fullPath: '/match-lab'
+      preLoaderRoute: typeof MatchLabRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/linkler': {
@@ -488,6 +508,7 @@ const rootRouteChildren: RootRouteChildren = {
   KvkkRoute: KvkkRoute,
   LegacyRoute: LegacyRoute,
   LinklerRoute: LinklerRoute,
+  MatchLabRoute: MatchLabRoute,
   NetworkStartupRoute: NetworkStartupRoute,
   NetworkingRoute: NetworkingRoute,
   NotworkNedirRoute: NotworkNedirRoute,
