@@ -56,7 +56,21 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
             Community
           </Link>
         </nav>
-        <MobileSiteMenu />
+        <div className="ml-auto flex items-center gap-0.5 sm:hidden">
+          <a
+            href="/#katilimci-yorumlari"
+            className="rounded-lg px-1.5 py-2 text-[10px] font-medium text-foreground transition hover:bg-muted"
+          >
+            Etkinlikler
+          </a>
+          <Link
+            to="/networking"
+            className="rounded-lg px-1.5 py-2 text-[10px] font-medium text-foreground transition hover:bg-muted"
+          >
+            Network Ağı
+          </Link>
+          <MobileSiteMenu />
+        </div>
       </div>
     </header>
   );
@@ -100,7 +114,7 @@ function MobileSiteMenu() {
           type="button"
           aria-label="Menüyü kapat"
           onClick={() => setOpen(false)}
-          className="fixed inset-0 z-[45] cursor-default bg-[#071112]/12 backdrop-blur-[22px] animate-in fade-in duration-200 sm:hidden"
+          className="fixed inset-0 z-[45] cursor-default bg-[#071112]/30 backdrop-blur-[22px] animate-in fade-in duration-200 sm:hidden"
         />
       ) : null}
       <DropdownMenuTrigger asChild>
