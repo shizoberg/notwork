@@ -38,24 +38,34 @@ export default async (request: Request, _context: Context) => {
     const store = getStore({ name: "site-analytics", consistency: "strong" });
     const { blobs } = await store.list();
     const recent = blobs
-      .filter((blob) => {
+      .map((blob) => {
         const timestamp = Number(blob.key.split("/")[1]?.split("-")[0]);
-        return Number.isFinite(timestamp) && timestamp >= cutoff;
+        return { ...blob, timestamp };
       })
+      .filter((blob) => Number.isFinite(blob.timestamp) && blob.timestamp >= cutoff)
+      .sort((first, second) => first.timestamp - second.timestamp)
       .slice(-5_000);
 
     const events: StoredEvent[] = [];
+    let skipped = 0;
     for (let index = 0; index < recent.length; index += 50) {
       const batch = recent.slice(index, index + 50);
       const rows = await Promise.all(
-        batch.map((blob) => store.get(blob.key, { type: "json", consistency: "strong" })),
+        batch.map(async (blob) => {
+          try {
+            return await store.get(blob.key, { type: "json", consistency: "strong" });
+          } catch {
+            skipped += 1;
+            return null;
+          }
+        }),
       );
       events.push(...(rows.filter(Boolean) as StoredEvent[]));
     }
 
     events.sort((first, second) => second.timestamp.localeCompare(first.timestamp));
     return Response.json(
-      { events, days: safeDays, truncated: recent.length >= 5_000 },
+      { events, days: safeDays, truncated: recent.length >= 5_000, skipped },
       { headers: { "cache-control": "no-store, private" } },
     );
   } catch {

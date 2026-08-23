@@ -297,15 +297,21 @@ function AdminPage() {
       });
       if (response.status === 401) throw new Error("Şifre yanlış.");
       if (!response.ok) throw new Error("Rapor şu anda alınamadı.");
-      const data = (await response.json()) as { events: AnalyticsEvent[] };
-      setEvents(data.events);
+      const data = (await response.json()) as { events?: AnalyticsEvent[] };
+      setEvents(Array.isArray(data.events) ? data.events : []);
       setDays(nextDays);
-      await Promise.all([
+      const auxiliaryLoads = await Promise.allSettled([
         loadNetwork(password),
         loadWordcloud(password),
         loadEventNetwork(password),
         loadStartupApplications(password),
       ]);
+      const failedLoads = auxiliaryLoads.filter((result) => result.status === "rejected").length;
+      if (failedLoads > 0) {
+        setError(
+          `Analiz yüklendi; ${failedLoads} ek admin modülü geçici olarak yüklenemedi. Sekmelerden tekrar deneyebilirsin.`,
+        );
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Rapor alınamadı.");
     } finally {
