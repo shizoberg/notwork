@@ -46,6 +46,7 @@ export default async (request: Request, _context: Context) => {
 
     return Response.json(
       {
+        schemaVersion: 2,
         events: recent.events,
         summaries,
         days: safeDays,
@@ -54,7 +55,12 @@ export default async (request: Request, _context: Context) => {
         truncated: recent.truncated,
         skipped: recent.skipped + summaries.reduce((total, summary) => total + summary.skipped, 0),
       },
-      { headers: { "cache-control": "no-store, private" } },
+      {
+        headers: {
+          "cache-control": "no-store, private",
+          "x-analytics-schema": "2",
+        },
+      },
     );
   } catch {
     return new Response("Rapor alınamadı", { status: 500 });

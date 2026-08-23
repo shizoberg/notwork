@@ -94,6 +94,7 @@ type AnalyticsCoverage = {
 };
 
 type AnalyticsAdminResponse = {
+  schemaVersion: 2;
   events: AnalyticsEvent[];
   summaries: AnalyticsDailySummary[];
   days: number;
@@ -362,7 +363,13 @@ function AdminPage() {
     });
     if (response.status === 401) throw new Error("Şifre yanlış.");
     if (!response.ok) throw new Error("Rapor şu anda alınamadı.");
-    return (await response.json()) as AnalyticsAdminResponse;
+    const data = (await response.json()) as Partial<AnalyticsAdminResponse>;
+    if (data.schemaVersion !== 2 || !Array.isArray(data.summaries) || !data.coverage) {
+      throw new Error(
+        "Analytics servisi eski sürümde çalışıyor. Son Netlify deploy'unu kontrol edip tekrar dene.",
+      );
+    }
+    return data as AnalyticsAdminResponse;
   };
 
   const backfillAnalytics = (daysToPrepare: string[]) => {
@@ -443,7 +450,10 @@ function AdminPage() {
     }
   };
 
-  const report = useMemo(() => buildReport(events || [], dailySummaries), [events, dailySummaries]);
+  const report = useMemo(
+    () => buildReport(events || [], dailySummaries, days),
+    [events, dailySummaries, days],
+  );
 
   if (events === null) {
     return (
@@ -718,7 +728,13 @@ function AdminPage() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="day" tickLine={false} axisLine={false} fontSize={11} />
+                <XAxis
+                  dataKey="day"
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={11}
+                  minTickGap={28}
+                />
                 <YAxis tickLine={false} axisLine={false} fontSize={11} />
                 <Tooltip contentStyle={{ borderRadius: 14, borderColor: "hsl(var(--border))" }} />
                 <Area
@@ -1904,7 +1920,11 @@ function ReportList({
   );
 }
 
-function buildReport(events: AnalyticsEvent[], summaries: AnalyticsDailySummary[]) {
+function buildReport(
+  events: AnalyticsEvent[],
+  summaries: AnalyticsDailySummary[],
+  requestedDays: number,
+) {
   const count = (type: string) =>
     summaries.reduce((total, summary) => total + (summary.counts[type] || 0), 0);
   const sessions = new Set(summaries.flatMap((summary) => summary.sessionIds)).size;
@@ -1947,17 +1967,31 @@ function buildReport(events: AnalyticsEvent[], summaries: AnalyticsDailySummary[
     ),
     buttonEvents,
     formAndNetworkEvents,
-    timeline: summaries
-      .slice()
-      .sort((first, second) => first.date.localeCompare(second.date))
-      .map((summary) => ({
-        day: formatAnalyticsDateShort(summary.date),
-        pageViews: summary.counts.page_view || 0,
-        sessions: summary.counts.session_start || 0,
-        ticketClicks: summary.counts.ticket_click || 0,
-        clicks: (summary.counts.click || 0) + (summary.counts.ticket_click || 0),
-      })),
+    timeline: buildAnalyticsTimeline(summaries, requestedDays),
   };
+}
+
+function buildAnalyticsTimeline(summaries: AnalyticsDailySummary[], requestedDays: number) {
+  const summariesByDate = new Map(summaries.map((summary) => [summary.date, summary]));
+  const today = new Date();
+  const safeDays = Math.max(1, Math.min(90, requestedDays));
+
+  return Array.from({ length: safeDays }, (_, index) => {
+    const offset = safeDays - index - 1;
+    const date = new Date(
+      Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - offset),
+    );
+    const dateKey = date.toISOString().slice(0, 10);
+    const summary = summariesByDate.get(dateKey);
+
+    return {
+      day: formatAnalyticsDateShort(dateKey),
+      pageViews: summary?.counts.page_view || 0,
+      sessions: summary?.counts.session_start || 0,
+      ticketClicks: summary?.counts.ticket_click || 0,
+      clicks: (summary?.counts.click || 0) + (summary?.counts.ticket_click || 0),
+    };
+  });
 }
 
 type SummaryRecordKey =
