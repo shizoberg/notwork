@@ -1,6 +1,26 @@
 import { Link } from "@tanstack/react-router";
-import { Instagram, Youtube } from "lucide-react";
+import {
+  ArrowUpRight,
+  CalendarDays,
+  Camera,
+  Handshake,
+  Instagram,
+  Menu,
+  Presentation,
+  Rocket,
+  Sparkles,
+  UsersRound,
+  Youtube,
+} from "lucide-react";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { COOKIE_CONSENT_OPEN_EVENT } from "@/lib/cookie-consent";
 
 type SiteNavVariant = "default" | "event" | "eventDark";
@@ -15,42 +35,186 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
           <span className="inline-block w-2.5 h-2.5 rounded-full bg-primary" />
           <span>notwork</span>
         </Link>
-        <nav className="flex items-center gap-0.5 sm:gap-2 text-[11px] sm:text-sm font-medium">
-          <Link
-            to="/notwork-nedir"
-            className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline"
-          >
+        <nav className="hidden items-center gap-2 text-sm font-medium sm:flex">
+          <Link to="/notwork-nedir" className="rounded-lg px-3 py-2 hover:bg-muted">
             Nedir?
           </Link>
-          <a href="/#galeri" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">
+          <a href="/#galeri" className="rounded-lg px-3 py-2 hover:bg-muted">
             Galeri
           </a>
-          <Link to="/etkinlikler" className="px-3 py-2 rounded-lg hover:bg-muted hidden sm:inline">
+          <Link to="/etkinlikler" className="rounded-lg px-3 py-2 hover:bg-muted">
             Etkinlikler
           </Link>
-          <Link to="/networking" className="px-1.5 sm:px-3 py-2 rounded-lg hover:bg-muted">
-            <span className="sm:hidden">Networking Ağı</span>
-            <span className="hidden sm:inline">Networking</span>
+          <Link to="/networking" className="rounded-lg px-3 py-2 hover:bg-muted">
+            Networking
           </Link>
-          <Link to="/sponsor" className="px-1.5 sm:px-3 py-2 rounded-lg hover:bg-muted">
+          <Link to="/sponsor" className="rounded-lg px-3 py-2 hover:bg-muted">
             Sponsor
           </Link>
-          <a
-            href="/#katilimci-yorumlari"
-            className="px-1.5 sm:hidden py-2 rounded-lg hover:bg-muted"
-          >
-            Etkinlikler
-          </a>
-          <Link
-            to="/community"
-            className="hidden px-1.5 py-2 rounded-lg hover:bg-muted sm:inline sm:px-3"
-          >
-            <span className="sm:hidden">Sunum Yap</span>
-            <span className="hidden sm:inline">Community</span>
+          <Link to="/community" className="rounded-lg px-3 py-2 hover:bg-muted">
+            Community
           </Link>
         </nav>
+        <MobileSiteMenu />
       </div>
     </header>
+  );
+}
+
+const mobilePrimaryLinks = [
+  {
+    to: "/notwork-nedir",
+    label: "notwork nedir?",
+    description: "Felsefeyi ve event akışını keşfet.",
+    icon: Sparkles,
+  },
+  {
+    href: "/#katilimci-yorumlari",
+    label: "Etkinlikler",
+    description: "Geçmiş geceler ve katılımcı yorumları.",
+    icon: CalendarDays,
+  },
+  {
+    to: "/networking",
+    label: "Networking ağı",
+    description: "Topluluktaki insanları ve bağlantıları gör.",
+    icon: Handshake,
+  },
+] as const;
+
+const mobileSecondaryLinks = [
+  { href: "/#galeri", label: "Galeri", icon: Camera },
+  { to: "/sponsor", label: "Sponsor", icon: Sparkles },
+  { to: "/sunum-yukle", label: "Sunum yap", icon: Presentation },
+  { to: "/startup", label: "Startup", icon: Rocket },
+] as const;
+
+function MobileSiteMenu() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Site menüsünü aç"
+          className="group inline-flex h-11 items-center gap-2 rounded-full border border-primary/35 bg-card/90 px-3 text-foreground shadow-[0_10px_30px_rgba(19,55,59,0.08)] outline-none transition hover:border-primary hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary sm:hidden"
+        >
+          <span className="text-[11px] font-black uppercase tracking-[0.16em]">Menü</span>
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground transition group-data-[state=open]:rotate-90">
+            <Menu size={16} strokeWidth={2.4} />
+          </span>
+        </button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent
+        align="end"
+        sideOffset={10}
+        className="w-[calc(100vw-1.5rem)] max-w-[370px] rounded-[28px] border-border/70 bg-background/95 p-2.5 shadow-[0_24px_80px_rgba(15,45,49,0.2)] backdrop-blur-2xl sm:hidden"
+      >
+        <div className="rounded-[22px] bg-primary/10 px-4 py-3.5">
+          <DropdownMenuLabel className="p-0 text-[10px] font-black uppercase tracking-[0.22em] text-primary-deep">
+            notwork’ü keşfet
+          </DropdownMenuLabel>
+          <div className="mt-1 text-sm font-medium leading-snug text-muted-foreground">
+            Hikâyelerden doğru bağlantılara.
+          </div>
+        </div>
+
+        <div className="mt-2 grid gap-1">
+          {mobilePrimaryLinks.map((item) => {
+            const Icon = item.icon;
+            const content = (
+              <>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground">
+                  <Icon size={19} strokeWidth={2} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-black text-foreground">{item.label}</span>
+                  <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
+                    {item.description}
+                  </span>
+                </span>
+                <ArrowUpRight
+                  size={16}
+                  className="shrink-0 text-muted-foreground transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary-deep"
+                />
+              </>
+            );
+
+            return (
+              <DropdownMenuItem
+                key={item.label}
+                asChild
+                className="rounded-2xl p-0 focus:bg-primary/8"
+              >
+                {"to" in item ? (
+                  <Link
+                    to={item.to}
+                    className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 outline-none"
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <a
+                    href={item.href}
+                    className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 outline-none"
+                  >
+                    {content}
+                  </a>
+                )}
+              </DropdownMenuItem>
+            );
+          })}
+        </div>
+
+        <DropdownMenuSeparator className="my-2 bg-border/70" />
+
+        <DropdownMenuItem asChild className="rounded-[20px] p-0 focus:bg-primary/10">
+          <Link
+            to="/community"
+            className="group flex items-center gap-3 rounded-[20px] bg-foreground px-4 py-3.5 text-background outline-none transition hover:bg-primary-deep"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-background/12">
+              <UsersRound size={20} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-black">Community</span>
+              <span className="mt-0.5 block text-[11px] text-background/65">
+                Fotoğraflar, takvim ve WhatsApp topluluğu.
+              </span>
+            </span>
+            <ArrowUpRight size={17} className="shrink-0" />
+          </Link>
+        </DropdownMenuItem>
+
+        <div className="mt-2 grid grid-cols-2 gap-1.5">
+          {mobileSecondaryLinks.map((item) => {
+            const Icon = item.icon;
+            const className =
+              "flex min-h-11 items-center gap-2 rounded-2xl border border-border/70 bg-card px-3 py-2.5 text-xs font-bold text-foreground outline-none transition hover:border-primary hover:bg-primary/8";
+
+            return (
+              <DropdownMenuItem
+                key={item.label}
+                asChild
+                className="rounded-2xl p-0 focus:bg-transparent"
+              >
+                {"to" in item ? (
+                  <Link to={item.to} className={className}>
+                    <Icon size={16} className="text-primary-deep" />
+                    {item.label}
+                  </Link>
+                ) : (
+                  <a href={item.href} className={className}>
+                    <Icon size={16} className="text-primary-deep" />
+                    {item.label}
+                  </a>
+                )}
+              </DropdownMenuItem>
+            );
+          })}
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
