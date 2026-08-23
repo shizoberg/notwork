@@ -33,7 +33,7 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const communityGalleryImageOrder = [27, 26, 25, 24, 23, 21, 20, 19, 2, 3, 8, 14, 13, 7, 9, 12, 15];
+const communityGalleryImageOrder = [25, 24, 23, 21, 20, 19, 2, 3, 27, 26, 8, 14, 13, 7, 9, 12, 15];
 
 const gallery = [
   ...communityGalleryImageOrder.slice(0, 8).map((imageNumber) => `/community/${imageNumber}.jpg`),
@@ -633,8 +633,8 @@ function EventReviewsFlow() {
             return (
               <article
                 key={review.id}
-                className={`flex w-[82vw] max-w-sm shrink-0 snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition-all sm:w-[360px] ${
-                  isExpanded ? "h-auto" : "h-[350px] sm:h-[460px]"
+                className={`flex w-[82vw] max-w-[340px] shrink-0 snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition-all sm:w-[340px] ${
+                  isExpanded ? "h-auto" : "h-[360px] sm:h-[440px]"
                 }`}
               >
                 {review.photoDataUrl && (
@@ -642,21 +642,21 @@ function EventReviewsFlow() {
                     src={review.photoDataUrl}
                     alt={`${review.eventTitle} yorumu`}
                     loading="lazy"
-                    className="h-28 w-full shrink-0 object-cover object-center sm:h-44"
+                    className="h-48 w-full shrink-0 object-cover object-center sm:h-64"
                   />
                 )}
-                <div className="flex flex-1 flex-col p-3.5 sm:p-5">
+                <div className="flex flex-1 flex-col p-3 sm:p-4">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="text-base text-primary-deep sm:text-lg">
+                    <div className="text-sm text-primary-deep sm:text-base">
                       {renderEventStars(review.rating)}
                     </div>
-                    <div className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-black text-primary-deep">
+                    <div className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-black text-primary-deep">
                       {event?.date || review.eventTitle}
                     </div>
                   </div>
                   <p
-                    className={`mt-2 text-sm leading-relaxed text-foreground/75 sm:mt-4 sm:text-base ${
-                      isExpanded ? "" : "line-clamp-3 sm:line-clamp-5"
+                    className={`mt-2 text-xs leading-relaxed text-foreground/75 sm:text-sm ${
+                      isExpanded ? "" : "line-clamp-2 sm:line-clamp-3"
                     }`}
                   >
                     “{review.comment}”
@@ -670,16 +670,16 @@ function EventReviewsFlow() {
                           [review.id]: !current[review.id],
                         }))
                       }
-                      className="mt-3 w-fit text-sm font-black text-primary-deep hover:underline"
+                      className="mt-2 w-fit text-xs font-black text-primary-deep hover:underline"
                     >
                       {isExpanded ? "Daha az göster" : "Devamını oku"}
                     </button>
                   )}
-                  <div className="mt-auto border-t border-border pt-3 sm:pt-4">
-                    <div className="text-xs font-bold uppercase tracking-[0.18em] text-foreground/45">
+                  <div className="mt-auto border-t border-border pt-2.5">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/45">
                       {review.name || "notwork katılımcısı"}
                     </div>
-                    <div className="mt-1 text-sm font-semibold text-foreground">
+                    <div className="mt-0.5 text-xs font-semibold text-foreground">
                       {event?.title || review.eventTitle}
                     </div>
                   </div>
