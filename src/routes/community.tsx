@@ -35,9 +35,13 @@ export const Route = createFileRoute("/community")({
 
 const whatsappCommunityUrl = "https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE";
 
-const galleryImages = Array.from({ length: 27 }, (_, index) => ({
-  src: `/community/${index + 1}.jpg`,
-  alt: `notwork community etkinlik fotoğrafı ${index + 1}`,
+const galleryImageOrder = [
+  2, 3, 6, 8, 17, 18, 19, 20, 25, 26, 27, 24, 23, 14, 21, 13, 16, 7, 9, 11, 12, 1, 10, 15, 22, 4, 5,
+];
+
+const galleryImages = galleryImageOrder.map((imageNumber) => ({
+  src: `/community/${imageNumber}.jpg`,
+  alt: `notwork community etkinlik fotoğrafı ${imageNumber}`,
 }));
 
 const communityVideos = [
@@ -64,7 +68,7 @@ const communityVideos = [
 ];
 
 const communityStats = [
-  { value: "126+", label: "dijital ağ üyesi" },
+  { value: "500+", label: "notwork community üyesi" },
   { value: "20+", label: "notwork buluşması" },
   { value: "27", label: "community fotoğrafı" },
 ];
@@ -94,11 +98,7 @@ function Community() {
       <main className="flex-1 overflow-hidden">
         <section className="mx-auto grid max-w-6xl gap-5 px-5 pt-7 sm:gap-8 sm:pt-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-primary-deep sm:px-4 sm:py-2 sm:text-xs">
-              <span className="h-2 w-2 rounded-full bg-primary" />
-              community hub
-            </div>
-            <h1 className="mt-4 font-brand text-[3.1rem] leading-[0.82] tracking-[-0.09em] sm:mt-5 sm:text-7xl lg:text-8xl">
+            <h1 className="font-brand text-[3rem] leading-[0.98] tracking-[-0.035em] sm:text-7xl sm:tracking-[-0.045em] lg:text-8xl">
               notwork <span className="text-primary-deep">community</span>
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground sm:mt-6 sm:text-xl">
@@ -154,7 +154,7 @@ function Community() {
                 fotoğraf galerisi
               </div>
               <h2 className="mt-2 font-display text-3xl font-black tracking-[-0.04em] sm:text-5xl">
-                odadaki enerji burada
+                odadaki enerji, yüzler ve hikâyeler
               </h2>
             </div>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
@@ -162,17 +162,17 @@ function Community() {
               notwork yakınlığı.
             </p>
           </div>
-          <div className="grid auto-rows-[104px] grid-cols-2 gap-2.5 sm:auto-rows-[170px] sm:grid-cols-4 sm:gap-3 lg:grid-cols-6">
+          <div className="grid auto-rows-[132px] grid-cols-2 gap-2.5 sm:auto-rows-[170px] sm:grid-cols-4 sm:gap-3 lg:grid-cols-6">
             {galleryImages.slice(0, 18).map((image, index) => (
               <figure
                 key={image.src}
-                className={`overflow-hidden rounded-[1.4rem] border border-border bg-card shadow-sm ${index === 0 || index === 7 ? "col-span-2 row-span-2" : ""}`}
+                className={`overflow-hidden rounded-[1.4rem] border border-border bg-card shadow-sm ${index === 0 || index === 7 ? "sm:col-span-2 sm:row-span-2" : ""}`}
               >
                 <img
                   src={image.src}
                   alt={image.alt}
                   loading="lazy"
-                  className="h-full w-full object-cover transition duration-500 hover:scale-105"
+                  className="h-full w-full object-cover object-[center_35%] transition duration-500 hover:scale-105"
                 />
               </figure>
             ))}
@@ -187,14 +187,14 @@ function Community() {
         />
 
         <section className="mx-auto grid max-w-6xl gap-5 px-5 pt-14 sm:pt-20 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-[2rem] border border-border bg-card p-6 shadow-[var(--shadow-card)] sm:p-8">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary-deep">
-              <CalendarDays className="h-7 w-7" />
+          <div className="rounded-[2rem] border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:p-8">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/15 text-primary-deep sm:h-14 sm:w-14">
+              <CalendarDays className="h-6 w-6 sm:h-7 sm:w-7" />
             </div>
-            <h2 className="mt-5 font-display text-3xl font-black tracking-[-0.04em] sm:text-5xl">
+            <h2 className="mt-4 font-display text-3xl font-black tracking-[-0.04em] sm:mt-5 sm:text-5xl">
               etkinlik takvimi
             </h2>
-            <p className="mt-4 text-muted-foreground">
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
               Yeni notwork geceleri, özel networking anları ve community duyuruları önce WhatsApp
               topluluğunda paylaşılır.
             </p>
@@ -213,12 +213,14 @@ function Community() {
             {calendar.map((item) => (
               <article
                 key={item.title}
-                className="rounded-[1.6rem] border border-border bg-card p-5"
+                className="rounded-[1.6rem] border border-border bg-card p-4 sm:p-5"
               >
                 <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
                   {item.date}
                 </div>
-                <h3 className="mt-2 text-2xl font-black tracking-[-0.03em]">{item.title}</h3>
+                <h3 className="mt-2 text-xl font-black tracking-[-0.03em] sm:text-2xl">
+                  {item.title}
+                </h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
               </article>
             ))}
@@ -278,10 +280,18 @@ function Community() {
                   >
                     geçmiş etkinlikler
                   </Link>
+                  <a
+                    href={whatsappCommunityUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-full bg-primary px-5 py-3 text-center font-black text-primary-foreground"
+                  >
+                    WhatsApp community
+                  </a>
                 </div>
               </div>
               <div className="grid max-h-[360px] grid-cols-4 gap-2 overflow-hidden bg-primary/10 p-3 lg:grid-cols-2">
-                {galleryImages.slice(18, 26).map((image) => (
+                {galleryImages.slice(0, 8).map((image) => (
                   <img
                     key={image.src}
                     src={image.src}
