@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ArrowUpRight,
   CalendarDays,
@@ -106,140 +107,145 @@ const mobileSecondaryLinks = [
 
 function MobileSiteMenu() {
   const [open, setOpen] = useState(false);
+  const backdrop =
+    open && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            aria-hidden="true"
+            className="pointer-events-none fixed inset-0 z-[45] bg-[#071112]/30 backdrop-blur-[22px] animate-in fade-in duration-200 sm:hidden"
+          />,
+          document.body,
+        )
+      : null;
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      {open ? (
-        <button
-          type="button"
-          aria-label="Menüyü kapat"
-          onClick={() => setOpen(false)}
-          className="fixed inset-0 z-[45] cursor-default bg-[#071112]/30 backdrop-blur-[22px] animate-in fade-in duration-200 sm:hidden"
-        />
-      ) : null}
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          aria-label="Site menüsünü aç"
-          className="group inline-flex h-11 items-center gap-2 rounded-full px-2.5 text-sm font-medium text-foreground outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary sm:hidden"
-        >
-          <span>Menü</span>
-          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-primary/35 bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground group-data-[state=open]:rotate-90 group-data-[state=open]:bg-primary group-data-[state=open]:text-primary-foreground">
-            <Menu size={16} strokeWidth={2.4} />
-          </span>
-        </button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent
-        align="end"
-        sideOffset={10}
-        className="w-[calc(100vw-1.5rem)] max-w-[370px] rounded-[30px] border border-white/90 bg-background/90 p-2.5 shadow-[0_32px_100px_rgba(7,17,18,0.34)] ring-1 ring-foreground/5 backdrop-blur-[34px] animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200 sm:hidden"
-      >
-        <div className="rounded-[22px] bg-primary/10 px-4 py-3.5">
-          <DropdownMenuLabel className="p-0 text-[10px] font-black uppercase tracking-[0.22em] text-primary-deep">
-            notwork’ü keşfet
-          </DropdownMenuLabel>
-          <div className="mt-1 text-sm font-medium leading-snug text-muted-foreground">
-            Hikâyelerden doğru bağlantılara.
-          </div>
-        </div>
-
-        <div className="mt-2 grid gap-1">
-          {mobilePrimaryLinks.map((item) => {
-            const Icon = item.icon;
-            const content = (
-              <>
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground">
-                  <Icon size={19} strokeWidth={2} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-black text-foreground">{item.label}</span>
-                  <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
-                    {item.description}
-                  </span>
-                </span>
-                <ArrowUpRight
-                  size={16}
-                  className="shrink-0 text-muted-foreground transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary-deep"
-                />
-              </>
-            );
-
-            return (
-              <DropdownMenuItem
-                key={item.label}
-                asChild
-                className="rounded-2xl p-0 focus:bg-primary/8"
-              >
-                {"to" in item ? (
-                  <Link
-                    to={item.to}
-                    className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 outline-none"
-                  >
-                    {content}
-                  </Link>
-                ) : (
-                  <a
-                    href={item.href}
-                    className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 outline-none"
-                  >
-                    {content}
-                  </a>
-                )}
-              </DropdownMenuItem>
-            );
-          })}
-        </div>
-
-        <DropdownMenuSeparator className="my-2 bg-border/70" />
-
-        <DropdownMenuItem asChild className="rounded-[20px] p-0 focus:bg-primary/10">
-          <Link
-            to="/community"
-            className="group flex items-center gap-3 rounded-[20px] bg-foreground px-4 py-3.5 text-background outline-none transition hover:bg-primary-deep"
+    <>
+      {backdrop}
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            aria-label="Site menüsünü aç"
+            className="group inline-flex h-11 items-center gap-2 rounded-full px-2.5 text-sm font-medium text-foreground outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary sm:hidden"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-background/12">
-              <UsersRound size={20} />
+            <span>Menü</span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-full border border-primary/35 bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground group-data-[state=open]:rotate-90 group-data-[state=open]:bg-primary group-data-[state=open]:text-primary-foreground">
+              <Menu size={16} strokeWidth={2.4} />
             </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-black">Community</span>
-              <span className="mt-0.5 block text-[11px] text-background/65">
-                Fotoğraflar, takvim ve WhatsApp topluluğu.
+          </button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent
+          align="end"
+          sideOffset={10}
+          className="w-[calc(100vw-1.5rem)] max-w-[370px] rounded-[30px] border border-white/90 bg-background/90 p-2.5 shadow-[0_32px_100px_rgba(7,17,18,0.34)] ring-1 ring-foreground/5 backdrop-blur-[34px] animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200 sm:hidden"
+        >
+          <div className="rounded-[22px] bg-primary/10 px-4 py-3.5">
+            <DropdownMenuLabel className="p-0 text-[10px] font-black uppercase tracking-[0.22em] text-primary-deep">
+              notwork’ü keşfet
+            </DropdownMenuLabel>
+            <div className="mt-1 text-sm font-medium leading-snug text-muted-foreground">
+              Hikâyelerden doğru bağlantılara.
+            </div>
+          </div>
+
+          <div className="mt-2 grid gap-1">
+            {mobilePrimaryLinks.map((item) => {
+              const Icon = item.icon;
+              const content = (
+                <>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground">
+                    <Icon size={19} strokeWidth={2} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-black text-foreground">{item.label}</span>
+                    <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
+                      {item.description}
+                    </span>
+                  </span>
+                  <ArrowUpRight
+                    size={16}
+                    className="shrink-0 text-muted-foreground transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary-deep"
+                  />
+                </>
+              );
+
+              return (
+                <DropdownMenuItem
+                  key={item.label}
+                  asChild
+                  className="rounded-2xl p-0 focus:bg-primary/8"
+                >
+                  {"to" in item ? (
+                    <Link
+                      to={item.to}
+                      className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 outline-none"
+                    >
+                      {content}
+                    </Link>
+                  ) : (
+                    <a
+                      href={item.href}
+                      className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 outline-none"
+                    >
+                      {content}
+                    </a>
+                  )}
+                </DropdownMenuItem>
+              );
+            })}
+          </div>
+
+          <DropdownMenuSeparator className="my-2 bg-border/70" />
+
+          <DropdownMenuItem asChild className="rounded-[20px] p-0 focus:bg-primary/10">
+            <Link
+              to="/community"
+              className="group flex items-center gap-3 rounded-[20px] bg-foreground px-4 py-3.5 text-background outline-none transition hover:bg-primary-deep"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-background/12">
+                <UsersRound size={20} />
               </span>
-            </span>
-            <ArrowUpRight size={17} className="shrink-0" />
-          </Link>
-        </DropdownMenuItem>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-black">Community</span>
+                <span className="mt-0.5 block text-[11px] text-background/65">
+                  Fotoğraflar, takvim ve WhatsApp topluluğu.
+                </span>
+              </span>
+              <ArrowUpRight size={17} className="shrink-0" />
+            </Link>
+          </DropdownMenuItem>
 
-        <div className="mt-2 grid grid-cols-2 gap-1.5">
-          {mobileSecondaryLinks.map((item) => {
-            const Icon = item.icon;
-            const className =
-              "flex min-h-11 items-center gap-2 rounded-2xl border border-border/70 bg-card px-3 py-2.5 text-xs font-bold text-foreground outline-none transition hover:border-primary hover:bg-primary/8";
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            {mobileSecondaryLinks.map((item) => {
+              const Icon = item.icon;
+              const className =
+                "flex min-h-11 items-center gap-2 rounded-2xl border border-border/70 bg-card px-3 py-2.5 text-xs font-bold text-foreground outline-none transition hover:border-primary hover:bg-primary/8";
 
-            return (
-              <DropdownMenuItem
-                key={item.label}
-                asChild
-                className="rounded-2xl p-0 focus:bg-transparent"
-              >
-                {"to" in item ? (
-                  <Link to={item.to} className={className}>
-                    <Icon size={16} className="text-primary-deep" />
-                    {item.label}
-                  </Link>
-                ) : (
-                  <a href={item.href} className={className}>
-                    <Icon size={16} className="text-primary-deep" />
-                    {item.label}
-                  </a>
-                )}
-              </DropdownMenuItem>
-            );
-          })}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+              return (
+                <DropdownMenuItem
+                  key={item.label}
+                  asChild
+                  className="rounded-2xl p-0 focus:bg-transparent"
+                >
+                  {"to" in item ? (
+                    <Link to={item.to} className={className}>
+                      <Icon size={16} className="text-primary-deep" />
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <a href={item.href} className={className}>
+                      <Icon size={16} className="text-primary-deep" />
+                      {item.label}
+                    </a>
+                  )}
+                </DropdownMenuItem>
+              );
+            })}
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }
 
