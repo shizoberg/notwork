@@ -35,9 +35,7 @@ export const Route = createFileRoute("/community")({
 
 const whatsappCommunityUrl = "https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE";
 
-const galleryImageOrder = [
-  2, 3, 6, 8, 17, 18, 19, 20, 25, 26, 27, 24, 23, 14, 21, 13, 16, 7, 9, 11, 12, 1, 10, 15, 22, 4, 5,
-];
+const galleryImageOrder = [2, 3, 8, 19, 20, 25, 26, 27, 24, 23, 14, 21, 13, 7, 9, 12, 15];
 
 const galleryImages = galleryImageOrder.map((imageNumber) => ({
   src: `/community/${imageNumber}.jpg`,
@@ -159,23 +157,25 @@ function Community() {
             </div>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
               Etkinliklerden seçtiğimiz kareler. İnsanlar, sahne, sohbet ve o garip ama güzel
-              notwork yakınlığı.
+              notwork yakınlığı. Yana kaydırarak bakabilirsin.
             </p>
           </div>
-          <div className="grid auto-rows-[132px] grid-cols-2 gap-2.5 sm:auto-rows-[170px] sm:grid-cols-4 sm:gap-3 lg:grid-cols-6">
-            {galleryImages.slice(0, 18).map((image, index) => (
-              <figure
-                key={image.src}
-                className={`overflow-hidden rounded-[1.4rem] border border-border bg-card shadow-sm ${index === 0 || index === 7 ? "sm:col-span-2 sm:row-span-2" : ""}`}
-              >
-                <img
-                  src={image.src}
-                  alt={image.alt}
-                  loading="lazy"
-                  className="h-full w-full object-cover object-[center_35%] transition duration-500 hover:scale-105"
-                />
-              </figure>
-            ))}
+          <div className="-mx-5 overflow-x-auto px-5 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex w-max gap-3">
+              {galleryImages.map((image, index) => (
+                <figure
+                  key={image.src}
+                  className={`h-44 w-72 shrink-0 overflow-hidden rounded-[1.4rem] border border-border bg-card shadow-sm sm:h-56 ${index % 6 === 0 ? "sm:w-[28rem]" : "sm:w-80"}`}
+                >
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    loading="lazy"
+                    className="h-full w-full object-cover object-center transition duration-500 hover:scale-105"
+                  />
+                </figure>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -290,16 +290,18 @@ function Community() {
                   </a>
                 </div>
               </div>
-              <div className="grid max-h-[360px] grid-cols-4 gap-2 overflow-hidden bg-primary/10 p-3 lg:grid-cols-2">
-                {galleryImages.slice(0, 8).map((image) => (
-                  <img
-                    key={image.src}
-                    src={image.src}
-                    alt={image.alt}
-                    loading="lazy"
-                    className="h-24 w-full rounded-2xl object-cover sm:h-32 lg:h-40"
-                  />
-                ))}
+              <div className="overflow-x-auto bg-primary/10 p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:max-h-[360px]">
+                <div className="flex w-max gap-2 lg:grid lg:w-auto lg:grid-cols-2">
+                  {galleryImages.slice(0, 8).map((image) => (
+                    <img
+                      key={image.src}
+                      src={image.src}
+                      alt={image.alt}
+                      loading="lazy"
+                      className="h-28 w-44 shrink-0 rounded-2xl object-cover object-center sm:h-36 sm:w-56 lg:h-40 lg:w-full"
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
