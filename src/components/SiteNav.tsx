@@ -100,17 +100,17 @@ function MobileSiteMenu() {
           type="button"
           aria-label="Menüyü kapat"
           onClick={() => setOpen(false)}
-          className="fixed inset-0 z-[45] cursor-default bg-[#d9f0f1]/30 backdrop-blur-[18px] animate-in fade-in duration-200 sm:hidden"
+          className="fixed inset-0 z-[45] cursor-default bg-[#071112]/12 backdrop-blur-[22px] animate-in fade-in duration-200 sm:hidden"
         />
       ) : null}
       <DropdownMenuTrigger asChild>
         <button
           type="button"
           aria-label="Site menüsünü aç"
-          className="group inline-flex h-11 items-center gap-2 rounded-full border border-primary/35 bg-card/90 px-3 text-foreground shadow-[0_10px_30px_rgba(19,55,59,0.08)] outline-none transition hover:border-primary hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary sm:hidden"
+          className="group inline-flex h-11 items-center gap-2 rounded-full px-2.5 text-sm font-medium text-foreground outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary sm:hidden"
         >
-          <span className="text-[11px] font-black uppercase tracking-[0.16em]">Keşfet</span>
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground transition group-data-[state=open]:rotate-90">
+          <span>Menü</span>
+          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-primary/35 bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground group-data-[state=open]:rotate-90 group-data-[state=open]:bg-primary group-data-[state=open]:text-primary-foreground">
             <Menu size={16} strokeWidth={2.4} />
           </span>
         </button>
@@ -119,7 +119,7 @@ function MobileSiteMenu() {
       <DropdownMenuContent
         align="end"
         sideOffset={10}
-        className="w-[calc(100vw-1.5rem)] max-w-[370px] rounded-[30px] border border-white/70 bg-background/72 p-2.5 shadow-[0_28px_90px_rgba(15,45,49,0.24)] backdrop-blur-[30px] animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200 sm:hidden"
+        className="w-[calc(100vw-1.5rem)] max-w-[370px] rounded-[30px] border border-white/90 bg-background/90 p-2.5 shadow-[0_32px_100px_rgba(7,17,18,0.34)] ring-1 ring-foreground/5 backdrop-blur-[34px] animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200 sm:hidden"
       >
         <div className="rounded-[22px] bg-primary/10 px-4 py-3.5">
           <DropdownMenuLabel className="p-0 text-[10px] font-black uppercase tracking-[0.22em] text-primary-deep">
