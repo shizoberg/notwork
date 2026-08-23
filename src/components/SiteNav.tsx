@@ -339,7 +339,7 @@ export function SiteFooter() {
   };
 
   return (
-    <footer className="border-t border-border/60 mt-20">
+    <footer className="mt-14 border-t border-border/60 sm:mt-20">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 text-sm text-muted-foreground lg:grid-cols-[1.1fr_1fr]">
         <div>
           <div className="font-brand text-2xl text-foreground">notwork</div>

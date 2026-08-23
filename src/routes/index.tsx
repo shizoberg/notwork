@@ -252,7 +252,7 @@ function Hero() {
 
   return (
     <section className="relative">
-      <div className="mx-auto max-w-5xl px-4 sm:px-5 pt-6 sm:pt-12 pb-10 sm:pb-16 text-center">
+      <div className="mx-auto max-w-5xl px-4 pb-8 pt-5 text-center sm:px-5 sm:pb-10 sm:pt-10">
         <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-foreground/60">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary blink" />
           <span>Etkinlik duyurusu yakında sizlerle olacak</span>
@@ -261,23 +261,23 @@ function Hero() {
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
 
         <h1
-          className="mt-3 font-display font-black tracking-[-0.05em] text-foreground text-balance break-keep text-[4rem] sm:text-7xl md:text-8xl lg:text-9xl leading-[0.82]"
+          className="mt-3 text-balance break-keep font-display text-[3.5rem] font-black leading-[0.82] tracking-[-0.05em] text-foreground sm:text-7xl md:text-8xl lg:text-9xl"
           aria-label={heroTitleVariants[titleIndex]}
         >
-          <span className="inline-block min-h-[1.65em] sm:min-h-[1.62em] md:min-h-[1.6em]">
+          <span className="inline-block min-h-[1.65em] sm:min-h-[0.92em]">
             {displayTitle}
             <span className="ml-1 inline-block h-[0.78em] w-[0.08em] translate-y-[0.08em] animate-pulse rounded-full bg-primary align-baseline" />
           </span>
         </h1>
 
-        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-lg">
           Başarısızlık hikayelerinden çıkarılmış doğru dersleri dinleyeceğin network club.
         </p>
 
-        <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-5 flex flex-row flex-wrap items-center justify-center gap-2 sm:gap-3">
           <Link
             to="/notwork-nedir"
-            className="inline-flex w-fit items-center justify-center rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary-deep sm:px-6 sm:py-3"
+            className="inline-flex w-fit items-center justify-center rounded-full border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary-deep sm:px-6 sm:py-3"
           >
             notwork nedir?
           </Link>
@@ -285,7 +285,7 @@ function Hero() {
             href={whatsappCommunityUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex w-fit items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground transition hover:opacity-90 sm:px-6 sm:py-3"
+            className="inline-flex w-fit items-center justify-center rounded-full bg-primary px-4 py-2.5 text-sm font-black text-primary-foreground transition hover:opacity-90 sm:px-6 sm:py-3"
           >
             WhatsApp duyuru kanalı
           </a>
@@ -297,7 +297,7 @@ function Hero() {
 
 function Benefits() {
   return (
-    <section className="mx-auto max-w-5xl px-4 sm:px-5 pb-6 sm:pb-12">
+    <section className="mx-auto max-w-5xl px-4 sm:px-5">
       <div className="mx-auto max-w-2xl w-full rounded-xl border border-border bg-card p-3 sm:p-5 text-left">
         <div className="flex items-center gap-2 mb-3">
           <span className="inline-block w-2 h-2 rounded-full bg-primary" />
@@ -330,7 +330,7 @@ function Benefits() {
 
 function Tracks() {
   return (
-    <section className="mx-auto max-w-5xl px-4 sm:px-5 pb-8 sm:pb-16">
+    <section className="mx-auto mt-14 max-w-5xl px-4 sm:mt-24 sm:px-5">
       <div className="rounded-2xl border border-border bg-card p-3 sm:p-5">
         <div className="flex items-center justify-center gap-2 mb-3">
           <span className="inline-block w-2 h-2 rounded-full bg-primary" />
@@ -403,7 +403,7 @@ function Nedir() {
     },
   ];
   return (
-    <section id="nedir" className="mx-auto max-w-6xl px-5 mt-14 sm:mt-24">
+    <section id="nedir" className="mx-auto mt-14 max-w-6xl px-4 sm:mt-24 sm:px-5">
       <div className="flex items-end justify-between flex-wrap gap-3 mb-5 sm:mb-8">
         <div>
           <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
@@ -461,8 +461,11 @@ function PastEvents() {
   }, []);
 
   return (
-    <section id="etkinlikler" className="mx-auto max-w-6xl scroll-mt-24 px-5 mt-20 sm:mt-28">
-      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <section
+      id="etkinlikler"
+      className="mx-auto mt-14 max-w-6xl scroll-mt-24 px-4 sm:mt-24 sm:px-5"
+    >
+      <div className="mb-5 flex flex-col justify-between gap-3 sm:mb-7 sm:flex-row sm:items-end">
         <div>
           <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
             etkinlikler
@@ -471,26 +474,26 @@ function PastEvents() {
             notwork geceleri
           </h2>
         </div>
-        <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+        <p className="max-w-md text-xs leading-relaxed text-muted-foreground sm:text-sm">
           Geçmiş notwork gecelerinden hikâyeleri, yorumları ve etkinlik arşivini burada topluyoruz.
         </p>
         <Link
           to="/etkinlikler"
-          className="inline-flex w-fit rounded-full border border-primary/30 bg-primary/10 px-5 py-3 text-sm font-black text-primary-deep transition hover:bg-primary hover:text-primary-foreground"
+          className="inline-flex w-fit rounded-full border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm font-black text-primary-deep transition hover:bg-primary hover:text-primary-foreground sm:px-5 sm:py-3"
         >
           Tüm etkinlikleri gör
         </Link>
       </div>
 
-      <div className="-mx-5 overflow-x-auto px-5 pb-4 [scrollbar-width:thin]">
-        <div className="flex snap-x gap-4">
+      <div className="-mx-4 overflow-x-auto px-4 pb-3 [scrollbar-width:thin] sm:-mx-5 sm:px-5 sm:pb-4">
+        <div className="flex snap-x gap-3 sm:gap-4">
           {pastEvents.map((event) => {
             const eventReviews = reviewsByEvent[event.id] || [];
             const eventAverage = averageRating(eventReviews);
             const eventPhoto = eventReviews.find((review) => review.photoDataUrl)?.photoDataUrl;
             const card = (
-              <article className="group flex h-full min-h-[360px] w-[72vw] max-w-[300px] snap-start flex-col overflow-hidden rounded-[24px] border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:min-h-[400px] sm:w-[300px]">
-                <div className="relative min-h-32 overflow-hidden bg-ink text-cream sm:min-h-40">
+              <article className="group flex h-full min-h-[338px] w-[76vw] max-w-[290px] snap-start flex-col overflow-hidden rounded-[22px] border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:min-h-[390px] sm:w-[300px] sm:max-w-[300px] sm:rounded-[24px]">
+                <div className="relative min-h-28 overflow-hidden bg-ink text-cream sm:min-h-40">
                   {eventPhoto && (
                     <img
                       src={eventPhoto}
@@ -505,7 +508,7 @@ function PastEvents() {
                   {eventPhoto && <div className="absolute inset-0 bg-ink/35" />}
                   <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full border-[20px] border-primary/25" />
                   <div className="absolute -bottom-14 left-8 h-32 w-32 rounded-full border-[22px] border-primary/15" />
-                  <div className="relative flex min-h-32 flex-col justify-between p-4 sm:min-h-40">
+                  <div className="relative flex min-h-28 flex-col justify-between p-3.5 sm:min-h-40 sm:p-4">
                     <div className="inline-flex w-fit rounded-full border border-cream/20 bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em]">
                       {event.date}
                     </div>
@@ -519,18 +522,18 @@ function PastEvents() {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-1 flex-col p-4 sm:p-5">
+                <div className="flex flex-1 flex-col p-3.5 sm:p-5">
                   <div className="inline-flex w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-deep">
                     Geçmiş event
                   </div>
-                  <h3 className="mt-3 font-display text-xl font-black tracking-[-0.04em]">
+                  <h3 className="mt-2.5 font-display text-lg font-black tracking-[-0.04em] sm:mt-3 sm:text-xl">
                     {event.title}
                   </h3>
-                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+                  <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground sm:mt-2 sm:line-clamp-3 sm:text-sm">
                     {event.text}
                   </p>
                   {eventReviews.length > 0 && (
-                    <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-primary/5 px-3 py-2.5">
+                    <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-primary/5 px-3 py-2 sm:mt-4 sm:py-2.5">
                       <div>
                         <div className="text-sm tracking-tight text-primary-deep">
                           {renderEventStars(Math.round(eventAverage))}
@@ -544,7 +547,7 @@ function PastEvents() {
                       </div>
                     </div>
                   )}
-                  <div className="mt-auto inline-flex items-center gap-2 pt-4 text-sm font-bold text-primary-deep">
+                  <div className="mt-auto inline-flex items-center gap-2 pt-3 text-xs font-bold text-primary-deep sm:pt-4 sm:text-sm">
                     {event.href ? "Event sayfasına git" : "Arşiv kaydı"}
                     {event.href && <span className="transition group-hover:translate-x-1">→</span>}
                   </div>
@@ -605,9 +608,9 @@ function EventReviewsFlow() {
   return (
     <section
       id="katilimci-yorumlari"
-      className="mx-auto max-w-6xl scroll-mt-24 px-5 mt-20 sm:mt-28"
+      className="mx-auto mt-14 max-w-6xl scroll-mt-24 px-4 sm:mt-24 sm:px-5"
     >
-      <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      <div className="mb-5 flex flex-col justify-between gap-3 sm:mb-7 sm:flex-row sm:items-end">
         <div>
           <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
             katılımcı yorumları
@@ -618,14 +621,14 @@ function EventReviewsFlow() {
         </div>
         <Link
           to="/etkinlik-degerlendirme"
-          className="inline-flex w-fit rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
+          className="inline-flex w-fit rounded-full bg-primary px-4 py-2.5 text-sm font-black text-primary-foreground transition hover:opacity-90 sm:px-5 sm:py-3"
         >
           Etkinlik yorumla
         </Link>
       </div>
 
-      <div className="-mx-5 overflow-x-auto px-5 pb-4 [scrollbar-width:thin]">
-        <div className="flex snap-x gap-4">
+      <div className="-mx-4 overflow-x-auto px-4 pb-3 [scrollbar-width:thin] sm:-mx-5 sm:px-5 sm:pb-4">
+        <div className="flex snap-x gap-3 sm:gap-4">
           {sortedReviews.map((review) => {
             const event = eventMetaById[review.eventId];
             const isExpanded = !!expandedReviews[review.id];
@@ -633,8 +636,12 @@ function EventReviewsFlow() {
             return (
               <article
                 key={review.id}
-                className={`flex w-[82vw] max-w-[340px] shrink-0 snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition-all sm:w-[340px] ${
-                  isExpanded ? "h-auto" : "h-[360px] sm:h-[440px]"
+                className={`flex w-[80vw] max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-[22px] border border-border bg-card shadow-[var(--shadow-card)] transition-all sm:w-[340px] sm:max-w-[340px] sm:rounded-3xl ${
+                  isExpanded
+                    ? "h-auto"
+                    : review.photoDataUrl
+                      ? "h-[350px] sm:h-[420px]"
+                      : "h-[240px] sm:h-[280px]"
                 }`}
               >
                 {review.photoDataUrl && (
@@ -737,11 +744,11 @@ function Gallery() {
   };
 
   return (
-    <section id="galeri" className="mt-20 sm:mt-28">
-      <div className="mx-auto mb-8 flex max-w-6xl items-end justify-between gap-4 px-5">
+    <section id="galeri" className="mt-14 sm:mt-24">
+      <div className="mx-auto mb-5 flex max-w-6xl items-end justify-between gap-3 px-4 sm:mb-7 sm:px-5">
         <div>
-          <h2 className="font-display font-bold text-2xl sm:text-4xl">Önceki eventlerden</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <h2 className="font-display text-3xl font-bold sm:text-4xl">Önceki eventlerden</h2>
+          <p className="mt-1.5 text-xs text-muted-foreground sm:mt-2 sm:text-sm">
             Kaydır veya oklarla fotoğrafları incele.
           </p>
         </div>
@@ -750,7 +757,7 @@ function Gallery() {
             type="button"
             onClick={() => moveManually(-1)}
             aria-label="Önceki fotoğraf"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-lg font-black transition hover:border-primary hover:bg-primary/10"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-base font-black transition hover:border-primary hover:bg-primary/10 sm:h-10 sm:w-10 sm:text-lg"
           >
             ←
           </button>
@@ -758,7 +765,7 @@ function Gallery() {
             type="button"
             onClick={() => moveManually(1)}
             aria-label="Sonraki fotoğraf"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-lg font-black transition hover:border-primary hover:bg-primary/10"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-base font-black transition hover:border-primary hover:bg-primary/10 sm:h-10 sm:w-10 sm:text-lg"
           >
             →
           </button>
@@ -776,7 +783,7 @@ function Gallery() {
           onPointerCancel={() => pauseAutoScroll()}
           onPointerLeave={() => pauseAutoScroll()}
           onWheel={() => pauseAutoScroll()}
-          className="overflow-x-auto px-5 pb-3 cursor-grab active:cursor-grabbing [scrollbar-width:thin]"
+          className="cursor-grab overflow-x-auto px-4 pb-3 active:cursor-grabbing [scrollbar-width:thin] sm:px-5"
         >
           <div className="flex w-max snap-x snap-mandatory gap-4">
             {loop.map((src, i) => (
@@ -788,7 +795,7 @@ function Gallery() {
                 width={1024}
                 height={1024}
                 draggable={false}
-                className="h-56 w-auto shrink-0 snap-start select-none rounded-2xl object-cover sm:h-72"
+                className="h-52 w-auto shrink-0 snap-start select-none rounded-2xl object-cover sm:h-72"
               />
             ))}
           </div>
@@ -800,10 +807,10 @@ function Gallery() {
 
 function FAQ() {
   return (
-    <section className="mx-auto max-w-3xl px-5 mt-20 sm:mt-28">
+    <section className="mx-auto mt-14 max-w-3xl px-4 sm:mt-24 sm:px-5">
       <h2 className="font-display font-bold text-3xl sm:text-4xl text-center">Sık sorulanlar</h2>
       <p className="mt-3 text-center text-muted-foreground">Aklında kalan her şey, hızlıca.</p>
-      <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-card">
+      <div className="mt-5 divide-y divide-border rounded-2xl border border-border bg-card sm:mt-8">
         {faq.map((f, i) => (
           <FaqItem key={i} q={f.q} a={f.a} defaultOpen={i === 0} />
         ))}
@@ -818,7 +825,7 @@ function FaqItem({ q, a, defaultOpen }: { q: string; a: string; defaultOpen?: bo
     <button
       type="button"
       onClick={() => setOpen((o) => !o)}
-      className="w-full text-left px-5 sm:px-6 py-5"
+      className="w-full px-4 py-4 text-left sm:px-6 sm:py-5"
     >
       <div className="flex items-center justify-between gap-4">
         <span className="font-display font-semibold text-base sm:text-lg">{q}</span>
@@ -839,8 +846,8 @@ function FaqItem({ q, a, defaultOpen }: { q: string; a: string; defaultOpen?: bo
 
 function SubmitCTA() {
   return (
-    <section className="mx-auto max-w-6xl px-5 mt-20 sm:mt-28">
-      <div className="relative overflow-hidden rounded-3xl bg-ink text-cream p-8 sm:p-14">
+    <section className="mx-auto mt-14 max-w-6xl px-4 sm:mt-24 sm:px-5">
+      <div className="relative overflow-hidden rounded-3xl bg-ink p-6 text-cream sm:p-14">
         <div
           className="absolute -right-20 -top-20 w-80 h-80 rounded-full blur-3xl opacity-50"
           style={{ background: "var(--primary)" }}
@@ -849,14 +856,14 @@ function SubmitCTA() {
           <div className="text-primary font-medium uppercase tracking-widest text-sm">
             Sahneye çık
           </div>
-          <h2 className="mt-3 font-display font-bold text-3xl sm:text-5xl leading-tight">
+          <h2 className="mt-3 font-display text-3xl font-bold leading-tight sm:text-5xl">
             Denedin, olmadı, sonra öğrendin ve başardın. Şimdi anlatma zamanı.
           </h2>
           <p className="mt-4 text-cream/75 max-w-lg">
             Sunumunu yükle, hikâyeni ve bu deneyimden çıkardığın dersi birkaç cümleyle anlat.
             WhatsApp üzerinden sana hızlıca dönüyoruz.
           </p>
-          <div className="mt-7 flex flex-col sm:flex-row gap-3">
+          <div className="mt-6 flex flex-col gap-2.5 sm:mt-7 sm:flex-row sm:gap-3">
             <Link
               to="/sunum-yukle"
               className="inline-flex items-center justify-center px-6 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition"

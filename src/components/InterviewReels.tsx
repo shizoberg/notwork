@@ -44,22 +44,22 @@ export function InterviewReels({
   const loopVideos = [...videos, ...videos];
 
   return (
-    <section className="mx-auto max-w-6xl px-5 mt-16 sm:mt-24">
-      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <section className="mx-auto mt-12 max-w-6xl px-4 sm:mt-20 sm:px-5">
+      <div className="mb-4 flex flex-col justify-between gap-2 sm:mb-6 sm:flex-row sm:items-end sm:gap-4">
         <div>
           <div className="text-sm font-bold uppercase tracking-[0.2em] text-primary-deep">
             {eyebrow}
           </div>
-          <h2 className="mt-2 font-display text-3xl font-black tracking-[-0.04em] sm:text-5xl">
+          <h2 className="mt-1.5 font-display text-3xl font-black tracking-[-0.04em] sm:mt-2 sm:text-5xl">
             {title}
           </h2>
         </div>
-        <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+        <p className="max-w-md text-xs leading-relaxed text-muted-foreground sm:text-base">
           {description}
         </p>
       </div>
 
-      <div className="relative overflow-hidden rounded-3xl border border-border bg-card/70 p-3 shadow-[var(--shadow-card)] sm:p-4">
+      <div className="relative overflow-hidden rounded-[22px] border border-border bg-card/70 p-2.5 shadow-[var(--shadow-card)] sm:rounded-3xl sm:p-4">
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-card to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-card to-transparent" />
         <div className="flex w-max gap-3 interview-reel-track">
@@ -68,7 +68,7 @@ export function InterviewReels({
               key={`${video.src}-${index}`}
               type="button"
               onClick={() => setActiveVideo(video)}
-              className="group relative h-56 w-36 shrink-0 overflow-hidden rounded-2xl border border-border bg-ink text-left shadow-[var(--shadow-card)] transition hover:-translate-y-1 sm:h-72 sm:w-48"
+              className="group relative h-52 w-32 shrink-0 overflow-hidden rounded-2xl border border-border bg-ink text-left shadow-[var(--shadow-card)] transition hover:-translate-y-1 sm:h-72 sm:w-48"
               aria-label={`${video.title} videosunu aç`}
             >
               <video

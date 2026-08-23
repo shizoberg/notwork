@@ -77,7 +77,7 @@ export function NtwAssistant() {
           className="fixed inset-0 z-40 cursor-default bg-background/45 backdrop-blur-[3px] transition"
         />
       )}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+      <div className="fixed bottom-3 right-3 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
         {open && (
           <div className="w-[min(calc(100vw-2rem),380px)] overflow-hidden rounded-3xl border border-primary/35 bg-background/98 shadow-[0_24px_80px_-24px_color-mix(in_oklab,var(--primary)_65%,#000)] ring-1 ring-background/80 backdrop-blur-2xl">
             <div className="border-b border-border/70 bg-gradient-to-r from-primary/15 via-primary/8 to-background p-4">
@@ -214,9 +214,9 @@ export function NtwAssistant() {
           onClick={() => setOpen((current) => !current)}
           aria-label={open ? "ntw asistanı kapat" : "ntw asistanı aç"}
           aria-expanded={open}
-          className="group relative h-20 w-20 rounded-full border border-primary/30 bg-background shadow-[var(--shadow-soft)] transition hover:-translate-y-1 hover:border-primary sm:h-24 sm:w-24"
+          className="group relative h-16 w-16 rounded-full border border-primary/30 bg-background shadow-[var(--shadow-soft)] transition hover:-translate-y-1 hover:border-primary sm:h-24 sm:w-24"
         >
-          <span className="absolute -left-2 -top-2 rounded-full bg-primary px-2 py-1 text-[10px] font-black text-primary-foreground shadow-md">
+          <span className="absolute -left-1.5 -top-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-black text-primary-foreground shadow-md sm:-left-2 sm:-top-2 sm:px-2 sm:py-1 sm:text-[10px]">
             ntw
           </span>
           <span className="absolute right-0 top-0 flex h-4 w-4" aria-label="çevrimiçi">
