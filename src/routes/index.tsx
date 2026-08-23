@@ -33,6 +33,8 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
+const communityGalleryImageOrder = [2, 3, 8, 19, 20, 25, 26, 27, 24, 23, 14, 21, 13, 7, 9, 12, 15];
+
 const gallery = [
   gallery2,
   gallery3,
@@ -44,6 +46,7 @@ const gallery = [
   gallery8,
   gallery6,
   gallery5,
+  ...communityGalleryImageOrder.map((imageNumber) => `/community/${imageNumber}.jpg`),
 ];
 
 const whatsappCommunityUrl = "https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE";
@@ -78,12 +81,12 @@ function Landing() {
       <main className="flex-1">
         <Hero />
         <Benefits />
-        <Tracks />
-        <Nedir />
-        <EventReviewsFlow />
         <InterviewReels />
-        <PastEvents />
         <Gallery />
+        <PastEvents />
+        <EventReviewsFlow />
+        <Nedir />
+        <Tracks />
         <FAQ />
         <SubmitCTA />
       </main>

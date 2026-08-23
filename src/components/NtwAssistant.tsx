@@ -24,8 +24,17 @@ const welcomeMessage: ChatMessage = {
 export function NtwAssistant() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
   const messageListRef = useRef<HTMLDivElement>(null);
+  const responseTimerRef = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (responseTimerRef.current) window.clearTimeout(responseTimerRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -33,20 +42,24 @@ export function NtwAssistant() {
       top: messageListRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages, open]);
+  }, [isTyping, messages, open]);
 
   const askQuestion = (question: string) => {
     const cleanQuestion = question.trim();
-    if (!cleanQuestion) return;
+    if (!cleanQuestion || isTyping) return;
 
     const response = findNtwAssistantAnswer(cleanQuestion);
     const messageId = Date.now();
-    setMessages((current) => [
-      ...current,
-      { id: messageId, role: "user", text: cleanQuestion },
-      toChatMessage(response, messageId + 1),
-    ]);
+    setMessages((current) => [...current, { id: messageId, role: "user", text: cleanQuestion }]);
     setInput("");
+    setIsTyping(true);
+
+    const responseDelay = Math.min(1400, Math.max(700, response.answer.length * 4));
+    responseTimerRef.current = window.setTimeout(() => {
+      setMessages((current) => [...current, toChatMessage(response, messageId + 1)]);
+      setIsTyping(false);
+      responseTimerRef.current = null;
+    }, responseDelay);
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -67,7 +80,7 @@ export function NtwAssistant() {
       <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
         {open && (
           <div className="w-[min(calc(100vw-2rem),380px)] overflow-hidden rounded-3xl border border-primary/35 bg-background/98 shadow-[0_24px_80px_-24px_color-mix(in_oklab,var(--primary)_65%,#000)] ring-1 ring-background/80 backdrop-blur-2xl">
-            <div className="border-b border-border/70 bg-primary/10 p-4">
+            <div className="border-b border-border/70 bg-gradient-to-r from-primary/15 via-primary/8 to-background p-4">
               <div className="flex items-start gap-3">
                 <div className="h-12 w-12 shrink-0">
                   <NtwMascotSvg compact />
@@ -75,12 +88,16 @@ export function NtwAssistant() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <div className="text-sm font-black text-foreground">ntw asistan</div>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary-deep">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary" /> çevrimiçi
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/12 px-2 py-1 text-[10px] font-black text-primary-deep">
+                      <span className="relative flex h-2 w-2">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-55" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                      </span>
+                      çevrimiçi
                     </span>
                   </div>
                   <p className="mt-1 text-xs leading-relaxed text-foreground/60">
-                    notwork hakkında sor, en uygun cevabı bulayım.
+                    aktif · notwork hakkında sor, en uygun cevabı bulayım.
                   </p>
                 </div>
                 <button
@@ -97,6 +114,7 @@ export function NtwAssistant() {
             <div
               ref={messageListRef}
               aria-live="polite"
+              aria-busy={isTyping}
               className="max-h-[min(52vh,430px)] space-y-3 overflow-y-auto px-3 py-4 [scrollbar-width:thin]"
             >
               {messages.map((message) => (
@@ -129,15 +147,33 @@ export function NtwAssistant() {
                   </div>
                 </div>
               ))}
+
+              {isTyping && (
+                <div className="flex justify-start" role="status" aria-label="ntw yazıyor">
+                  <div className="flex items-center gap-2 rounded-2xl rounded-bl-md border border-border bg-card px-3.5 py-3 text-foreground/65">
+                    <div className="flex gap-1" aria-hidden="true">
+                      {[0, 1, 2].map((dot) => (
+                        <span
+                          key={dot}
+                          className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary"
+                          style={{ animationDelay: `${dot * 120}ms` }}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-[11px] font-bold">ntw yazıyor…</span>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {messages.length === 1 && (
+            {messages.length === 1 && !isTyping && (
               <div className="flex gap-2 overflow-x-auto border-t border-border/60 px-3 py-2.5 [scrollbar-width:none]">
                 {ntwQuickQuestions.map((question) => (
                   <button
                     key={question}
                     type="button"
                     onClick={() => askQuestion(question)}
+                    disabled={isTyping}
                     className="shrink-0 rounded-full border border-primary/25 bg-primary/8 px-3 py-1.5 text-[11px] font-bold text-foreground/70 transition hover:border-primary hover:text-foreground"
                   >
                     {question}
@@ -155,14 +191,15 @@ export function NtwAssistant() {
                   id="ntw-assistant-input"
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
-                  placeholder="ör. yeni etkinlik ne zaman?"
+                  placeholder={isTyping ? "ntw yanıt hazırlıyor…" : "ör. yeni etkinlik ne zaman?"}
                   autoComplete="off"
+                  disabled={isTyping}
                   className="h-11 min-w-0 flex-1 rounded-full border border-border bg-card px-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
                 <button
                   type="submit"
                   aria-label="mesajı gönder"
-                  disabled={!input.trim()}
+                  disabled={!input.trim() || isTyping}
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:bg-primary-deep disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Send size={17} />
@@ -181,6 +218,10 @@ export function NtwAssistant() {
         >
           <span className="absolute -left-2 -top-2 rounded-full bg-primary px-2 py-1 text-[10px] font-black text-primary-foreground shadow-md">
             ntw
+          </span>
+          <span className="absolute right-0 top-0 flex h-4 w-4" aria-label="çevrimiçi">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+            <span className="relative inline-flex h-4 w-4 rounded-full border-2 border-background bg-emerald-500" />
           </span>
           <NtwMascotSvg />
         </button>
