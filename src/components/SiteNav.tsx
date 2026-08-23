@@ -112,7 +112,7 @@ function MobileSiteMenu() {
       ? createPortal(
           <div
             aria-hidden="true"
-            className="pointer-events-none fixed inset-0 z-[45] bg-[#071112]/30 backdrop-blur-[22px] animate-in fade-in duration-200 sm:hidden"
+            className="pointer-events-none fixed inset-0 z-[9998] bg-[#020707]/55 backdrop-blur-[12px] animate-in fade-in duration-200 sm:hidden"
           />,
           document.body,
         )
@@ -126,7 +126,7 @@ function MobileSiteMenu() {
           <button
             type="button"
             aria-label="Site menüsünü aç"
-            className="group inline-flex h-11 items-center gap-2 rounded-full px-2.5 text-sm font-medium text-foreground outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary sm:hidden"
+            className="group inline-flex h-11 items-center gap-2 rounded-full px-2.5 text-[10px] font-medium text-foreground outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary sm:hidden"
           >
             <span>Menü</span>
             <span className="flex h-7 w-7 items-center justify-center rounded-full border border-primary/35 bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground group-data-[state=open]:rotate-90 group-data-[state=open]:bg-primary group-data-[state=open]:text-primary-foreground">
@@ -138,7 +138,7 @@ function MobileSiteMenu() {
         <DropdownMenuContent
           align="end"
           sideOffset={10}
-          className="w-[calc(100vw-1.5rem)] max-w-[370px] rounded-[30px] border border-white/90 bg-background/90 p-2.5 shadow-[0_32px_100px_rgba(7,17,18,0.34)] ring-1 ring-foreground/5 backdrop-blur-[34px] animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200 sm:hidden"
+          className="z-[9999] w-[calc(100vw-1.5rem)] max-w-[370px] rounded-[30px] border border-white/90 bg-background/90 p-2.5 shadow-[0_32px_100px_rgba(7,17,18,0.34)] ring-1 ring-foreground/5 backdrop-blur-[34px] animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200 sm:hidden"
         >
           <div className="rounded-[22px] bg-primary/10 px-4 py-3.5">
             <DropdownMenuLabel className="p-0 text-[10px] font-black uppercase tracking-[0.22em] text-primary-deep">
