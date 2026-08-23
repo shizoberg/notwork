@@ -489,8 +489,8 @@ function PastEvents() {
             const eventAverage = averageRating(eventReviews);
             const eventPhoto = eventReviews.find((review) => review.photoDataUrl)?.photoDataUrl;
             const card = (
-              <article className="group flex h-full min-h-[450px] w-[82vw] sm:min-h-[520px] max-w-sm snap-start flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:w-[360px]">
-                <div className="relative min-h-44 overflow-hidden bg-ink text-cream sm:min-h-56">
+              <article className="group flex h-full min-h-[360px] w-[72vw] max-w-[300px] snap-start flex-col overflow-hidden rounded-[24px] border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:min-h-[400px] sm:w-[300px]">
+                <div className="relative min-h-32 overflow-hidden bg-ink text-cream sm:min-h-40">
                   {eventPhoto && (
                     <img
                       src={eventPhoto}
@@ -503,9 +503,9 @@ function PastEvents() {
                     className={`absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_32%)] bg-gradient-to-br ${event.accent} ${eventPhoto ? "mix-blend-multiply" : ""}`}
                   />
                   {eventPhoto && <div className="absolute inset-0 bg-ink/35" />}
-                  <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full border-[24px] border-primary/25" />
-                  <div className="absolute -bottom-14 left-8 h-40 w-40 rounded-full border-[28px] border-primary/15" />
-                  <div className="relative flex min-h-44 flex-col justify-between p-5 sm:min-h-56 sm:p-6">
+                  <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full border-[20px] border-primary/25" />
+                  <div className="absolute -bottom-14 left-8 h-32 w-32 rounded-full border-[22px] border-primary/15" />
+                  <div className="relative flex min-h-32 flex-col justify-between p-4 sm:min-h-40">
                     <div className="inline-flex w-fit rounded-full border border-cream/20 bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em]">
                       {event.date}
                     </div>
@@ -513,58 +513,38 @@ function PastEvents() {
                       <div className="text-xs font-bold uppercase tracking-[0.24em] text-primary">
                         {event.location}
                       </div>
-                      <div className="mt-2 font-display text-4xl font-black leading-none tracking-[-0.05em]">
-                        notwork
-                        <br />
-                        gecesi
+                      <div className="mt-1 font-display text-2xl font-black leading-none tracking-[-0.05em]">
+                        notwork gecesi
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-1 flex-col p-5 sm:p-6">
+                <div className="flex flex-1 flex-col p-4 sm:p-5">
                   <div className="inline-flex w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-deep">
                     Geçmiş event
                   </div>
-                  <h3 className="mt-4 font-display text-2xl font-black tracking-[-0.04em]">
+                  <h3 className="mt-3 font-display text-xl font-black tracking-[-0.04em]">
                     {event.title}
                   </h3>
-                  <p className="mt-4 flex-1 leading-relaxed text-muted-foreground">{event.text}</p>
+                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+                    {event.text}
+                  </p>
                   {eventReviews.length > 0 && (
-                    <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-3 sm:mt-5 sm:p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="text-lg tracking-tight text-primary-deep">
+                    <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-primary/5 px-3 py-2.5">
+                      <div>
+                        <div className="text-sm tracking-tight text-primary-deep">
                           {renderEventStars(Math.round(eventAverage))}
                         </div>
-                        <div className="text-xs font-black text-primary-deep">
-                          {eventAverage.toFixed(1)} / 5
+                        <div className="mt-0.5 text-[10px] font-semibold text-foreground/45">
+                          {eventReviews.length} değerlendirme
                         </div>
                       </div>
-                      <div className="mt-1 text-xs font-semibold text-foreground/50">
-                        {eventReviews.length} değerlendirme
-                      </div>
-                      <div className="mt-3 grid max-h-20 gap-2 overflow-y-auto pr-1 [scrollbar-width:thin] sm:max-h-28">
-                        {eventReviews.slice(0, 4).map((review) => (
-                          <p
-                            key={review.id}
-                            className="rounded-xl bg-background/80 px-3 py-2 text-sm leading-relaxed text-foreground/65"
-                          >
-                            “{review.comment}”
-                          </p>
-                        ))}
+                      <div className="text-sm font-black text-primary-deep">
+                        {eventAverage.toFixed(1)} / 5
                       </div>
                     </div>
                   )}
-                  <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold">
-                    {event.tags.map((item) => (
-                      <span
-                        key={item}
-                        className="rounded-full border border-border bg-background px-3 py-1.5"
-                      >
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="mt-7 inline-flex items-center gap-2 font-bold text-primary-deep">
+                  <div className="mt-auto inline-flex items-center gap-2 pt-4 text-sm font-bold text-primary-deep">
                     {event.href ? "Event sayfasına git" : "Arşiv kaydı"}
                     {event.href && <span className="transition group-hover:translate-x-1">→</span>}
                   </div>
