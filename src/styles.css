@@ -102,7 +102,11 @@
 }
 
 @utility marquee-track {
-  animation: marquee 40s linear infinite;
+  animation: marquee 110s linear infinite;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
 }
 @keyframes marquee {
   from {
@@ -144,6 +148,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .marquee-track,
   .interview-reel-track {
     animation: none;
   }

@@ -36,17 +36,33 @@ export const Route = createFileRoute("/")({
 const communityGalleryImageOrder = [2, 3, 8, 19, 20, 25, 26, 27, 24, 23, 14, 21, 13, 7, 9, 12, 15];
 
 const gallery = [
-  gallery2,
-  gallery3,
-  gallery4,
+  `/community/${communityGalleryImageOrder[0]}.jpg`,
+  `/community/${communityGalleryImageOrder[1]}.jpg`,
+  `/community/${communityGalleryImageOrder[2]}.jpg`,
+  `/community/${communityGalleryImageOrder[3]}.jpg`,
   gallery13,
+  `/community/${communityGalleryImageOrder[4]}.jpg`,
+  `/community/${communityGalleryImageOrder[5]}.jpg`,
   gallery12,
+  `/community/${communityGalleryImageOrder[6]}.jpg`,
+  `/community/${communityGalleryImageOrder[7]}.jpg`,
+  gallery2,
+  `/community/${communityGalleryImageOrder[8]}.jpg`,
+  gallery3,
+  `/community/${communityGalleryImageOrder[9]}.jpg`,
+  gallery4,
+  `/community/${communityGalleryImageOrder[10]}.jpg`,
   gallery10,
+  `/community/${communityGalleryImageOrder[11]}.jpg`,
   gallery9,
+  `/community/${communityGalleryImageOrder[12]}.jpg`,
   gallery8,
+  `/community/${communityGalleryImageOrder[13]}.jpg`,
   gallery6,
+  `/community/${communityGalleryImageOrder[14]}.jpg`,
   gallery5,
-  ...communityGalleryImageOrder.map((imageNumber) => `/community/${imageNumber}.jpg`),
+  `/community/${communityGalleryImageOrder[15]}.jpg`,
+  `/community/${communityGalleryImageOrder[16]}.jpg`,
 ];
 
 const whatsappCommunityUrl = "https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE";
@@ -82,11 +98,11 @@ function Landing() {
         <Hero />
         <Benefits />
         <InterviewReels />
-        <Gallery />
         <PastEvents />
         <EventReviewsFlow />
-        <Nedir />
         <Tracks />
+        <Gallery />
+        <Nedir />
         <FAQ />
         <SubmitCTA />
       </main>
