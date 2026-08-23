@@ -101,22 +101,6 @@
   }
 }
 
-@utility marquee-track {
-  animation: marquee 110s linear infinite;
-}
-
-.marquee-track:hover {
-  animation-play-state: paused;
-}
-@keyframes marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
 @utility blink {
   animation: blink 1.4s ease-in-out infinite;
 }
@@ -148,7 +132,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .marquee-track,
   .interview-reel-track {
     animation: none;
   }

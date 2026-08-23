@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import gallery2 from "@/assets/gallery/notwork-2.jpg";
 import gallery3 from "@/assets/gallery/notwork-3.jpg";
 import gallery4 from "@/assets/gallery/notwork-4.jpg";
@@ -33,36 +33,29 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const communityGalleryImageOrder = [2, 3, 8, 19, 20, 25, 26, 27, 24, 23, 14, 21, 13, 7, 9, 12, 15];
+const communityGalleryImageOrder = [27, 26, 25, 24, 23, 21, 20, 19, 2, 3, 8, 14, 13, 7, 9, 12, 15];
 
 const gallery = [
-  `/community/${communityGalleryImageOrder[0]}.jpg`,
-  `/community/${communityGalleryImageOrder[1]}.jpg`,
-  `/community/${communityGalleryImageOrder[2]}.jpg`,
-  `/community/${communityGalleryImageOrder[3]}.jpg`,
+  ...communityGalleryImageOrder.slice(0, 8).map((imageNumber) => `/community/${imageNumber}.jpg`),
   gallery13,
-  `/community/${communityGalleryImageOrder[4]}.jpg`,
-  `/community/${communityGalleryImageOrder[5]}.jpg`,
-  gallery12,
-  `/community/${communityGalleryImageOrder[6]}.jpg`,
-  `/community/${communityGalleryImageOrder[7]}.jpg`,
-  gallery2,
   `/community/${communityGalleryImageOrder[8]}.jpg`,
-  gallery3,
+  gallery12,
   `/community/${communityGalleryImageOrder[9]}.jpg`,
-  gallery4,
+  gallery2,
   `/community/${communityGalleryImageOrder[10]}.jpg`,
-  gallery10,
+  gallery3,
   `/community/${communityGalleryImageOrder[11]}.jpg`,
-  gallery9,
+  gallery4,
   `/community/${communityGalleryImageOrder[12]}.jpg`,
-  gallery8,
+  gallery10,
   `/community/${communityGalleryImageOrder[13]}.jpg`,
-  gallery6,
+  gallery9,
   `/community/${communityGalleryImageOrder[14]}.jpg`,
-  gallery5,
+  gallery8,
   `/community/${communityGalleryImageOrder[15]}.jpg`,
+  gallery6,
   `/community/${communityGalleryImageOrder[16]}.jpg`,
+  gallery5,
 ];
 
 const whatsappCommunityUrl = "https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE";
@@ -721,27 +714,104 @@ function EventReviewsFlow() {
 }
 
 function Gallery() {
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const resumeAutoScrollAtRef = useRef(0);
   const loop = [...gallery, ...gallery];
+
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let animationFrame = 0;
+    let previousTime = performance.now();
+
+    const moveSlider = (currentTime: number) => {
+      const elapsed = Math.min(currentTime - previousTime, 50);
+      previousTime = currentTime;
+
+      if (currentTime >= resumeAutoScrollAtRef.current) {
+        slider.scrollLeft += elapsed * 0.007;
+        const loopPoint = slider.scrollWidth / 2;
+        if (slider.scrollLeft >= loopPoint) slider.scrollLeft -= loopPoint;
+      }
+
+      animationFrame = window.requestAnimationFrame(moveSlider);
+    };
+
+    animationFrame = window.requestAnimationFrame(moveSlider);
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, []);
+
+  const pauseAutoScroll = (duration = 5000) => {
+    resumeAutoScrollAtRef.current = performance.now() + duration;
+  };
+
+  const moveManually = (direction: -1 | 1) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    pauseAutoScroll();
+    slider.scrollBy({
+      left: direction * Math.min(slider.clientWidth * 0.78, 420),
+      behavior: "smooth",
+    });
+  };
+
   return (
     <section id="galeri" className="mt-20 sm:mt-28">
-      <div className="mx-auto max-w-6xl px-5 mb-8">
-        <h2 className="font-display font-bold text-2xl sm:text-4xl">Önceki eventlerden</h2>
+      <div className="mx-auto mb-8 flex max-w-6xl items-end justify-between gap-4 px-5">
+        <div>
+          <h2 className="font-display font-bold text-2xl sm:text-4xl">Önceki eventlerden</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Kaydır veya oklarla fotoğrafları incele.
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            onClick={() => moveManually(-1)}
+            aria-label="Önceki fotoğraf"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-lg font-black transition hover:border-primary hover:bg-primary/10"
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            onClick={() => moveManually(1)}
+            aria-label="Sonraki fotoğraf"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-lg font-black transition hover:border-primary hover:bg-primary/10"
+          >
+            →
+          </button>
+        </div>
       </div>
-      <div className="relative overflow-hidden">
+      <div className="relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-background to-transparent z-10" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-background to-transparent z-10" />
-        <div className="flex gap-4 w-max marquee-track">
-          {loop.map((src, i) => (
-            <img
-              key={i}
-              src={src}
-              alt={`notwork event anı ${i + 1}`}
-              loading="lazy"
-              width={1024}
-              height={1024}
-              className="h-56 sm:h-72 w-auto rounded-2xl object-cover shrink-0"
-            />
-          ))}
+        <div
+          ref={sliderRef}
+          onPointerDown={() => {
+            resumeAutoScrollAtRef.current = Number.POSITIVE_INFINITY;
+          }}
+          onPointerUp={() => pauseAutoScroll()}
+          onPointerCancel={() => pauseAutoScroll()}
+          onPointerLeave={() => pauseAutoScroll()}
+          onWheel={() => pauseAutoScroll()}
+          className="overflow-x-auto px-5 pb-3 cursor-grab active:cursor-grabbing [scrollbar-width:thin]"
+        >
+          <div className="flex w-max snap-x snap-mandatory gap-4">
+            {loop.map((src, i) => (
+              <img
+                key={`${src}-${i}`}
+                src={src}
+                alt={`notwork event anı ${(i % gallery.length) + 1}`}
+                loading="lazy"
+                width={1024}
+                height={1024}
+                draggable={false}
+                className="h-56 w-auto shrink-0 snap-start select-none rounded-2xl object-cover sm:h-72"
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>
