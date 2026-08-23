@@ -90,12 +90,12 @@ function Landing() {
       <main className="flex-1">
         <Hero />
         <Benefits />
+        <Nedir />
         <InterviewReels />
         <PastEvents />
         <EventReviewsFlow />
         <Tracks />
         <Gallery />
-        <Nedir />
         <FAQ />
         <SubmitCTA />
       </main>
@@ -301,9 +301,9 @@ function Benefits() {
       <div className="mx-auto max-w-2xl w-full rounded-xl border border-border bg-card p-3 sm:p-5 text-left">
         <div className="flex items-center gap-2 mb-3">
           <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-          <span className="text-sm sm:text-lg font-bold text-foreground/80 uppercase tracking-widest">
+          <h2 className="text-sm sm:text-lg font-bold text-foreground/80 uppercase tracking-widest">
             Sana ne katacak?
-          </span>
+          </h2>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
@@ -313,9 +313,9 @@ function Benefits() {
             { tag: "Başarıya Nasıl Gidilir", desc: "Hataları başarıya çeviren yolları öğrenmek." },
           ].map((b) => (
             <div key={b.tag} className="rounded-lg border border-border bg-background p-2.5">
-              <div className="font-display font-bold text-[10px] sm:text-sm tracking-tight text-primary-deep">
+              <h3 className="font-display font-bold text-[10px] sm:text-sm tracking-tight text-primary-deep">
                 {b.tag}
-              </div>
+              </h3>
               <div className="mt-1 h-px w-5 bg-primary/40" />
               <p className="mt-1.5 text-[10px] sm:text-xs text-foreground/80 leading-snug">
                 {b.desc}
@@ -334,10 +334,10 @@ function Tracks() {
       <div className="rounded-2xl border border-border bg-card p-3 sm:p-5">
         <div className="flex items-center justify-center gap-2 mb-3">
           <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-          <span className="text-sm sm:text-lg font-bold text-foreground/80 uppercase tracking-[0.2em] leading-relaxed">
+          <h2 className="text-sm sm:text-lg font-bold text-foreground/80 uppercase tracking-[0.2em] leading-relaxed">
             BAŞARISIZLIK HİKAYELERİ
             <br />3 FARKLI AÇIDA
-          </span>
+          </h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-left">
@@ -347,12 +347,12 @@ function Tracks() {
               className="rounded-xl border p-3 sm:p-4"
               style={{ borderColor: `${t.color}30`, backgroundColor: `${t.color}08` }}
             >
-              <div
+              <h3
                 className="font-display font-bold text-lg sm:text-2xl tracking-tight"
                 style={{ color: t.color }}
               >
                 {t.tag}
-              </div>
+              </h3>
               <div className="mt-1.5 h-px w-10 opacity-40" style={{ backgroundColor: t.color }} />
               <p className="mt-2 text-xs sm:text-sm text-foreground/80 leading-relaxed">{t.desc}</p>
             </div>
@@ -425,9 +425,9 @@ function Nedir() {
             className="rounded-2xl border border-border bg-card p-3 transition hover:border-primary/60 hover:shadow-[var(--shadow-card)] sm:p-5"
           >
             <div className="font-display text-primary text-xl font-bold sm:text-3xl">{i.n}</div>
-            <div className="mt-2 font-display font-semibold text-sm leading-tight sm:text-lg">
+            <h3 className="mt-2 font-display font-semibold text-sm leading-tight sm:text-lg">
               {i.t}
-            </div>
+            </h3>
             <p className="mt-1.5 text-xs text-muted-foreground leading-snug sm:mt-2 sm:text-sm sm:leading-relaxed">
               {i.d}
             </p>

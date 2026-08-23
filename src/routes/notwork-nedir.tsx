@@ -1,11 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { CalendarDays, MessageCircle, Users } from "lucide-react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
-import gallery2 from "@/assets/gallery/notwork-2.jpg";
-import gallery3 from "@/assets/gallery/notwork-3.jpg";
-import gallery4 from "@/assets/gallery/notwork-4.jpg";
-import gallery6 from "@/assets/gallery/notwork-6.jpg";
-import gallery8 from "@/assets/gallery/notwork-8.jpg";
-import gallery13 from "@/assets/gallery/notwork-13.jpg";
 import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/notwork-nedir")({
@@ -73,13 +68,17 @@ const explainerVideos = [
   },
 ];
 
-const networkMoments = [
-  { src: gallery4, alt: "notwork etkinliğinde katılımcıların sahneye eşlik ettiği an" },
-  { src: gallery6, alt: "notwork networking anında mikrofonla konuşan katılımcı" },
-  { src: gallery8, alt: "notwork etkinliğinde masada sohbet eden katılımcılar" },
-  { src: gallery13, alt: "notwork etkinliğinde hikaye dinleyen katılımcılar" },
-  { src: gallery2, alt: "notwork etkinliğinde sunumu dinleyen katılımcı" },
-  { src: gallery3, alt: "notwork etkinliğinde mikrofon uzatılan katılımcı" },
+const whatsappCommunityUrl = "https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE";
+
+const eventMoments = [
+  { src: "/community/25.jpg", alt: "notwork etkinliğinde sohbet eden katılımcılar" },
+  { src: "/community/24.jpg", alt: "notwork networking anında tanışan katılımcılar" },
+  { src: "/community/23.jpg", alt: "notwork sahnesini izleyen topluluk" },
+  { src: "/community/21.jpg", alt: "notwork etkinliğinde konuşmacı ve katılımcılar" },
+  { src: "/community/20.jpg", alt: "notwork etkinliği topluluk fotoğrafı" },
+  { src: "/community/19.jpg", alt: "notwork etkinliğinde sahne anı" },
+  { src: "/community/2.jpg", alt: "notwork etkinliğinde bağlantı kuran katılımcılar" },
+  { src: "/community/3.jpg", alt: "notwork networking gecesinden bir an" },
 ];
 
 function NotworkNedirPage() {
@@ -87,23 +86,85 @@ function NotworkNedirPage() {
     <div className="min-h-screen bg-background text-foreground">
       <SiteNav />
       <main>
-        <section className="mx-auto max-w-6xl px-5 py-12 sm:py-20">
+        <section className="mx-auto max-w-6xl px-4 pb-10 pt-9 sm:px-5 sm:pb-16 sm:pt-20">
           <div className="mx-auto max-w-3xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
               <span className="h-2 w-2 rounded-full bg-primary" />
               notwork nedir?
             </div>
-            <h1 className="mt-6 font-display text-5xl font-black leading-[0.86] tracking-[-0.06em] sm:text-7xl md:text-8xl">
+            <h1 className="mt-5 font-display text-[3.25rem] font-black leading-[0.86] tracking-[-0.06em] sm:mt-6 sm:text-7xl md:text-8xl">
               adım adım networking club
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
+            <p className="mx-auto mt-5 max-w-2xl text-sm leading-6 text-muted-foreground sm:mt-6 sm:text-lg sm:leading-7">
               notwork; başarısızlık hikayelerinden çıkarılmış doğru dersleri dinlediğin, sonra bu
               derslerin etrafında doğru insanlarla bağ kurduğun bir community sistemi.
             </p>
+            <div className="mx-auto mt-6 grid max-w-lg grid-cols-2 gap-2 sm:mt-8 sm:flex sm:justify-center sm:gap-3">
+              <a
+                href={whatsappCommunityUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-3 py-3 text-center text-xs font-black leading-tight text-primary-foreground transition hover:-translate-y-0.5 hover:bg-primary-deep sm:rounded-full sm:px-6 sm:text-sm"
+              >
+                <MessageCircle className="h-4 w-4 shrink-0" />
+                WhatsApp community
+              </a>
+              <Link
+                to="/community"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-primary/30 bg-card px-3 py-3 text-center text-xs font-black leading-tight transition hover:border-primary hover:bg-primary/10 sm:rounded-full sm:px-6 sm:text-sm"
+              >
+                <Users className="h-4 w-4 shrink-0 text-primary-deep" />
+                Community’yi gör
+              </Link>
+            </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 pb-10 sm:pb-14">
+        <section id="etkinlik-anlari" className="mx-auto max-w-6xl px-4 pb-12 sm:px-5 sm:pb-20">
+          <div className="mb-5 flex flex-col justify-between gap-3 sm:mb-7 sm:flex-row sm:items-end">
+            <div>
+              <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
+                gerçek etkinlik anları
+              </div>
+              <h2 className="mt-2 max-w-2xl font-display text-3xl font-black tracking-[-0.05em] sm:text-5xl">
+                hikâyeden bağlantıya geçen oda
+              </h2>
+            </div>
+            <p className="max-w-md text-xs leading-relaxed text-muted-foreground sm:text-sm">
+              Sahne, kahkaha, masa sohbetleri ve yeni tanışmalar. notwork’ün nasıl hissettirdiğini
+              en iyi bu kareler anlatıyor.
+            </p>
+          </div>
+          <div className="-mx-4 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:-mx-5 sm:px-5">
+            <div className="flex w-max snap-x snap-mandatory gap-3">
+              {eventMoments.map((image, index) => (
+                <figure
+                  key={image.src}
+                  className={`h-56 w-44 shrink-0 snap-start overflow-hidden rounded-[1.4rem] border border-border bg-card shadow-[var(--shadow-card)] sm:h-72 sm:w-56 ${
+                    index === 0 ? "w-64 sm:w-[24rem]" : ""
+                  }`}
+                >
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    loading={index < 2 ? "eager" : "lazy"}
+                    className="h-full w-full object-cover object-center transition duration-500 hover:scale-105"
+                  />
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-5 sm:pb-20">
+          <div className="mb-5 sm:mb-7">
+            <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
+              önce izle
+            </div>
+            <h2 className="mt-2 font-display text-3xl font-black tracking-[-0.05em] sm:text-5xl">
+              notwork’ü ve sahneyi tanı
+            </h2>
+          </div>
           <div className="-mx-5 overflow-x-auto px-5 pb-3 [scrollbar-width:thin]">
             <div className="flex snap-x gap-4 lg:grid lg:grid-cols-2">
               {explainerVideos.map((video) => (
@@ -145,7 +206,18 @@ function NotworkNedirPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 pb-8 sm:pb-10">
+        <section className="mx-auto max-w-6xl px-4 pb-12 sm:px-5 sm:pb-20">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div>
+              <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
+                event akışı
+              </div>
+              <h2 className="mt-2 font-display text-2xl font-black tracking-[-0.04em] sm:text-4xl">
+                gecenin ritmi
+              </h2>
+            </div>
+            <CalendarDays className="h-7 w-7 shrink-0 text-primary-deep sm:h-9 sm:w-9" />
+          </div>
           <div className="-mx-5 overflow-x-auto px-5 pb-3 [scrollbar-width:thin]">
             <div className="flex snap-x gap-3">
               {flow.map((item, index) => (
@@ -165,53 +237,21 @@ function NotworkNedirPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 pb-10 sm:pb-14">
-          <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-            <div>
-              <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
-                network anları
-              </div>
-              <h2 className="mt-2 font-display text-3xl font-black tracking-[-0.05em] sm:text-4xl">
-                insanlar hikayeden sonra tanışıyor
-              </h2>
-            </div>
-            <p className="max-w-sm text-sm leading-7 text-muted-foreground">
-              etkinlik boyunca sahne, masa sohbetleri ve mikrofon anları aynı hissin parçası:
-              güvenli, samimi ve bağlantıya açık bir oda.
-            </p>
-          </div>
-          <div className="-mx-5 overflow-x-auto px-5 pb-3 [scrollbar-width:thin]">
-            <div className="flex snap-x gap-3">
-              {networkMoments.map((image, index) => (
-                <img
-                  key={image.alt}
-                  src={image.src}
-                  alt={image.alt}
-                  loading="lazy"
-                  className={`h-36 w-56 shrink-0 snap-start rounded-2xl object-cover shadow-[var(--shadow-card)] sm:h-44 sm:w-72 ${
-                    index === 0 ? "sm:w-[34rem]" : ""
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-5xl px-5 pb-16 sm:pb-24">
+        <section className="mx-auto max-w-5xl px-4 pb-14 sm:px-5 sm:pb-24">
           <div className="relative border-l border-primary/30 pl-5 sm:pl-8">
             {steps.map((step, index) => (
-              <article key={step.title} className="relative pb-10 last:pb-0">
+              <article key={step.title} className="relative pb-6 last:pb-0 sm:pb-10">
                 <span className="absolute -left-[1.92rem] top-1 flex h-5 w-5 items-center justify-center rounded-full border border-primary bg-background sm:-left-[2.58rem]">
                   <span className="h-2.5 w-2.5 rounded-full bg-primary" />
                 </span>
-                <div className="rounded-[2rem] border border-border bg-card p-6 shadow-[var(--shadow-card)] sm:p-8">
+                <div className="rounded-[1.5rem] border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:rounded-[2rem] sm:p-8">
                   <div className="text-xs font-black uppercase tracking-[0.24em] text-primary-deep">
                     {step.eyebrow}
                   </div>
-                  <h2 className="mt-3 font-display text-3xl font-black tracking-[-0.04em] sm:text-5xl">
+                  <h2 className="mt-2.5 font-display text-2xl font-black tracking-[-0.04em] sm:mt-3 sm:text-5xl">
                     {step.title}
                   </h2>
-                  <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:mt-4 sm:text-base sm:leading-7">
                     {step.text}
                   </p>
                   {index === 1 ? (
@@ -255,7 +295,7 @@ function NotworkNedirPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-5xl px-5 pb-20">
+        <section className="mx-auto max-w-5xl px-4 pb-16 sm:px-5 sm:pb-20">
           <div className="overflow-hidden rounded-[2rem] border border-primary/25 bg-primary/10 p-6 text-center shadow-[var(--shadow-card)] sm:p-10">
             <div className="text-xs font-black uppercase tracking-[0.24em] text-primary-deep">
               kısa cevap
@@ -264,18 +304,27 @@ function NotworkNedirPage() {
               notwork, başarıdan önceki gerçek deneyimleri duyup sonrasında doğru bağlantılar
               kurduğun yer.
             </p>
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link
-                to="/"
-                className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
+            <div className="mt-7 grid gap-2 sm:mt-8 sm:flex sm:justify-center sm:gap-3">
+              <a
+                href={whatsappCommunityUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-black text-primary-foreground transition hover:bg-primary-deep"
               >
-                ana sayfaya dön
-              </Link>
+                <MessageCircle className="h-4 w-4" />
+                WhatsApp community’ye katıl
+              </a>
               <Link
                 to="/community"
                 className="inline-flex items-center justify-center rounded-full border border-border bg-background px-6 py-3 text-sm font-black transition hover:border-primary hover:text-primary-deep"
               >
-                sahneye hikaye gönder
+                community sayfasını gör
+              </Link>
+              <Link
+                to="/"
+                className="inline-flex items-center justify-center px-6 py-2 text-sm font-bold text-foreground/60 transition hover:text-primary-deep"
+              >
+                ana sayfaya dön
               </Link>
             </div>
           </div>
