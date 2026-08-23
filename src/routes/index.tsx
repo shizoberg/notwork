@@ -808,7 +808,7 @@ function SubmitCTA() {
           </p>
           <div className="mt-7 flex flex-col sm:flex-row gap-3">
             <Link
-              to="/community"
+              to="/sunum-yukle"
               className="inline-flex items-center justify-center px-6 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition"
             >
               Sunumu gönder →

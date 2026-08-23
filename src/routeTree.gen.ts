@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SunumYukleRouteImport } from './routes/sunum-yukle'
 import { Route as StartupRouteImport } from './routes/startup'
 import { Route as SponsorRouteImport } from './routes/sponsor'
 import { Route as NotworkNedirRouteImport } from './routes/notwork-nedir'
@@ -31,6 +32,11 @@ import { Route as R21AgustosSonuclarRouteImport } from './routes/21-agustos.sonu
 import { Route as R21AgustosNetworkRouteImport } from './routes/21-agustos.network'
 import { Route as R21AgustosEslesmeRouteImport } from './routes/21-agustos.eslesme'
 
+const SunumYukleRoute = SunumYukleRouteImport.update({
+  id: '/sunum-yukle',
+  path: '/sunum-yukle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StartupRoute = StartupRouteImport.update({
   id: '/startup',
   path: '/startup',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/notwork-nedir': typeof NotworkNedirRoute
   '/sponsor': typeof SponsorRoute
   '/startup': typeof StartupRoute
+  '/sunum-yukle': typeof SunumYukleRoute
   '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/notwork-nedir': typeof NotworkNedirRoute
   '/sponsor': typeof SponsorRoute
   '/startup': typeof StartupRoute
+  '/sunum-yukle': typeof SunumYukleRoute
   '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
@@ -202,6 +210,7 @@ export interface FileRoutesById {
   '/notwork-nedir': typeof NotworkNedirRoute
   '/sponsor': typeof SponsorRoute
   '/startup': typeof StartupRoute
+  '/sunum-yukle': typeof SunumYukleRoute
   '/21-agustos/eslesme': typeof R21AgustosEslesmeRoute
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/notwork-nedir'
     | '/sponsor'
     | '/startup'
+    | '/sunum-yukle'
     | '/21-agustos/eslesme'
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/notwork-nedir'
     | '/sponsor'
     | '/startup'
+    | '/sunum-yukle'
     | '/21-agustos/eslesme'
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/notwork-nedir'
     | '/sponsor'
     | '/startup'
+    | '/sunum-yukle'
     | '/21-agustos/eslesme'
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
@@ -297,6 +309,7 @@ export interface RootRouteChildren {
   NotworkNedirRoute: typeof NotworkNedirRoute
   SponsorRoute: typeof SponsorRoute
   StartupRoute: typeof StartupRoute
+  SunumYukleRoute: typeof SunumYukleRoute
   R21AgustosEslesmeRoute: typeof R21AgustosEslesmeRoute
   R21AgustosNetworkRoute: typeof R21AgustosNetworkRoute
   R21AgustosSonuclarRoute: typeof R21AgustosSonuclarRoute
@@ -305,6 +318,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sunum-yukle': {
+      id: '/sunum-yukle'
+      path: '/sunum-yukle'
+      fullPath: '/sunum-yukle'
+      preLoaderRoute: typeof SunumYukleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/startup': {
       id: '/startup'
       path: '/startup'
@@ -473,6 +493,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotworkNedirRoute: NotworkNedirRoute,
   SponsorRoute: SponsorRoute,
   StartupRoute: StartupRoute,
+  SunumYukleRoute: SunumYukleRoute,
   R21AgustosEslesmeRoute: R21AgustosEslesmeRoute,
   R21AgustosNetworkRoute: R21AgustosNetworkRoute,
   R21AgustosSonuclarRoute: R21AgustosSonuclarRoute,
