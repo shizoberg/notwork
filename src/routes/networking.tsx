@@ -146,16 +146,102 @@ const roleGroups = [
   },
 ] as const;
 
-function getRoleGroup(member: Member) {
-  const profile = normalizeSearchText(
+const maxMembersPerVisualCluster = 18;
+
+const roleSubgroups: Record<
+  string,
+  Array<{
+    id: string;
+    label: string;
+    keywords: string[];
+  }>
+> = {
+  technology: [
+    {
+      id: "software",
+      label: "Yazılım",
+      keywords: ["yazılım", "developer", "frontend", "backend", "fullstack", "react", "typescript"],
+    },
+    { id: "data-ai", label: "AI & Veri", keywords: ["veri", "data", "ai", "yapay zeka", "python"] },
+    {
+      id: "automation",
+      label: "Otomasyon",
+      keywords: ["otomasyon", "api", "excel", "nocode", "no-code"],
+    },
+  ],
+  design: [
+    { id: "ux-ui", label: "UX/UI", keywords: ["ux", "ui", "figma", "product", "ürün"] },
+    { id: "brand", label: "Grafik & Marka", keywords: ["grafik", "marka", "illüstr", "logo"] },
+    { id: "fashion", label: "Moda & Ürün", keywords: ["moda", "stil", "tekstil"] },
+  ],
+  content: [
+    {
+      id: "photo-video",
+      label: "Fotoğraf & Video",
+      keywords: ["fotoğraf", "fotoğrafçı", "video", "kurgu"],
+    },
+    { id: "social", label: "Sosyal Medya", keywords: ["sosyal medya", "reklam", "influencer"] },
+    { id: "stage", label: "Sahne & Ses", keywords: ["sahne", "müzik", "podcast", "youtuber"] },
+  ],
+  marketing: [
+    { id: "sales-growth", label: "Satış & Growth", keywords: ["satış", "growth", "performans"] },
+    { id: "brand-marketing", label: "Marka & Reklam", keywords: ["marka", "reklam", "pazarlama"] },
+    { id: "social-marketing", label: "Sosyal Medya", keywords: ["sosyal medya", "içerik"] },
+  ],
+  business: [
+    {
+      id: "startup",
+      label: "Startup & Kurucu",
+      keywords: ["startup", "girişim", "kurucu", "founder"],
+    },
+    { id: "strategy", label: "Strateji & Proje", keywords: ["strateji", "proje", "iş geliştirme"] },
+  ],
+  community: [
+    { id: "events", label: "Etkinlik", keywords: ["etkinlik", "organizasyon"] },
+    { id: "community-build", label: "Topluluk", keywords: ["topluluk", "community"] },
+    { id: "travel", label: "Turizm", keywords: ["turizm", "seyahat"] },
+  ],
+  people: [
+    { id: "psychology", label: "Psikoloji", keywords: ["psikolog", "terapi", "empati"] },
+    {
+      id: "hr",
+      label: "İK & Kariyer",
+      keywords: ["insan kaynakları", "ik", "kariyer", "işe alım"],
+    },
+    { id: "education", label: "Eğitim & Mentörlük", keywords: ["eğitim", "koç", "mentör"] },
+  ],
+};
+
+function getMemberProfile(member: Member) {
+  return normalizeSearchText(
     `${member.title} ${member.skills.join(" ")} ${member.motivation || ""}`,
   );
+}
+
+function getRoleGroup(member: Member) {
+  const profile = getMemberProfile(member);
   return (
     roleGroups.find(
       (group) =>
         group.id !== "other" &&
         group.keywords.some((keyword) => profile.includes(normalizeSearchText(keyword))),
     ) || roleGroups[roleGroups.length - 1]
+  );
+}
+
+function getRoleSubgroup(member: Member, groupId: string) {
+  const profile = getMemberProfile(member);
+  const subgroups = roleSubgroups[groupId] || [];
+  return (
+    subgroups.find((subgroup) =>
+      subgroup.keywords.some((keyword) => profile.includes(normalizeSearchText(keyword))),
+    ) || { id: "general", label: "Genel", keywords: [] }
+  );
+}
+
+function chunkMembers(members: Member[], size = maxMembersPerVisualCluster) {
+  return Array.from({ length: Math.ceil(members.length / size) }, (_, index) =>
+    members.slice(index * size, index * size + size),
   );
 }
 
@@ -1431,12 +1517,40 @@ function NetworkGraph({
 
   const groupedMembers = useMemo(
     () =>
-      roleGroups
-        .map((group) => ({
-          group,
-          members: members.filter((member) => getRoleGroup(member).id === group.id),
-        }))
-        .filter((entry) => entry.members.length > 0),
+      roleGroups.flatMap((group) => {
+        const groupMembers = members.filter((member) => getRoleGroup(member).id === group.id);
+        if (groupMembers.length === 0) return [];
+        if (groupMembers.length <= maxMembersPerVisualCluster) {
+          return [
+            {
+              group,
+              label: group.label,
+              members: groupMembers,
+              visualId: group.id,
+            },
+          ];
+        }
+
+        const subgroupMap = new Map<string, { label: string; members: Member[] }>();
+        for (const member of groupMembers) {
+          const subgroup = getRoleSubgroup(member, group.id);
+          const current = subgroupMap.get(subgroup.id) || { label: subgroup.label, members: [] };
+          current.members.push(member);
+          subgroupMap.set(subgroup.id, current);
+        }
+
+        return [...subgroupMap.entries()].flatMap(([subgroupId, subgroup]) =>
+          chunkMembers(subgroup.members).map((chunk, chunkIndex, chunks) => ({
+            group,
+            label:
+              subgroup.label === "Genel"
+                ? group.label
+                : `${group.label} / ${subgroup.label}${chunks.length > 1 ? ` ${chunkIndex + 1}` : ""}`,
+            members: chunk,
+            visualId: `${group.id}-${subgroupId}-${chunkIndex}`,
+          })),
+        );
+      }),
     [members],
   );
 
@@ -1473,6 +1587,7 @@ function NetworkGraph({
         return {
           ...member,
           groupId: cluster.group.id,
+          visualId: cluster.visualId,
           x: cluster.centerX + Math.cos(angle) * orbit * (cluster.members.length > 1 ? 1 : 0),
           y: cluster.centerY + Math.sin(angle) * orbit * (cluster.members.length > 1 ? 1 : 0),
         };
@@ -1484,7 +1599,9 @@ function NetworkGraph({
   const edges = useMemo(() => {
     const connections = new Map<string, { first: number; second: number; weight: number }>();
     layout.nodes.forEach((node, firstIndex) => {
-      const matches = getRecommendations(node, layout.nodes).slice(0, 2);
+      const matches = getRecommendations(node, layout.nodes)
+        .filter((match) => match.member.id !== node.id)
+        .slice(0, 1);
       for (const match of matches) {
         const secondIndex = layout.nodes.findIndex((candidate) => candidate.id === match.member.id);
         if (secondIndex < 0) continue;
@@ -1548,7 +1665,7 @@ function NetworkGraph({
             </marker>
           </defs>
           {layout.clusters.map((cluster) => (
-            <g key={cluster.group.id}>
+            <g key={cluster.visualId}>
               <circle
                 cx={cluster.centerX}
                 cy={cluster.centerY}
@@ -1563,7 +1680,7 @@ function NetworkGraph({
                 textAnchor="middle"
                 className="fill-foreground/70 text-[11px] font-bold uppercase tracking-wider"
               >
-                {cluster.group.label} · {cluster.members.length}
+                {cluster.label} · {cluster.members.length}
               </text>
             </g>
           ))}
