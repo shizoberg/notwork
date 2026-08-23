@@ -8,10 +8,12 @@ import {
   Handshake,
   Instagram,
   Menu,
+  MessageCircle,
   Presentation,
   Rocket,
   Sparkles,
   UsersRound,
+  X,
   Youtube,
 } from "lucide-react";
 
@@ -26,6 +28,9 @@ import {
 import { COOKIE_CONSENT_OPEN_EVENT } from "@/lib/cookie-consent";
 
 type SiteNavVariant = "default" | "event" | "eventDark";
+
+const mobileHeaderLinkClass =
+  "inline-flex h-11 items-center rounded-lg px-1.5 text-[11px] font-medium leading-none text-foreground transition hover:bg-muted";
 
 export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
   if (variant !== "default") return <EventSiteNav variant={variant} />;
@@ -58,16 +63,10 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
           </Link>
         </nav>
         <div className="ml-auto flex items-center gap-0.5 sm:hidden">
-          <a
-            href="/#katilimci-yorumlari"
-            className="rounded-lg px-1.5 py-2 text-[10px] font-medium text-foreground transition hover:bg-muted"
-          >
+          <a href="/#katilimci-yorumlari" className={mobileHeaderLinkClass}>
             Etkinlikler
           </a>
-          <Link
-            to="/networking"
-            className="rounded-lg px-1.5 py-2 text-[10px] font-medium text-foreground transition hover:bg-muted"
-          >
+          <Link to="/networking" className={mobileHeaderLinkClass}>
             Network Ağı
           </Link>
           <MobileSiteMenu />
@@ -126,7 +125,7 @@ function MobileSiteMenu() {
           <button
             type="button"
             aria-label="Site menüsünü aç"
-            className="group inline-flex h-11 items-center gap-2 rounded-full px-2.5 text-[10px] font-medium text-foreground outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary sm:hidden"
+            className={`${mobileHeaderLinkClass} group gap-1.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary sm:hidden`}
           >
             <span>Menü</span>
             <span className="flex h-7 w-7 items-center justify-center rounded-full border border-primary/35 bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground group-data-[state=open]:rotate-90 group-data-[state=open]:bg-primary group-data-[state=open]:text-primary-foreground">
@@ -138,15 +137,25 @@ function MobileSiteMenu() {
         <DropdownMenuContent
           align="end"
           sideOffset={10}
-          className="z-[9999] w-[calc(100vw-1.5rem)] max-w-[370px] rounded-[30px] border border-white/90 bg-background/90 p-2.5 shadow-[0_32px_100px_rgba(7,17,18,0.34)] ring-1 ring-foreground/5 backdrop-blur-[34px] animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200 sm:hidden"
+          className="z-[9999] w-[calc(100vw-1.5rem)] max-w-[370px] rounded-[30px] border border-white/90 bg-background p-2.5 shadow-[0_32px_100px_rgba(7,17,18,0.34)] ring-1 ring-foreground/5 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200 sm:hidden"
         >
-          <div className="rounded-[22px] bg-primary/10 px-4 py-3.5">
-            <DropdownMenuLabel className="p-0 text-[10px] font-black uppercase tracking-[0.22em] text-primary-deep">
-              notwork’ü keşfet
-            </DropdownMenuLabel>
-            <div className="mt-1 text-sm font-medium leading-snug text-muted-foreground">
-              Hikâyelerden doğru bağlantılara.
+          <div className="flex items-start justify-between gap-3 rounded-[22px] bg-primary/10 px-4 py-3.5">
+            <div className="min-w-0">
+              <DropdownMenuLabel className="p-0 text-[10px] font-black uppercase tracking-[0.22em] text-primary-deep">
+                notwork’ü keşfet
+              </DropdownMenuLabel>
+              <div className="mt-1 text-sm font-medium leading-snug text-muted-foreground">
+                Hikâyelerden doğru bağlantılara.
+              </div>
             </div>
+            <button
+              type="button"
+              aria-label="Menüyü kapat"
+              onClick={() => setOpen(false)}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/25 bg-background/80 text-foreground transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <X size={17} strokeWidth={2.2} />
+            </button>
           </div>
 
           <div className="mt-2 grid gap-1">
@@ -214,6 +223,26 @@ function MobileSiteMenu() {
               </span>
               <ArrowUpRight size={17} className="shrink-0" />
             </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem asChild className="mt-1.5 rounded-[20px] p-0 focus:bg-primary/10">
+            <a
+              href="https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE"
+              target="_blank"
+              rel="noreferrer"
+              className="group flex items-center gap-3 rounded-[20px] bg-primary px-4 py-3 text-primary-foreground outline-none transition hover:bg-primary-deep"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary-foreground/15">
+                <MessageCircle size={19} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-black">WhatsApp’a katıl</span>
+                <span className="mt-0.5 block text-[11px] text-primary-foreground/70">
+                  Community duyurularını takip et.
+                </span>
+              </span>
+              <ArrowUpRight size={17} className="shrink-0" />
+            </a>
           </DropdownMenuItem>
 
           <div className="mt-2 grid grid-cols-2 gap-1.5">
