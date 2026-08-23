@@ -1,36 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { NetworkStartupPage } from "./network-startup";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/startup")({
-  head: () => ({
-    meta: [
-      { title: "Network Startup | notwork" },
-      {
-        name: "description",
-        content:
-          "Kendi işini geliştirmek, işini kurmak veya projesini doğru bağlantılarla büyütmek isteyen girişimciler için notwork Network Startup formu.",
-      },
-      {
-        name: "keywords",
-        content:
-          "network startup, startup networking, girişimci ağı, notwork startup, İzmir startup, proje geliştirme",
-      },
-      { property: "og:title", content: "Network Startup | notwork" },
-      {
-        property: "og:description",
-        content:
-          "Projeni anlat; Berk Aktaş ve notwork ağı sana doğru bağlantıları bulmaya çalışsın.",
-      },
-      { property: "og:url", content: "https://notwork.me/startup" },
-      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
-      { name: "twitter:title", content: "Network Startup | notwork" },
-      {
-        name: "twitter:description",
-        content: "Kendi işini kurmak veya büyütmek isteyenler için bağlantı odaklı destek formu.",
-      },
-      { name: "twitter:image", content: "https://notwork.me/notwork-social.jpg" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/startup" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "İzmir Startup Ağı ve Proje Desteği | notwork",
+      description:
+        "İzmir’de startup projesini anlat, pazarlama ihtiyacını paylaş ve notwork network club topluluğundan doğru bağlantılarla destek al.",
+      path: "/startup",
+      keywords: ["İzmir startup", "İzmir girişimci ağı", "startup proje desteği"],
+    }),
   component: NetworkStartupPage,
 });

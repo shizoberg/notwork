@@ -13,42 +13,23 @@ import gallery13 from "@/assets/gallery/notwork-13.jpg";
 import { InterviewReels } from "@/components/InterviewReels";
 import { SiteNav, SiteFooter } from "@/components/SiteNav";
 import { averageRating, listEventReviews, type EventReview } from "@/lib/event-reviews";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "notwork | İzmir Networking, Event ve Başarısızlık Hikâyeleri" },
-      {
-        name: "description",
-        content:
-          "notwork İzmir; başarısızlık hikâyeleri, girişimcilik deneyimleri ve networking odaklı tanışma alanıyla İzmir’de güçlü bağlantılar kurduran event ve topluluktur.",
-      },
-      {
-        name: "keywords",
-        content:
-          "notwork, notwork İzmir, notwork.me, İzmir networking, networking event İzmir, notwork networking, İzmir etkinlik, başarısızlık hikâyeleri, girişimcilik etkinliği, Mahal Bomonti",
-      },
-      { property: "og:title", content: "notwork İzmir | Uğraşıp da Olduramadıklarının Sahnesi" },
-      {
-        property: "og:description",
-        content:
-          "Gerçek başarısızlıkları, çıkarılan dersleri ve başarıya dönüşen hikâyeleri İzmir’de birlikte dinliyoruz.",
-      },
-      { property: "og:url", content: "https://notwork.me/" },
-      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
-      { property: "og:image:width", content: "1080" },
-      { property: "og:image:height", content: "1080" },
-      { property: "og:image:alt", content: "notwork İzmir etkinliğinden katılımcılar" },
-      { name: "twitter:title", content: "notwork İzmir | Uğraşıp da Olduramadıklarının Sahnesi" },
-      {
-        name: "twitter:description",
-        content:
-          "Başarısızlıklardan öğrenilenlerin ve başarıya dönüşen gerçek hikâyelerin sahnesi.",
-      },
-      { name: "twitter:image", content: "https://notwork.me/notwork-social.jpg" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "notwork Network Club - İzmir Başarısızlık Hikâyeleri",
+      description:
+        "notwork, İzmir’de başarısızlık hikâyelerinin anlatıldığı bir network club. Gerçek deneyimleri dinle, doğru dersleri çıkar ve yeni bağlantılar kur.",
+      path: "/",
+      keywords: [
+        "İzmir network etkinliği",
+        "İzmir networking event",
+        "networking club İzmir",
+        "girişimcilik hikâyeleri",
+        "f*ckup nights İzmir",
+      ],
+    }),
   component: Landing,
 });
 

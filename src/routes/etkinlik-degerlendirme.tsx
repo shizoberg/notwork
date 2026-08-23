@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { addEventReview } from "@/lib/event-reviews";
+import { createSeo } from "@/lib/seo";
 
 const events = [
   { id: "21-agustos-2026", title: "21 Ağustos notwork", location: "House of Rene Lokal" },
@@ -17,19 +18,14 @@ const events = [
 ];
 
 export const Route = createFileRoute("/etkinlik-degerlendirme")({
-  head: () => ({
-    meta: [
-      { title: "Etkinlik Değerlendirme | notwork İzmir" },
-      {
-        name: "description",
-        content:
-          "Katıldığın notwork etkinliğini seç, fotoğrafını ekle, yorumunu yaz ve 5 yıldız üzerinden puanla.",
-      },
-      { property: "og:title", content: "notwork Etkinlik Değerlendirme" },
-      { property: "og:url", content: "https://notwork.me/etkinlik-degerlendirme" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/etkinlik-degerlendirme" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "notwork İzmir Etkinliğini Değerlendir",
+      description:
+        "Katıldığın notwork İzmir network club etkinliğini seç; fotoğrafını ekle, yorumunu yaz ve deneyimini 5 yıldız üzerinden puanla.",
+      path: "/etkinlik-degerlendirme",
+      keywords: ["notwork yorum", "İzmir etkinlik yorumu", "network etkinliği değerlendirme"],
+    }),
   component: EventReviewPage,
 });
 

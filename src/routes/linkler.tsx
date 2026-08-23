@@ -4,23 +4,18 @@ import { useEffect, useMemo, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import type { EventNetworkRegistration } from "@/lib/event-network";
 import { getEventNetworkMe, registerEventNetwork } from "@/lib/event-network-api";
+import { createNoIndexSeo } from "@/lib/seo";
 
 const tokenStorageKey = "notwork_21_agustos_network_token";
 
 export const Route = createFileRoute("/linkler")({
-  head: () => ({
-    meta: [
-      { title: "notwork Linkler | 21 Ağustos Etkinlik Girişi" },
-      {
-        name: "description",
-        content:
-          "notwork 21 Ağustos etkinlik giriş sayfası: önce KVKK onaylı hızlı kayıt, sonra anket, Notworking Match Lab, WhatsApp ve etkinlik yorumu bağlantıları.",
-      },
-      { property: "og:title", content: "notwork 21 Ağustos linkler" },
-      { property: "og:url", content: "https://notwork.me/linkler" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/linkler" }],
-  }),
+  head: () =>
+    createNoIndexSeo({
+      title: "notwork Etkinlik Girişi | Anket ve Match Lab",
+      description:
+        "notwork etkinlik katılımcıları için kayıt, canlı anket, Match Lab, WhatsApp topluluğu ve etkinlik yorumu bağlantıları.",
+      path: "/linkler",
+    }),
   component: LinksPage,
 });
 

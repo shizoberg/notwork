@@ -1,34 +1,17 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { CalendarDays, Camera, MessageCircle, Play, Sparkles, Upload, Users } from "lucide-react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/community")({
-  head: () => ({
-    meta: [
-      { title: "notwork Community | İzmir Networking Club" },
-      {
-        name: "description",
-        content:
-          "notwork community; İzmir'de başarısızlık hikâyeleri, networking, etkinlik röportajları, galeri, WhatsApp topluluğu ve yeni etkinlik takvimi.",
-      },
-      { property: "og:title", content: "notwork Community | İzmir Networking Club" },
-      {
-        property: "og:description",
-        content:
-          "notwork community vibe: etkinlik fotoğrafları, röportajlar, topluluk ağı ve WhatsApp duyuru kanalı.",
-      },
-      { property: "og:url", content: "https://notwork.me/community" },
-      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
-      { name: "twitter:title", content: "notwork Community | İzmir Networking Club" },
-      {
-        name: "twitter:description",
-        content:
-          "notwork topluluğunun fotoğrafları, röportajları, etkinlik takvimi ve bağlantıları.",
-      },
-      { name: "twitter:image", content: "https://notwork.me/notwork-social.jpg" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/community" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "notwork Community | İzmir Network Club Topluluğu",
+      description:
+        "notwork Community, İzmir’de başarısızlık hikâyeleri etrafında buluşan network club üyelerini etkinlikler, WhatsApp topluluğu ve networking ağıyla bir araya getirir.",
+      path: "/community",
+      keywords: ["İzmir network topluluğu", "İzmir community", "network club topluluğu"],
+    }),
   component: Community,
 });
 

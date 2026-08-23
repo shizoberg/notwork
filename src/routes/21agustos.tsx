@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { InterviewReels } from "@/components/InterviewReels";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { averageRating, listEventReviews, type EventReview } from "@/lib/event-reviews";
+import { createSeo } from "@/lib/seo";
 
 const ticketUrl =
   "https://www.biletimgo.com/etkinlik/notwork-basarisizlik-hikayeleri-networking-club-29731";
@@ -10,37 +11,15 @@ const locationUrl =
   "https://www.google.com/maps/search/?api=1&query=House%20of%20Rene%20Lokal%20Erzene%20Mahallesi%20Fevzi%20%C3%87akmak%20Caddesi%20No%2049%20Bornova%20%C4%B0zmir";
 
 export const Route = createFileRoute("/21agustos")({
-  head: () => ({
-    meta: [
-      { title: "21 Ağustos notwork İzmir | Rene Lokal Networking Eventi" },
-      {
-        name: "description",
-        content:
-          "21 Ağustos Cuma House of Rene Lokal Bornova’da notwork başarısızlık hikâyeleri ve networking club etkinliği. Kapı açılış 19.30, bilet ve konum bilgileri.",
-      },
-      {
-        name: "keywords",
-        content:
-          "21 Ağustos notwork, notwork İzmir, Rene Lokal, Bornova networking event, İzmir networking, başarısızlık hikayeleri",
-      },
-      { property: "og:title", content: "21 Ağustos notwork İzmir | Rene Lokal" },
-      {
-        property: "og:description",
-        content:
-          "Başarısızlık hikâyelerinden çıkarılmış dersler ve doğru bağlantılar için 21 Ağustos’ta Rene Lokal’de buluşuyoruz.",
-      },
-      { property: "og:url", content: "https://notwork.me/21agustos" },
-      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
-      { name: "twitter:title", content: "21 Ağustos notwork İzmir | Rene Lokal" },
-      {
-        name: "twitter:description",
-        content:
-          "21 Ağustos Cuma Rene Lokal Bornova’da notwork başarısızlık hikâyeleri ve networking eventi.",
-      },
-      { name: "twitter:image", content: "https://notwork.me/notwork-social.jpg" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/21agustos" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "21 Ağustos notwork İzmir | Network Club Etkinliği",
+      description:
+        "21 Ağustos notwork İzmir network club gecesinin başarısızlık hikâyelerini, katılımcı yorumlarını, röportajlarını ve networking anlarını keşfet.",
+      path: "/21agustos",
+      keywords: ["21 Ağustos notwork", "Bornova networking", "Rene Lokal etkinlik"],
+      type: "article",
+    }),
   component: AugustTwentyFirst,
 });
 

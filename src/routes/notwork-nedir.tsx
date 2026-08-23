@@ -6,31 +6,17 @@ import gallery4 from "@/assets/gallery/notwork-4.jpg";
 import gallery6 from "@/assets/gallery/notwork-6.jpg";
 import gallery8 from "@/assets/gallery/notwork-8.jpg";
 import gallery13 from "@/assets/gallery/notwork-13.jpg";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/notwork-nedir")({
-  head: () => ({
-    meta: [
-      { title: "notwork nedir? | networking club" },
-      {
-        name: "description",
-        content:
-          "notwork; başarısızlık hikayelerinden çıkarılmış doğru dersleri dinlediğin, sonra doğru insanlarla bağ kurduğun İzmir merkezli networking club.",
-      },
-      {
-        name: "keywords",
-        content:
-          "notwork nedir, networking club, İzmir networking, başarısızlık hikayeleri, notwork felsefe, notwork event akışı",
-      },
-      { property: "og:title", content: "notwork nedir? | networking club" },
-      {
-        property: "og:description",
-        content: "event akışı, sistem ve felsefe: notwork’ün nasıl çalıştığını adım adım keşfet.",
-      },
-      { property: "og:url", content: "https://notwork.me/notwork-nedir" },
-      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/notwork-nedir" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "notwork Nedir? | İzmir Network Club",
+      description:
+        "notwork, İzmir’de başarısızlık hikâyelerinin anlatıldığı ve katılımcıların doğru bağlantılar kurduğu bir network club. Etkinlik akışını ve felsefesini keşfet.",
+      path: "/notwork-nedir",
+      keywords: ["notwork nedir", "network club nedir", "başarısızlık etkinliği"],
+    }),
   component: NotworkNedirPage,
 });
 

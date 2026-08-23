@@ -1,41 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { createSeo } from "@/lib/seo";
 
 const sponsorMailUrl =
   "mailto:berk@carewithki.com?subject=notwork%20sponsorlu%C4%9Fu%20hakk%C4%B1nda%20g%C3%B6r%C3%BC%C5%9Fmek%20istiyorum";
 
 export const Route = createFileRoute("/sponsor")({
-  head: () => ({
-    meta: [
-      { title: "notwork Sponsor Ol | Marka Deneyimi ve Meslek Bazlı Etkinlikler" },
-      {
-        name: "description",
-        content:
-          "notwork sponsorluğu ile markanız için etkinlik içi çekim, ürün deneyimi, doğru konsept eşleşmesi ve meslek bazlı özel networking etkinlikleri tasarlıyoruz.",
-      },
-      {
-        name: "keywords",
-        content:
-          "notwork sponsor, İzmir etkinlik sponsorluğu, marka deneyimi, ürün deneyimi, meslek bazlı etkinlik, notpharmacy, notdoctor, notarchitecture",
-      },
-      { property: "og:title", content: "notwork Sponsor Ol" },
-      {
-        property: "og:description",
-        content:
-          "Markanızı notwork sahnesiyle buluşturun: çekim hizmeti, ürün deneyimi ve meslek bazlı özel etkinlik formatları.",
-      },
-      { property: "og:url", content: "https://notwork.me/sponsor" },
-      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
-      { name: "twitter:title", content: "notwork Sponsor Ol" },
-      {
-        name: "twitter:description",
-        content:
-          "notwork sponsorluğu ile markanız için doğru konsepti ve hedef topluluğu buluşturuyoruz.",
-      },
-      { name: "twitter:image", content: "https://notwork.me/notwork-social.jpg" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/sponsor" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "İzmir Etkinlik Sponsorluğu | notwork Network Club",
+      description:
+        "notwork İzmir network club etkinliklerinde marka deneyimi, ürün yerleştirme, içerik üretimi ve isim sponsorluğu fırsatlarını keşfet.",
+      path: "/sponsor",
+      keywords: ["İzmir etkinlik sponsorluğu", "İzmir marka iş birliği", "networking sponsorluğu"],
+    }),
   component: SponsorPage,
 });
 

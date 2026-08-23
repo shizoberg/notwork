@@ -1,27 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/kvkk")({
-  head: () => ({
-    meta: [
-      { title: "KVKK Aydınlatma Metni | notwork İzmir" },
-      {
-        name: "description",
-        content:
-          "notwork İzmir web sitesi, networking formları, etkinlik başvuruları ve topluluk iletişimi için KVKK kapsamındaki kişisel veri işleme bilgilendirmesi.",
-      },
-      { name: "robots", content: "index, follow" },
-      { property: "og:title", content: "KVKK Aydınlatma Metni | notwork" },
-      {
-        property: "og:description",
-        content:
-          "notwork tarafından işlenen kişisel veriler, işleme amaçları, aktarım kapsamı ve KVKK haklarınız.",
-      },
-      { property: "og:url", content: "https://notwork.me/kvkk" },
-      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/kvkk" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "KVKK Aydınlatma Metni | notwork İzmir",
+      description:
+        "notwork İzmir web sitesi, network club formları, etkinlik başvuruları ve topluluk iletişimi için kişisel veri işleme bilgilendirmesi.",
+      path: "/kvkk",
+      keywords: ["notwork KVKK", "networking veri politikası"],
+    }),
   component: KvkkPage,
 });
 

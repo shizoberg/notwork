@@ -1,29 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/sunum-yukle")({
-  head: () => ({
-    meta: [
-      { title: "Sunum Yükle | notwork" },
-      {
-        name: "description",
-        content:
-          "notwork sahnesine çıkmak için başarısızlıktan öğrendiğin hikâyeyi ve sunum bilgilerini gönder.",
-      },
-      { property: "og:title", content: "Sunum Yükle | notwork" },
-      {
-        property: "og:description",
-        content: "Hikâyeni gönder, notwork sahnesinde birlikte anlatalım.",
-      },
-      { property: "og:url", content: "https://notwork.me/sunum-yukle" },
-      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
-      { name: "twitter:title", content: "Sunum Yükle | notwork" },
-      { name: "twitter:description", content: "Hikâyeni notwork sahnesine taşı." },
-      { name: "twitter:image", content: "https://notwork.me/notwork-social.jpg" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/sunum-yukle" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "Başarısızlık Hikâyeni Anlat | notwork İzmir",
+      description:
+        "Başarısızlıktan çıkardığın dersi notwork İzmir network club sahnesinde anlatmak için sunumunu ve hikâyeni gönder.",
+      path: "/sunum-yukle",
+      keywords: ["İzmir konuşmacı başvurusu", "başarısızlık hikayesi anlat", "notwork sunum"],
+    }),
   component: PresentationUpload,
 });
 

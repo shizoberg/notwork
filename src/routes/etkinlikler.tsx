@@ -2,38 +2,21 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/etkinlikler")({
-  head: () => ({
-    meta: [
-      { title: "notwork Etkinlikleri | İzmir Networking Event Kataloğu" },
-      {
-        name: "description",
-        content:
-          "notwork İzmir etkinlik kataloğu: geçmiş networking geceleri, katılımcı sayıları, lokasyonlar ve event sayfaları.",
-      },
-      {
-        name: "keywords",
-        content:
-          "notwork etkinlikleri, İzmir networking etkinlikleri, notwork İzmir, başarısızlık hikayeleri, event kataloğu",
-      },
-      { property: "og:title", content: "notwork Etkinlikleri" },
-      {
-        property: "og:description",
-        content:
-          "Geçmiş notwork gecelerini, lokasyonları ve katılımcı sayılarını filtreleyerek keşfet.",
-      },
-      { property: "og:url", content: "https://notwork.me/etkinlikler" },
-      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
-      { name: "twitter:title", content: "notwork Etkinlikleri" },
-      {
-        name: "twitter:description",
-        content: "notwork İzmir networking event kataloğu ve geçmiş etkinlik arşivi.",
-      },
-      { name: "twitter:image", content: "https://notwork.me/notwork-social.jpg" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/etkinlikler" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "İzmir Networking Etkinlikleri | notwork Network Club",
+      description:
+        "notwork İzmir network club etkinliklerini keşfet: başarısızlık hikâyeleri, gerçek dersler, katılımcı yorumları ve networking geceleri.",
+      path: "/etkinlikler",
+      keywords: [
+        "İzmir networking etkinlikleri",
+        "İzmir network etkinliği",
+        "İzmir etkinlik takvimi",
+      ],
+    }),
   component: EventsCatalogPage,
 });
 

@@ -1,40 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createSeo } from "@/lib/seo";
 
 const legacyMailUrl =
   "mailto:berk@carewithki.com?subject=notwork%20legacy%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum";
 
 export const Route = createFileRoute("/legacy")({
-  head: () => ({
-    meta: [
-      { title: "notwork Legacy | Private Üyelik ve Özel Toplanmalar" },
-      {
-        name: "description",
-        content:
-          "notwork Legacy; düzenli etkinliklere katılan, topluluğu geliştiren ve seçilen üyelerin özel yemeklere, private buluşmalara ve özel network ağlarına davet edildiği üyelik deneyimidir.",
-      },
-      {
-        name: "keywords",
-        content:
-          "notwork legacy, notwork private etkinlik, notwork üyelik, İzmir özel networking, premium networking, özel network ağları",
-      },
-      { property: "og:title", content: "notwork Legacy" },
-      {
-        property: "og:description",
-        content:
-          "Seçilmiş notwork üyeleri için private toplanmalar, özel yemekler ve özel network ağları deneyimi.",
-      },
-      { property: "og:url", content: "https://notwork.me/legacy" },
-      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
-      { name: "twitter:title", content: "notwork Legacy" },
-      {
-        name: "twitter:description",
-        content:
-          "notwork topluluğunun seçilmiş üyeleri için özel, private ve premium üyelik deneyimi.",
-      },
-      { name: "twitter:image", content: "https://notwork.me/notwork-social.jpg" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/legacy" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "notwork Legacy | İzmir Özel Network Topluluğu",
+      description:
+        "notwork Legacy, İzmir network club topluluğunun seçilen üyeleri için özel buluşmalar, yemekler ve nitelikli bağlantılar sunan üyelik deneyimi.",
+      path: "/legacy",
+      keywords: ["İzmir özel networking", "notwork üyelik", "private network topluluğu"],
+    }),
   component: LegacyPage,
 });
 

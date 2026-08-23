@@ -1,28 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { COOKIE_CONSENT_OPEN_EVENT } from "@/lib/cookie-consent";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/cerez-politikasi")({
-  head: () => ({
-    meta: [
-      { title: "Çerez Politikası | notwork İzmir" },
-      {
-        name: "description",
-        content:
-          "notwork web sitesinde kullanılan zorunlu, analitik ve pazarlama çerezleri; Meta Pixel, site içi ölçüm ve tercih yönetimi hakkında bilgi.",
-      },
-      { name: "robots", content: "index, follow" },
-      { property: "og:title", content: "Çerez Politikası | notwork" },
-      {
-        property: "og:description",
-        content:
-          "notwork.me çerez kullanımı, analiz ve pazarlama ölçümleri ile tercihlerinizi nasıl yöneteceğiniz.",
-      },
-      { property: "og:url", content: "https://notwork.me/cerez-politikasi" },
-      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/cerez-politikasi" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "Çerez Politikası | notwork İzmir",
+      description:
+        "notwork İzmir web sitesinde kullanılan zorunlu, analitik ve pazarlama çerezleri ile Meta Pixel ve tercih yönetimi hakkında bilgi.",
+      path: "/cerez-politikasi",
+      keywords: ["notwork çerez politikası", "notwork gizlilik"],
+    }),
   component: CookiePolicyPage,
 });
 

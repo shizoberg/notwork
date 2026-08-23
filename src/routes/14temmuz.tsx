@@ -2,28 +2,21 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { averageRating, listEventReviews, type EventReview } from "@/lib/event-reviews";
+import { createSeo } from "@/lib/seo";
 
 const ticketUrl = "https://www.biletimgo.com/etkinlik/notwork-bir-tur-network-eventi-28473";
 const locationUrl = "https://maps.app.goo.gl/YfRXaqhTXdZS7W7n8";
 
 export const Route = createFileRoute("/14temmuz")({
-  head: () => ({
-    meta: [
-      { title: "14 Temmuz notwork İzmir | Etkinlik Merkezi" },
-      {
-        name: "description",
-        content:
-          "14 Temmuz 2026 notwork İzmir etkinliğinin programı, konuşmacıları, duyuruları ve etkinlik günü güncellemeleri.",
-      },
-      { property: "og:title", content: "14 Temmuz notwork İzmir" },
-      {
-        property: "og:description",
-        content: "14 Temmuz notwork etkinliğinin programı ve etkinlik günü duyuruları.",
-      },
-      { property: "og:url", content: "https://notwork.me/14temmuz" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/14temmuz" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "14 Temmuz notwork İzmir | Başarısızlık Hikâyeleri",
+      description:
+        "14 Temmuz notwork İzmir network club gecesinin konuşmacıları, başarısızlık hikâyeleri, programı, katılımcı yorumları ve networking anları.",
+      path: "/14temmuz",
+      keywords: ["14 Temmuz notwork", "İzmir network gecesi", "Mahal Bomonti etkinlik"],
+      type: "article",
+    }),
   component: JulyFourteenth,
 });
 
@@ -237,7 +230,6 @@ function JulyFourteenth() {
             ))}
           </div>
         </section>
-
       </main>
       <SiteFooter />
     </div>
@@ -308,7 +300,9 @@ function EventReviewsSection({
                         />
                       )}
                       <div className="flex flex-1 flex-col p-4">
-                        <div className="text-lg text-primary-deep">{renderStars(review.rating)}</div>
+                        <div className="text-lg text-primary-deep">
+                          {renderStars(review.rating)}
+                        </div>
                         <p
                           className={`mt-3 text-sm leading-relaxed text-foreground/70 ${
                             isExpanded ? "" : "line-clamp-6"

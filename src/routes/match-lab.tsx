@@ -15,27 +15,17 @@ import {
   Zap,
 } from "lucide-react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/match-lab")({
-  head: () => ({
-    meta: [
-      { title: "ntw.match.lab v1.0 | notwork AI Networking Eşleştirme Sistemi" },
-      {
-        name: "description",
-        content:
-          "ntw.match.lab v1.0; notwork etkinliklerinde katılımcıların niyet, ihtiyaç ve katkı alanlarına göre doğru üçlü networking grupları oluşturan AI destekli eşleştirme sistemi.",
-      },
-      { property: "og:title", content: "ntw.match.lab v1.0 | notwork" },
-      {
-        property: "og:description",
-        content:
-          "notwork etkinliklerinde doğru insanları sıkıcı olmayan şekilde buluşturan AI destekli networking algoritması.",
-      },
-      { property: "og:url", content: "https://notwork.me/match-lab" },
-      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
-    ],
-    links: [{ rel: "canonical", href: "https://notwork.me/match-lab" }],
-  }),
+  head: () =>
+    createSeo({
+      title: "AI Networking Eşleştirme | ntw.match.lab",
+      description:
+        "ntw.match.lab, notwork İzmir network club etkinliklerinde katılımcıların niyet, ihtiyaç ve katkı alanlarına göre doğru üçlü grupları oluşturan AI destekli eşleştirme sistemi.",
+      path: "/match-lab",
+      keywords: ["AI networking", "networking eşleştirme", "network eşleştirme algoritması"],
+    }),
   component: MatchLabPage,
 });
 
@@ -193,7 +183,9 @@ function MatchLabPage() {
                       0{index + 1}
                     </span>
                   </div>
-                  <h3 className="mt-4 text-lg font-black tracking-[-0.035em] sm:mt-6 sm:text-xl">{principle.title}</h3>
+                  <h3 className="mt-4 text-lg font-black tracking-[-0.035em] sm:mt-6 sm:text-xl">
+                    {principle.title}
+                  </h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     {principle.text}
                   </p>
@@ -215,8 +207,8 @@ function MatchLabPage() {
                 </h2>
               </div>
               <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-                Sohbeti teknoloji değil insanlar yapar. Teknoloji sadece doğru başlangıcı daha
-                hızlı bulur.
+                Sohbeti teknoloji değil insanlar yapar. Teknoloji sadece doğru başlangıcı daha hızlı
+                bulur.
               </p>
             </div>
 
@@ -236,7 +228,9 @@ function MatchLabPage() {
                         {step.number}
                       </span>
                     </div>
-                    <h3 className="mt-4 text-lg font-black tracking-[-0.035em] sm:mt-7 sm:text-xl">{step.title}</h3>
+                    <h3 className="mt-4 text-lg font-black tracking-[-0.035em] sm:mt-7 sm:text-xl">
+                      {step.title}
+                    </h3>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground lg:min-h-20">
                       {step.text}
                     </p>
@@ -280,7 +274,9 @@ function MatchLabPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary-deep">
                 <MessageCircleQuestion className="h-6 w-6" />
               </div>
-              <h3 className="mt-4 text-xl font-black tracking-[-0.04em] sm:mt-5 sm:text-2xl">buzları sistem kırar</h3>
+              <h3 className="mt-4 text-xl font-black tracking-[-0.04em] sm:mt-5 sm:text-2xl">
+                buzları sistem kırar
+              </h3>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
                 Her eşleşmede gruba farklı bir icebreaker sorusu gelir. İlk cümleyi düşünmek yerine
                 doğrudan birbirinizi tanımaya başlarsınız.
@@ -292,7 +288,9 @@ function MatchLabPage() {
 
             <article className="rounded-[1.5rem] border border-border bg-card p-4 shadow-[var(--shadow-card)] sm:rounded-[2rem] sm:p-6">
               <Clock3 className="h-6 w-6 text-primary-deep" />
-              <div className="mt-3 font-display text-3xl font-black tracking-[-0.06em] sm:mt-5 sm:text-4xl">3 kişi</div>
+              <div className="mt-3 font-display text-3xl font-black tracking-[-0.06em] sm:mt-5 sm:text-4xl">
+                3 kişi
+              </div>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 Ne kalabalık ne de kırılgan. Sohbeti akıtacak ideal mini grup.
               </p>
@@ -300,7 +298,9 @@ function MatchLabPage() {
 
             <article className="rounded-[1.5rem] border border-border bg-card p-4 shadow-[var(--shadow-card)] sm:rounded-[2rem] sm:p-6">
               <ShieldCheck className="h-6 w-6 text-primary-deep" />
-              <div className="mt-3 font-display text-3xl font-black tracking-[-0.06em] sm:mt-5 sm:text-4xl">KVKK</div>
+              <div className="mt-3 font-display text-3xl font-black tracking-[-0.06em] sm:mt-5 sm:text-4xl">
+                KVKK
+              </div>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 Katılım ve veri paylaşımı açık onayla başlar; kontrol kullanıcıda kalır.
               </p>
@@ -352,7 +352,9 @@ function MatchPreview() {
             <div className="text-[9px] font-black uppercase tracking-[0.2em] text-[#8ee4e8]">
               eşleşmen hazır
             </div>
-            <div className="mt-0.5 text-base font-black tracking-[-0.03em] sm:mt-1 sm:text-lg">grup m-08</div>
+            <div className="mt-0.5 text-base font-black tracking-[-0.03em] sm:mt-1 sm:text-lg">
+              grup m-08
+            </div>
           </div>
           <div className="rounded-full border border-[#8ee4e8]/25 bg-[#8ee4e8]/10 px-3 py-1.5 text-[10px] font-black text-[#b9f5f2]">
             canlı
@@ -370,7 +372,9 @@ function MatchPreview() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-black">{participant.name}</div>
-                <div className="mt-0.5 truncate text-[11px] text-white/45">{participant.detail}</div>
+                <div className="mt-0.5 truncate text-[11px] text-white/45">
+                  {participant.detail}
+                </div>
               </div>
               <span className="flex h-6 w-6 items-center justify-center rounded-full border border-[#8ee4e8]/20 bg-[#8ee4e8]/10 text-[10px] font-black text-[#8ee4e8]">
                 {index + 1}

@@ -81,16 +81,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "notwork | İzmir Networking ve Başarısızlık Hikâyeleri" },
+      { title: "notwork Network Club - İzmir Başarısızlık Hikâyeleri" },
       {
         name: "description",
         content:
-          "notwork; İzmir’de başarısızlık hikâyeleri, öğrenme deneyimleri ve güçlü networking bağlantılarını bir araya getiren topluluk ve etkinlik serisidir.",
+          "notwork, İzmir’de başarısızlık hikâyelerinin anlatıldığı; gerçek deneyimleri, doğru dersleri ve güçlü bağlantıları buluşturan bir network club.",
       },
       {
         name: "keywords",
         content:
-          "notwork, notwork İzmir, notwork.me, İzmir networking, notwork networking, İzmir etkinlik, başarısızlık hikâyeleri, girişimcilik İzmir",
+          "notwork, notwork İzmir, notwork.me, İzmir network club, İzmir networking, İzmir networking event, başarısızlık hikâyeleri, girişimcilik İzmir",
       },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { name: "theme-color", content: "#8fcbd0" },
@@ -98,6 +98,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:url", content: "https://notwork.me/" },
       { property: "og:locale", content: "tr_TR" },
       { property: "og:type", content: "website" },
+      { property: "og:title", content: "notwork Network Club - İzmir" },
+      {
+        property: "og:description",
+        content:
+          "Başarısızlık hikâyelerini dinle, çıkarılan dersleri keşfet ve İzmir’de doğru insanlarla bağlantı kur.",
+      },
+      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
