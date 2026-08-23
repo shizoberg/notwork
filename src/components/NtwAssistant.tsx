@@ -1,45 +1,58 @@
-import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { Send, X } from "lucide-react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
-const prompts = [
-  {
-    id: "about",
-    question: "notwork nedir?",
-    answer:
-      "notwork bir networking club’dır ama bildiğiniz türden değil. Burada hatalarımızı, yaptığımız yanlışları ve başarısızlıklarımızdan çıkardığımız derslerle bugün geldiğimiz noktaları konuşuyoruz. Kısacası fck-up nights diyebilirsiniz.",
-    cta: "Ana sayfayı incele",
-    href: "/",
-  },
-  {
-    id: "network",
-    question: "Network genişletmek mi istiyorsun?",
-    answer:
-      "notwork ağına katılıp profilini ekleyebilir, ortak ilgi ve yeteneklere göre yeni insanlarla tanışabilirsin.",
-    cta: "Networking sayfasına git",
-    href: "/networking",
-  },
-  {
-    id: "sponsor",
-    question: "Sponsor mu olmak istiyorsun?",
-    answer:
-      "Markanı etkinlik deneyimine, içerik üretimine veya meslek bazlı özel notwork formatlarına bağlayabiliriz.",
-    cta: "Sponsorluğu incele",
-    href: "/sponsor",
-  },
-  {
-    id: "events",
-    question: "Etkinlikler hakkında bilgi mi almak istiyorsun?",
-    answer:
-      "Yaklaşan etkinliklerin programını, bilet bağlantılarını ve topluluk linklerini hızlıca görebilirsin.",
-    cta: "Etkinlik sayfasına git",
-    href: "/21agustos",
-  },
-] as const;
+import {
+  findNtwAssistantAnswer,
+  ntwQuickQuestions,
+  type NtwAssistantAnswer,
+} from "@/lib/ntw-assistant";
+
+type ChatMessage = {
+  id: number;
+  role: "assistant" | "user";
+  text: string;
+  cta?: string;
+  href?: string;
+};
+
+const welcomeMessage: ChatMessage = {
+  id: 0,
+  role: "assistant",
+  text: "selam! Ben ntw. Site içindeki güncel bilgilerle sana yardımcı olabilirim. Ne öğrenmek istiyorsun?",
+};
 
 export function NtwAssistant() {
   const [open, setOpen] = useState(false);
-  const [activeId, setActiveId] = useState<(typeof prompts)[number]["id"]>("about");
-  const activePrompt = prompts.find((prompt) => prompt.id === activeId) || prompts[0];
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
+  const messageListRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    messageListRef.current?.scrollTo({
+      top: messageListRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages, open]);
+
+  const askQuestion = (question: string) => {
+    const cleanQuestion = question.trim();
+    if (!cleanQuestion) return;
+
+    const response = findNtwAssistantAnswer(cleanQuestion);
+    const messageId = Date.now();
+    setMessages((current) => [
+      ...current,
+      { id: messageId, role: "user", text: cleanQuestion },
+      toChatMessage(response, messageId + 1),
+    ]);
+    setInput("");
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    askQuestion(input);
+  };
 
   return (
     <>
@@ -53,47 +66,108 @@ export function NtwAssistant() {
       )}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
         {open && (
-          <div className="w-[min(calc(100vw-2rem),360px)] overflow-hidden rounded-3xl border border-primary/35 bg-background/98 shadow-[0_24px_80px_-24px_color-mix(in_oklab,var(--primary)_65%,#000)] ring-1 ring-background/80 backdrop-blur-2xl">
+          <div className="w-[min(calc(100vw-2rem),380px)] overflow-hidden rounded-3xl border border-primary/35 bg-background/98 shadow-[0_24px_80px_-24px_color-mix(in_oklab,var(--primary)_65%,#000)] ring-1 ring-background/80 backdrop-blur-2xl">
             <div className="border-b border-border/70 bg-primary/10 p-4">
               <div className="flex items-start gap-3">
                 <div className="h-12 w-12 shrink-0">
                   <NtwMascotSvg compact />
                 </div>
-                <div>
-                  <div className="text-sm font-black text-foreground">selam ben ntw 👋</div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-black text-foreground">ntw asistan</div>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary-deep">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary" /> çevrimiçi
+                    </span>
+                  </div>
                   <p className="mt-1 text-xs leading-relaxed text-foreground/60">
-                    Site içinde doğru yere hızlıca gidelim. Ne yapmak istiyorsun?
+                    notwork hakkında sor, en uygun cevabı bulayım.
                   </p>
                 </div>
+                <button
+                  type="button"
+                  aria-label="ntw asistanı kapat"
+                  onClick={() => setOpen(false)}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-background/70 text-foreground transition hover:bg-background"
+                >
+                  <X size={15} />
+                </button>
               </div>
             </div>
-            <div className="grid gap-2 p-3">
-              {prompts.map((prompt) => {
-                const active = prompt.id === activeId;
-                return (
-                  <button
-                    key={prompt.id}
-                    type="button"
-                    onClick={() => setActiveId(prompt.id)}
-                    className={`rounded-2xl border px-3 py-2.5 text-left text-sm font-semibold transition ${
-                      active
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-card text-foreground/70 hover:border-primary/50 hover:text-foreground"
+
+            <div
+              ref={messageListRef}
+              aria-live="polite"
+              className="max-h-[min(52vh,430px)] space-y-3 overflow-y-auto px-3 py-4 [scrollbar-width:thin]"
+            >
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[88%] rounded-2xl px-3.5 py-3 text-sm leading-relaxed ${
+                      message.role === "user"
+                        ? "rounded-br-md bg-primary text-primary-foreground"
+                        : "rounded-bl-md border border-border bg-card text-foreground/75"
                     }`}
                   >
-                    {prompt.question}
-                  </button>
-                );
-              })}
+                    <p>{message.text}</p>
+                    {message.href && message.cta && (
+                      <a
+                        href={message.href}
+                        target={message.href.startsWith("http") ? "_blank" : undefined}
+                        rel={message.href.startsWith("http") ? "noreferrer" : undefined}
+                        className={`mt-2.5 inline-flex rounded-full px-3 py-1.5 text-xs font-black transition ${
+                          message.role === "user"
+                            ? "bg-primary-foreground/15 text-primary-foreground"
+                            : "bg-primary text-primary-foreground hover:opacity-90"
+                        }`}
+                      >
+                        {message.cta}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="border-t border-border/70 p-4">
-              <p className="text-sm leading-relaxed text-foreground/65">{activePrompt.answer}</p>
-              <Link
-                to={activePrompt.href}
-                className="mt-3 inline-flex rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground transition hover:opacity-90"
-              >
-                {activePrompt.cta}
-              </Link>
+
+            {messages.length === 1 && (
+              <div className="flex gap-2 overflow-x-auto border-t border-border/60 px-3 py-2.5 [scrollbar-width:none]">
+                {ntwQuickQuestions.map((question) => (
+                  <button
+                    key={question}
+                    type="button"
+                    onClick={() => askQuestion(question)}
+                    className="shrink-0 rounded-full border border-primary/25 bg-primary/8 px-3 py-1.5 text-[11px] font-bold text-foreground/70 transition hover:border-primary hover:text-foreground"
+                  >
+                    {question}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="border-t border-border/70 p-3">
+              <form onSubmit={handleSubmit} className="flex items-center gap-2">
+                <label htmlFor="ntw-assistant-input" className="sr-only">
+                  ntw asistana mesaj yaz
+                </label>
+                <input
+                  id="ntw-assistant-input"
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  placeholder="ör. yeni etkinlik ne zaman?"
+                  autoComplete="off"
+                  className="h-11 min-w-0 flex-1 rounded-full border border-border bg-card px-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/15"
+                />
+                <button
+                  type="submit"
+                  aria-label="mesajı gönder"
+                  disabled={!input.trim()}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:bg-primary-deep disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Send size={17} />
+                </button>
+              </form>
             </div>
           </div>
         )}
@@ -113,6 +187,16 @@ export function NtwAssistant() {
       </div>
     </>
   );
+}
+
+function toChatMessage(answer: NtwAssistantAnswer, id: number): ChatMessage {
+  return {
+    id,
+    role: "assistant",
+    text: answer.answer,
+    cta: answer.cta,
+    href: answer.href,
+  };
 }
 
 function NtwMascotSvg({ compact = false }: { compact?: boolean }) {
