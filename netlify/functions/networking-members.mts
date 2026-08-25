@@ -1,6 +1,10 @@
 import { getStore } from "@netlify/blobs";
 import type { Config, Context } from "@netlify/functions";
 import seedMembers from "../data/networking-seed.json" with { type: "json" };
+import {
+  getMemberProfileBySession,
+  getNetworkingMemberPhotoVersions,
+} from "./_member-profile-store.mjs";
 
 type MemberRow = {
   id: string;
@@ -48,6 +52,15 @@ function clean(value: unknown, maxLength: number) {
         .trim()
         .slice(0, maxLength)
     : "";
+}
+
+function readMemberSessionCookie(request: Request) {
+  const cookie = request.headers.get("cookie") || "";
+  const row = cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith("notwork_profile_session="));
+  return row ? decodeURIComponent(row.slice("notwork_profile_session=".length)) : "";
 }
 
 function serializeSkills(value: MemberInput["skills"]) {
@@ -166,7 +179,28 @@ export default async (request: Request, _context: Context) => {
 
   if (request.method === "GET") {
     await ensureBackedUp(store);
-    return Response.json(await getRows(store), { headers: { "cache-control": "no-store" } });
+    const [rows, memberSession, photoVersions] = await Promise.all([
+      getRows(store),
+      getMemberProfileBySession(readMemberSessionCookie(request)),
+      getNetworkingMemberPhotoVersions(),
+    ]);
+    const canViewContacts = Boolean(memberSession?.profile.verifiedMember);
+    const responseRows = rows.map((row) => {
+      const photoVersion = photoVersions.get(row.username);
+      return {
+        ...row,
+        email: canViewContacts ? row.email : "",
+        instagram: canViewContacts ? row.instagram : "",
+        linkedin: canViewContacts ? row.linkedin : "",
+        contact: canViewContacts ? row.contact : "",
+        photoUrl: photoVersion
+          ? `/api/member-profile?networkPhoto=${encodeURIComponent(row.username)}&v=${encodeURIComponent(photoVersion)}`
+          : "",
+      };
+    });
+    return Response.json(responseRows, {
+      headers: { "cache-control": "no-store, private", vary: "Cookie" },
+    });
   }
 
   if (request.method === "POST") {

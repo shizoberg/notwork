@@ -5,10 +5,13 @@ import {
   Check,
   Eye,
   EyeOff,
+  KeyRound,
+  MessageSquareQuote,
   MousePointerClick,
   Pencil,
   Plus,
   RefreshCcw,
+  ShieldCheck,
   Ticket,
   Trash2,
   Users,
@@ -31,6 +34,12 @@ import {
 } from "recharts";
 import type { WordcloudAnswer, WordcloudQuestion, WordcloudResults } from "@/lib/event-wordcloud";
 import type { EventNetworkRegistration } from "@/lib/event-network";
+import type {
+  MemberProfilesAdminPayload,
+  NotworkMemberReference,
+  NotworkMemberProfile,
+  TemporaryMemberCredential,
+} from "@/lib/member-profile";
 import {
   getEventNetworkAdmin,
   resetEventNetworkDemo,
@@ -183,7 +192,7 @@ const eventNames: Record<string, string> = {
   form_submit: "Form gönderimi",
 };
 
-type AdminTab = "events" | "analytics" | "networking" | "applications";
+type AdminTab = "events" | "analytics" | "networking" | "profiles" | "applications";
 
 type EventDatabaseInfo = {
   storeName: string;
@@ -199,6 +208,11 @@ const adminTabs: Array<{ id: AdminTab; label: string; description: string }> = [
   { id: "events", label: "21 Ağustos", description: "WordCloud, Match Lab ve event kayıtları" },
   { id: "analytics", label: "Analiz", description: "Trafik, bilet ve aksiyon grafikleri" },
   { id: "networking", label: "Networking", description: "Genel topluluk ağı ve onaylar" },
+  {
+    id: "profiles",
+    label: "Profiller",
+    description: "Doğrulanmış üyeler, rozetler ve geçici girişler",
+  },
   { id: "applications", label: "Başvurular", description: "Network Startup proje başvuruları" },
 ];
 
@@ -220,6 +234,10 @@ function AdminPage() {
   const [members, setMembers] = useState<NetworkMember[]>([]);
   const [requests, setRequests] = useState<ChangeRequest[]>([]);
   const [startupApplications, setStartupApplications] = useState<StartupApplication[]>([]);
+  const [memberProfiles, setMemberProfiles] = useState<NotworkMemberProfile[]>([]);
+  const [memberReferences, setMemberReferences] = useState<NotworkMemberReference[]>([]);
+  const [temporaryCredentials, setTemporaryCredentials] = useState<TemporaryMemberCredential[]>([]);
+  const [profileMessage, setProfileMessage] = useState("");
   const [memberDraft, setMemberDraft] = useState<NetworkMember>(blankMember);
   const [editingUsername, setEditingUsername] = useState("");
   const [networkMessage, setNetworkMessage] = useState("");
@@ -273,6 +291,69 @@ function AdminPage() {
     if (!response.ok) throw new Error("Startup başvuruları alınamadı.");
     const data = (await response.json()) as { applications: StartupApplication[] };
     setStartupApplications(data.applications);
+  };
+
+  const loadMemberProfiles = async (nextPassword = password) => {
+    const response = await fetch("/api/admin/member-profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: nextPassword, action: "list" }),
+    });
+    if (!response.ok) throw new Error("Üye profilleri alınamadı.");
+    const data = (await response.json()) as MemberProfilesAdminPayload;
+    setMemberProfiles(data.profiles);
+    setMemberReferences(data.references || []);
+  };
+
+  const memberProfileAction = async (action: "syncMembers" | "issueCredentials") => {
+    setProfileMessage("");
+    setTemporaryCredentials([]);
+    const response = await fetch("/api/admin/member-profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password, action }),
+    });
+    if (!response.ok) {
+      setProfileMessage(await response.text());
+      return;
+    }
+    const data = (await response.json()) as MemberProfilesAdminPayload;
+    setMemberProfiles(data.profiles);
+    setMemberReferences(data.references || []);
+    setTemporaryCredentials(data.credentials || []);
+    setProfileMessage(
+      action === "syncMembers"
+        ? `${data.syncedCount || 0} doğrulanmış etkinlik üyesi profil sistemine eşitlendi.`
+        : `${data.credentials?.length || 0} geçici şifre üretildi. Bu liste yalnızca şu anda gösterilir.`,
+    );
+  };
+
+  const moderateMemberReference = async (
+    reference: NotworkMemberReference,
+    referenceStatus: "approved" | "rejected",
+  ) => {
+    setProfileMessage("");
+    const response = await fetch("/api/admin/member-profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        password,
+        action: "moderateReference",
+        targetUsername: reference.targetUsername,
+        authorUsername: reference.authorUsername,
+        referenceStatus,
+      }),
+    });
+    if (!response.ok) {
+      setProfileMessage(await response.text());
+      return;
+    }
+    const data = (await response.json()) as MemberProfilesAdminPayload;
+    setMemberProfiles(data.profiles);
+    setMemberReferences(data.references || []);
+    setProfileMessage(
+      referenceStatus === "approved" ? "Referans yayınlandı." : "Referans reddedildi.",
+    );
   };
 
   const seedEventNetwork = async () => {
@@ -436,6 +517,7 @@ function AdminPage() {
         loadWordcloud(password),
         loadEventNetwork(password),
         loadStartupApplications(password),
+        loadMemberProfiles(password),
       ]);
       const failedLoads = auxiliaryLoads.filter((result) => result.status === "rejected").length;
       if (failedLoads > 0) {
@@ -541,7 +623,7 @@ function AdminPage() {
           </div>
         </header>
 
-        <nav className="mt-6 grid gap-3 lg:grid-cols-4">
+        <nav className="mt-6 grid gap-3 lg:grid-cols-5">
           {adminTabs.map((tab) => (
             <button
               key={tab.id}
@@ -886,6 +968,19 @@ function AdminPage() {
           />
         </div>
 
+        <div className={activeAdminTab === "profiles" ? "" : "hidden"}>
+          <MemberProfilesAdmin
+            profiles={memberProfiles}
+            references={memberReferences}
+            credentials={temporaryCredentials}
+            message={profileMessage}
+            refresh={() => loadMemberProfiles(password)}
+            syncMembers={() => memberProfileAction("syncMembers")}
+            issueCredentials={() => memberProfileAction("issueCredentials")}
+            moderateReference={moderateMemberReference}
+          />
+        </div>
+
         <div className={activeAdminTab === "applications" ? "" : "hidden"}>
           <StartupApplicationsAdmin
             applications={startupApplications}
@@ -1051,6 +1146,257 @@ function StartupApplicationsAdmin({
         {applications.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-foreground/45">
             Henüz Network Startup başvurusu yok.
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function downloadTemporaryCredentials(credentials: TemporaryMemberCredential[]) {
+  const escapeCsv = (value: string) => `"${value.replace(/"/g, '""')}"`;
+  const rows = [
+    ["ad soyad", "eposta", "kullanıcı adı", "geçici şifre"],
+    ...credentials.map((credential) => [
+      credential.name,
+      credential.email,
+      credential.username,
+      credential.temporaryPassword,
+    ]),
+  ];
+  const csv = `\uFEFF${rows.map((row) => row.map(escapeCsv).join(",")).join("\n")}`;
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `notwork-gecici-uyelik-sifreleri-${new Date().toISOString().slice(0, 10)}.csv`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+function MemberProfilesAdmin({
+  profiles,
+  references,
+  credentials,
+  message,
+  refresh,
+  syncMembers,
+  issueCredentials,
+  moderateReference,
+}: {
+  profiles: NotworkMemberProfile[];
+  references: NotworkMemberReference[];
+  credentials: TemporaryMemberCredential[];
+  message: string;
+  refresh: () => Promise<void>;
+  syncMembers: () => Promise<void>;
+  issueCredentials: () => Promise<void>;
+  moderateReference: (
+    reference: NotworkMemberReference,
+    status: "approved" | "rejected",
+  ) => Promise<void>;
+}) {
+  const verifiedCount = profiles.filter((profile) => profile.verifiedMember).length;
+  const issuedCount = profiles.filter((profile) => profile.credentialIssuedAt).length;
+  const publicCount = profiles.filter((profile) => profile.publicProfileEnabled).length;
+  const pendingReferenceCount = references.filter(
+    (reference) => reference.status === "pending",
+  ).length;
+  const profileNames = new Map(profiles.map((profile) => [profile.username, profile.name]));
+
+  return (
+    <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border px-5 py-4">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
+            <ShieldCheck size={16} /> Notwork Profile
+          </div>
+          <h2 className="mt-2 text-2xl font-black">Doğrulanmış üye profilleri</h2>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-foreground/55">
+            En az bir Notwork etkinliğine katılan üyeler özel rozet alır. Geçici şifreler yalnızca
+            üretildiği anda dışa aktarılır; sistemde düz şifre tutulmaz.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void refresh()}
+          className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-2 text-xs font-bold"
+        >
+          <RefreshCcw size={14} /> yenile
+        </button>
+      </div>
+
+      <div className="grid gap-3 border-b border-border bg-muted/35 p-5 sm:grid-cols-2 xl:grid-cols-5">
+        <Metric icon={Users} label="Profil kaydı" value={profiles.length} highlight />
+        <Metric icon={ShieldCheck} label="Doğrulanmış etkinlik üyesi" value={verifiedCount} />
+        <Metric icon={KeyRound} label="Geçici şifre atanmış" value={issuedCount} />
+        <Metric icon={Eye} label="Yayındaki business kart" value={publicCount} />
+        <Metric
+          icon={MessageSquareQuote}
+          label="Onay bekleyen referans"
+          value={pendingReferenceCount}
+        />
+      </div>
+
+      <div className="border-b border-border p-5">
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void syncMembers()}
+            className="rounded-full bg-primary px-4 py-2.5 text-sm font-black text-primary-foreground"
+          >
+            etkinlik üyelerini eşitle
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (
+                confirm(
+                  "Tüm doğrulanmış üyeler için yeni geçici şifre üretilecek ve eski şifreler geçersiz olacak. Devam edilsin mi?",
+                )
+              ) {
+                void issueCredentials();
+              }
+            }}
+            disabled={verifiedCount === 0}
+            className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-sm font-black disabled:opacity-40"
+          >
+            <KeyRound size={16} /> geçici şifreleri üret
+          </button>
+          {credentials.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => downloadTemporaryCredentials(credentials)}
+              className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-sm font-black text-background"
+            >
+              CSV indir · {credentials.length} üye
+            </button>
+          ) : null}
+        </div>
+        {message ? <p className="mt-3 text-sm font-semibold text-primary-deep">{message}</p> : null}
+        {credentials.length > 0 ? (
+          <p className="mt-2 text-xs font-semibold text-destructive">
+            Bu şifre listesi sayfa yenilenince kaybolur. CSV dosyasını şimdi indir ve güvenli tut.
+          </p>
+        ) : null}
+      </div>
+
+      <div className="border-b border-border p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xs font-black uppercase tracking-[0.16em] text-primary-deep">
+              Üye referansları
+            </div>
+            <h3 className="mt-1 text-lg font-black">Onay kuyruğu</h3>
+          </div>
+          <span className="rounded-full bg-muted px-3 py-1 text-xs font-black">
+            {pendingReferenceCount} bekliyor
+          </span>
+        </div>
+        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          {references
+            .filter((reference) => reference.status === "pending")
+            .map((reference) => (
+              <article
+                key={reference.id}
+                className="rounded-2xl border border-border bg-background p-4"
+              >
+                <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-foreground/55">
+                  <span>{reference.authorName}</span>
+                  <span>→</span>
+                  <span>
+                    {profileNames.get(reference.targetUsername) || `@${reference.targetUsername}`}
+                  </span>
+                  <span className="rounded-full bg-primary/15 px-2 py-1 text-primary-deep">
+                    {reference.skill}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm font-semibold leading-6">“{reference.message}”</p>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void moderateReference(reference, "approved")}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-black text-primary-foreground"
+                  >
+                    <Check size={14} /> yayınla
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void moderateReference(reference, "rejected")}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-black"
+                  >
+                    <X size={14} /> reddet
+                  </button>
+                </div>
+              </article>
+            ))}
+        </div>
+        {pendingReferenceCount === 0 ? (
+          <p className="mt-4 rounded-2xl bg-muted/60 p-4 text-sm font-semibold text-foreground/45">
+            Onay bekleyen referans yok.
+          </p>
+        ) : null}
+      </div>
+
+      <div className="max-h-[620px] overflow-auto">
+        <table className="w-full min-w-[880px] text-left text-sm">
+          <thead className="sticky top-0 bg-muted text-xs text-foreground/50">
+            <tr>
+              <th className="px-4 py-3">Üye</th>
+              <th className="px-4 py-3">Doğrulama</th>
+              <th className="px-4 py-3">Etkinlikler</th>
+              <th className="px-4 py-3">Profil durumu</th>
+              <th className="px-4 py-3">Business kart</th>
+              <th className="px-4 py-3">Giriş</th>
+            </tr>
+          </thead>
+          <tbody>
+            {profiles.map((profile) => (
+              <tr key={profile.id} className="border-t border-border/70">
+                <td className="px-4 py-3">
+                  <div className="font-bold">{profile.name}</div>
+                  <div className="text-xs text-foreground/45">
+                    @{profile.username} · {profile.email}
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  {profile.verifiedMember ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-black text-primary-deep">
+                      <ShieldCheck size={13} /> Doğrulanmış Notwork Üyesi
+                    </span>
+                  ) : (
+                    <span className="text-xs text-foreground/40">doğrulanmadı</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-xs font-semibold text-foreground/60">
+                  {profile.attendedEvents.join(", ") || "—"}
+                </td>
+                <td className="px-4 py-3">{profile.status}</td>
+                <td className="px-4 py-3 text-xs font-semibold">
+                  {profile.publicProfileEnabled ? (
+                    <a
+                      href={`/u/${encodeURIComponent(profile.username)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary-deep hover:underline"
+                    >
+                      yayında →
+                    </a>
+                  ) : (
+                    <span className="text-foreground/40">kapalı</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-xs text-foreground/55">
+                  {profile.credentialIssuedAt
+                    ? `geçici şifre · ${new Date(profile.credentialIssuedAt).toLocaleDateString("tr-TR")}`
+                    : "şifre bekliyor"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {profiles.length === 0 ? (
+          <div className="p-8 text-center text-sm text-foreground/45">
+            Henüz profil kaydı yok. Önce etkinlik üyelerini eşitle.
           </div>
         ) : null}
       </div>
@@ -1600,7 +1946,7 @@ function EventNetworkAdmin({
         </div>
         <div className="flex flex-wrap gap-2">
           <a
-            href="/21-agustos/network"
+            href="/linkler"
             target="_blank"
             rel="noreferrer"
             className="rounded-full border border-border px-3 py-2 text-xs font-bold"

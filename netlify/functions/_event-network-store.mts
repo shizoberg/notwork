@@ -3,10 +3,12 @@ import { getStore } from "@netlify/blobs";
 
 type EventNetworkProfile = {
   id: string;
+  username: string;
   firstName: string;
   lastName: string;
   email: string;
   emailNormalized: string;
+  attendedEvent: string;
   generalNetworkOptIn: boolean;
   marketingOptIn: boolean;
   createdAt: string;
@@ -28,6 +30,8 @@ type EventNetworkRegistration = {
   profile: EventNetworkProfile;
   participant: EventParticipant;
   offers: string[];
+  intro: string;
+  offersDetail: string;
   needs: string;
   needTag: string;
   accessToken?: string;
@@ -97,8 +101,12 @@ export type NetworkInput = {
   lastName?: string;
   email?: string;
   offers?: string[];
+  intro?: string;
+  offersDetail?: string;
   needs?: string;
   needTag?: string;
+  attendedEvent?: string;
+  memberUsername?: string;
   rating?: number;
   comment?: string;
   photoDataUrl?: string;
@@ -123,6 +131,17 @@ const datasetCode =
   liveDatasetCode;
 const datasetPrefix = `events/${datasetCode}/network`;
 const codeLetters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+const attendedEventValues = new Set([
+  "21-agustos-2026",
+  "14-temmuz-2026",
+  "22-mayis-2026",
+  "10-nisan-2026",
+  "8-mart-2026",
+  "10-subat-2026",
+  "16-ocak-2026",
+  "8-aralik-2025",
+  "ilk-etkinligim",
+]);
 
 export function getEventNetworkStore() {
   return getStore({ name: storeName, consistency: "strong" });
@@ -226,24 +245,44 @@ function generalMemberKey(username: string) {
   return `members/${username}.json`;
 }
 
+async function resolveGeneralUsername(
+  emailNormalized: string,
+  name: string,
+  publicCode: string,
+  preferredUsername = "",
+) {
+  const store = getStore({ name: "networking-members", consistency: "strong" });
+  const members = await getJsonRows<NetworkMemberRow>(store, "members/");
+  const matchingMember = members.find(
+    (member) => normalizeEmail(member.email || "") === emailNormalized,
+  );
+  if (matchingMember?.username) return matchingMember.username;
+
+  const baseUsername =
+    slugify(preferredUsername) || slugify(name) || `notwork-${publicCode.toLocaleLowerCase()}`;
+  const existing = (await store.get(generalMemberKey(baseUsername), {
+    type: "json",
+    consistency: "strong",
+  })) as NetworkMemberRow | null;
+  if (!existing || normalizeEmail(existing.email || "") === emailNormalized) return baseUsername;
+  return `${baseUsername}-${hashToken(emailNormalized).slice(0, 4)}`;
+}
+
 async function upsertGeneralNetworkingMember(registration: EventNetworkRegistration) {
   if (!registration.profile.generalNetworkOptIn) return;
 
   const store = getStore({ name: "networking-members", consistency: "strong" });
-  const baseUsername =
-    slugify(displayName(registration)) || `notwork-${registration.participant.publicCode}`;
-  let username = baseUsername;
+  const username =
+    registration.profile.username ||
+    (await resolveGeneralUsername(
+      registration.profile.emailNormalized,
+      displayName(registration),
+      registration.participant.publicCode,
+    ));
   const existing = (await store.get(generalMemberKey(username), {
     type: "json",
     consistency: "strong",
   })) as NetworkMemberRow | null;
-
-  if (
-    existing &&
-    existing.email.toLocaleLowerCase("tr-TR") !== registration.profile.emailNormalized
-  ) {
-    username = `${baseUsername}-${hashToken(registration.profile.emailNormalized).slice(0, 4)}`;
-  }
 
   const member: NetworkMemberRow = {
     id: existing?.id || registration.profile.id,
@@ -255,8 +294,11 @@ async function upsertGeneralNetworkingMember(registration: EventNetworkRegistrat
     email: registration.profile.email,
     instagram: existing?.instagram || "",
     linkedin: existing?.linkedin || "",
-    motivation: registration.needs,
-    contact: registration.profile.email,
+    motivation:
+      `${registration.intro || ""} ${registration.offersDetail || ""} ${registration.needs}`
+        .replace(/\s+/g, " ")
+        .trim(),
+    contact: `${registration.profile.email} || event:21agustos || claimed-event:${registration.profile.attendedEvent || "belirtilmedi"}`,
     createdAt: existing?.createdAt || registration.profile.createdAt,
     username,
     consentAt: registration.profile.updatedAt,
@@ -557,13 +599,21 @@ export async function registerNetworkProfile(
   const firstName = clean(input.firstName, 50);
   const lastName = clean(input.lastName, 50);
   const offers = normalizeOffers(input.offers);
-  const needs = clean(input.needs, 220);
+  const intro = clean(input.intro, 600);
+  const offersDetail = clean(input.offersDetail, 600);
+  const needs = clean(input.needs, 600);
   const needTag = clean(input.needTag, 40).toLocaleLowerCase("tr-TR");
+  const attendedEvent = clean(input.attendedEvent, 80).toLocaleLowerCase("tr-TR");
 
   if (!firstName || !lastName) throw new Error("Ad ve soyad gerekli");
   if (!isValidEmail(emailNormalized)) throw new Error("Geçerli e-posta gerekli");
   if (offers.length === 0) throw new Error("En az bir yardımcı olabileceğin konu gerekli");
-  if (!needs) throw new Error("Destek aradığın konu gerekli");
+  if (intro.length < 140) throw new Error("Kendini tanıt yanıtı en az 140 karakter olmalı");
+  if (offersDetail.length < 140)
+    throw new Error("Neler yapabilirsin yanıtı en az 140 karakter olmalı");
+  if (needs.length < 140) throw new Error("Ne istiyorsun yanıtı en az 140 karakter olmalı");
+  if (!attendedEventValues.has(attendedEvent))
+    throw new Error("Katıldığın Notwork etkinliğini seçmelisin");
   if (!input.eventConsent) throw new Error("Etkinlik eşleştirmesi için onay gerekli");
 
   const existing = (await store.get(profileKey(emailNormalized), {
@@ -573,12 +623,20 @@ export async function registerNetworkProfile(
   if (existing) {
     const accessToken = crypto.randomUUID();
     const accessTokenHash = hashToken(accessToken);
+    const username = await resolveGeneralUsername(
+      emailNormalized,
+      `${firstName} ${lastName}`,
+      existing.participant.publicCode,
+      clean(input.memberUsername, 80) || existing.profile.username,
+    );
     const profile: EventNetworkProfile = {
       ...existing.profile,
+      username,
       firstName,
       lastName,
       email,
       emailNormalized,
+      attendedEvent,
       generalNetworkOptIn: Boolean(
         input.generalNetworkOptIn || existing.profile.generalNetworkOptIn,
       ),
@@ -595,6 +653,8 @@ export async function registerNetworkProfile(
       profile,
       participant,
       offers,
+      intro,
+      offersDetail,
       needs,
       needTag,
       accessToken,
@@ -604,7 +664,15 @@ export async function registerNetworkProfile(
     await Promise.all([
       store.setJSON(profileKey(emailNormalized), storedRegistration),
       store.setJSON(participantKey(participant.id), storedRegistration),
-      store.setJSON(detailKey(participant.id), { offers, needs, needTag, updatedAt: now }),
+      store.setJSON(detailKey(participant.id), {
+        offers,
+        intro,
+        offersDetail,
+        needs,
+        needTag,
+        attendedEvent,
+        updatedAt: now,
+      }),
       store.set(tokenKey(accessTokenHash), participant.id),
     ]);
     await upsertGeneralNetworkingMember(registration);
@@ -615,12 +683,20 @@ export async function registerNetworkProfile(
   const accessToken = crypto.randomUUID();
   const accessTokenHash = hashToken(accessToken);
   const publicCode = await nextPublicCode(store);
+  const username = await resolveGeneralUsername(
+    emailNormalized,
+    `${firstName} ${lastName}`,
+    publicCode,
+    clean(input.memberUsername, 80),
+  );
   const profile: EventNetworkProfile = {
     id: crypto.randomUUID(),
+    username,
     firstName,
     lastName,
     email,
     emailNormalized,
+    attendedEvent,
     generalNetworkOptIn: Boolean(input.generalNetworkOptIn),
     marketingOptIn: Boolean(input.marketingOptIn),
     createdAt: now,
@@ -640,6 +716,8 @@ export async function registerNetworkProfile(
     profile,
     participant,
     offers,
+    intro,
+    offersDetail,
     needs,
     needTag,
     accessToken,
@@ -649,12 +727,60 @@ export async function registerNetworkProfile(
   await Promise.all([
     store.setJSON(profileKey(emailNormalized), storedRegistration),
     store.setJSON(participantKey(participant.id), storedRegistration),
-    store.setJSON(detailKey(participant.id), { offers, needs, needTag, updatedAt: now }),
+    store.setJSON(detailKey(participant.id), {
+      offers,
+      intro,
+      offersDetail,
+      needs,
+      needTag,
+      attendedEvent,
+      updatedAt: now,
+    }),
     store.setJSON(codeKey(publicCode), participant.id),
     store.set(tokenKey(accessTokenHash), participant.id),
   ]);
   await upsertGeneralNetworkingMember(registration);
 
+  return registration;
+}
+
+export async function resumeNetworkProfile(
+  store: ReturnType<typeof getEventNetworkStore>,
+  email: string,
+  preferredUsername = "",
+) {
+  const emailNormalized = normalizeEmail(clean(email, 120));
+  if (!isValidEmail(emailNormalized)) return null;
+  const existing = (await store.get(profileKey(emailNormalized), {
+    type: "json",
+    consistency: "strong",
+  })) as EventNetworkRegistration | null;
+  if (!existing) return null;
+
+  const now = new Date().toISOString();
+  const accessToken = crypto.randomUUID();
+  const accessTokenHash = hashToken(accessToken);
+  const username = await resolveGeneralUsername(
+    emailNormalized,
+    displayName(existing),
+    existing.participant.publicCode,
+    preferredUsername || existing.profile.username,
+  );
+  const registration: EventNetworkRegistration = {
+    ...existing,
+    profile: { ...existing.profile, username, updatedAt: now },
+    participant: { ...existing.participant, accessTokenHash, updatedAt: now },
+    intro: existing.intro || "",
+    offersDetail: existing.offersDetail || "",
+    accessToken,
+  };
+  const storedRegistration = { ...registration, accessToken: undefined };
+  await Promise.all([
+    store.setJSON(profileKey(emailNormalized), storedRegistration),
+    store.setJSON(participantKey(registration.participant.id), storedRegistration),
+    store.set(tokenKey(accessTokenHash), registration.participant.id),
+  ]);
+  await upsertGeneralNetworkingMember(registration);
   return registration;
 }
 
@@ -665,10 +791,35 @@ export async function getRegistrationByToken(
   const tokenHash = hashToken(clean(accessToken, 100));
   const participantId = await store.get(tokenKey(tokenHash), { consistency: "strong" });
   if (!participantId) return null;
-  return (await store.get(participantKey(String(participantId)), {
+  const existing = (await store.get(participantKey(String(participantId)), {
     type: "json",
     consistency: "strong",
   })) as EventNetworkRegistration | null;
+  if (!existing) return null;
+
+  if (existing.profile.username && existing.profile.attendedEvent) return existing;
+  const username = await resolveGeneralUsername(
+    existing.profile.emailNormalized,
+    displayName(existing),
+    existing.participant.publicCode,
+    existing.profile.username,
+  );
+  const hydrated: EventNetworkRegistration = {
+    ...existing,
+    profile: {
+      ...existing.profile,
+      username,
+      attendedEvent: existing.profile.attendedEvent || "21-agustos-2026",
+    },
+    intro: existing.intro || "",
+    offersDetail: existing.offersDetail || "",
+  };
+  await Promise.all([
+    store.setJSON(profileKey(hydrated.profile.emailNormalized), hydrated),
+    store.setJSON(participantKey(hydrated.participant.id), hydrated),
+  ]);
+  await upsertGeneralNetworkingMember(hydrated);
+  return hydrated;
 }
 
 export async function listRegistrations(store: ReturnType<typeof getEventNetworkStore>) {
@@ -973,6 +1124,10 @@ export async function seedSampleRegistrations(
     registrations.push(
       await registerNetworkProfile(store, {
         ...sample,
+        intro: `${sample.firstName} ${sample.lastName}, ${sample.offers.join(", ")} alanlarında çalışan ve farklı ekiplerle üretim yapan bir Notwork katılımcısıdır. Deneyimlerini açıkça paylaşmayı ve yeni insanlarla uzun vadeli bağ kurmayı önemsiyor.`,
+        offersDetail: `${sample.offers.join(", ")} konularında uygulamalı deneyim, fikir geliştirme ve ekiplerle birlikte sonuç üretme desteği sunabilir. Bildiklerini açık biçimde paylaşır ve karşısındaki kişinin ihtiyacını dinleyerek somut katkı sağlamaya çalışır.`,
+        needs: `${sample.needs}. Bu ihtiyacın neden önemli olduğunu, hangi aşamada olduğunu ve doğru kişiyle tanıştığında birlikte nasıl bir sonuç üretmek istediğini ayrıntılı biçimde anlatmak istiyor.`,
+        attendedEvent: "21-agustos-2026",
         action: "register",
         eventConsent: true,
         generalNetworkOptIn: true,

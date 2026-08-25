@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   CalendarDays,
   Camera,
+  ChevronDown,
   Handshake,
   Instagram,
   Menu,
@@ -12,6 +13,7 @@ import {
   Presentation,
   Rocket,
   Sparkles,
+  UserRound,
   UsersRound,
   X,
   Youtube,
@@ -29,19 +31,13 @@ import { COOKIE_CONSENT_OPEN_EVENT } from "@/lib/cookie-consent";
 
 type SiteNavVariant = "default" | "event" | "eventDark";
 
-const mobileHeaderLinkClass =
-  "inline-flex h-11 items-center rounded-lg px-1.5 text-[11px] font-medium leading-none text-foreground transition hover:bg-muted";
-
 export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
   if (variant !== "default") return <EventSiteNav variant={variant} />;
 
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-background/70 border-b border-border/60">
-      <div className="mx-auto max-w-6xl px-2 sm:px-5 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 font-brand text-lg sm:text-xl">
-          <span className="inline-block w-2.5 h-2.5 rounded-full bg-primary" />
-          <span>notwork</span>
-        </Link>
+      <div className="mx-auto hidden h-16 max-w-6xl items-center justify-between px-5 sm:flex">
+        <BrandLink />
         <nav className="hidden items-center gap-2 text-sm font-medium sm:flex">
           <Link to="/notwork-nedir" className="rounded-lg px-3 py-2 hover:bg-muted">
             Nedir?
@@ -61,18 +57,48 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
           <Link to="/community" className="rounded-lg px-3 py-2 hover:bg-muted">
             Community
           </Link>
-        </nav>
-        <div className="ml-auto flex items-center gap-0.5 sm:hidden">
-          <a href="/#katilimci-yorumlari" className={mobileHeaderLinkClass}>
-            Etkinlikler
-          </a>
-          <Link to="/networking" className={mobileHeaderLinkClass}>
-            Network Ağı
+          <Link
+            to="/profil"
+            aria-label="Üye profiline git"
+            title="Üye profili"
+            className="ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary-deep transition hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <UserRound size={17} strokeWidth={2.2} />
           </Link>
-          <MobileSiteMenu />
-        </div>
+        </nav>
+      </div>
+      <div className="mx-auto grid h-16 grid-cols-[72px_1fr_72px] items-center px-3 sm:hidden">
+        <MobileSiteMenu />
+        <BrandLink className="justify-self-center" showDot={false} />
+        <ProfileLink className="justify-self-end" />
       </div>
     </header>
+  );
+}
+
+function BrandLink({ className = "", showDot = true }: { className?: string; showDot?: boolean }) {
+  return (
+    <Link to="/" className={`flex items-center gap-2 font-brand text-lg sm:text-xl ${className}`}>
+      {showDot ? <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary" /> : null}
+      <span>notwork</span>
+    </Link>
+  );
+}
+
+function ProfileLink({ className = "", dark = false }: { className?: string; dark?: boolean }) {
+  return (
+    <Link
+      to="/profil"
+      aria-label="Üye profiline git"
+      title="Üye profili"
+      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+        dark
+          ? "border-white/20 bg-white/10 text-white hover:bg-white/20"
+          : "border-primary/35 bg-primary/10 text-primary-deep hover:bg-primary hover:text-primary-foreground"
+      } ${className}`}
+    >
+      <UserRound size={18} strokeWidth={2.2} />
+    </Link>
   );
 }
 
@@ -125,17 +151,20 @@ function MobileSiteMenu() {
           <button
             type="button"
             aria-label="Site menüsünü aç"
-            className={`${mobileHeaderLinkClass} group gap-1.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary sm:hidden`}
+            className="group inline-flex h-10 items-center gap-1.5 rounded-lg px-1 text-[11px] font-medium leading-none text-foreground outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary sm:hidden"
           >
+            <Menu size={15} strokeWidth={2.2} />
             <span>Menü</span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-full border border-primary/35 bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground group-data-[state=open]:rotate-90 group-data-[state=open]:bg-primary group-data-[state=open]:text-primary-foreground">
-              <Menu size={16} strokeWidth={2.4} />
-            </span>
+            <ChevronDown
+              size={13}
+              strokeWidth={2.2}
+              className="transition-transform duration-200 group-data-[state=open]:rotate-180"
+            />
           </button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
-          align="end"
+          align="start"
           sideOffset={10}
           className="z-[9999] w-[calc(100vw-1.5rem)] max-w-[370px] rounded-[30px] border border-white/90 bg-background p-2.5 shadow-[0_32px_100px_rgba(7,17,18,0.34)] ring-1 ring-foreground/5 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200 sm:hidden"
         >
@@ -292,7 +321,7 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
 
   return (
     <header className={headerClass}>
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-3 sm:px-5">
+      <div className="mx-auto hidden h-16 max-w-6xl items-center justify-between gap-3 px-5 sm:flex">
         <Link to="/linkler" className="flex min-w-0 items-center gap-2">
           <span className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20">
             <span className="h-2.5 w-2.5 rounded-full bg-primary" />
@@ -307,7 +336,7 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
                   : "block truncate text-[10px] font-bold text-foreground/45"
               }
             >
-              21 Ağustos giriş
+              etkinlik girişi
             </span>
           </span>
         </Link>
@@ -325,7 +354,15 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
           <a href="/etkinlik-degerlendirme?event=21-agustos-2026" className={primaryClass}>
             Yorumla
           </a>
+          <ProfileLink dark={dark} />
         </nav>
+      </div>
+      <div className="mx-auto grid h-16 grid-cols-[72px_1fr_72px] items-center px-3 sm:hidden">
+        <MobileSiteMenu />
+        <Link to="/linkler" className="justify-self-center font-brand text-lg leading-none">
+          notwork
+        </Link>
+        <ProfileLink className="justify-self-end" dark={dark} />
       </div>
     </header>
   );

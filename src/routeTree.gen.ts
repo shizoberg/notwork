@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SunumYukleRouteImport } from './routes/sunum-yukle'
 import { Route as StartupRouteImport } from './routes/startup'
 import { Route as SponsorRouteImport } from './routes/sponsor'
+import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as NotworkNedirRouteImport } from './routes/notwork-nedir'
 import { Route as NetworkingRouteImport } from './routes/networking'
 import { Route as NetworkStartupRouteImport } from './routes/network-startup'
@@ -28,6 +29,7 @@ import { Route as R21agustosRouteImport } from './routes/21agustos'
 import { Route as R14temmuznetworkingRouteImport } from './routes/14temmuznetworking'
 import { Route as R14temmuzRouteImport } from './routes/14temmuz'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as R21AgustosWordcloudRouteImport } from './routes/21-agustos.wordcloud'
 import { Route as R21AgustosSonuclarRouteImport } from './routes/21-agustos.sonuclar'
 import { Route as R21AgustosNetworkRouteImport } from './routes/21-agustos.network'
@@ -46,6 +48,11 @@ const StartupRoute = StartupRouteImport.update({
 const SponsorRoute = SponsorRouteImport.update({
   id: '/sponsor',
   path: '/sponsor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfilRoute = ProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotworkNedirRoute = NotworkNedirRouteImport.update({
@@ -128,6 +135,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UUsernameRoute = UUsernameRouteImport.update({
+  id: '/u/$username',
+  path: '/u/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const R21AgustosWordcloudRoute = R21AgustosWordcloudRouteImport.update({
   id: '/21-agustos/wordcloud',
   path: '/21-agustos/wordcloud',
@@ -166,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/notwork-nedir': typeof NotworkNedirRoute
+  '/profil': typeof ProfilRoute
   '/sponsor': typeof SponsorRoute
   '/startup': typeof StartupRoute
   '/sunum-yukle': typeof SunumYukleRoute
@@ -173,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
+  '/u/$username': typeof UUsernameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -191,6 +205,7 @@ export interface FileRoutesByTo {
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/notwork-nedir': typeof NotworkNedirRoute
+  '/profil': typeof ProfilRoute
   '/sponsor': typeof SponsorRoute
   '/startup': typeof StartupRoute
   '/sunum-yukle': typeof SunumYukleRoute
@@ -198,6 +213,7 @@ export interface FileRoutesByTo {
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
+  '/u/$username': typeof UUsernameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -217,6 +233,7 @@ export interface FileRoutesById {
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/notwork-nedir': typeof NotworkNedirRoute
+  '/profil': typeof ProfilRoute
   '/sponsor': typeof SponsorRoute
   '/startup': typeof StartupRoute
   '/sunum-yukle': typeof SunumYukleRoute
@@ -224,6 +241,7 @@ export interface FileRoutesById {
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
+  '/u/$username': typeof UUsernameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -244,6 +262,7 @@ export interface FileRouteTypes {
     | '/network-startup'
     | '/networking'
     | '/notwork-nedir'
+    | '/profil'
     | '/sponsor'
     | '/startup'
     | '/sunum-yukle'
@@ -251,6 +270,7 @@ export interface FileRouteTypes {
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
+    | '/u/$username'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -269,6 +289,7 @@ export interface FileRouteTypes {
     | '/network-startup'
     | '/networking'
     | '/notwork-nedir'
+    | '/profil'
     | '/sponsor'
     | '/startup'
     | '/sunum-yukle'
@@ -276,6 +297,7 @@ export interface FileRouteTypes {
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
+    | '/u/$username'
   id:
     | '__root__'
     | '/'
@@ -294,6 +316,7 @@ export interface FileRouteTypes {
     | '/network-startup'
     | '/networking'
     | '/notwork-nedir'
+    | '/profil'
     | '/sponsor'
     | '/startup'
     | '/sunum-yukle'
@@ -301,6 +324,7 @@ export interface FileRouteTypes {
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
+    | '/u/$username'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -320,6 +344,7 @@ export interface RootRouteChildren {
   NetworkStartupRoute: typeof NetworkStartupRoute
   NetworkingRoute: typeof NetworkingRoute
   NotworkNedirRoute: typeof NotworkNedirRoute
+  ProfilRoute: typeof ProfilRoute
   SponsorRoute: typeof SponsorRoute
   StartupRoute: typeof StartupRoute
   SunumYukleRoute: typeof SunumYukleRoute
@@ -327,6 +352,7 @@ export interface RootRouteChildren {
   R21AgustosNetworkRoute: typeof R21AgustosNetworkRoute
   R21AgustosSonuclarRoute: typeof R21AgustosSonuclarRoute
   R21AgustosWordcloudRoute: typeof R21AgustosWordcloudRoute
+  UUsernameRoute: typeof UUsernameRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -350,6 +376,13 @@ declare module '@tanstack/react-router' {
       path: '/sponsor'
       fullPath: '/sponsor'
       preLoaderRoute: typeof SponsorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profil': {
+      id: '/profil'
+      path: '/profil'
+      fullPath: '/profil'
+      preLoaderRoute: typeof ProfilRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notwork-nedir': {
@@ -464,6 +497,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/u/$username': {
+      id: '/u/$username'
+      path: '/u/$username'
+      fullPath: '/u/$username'
+      preLoaderRoute: typeof UUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/21-agustos/wordcloud': {
       id: '/21-agustos/wordcloud'
       path: '/21-agustos/wordcloud'
@@ -512,6 +552,7 @@ const rootRouteChildren: RootRouteChildren = {
   NetworkStartupRoute: NetworkStartupRoute,
   NetworkingRoute: NetworkingRoute,
   NotworkNedirRoute: NotworkNedirRoute,
+  ProfilRoute: ProfilRoute,
   SponsorRoute: SponsorRoute,
   StartupRoute: StartupRoute,
   SunumYukleRoute: SunumYukleRoute,
@@ -519,6 +560,7 @@ const rootRouteChildren: RootRouteChildren = {
   R21AgustosNetworkRoute: R21AgustosNetworkRoute,
   R21AgustosSonuclarRoute: R21AgustosSonuclarRoute,
   R21AgustosWordcloudRoute: R21AgustosWordcloudRoute,
+  UUsernameRoute: UUsernameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

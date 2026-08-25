@@ -1,6 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { LockKeyhole } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { getMyMemberProfile, MemberProfileApiError } from "@/lib/member-profile-api";
+import type { NotworkMemberProfile } from "@/lib/member-profile";
 import { createSeo } from "@/lib/seo";
 import {
   addMember,
@@ -481,6 +484,8 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
   const config = networkingVariants[variant];
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
+  const [memberProfile, setMemberProfile] = useState<NotworkMemberProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [form, setForm] = useState({
     name: "",
     title: "",
@@ -510,6 +515,27 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
       .catch(() => setError(config.loadError))
       .finally(() => setLoading(false));
   }, [config.loadError]);
+
+  useEffect(() => {
+    let active = true;
+    void getMyMemberProfile()
+      .then((profile) => {
+        if (active) setMemberProfile(profile);
+      })
+      .catch((caught) => {
+        if (!(caught instanceof MemberProfileApiError && caught.status === 401)) {
+          console.error(caught);
+        }
+      })
+      .finally(() => {
+        if (active) setProfileLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const canViewContacts = Boolean(memberProfile?.verifiedMember);
 
   const set =
     (key: keyof typeof form) =>
@@ -805,183 +831,185 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
           </section>
         )}
 
-        <section className="mx-auto max-w-6xl px-5 pb-10">
-          <form
-            id="networking-form"
-            onSubmit={onSubmit}
-            className="rounded-2xl border border-border bg-card p-5 sm:p-6 grid gap-4 sm:grid-cols-2"
-          >
-            <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3">
-              <div className="text-sm font-semibold text-foreground/80">
-                {editingUsername ? `${editingUsername} bilgilerini güncelle` : "Kendini ekle"}
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  if (updateMode) {
-                    setEditingUsername("");
-                    setUsernameInput("");
-                    setForm({
-                      name: "",
-                      title: "",
-                      skills: "",
-                      email: "",
-                      instagram: "",
-                      linkedin: "",
-                      about: "",
-                      consent: false,
-                    });
-                  }
-                  setUpdateMode((current) => !current);
-                  setError("");
-                  setNotice("");
-                }}
-                className="text-xs font-semibold text-primary hover:underline"
-              >
-                {updateMode ? "yeni kayıt formuna dön" : "verilerimi güncellemek istiyorum"}
-              </button>
-            </div>
-            {updateMode && (
-              <div className="sm:col-span-2 grid gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4 sm:grid-cols-[1fr_auto] sm:items-end">
-                <Field
-                  label="Kullanıcı adın"
-                  placeholder="berkaktas"
-                  value={usernameInput}
-                  onChange={(event) => setUsernameInput(event.target.value)}
-                  autoComplete="username"
-                />
+        {!profileLoading && !memberProfile ? (
+          <section className="mx-auto max-w-6xl px-5 pb-10">
+            <form
+              id="networking-form"
+              onSubmit={onSubmit}
+              className="grid gap-4 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2 sm:p-6"
+            >
+              <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3">
+                <div className="text-sm font-semibold text-foreground/80">
+                  {editingUsername ? `${editingUsername} bilgilerini güncelle` : "Kendini ekle"}
+                </div>
                 <button
                   type="button"
-                  onClick={loadMemberForEditing}
-                  className="rounded-lg border border-primary px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary hover:text-primary-foreground"
+                  onClick={() => {
+                    if (updateMode) {
+                      setEditingUsername("");
+                      setUsernameInput("");
+                      setForm({
+                        name: "",
+                        title: "",
+                        skills: "",
+                        email: "",
+                        instagram: "",
+                        linkedin: "",
+                        about: "",
+                        consent: false,
+                      });
+                    }
+                    setUpdateMode((current) => !current);
+                    setError("");
+                    setNotice("");
+                  }}
+                  className="text-xs font-semibold text-primary hover:underline"
                 >
-                  bilgilerimi getir
+                  {updateMode ? "yeni kayıt formuna dön" : "verilerimi güncellemek istiyorum"}
                 </button>
               </div>
-            )}
-            <Field
-              label="Ad Soyad*"
-              placeholder="Berk Aktaş"
-              value={form.name}
-              onChange={set("name")}
-              autoComplete="name"
-              required
-            />
-            <Field
-              label="Sıfat / Rol*"
-              placeholder="yazılımcı"
-              value={form.title}
-              onChange={set("title")}
-              required
-            />
-            <Field
-              className="sm:col-span-2"
-              label="Yetenekler"
-              placeholder="react, ui, pazarlama (virgülle ayır)"
-              value={form.skills}
-              onChange={set("skills")}
-            />
-            <Field
-              label="E-posta*"
-              type="email"
-              placeholder="isim@eposta.com"
-              value={form.email}
-              onChange={set("email")}
-              autoComplete="email"
-              required
-            />
-            <Field
-              label="Instagram (opsiyonel)"
-              placeholder="@kullaniciadi"
-              value={form.instagram}
-              onChange={set("instagram")}
-              autoComplete="off"
-            />
-            <Field
-              className="sm:col-span-2"
-              label="LinkedIn (opsiyonel)"
-              placeholder="linkedin.com/in/kullaniciadi"
-              value={form.linkedin}
-              onChange={set("linkedin")}
-              autoComplete="url"
-            />
-            <TextArea
-              className="sm:col-span-2"
-              label="Neden bu toplulukta olmak istiyorsunuz? Topluluğa ne katabilirsiniz?*"
-              placeholder="Kısaca kendini, motivasyonunu ve topluluğa sunabileceğin katkıyı anlat."
-              value={form.about}
-              onChange={set("about")}
-              maxLength={140}
-              required
-            />
-            <div className="sm:col-span-2 -mt-2 text-right text-[11px] text-foreground/45">
-              {form.about.length}/140
-            </div>
-            <label className="sm:col-span-2 flex gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm leading-relaxed text-foreground/70">
-              <input
-                type="checkbox"
-                checked={form.consent}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, consent: event.target.checked }))
-                }
+              {updateMode && (
+                <div className="sm:col-span-2 grid gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4 sm:grid-cols-[1fr_auto] sm:items-end">
+                  <Field
+                    label="Kullanıcı adın"
+                    placeholder="berkaktas"
+                    value={usernameInput}
+                    onChange={(event) => setUsernameInput(event.target.value)}
+                    autoComplete="username"
+                  />
+                  <button
+                    type="button"
+                    onClick={loadMemberForEditing}
+                    className="rounded-lg border border-primary px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary hover:text-primary-foreground"
+                  >
+                    bilgilerimi getir
+                  </button>
+                </div>
+              )}
+              <Field
+                label="Ad Soyad*"
+                placeholder="Berk Aktaş"
+                value={form.name}
+                onChange={set("name")}
+                autoComplete="name"
                 required
-                className="mt-1 h-4 w-4 shrink-0 accent-primary"
               />
-              <span>
-                Bilgilerimin notwork networking ağı içinde görünmesini, benimle etkinlik/topluluk
-                iletişimi için e-posta üzerinden iletişime geçilmesini ve{" "}
-                <a
-                  href="/kvkk"
-                  target="_blank"
-                  className="font-semibold text-primary-deep underline"
-                >
-                  KVKK Aydınlatma Metni
-                </a>{" "}
-                ile{" "}
-                <a
-                  href="/cerez-politikasi"
-                  target="_blank"
-                  className="font-semibold text-primary-deep underline"
-                >
-                  Çerez Politikası
-                </a>
-                ’nı okuduğumu/onayladığımı kabul ediyorum.
-              </span>
-            </label>
-            <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">
-              <p className="text-xs text-foreground/50">
-                {config.formNote}
-                <span className="mt-1 block font-semibold text-foreground/65">
-                  Etkinliklere ve organizasyonlara düzenli katılım sağlamanız çok önemlidir.
+              <Field
+                label="Sıfat / Rol*"
+                placeholder="yazılımcı"
+                value={form.title}
+                onChange={set("title")}
+                required
+              />
+              <Field
+                className="sm:col-span-2"
+                label="Yetenekler"
+                placeholder="react, ui, pazarlama (virgülle ayır)"
+                value={form.skills}
+                onChange={set("skills")}
+              />
+              <Field
+                label="E-posta*"
+                type="email"
+                placeholder="isim@eposta.com"
+                value={form.email}
+                onChange={set("email")}
+                autoComplete="email"
+                required
+              />
+              <Field
+                label="Instagram (opsiyonel)"
+                placeholder="@kullaniciadi"
+                value={form.instagram}
+                onChange={set("instagram")}
+                autoComplete="off"
+              />
+              <Field
+                className="sm:col-span-2"
+                label="LinkedIn (opsiyonel)"
+                placeholder="linkedin.com/in/kullaniciadi"
+                value={form.linkedin}
+                onChange={set("linkedin")}
+                autoComplete="url"
+              />
+              <TextArea
+                className="sm:col-span-2"
+                label="Neden bu toplulukta olmak istiyorsunuz? Topluluğa ne katabilirsiniz?*"
+                placeholder="Kısaca kendini, motivasyonunu ve topluluğa sunabileceğin katkıyı anlat."
+                value={form.about}
+                onChange={set("about")}
+                maxLength={140}
+                required
+              />
+              <div className="sm:col-span-2 -mt-2 text-right text-[11px] text-foreground/45">
+                {form.about.length}/140
+              </div>
+              <label className="sm:col-span-2 flex gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm leading-relaxed text-foreground/70">
+                <input
+                  type="checkbox"
+                  checked={form.consent}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, consent: event.target.checked }))
+                  }
+                  required
+                  className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                />
+                <span>
+                  Bilgilerimin notwork networking ağı içinde görünmesini, benimle etkinlik/topluluk
+                  iletişimi için e-posta üzerinden iletişime geçilmesini ve{" "}
+                  <a
+                    href="/kvkk"
+                    target="_blank"
+                    className="font-semibold text-primary-deep underline"
+                  >
+                    KVKK Aydınlatma Metni
+                  </a>{" "}
+                  ile{" "}
+                  <a
+                    href="/cerez-politikasi"
+                    target="_blank"
+                    className="font-semibold text-primary-deep underline"
+                  >
+                    Çerez Politikası
+                  </a>
+                  ’nı okuduğumu/onayladığımı kabul ediyorum.
                 </span>
-              </p>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition disabled:opacity-50"
-              >
-                {submitting
-                  ? "kaydediliyor…"
-                  : editingUsername
-                    ? "bilgilerimi güncelle"
-                    : "ağa ekle"}
-              </button>
-            </div>
-            {notice && (
-              <p
-                role="status"
-                className="sm:col-span-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-semibold text-primary-deep"
-              >
-                {notice}
-              </p>
-            )}
-            {error && (
-              <p role="alert" className="sm:col-span-2 text-sm text-destructive">
-                {error}
-              </p>
-            )}
-          </form>
-        </section>
+              </label>
+              <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">
+                <p className="text-xs text-foreground/50">
+                  {config.formNote}
+                  <span className="mt-1 block font-semibold text-foreground/65">
+                    Etkinliklere ve organizasyonlara düzenli katılım sağlamanız çok önemlidir.
+                  </span>
+                </p>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition disabled:opacity-50"
+                >
+                  {submitting
+                    ? "kaydediliyor…"
+                    : editingUsername
+                      ? "bilgilerimi güncelle"
+                      : "ağa ekle"}
+                </button>
+              </div>
+              {notice && (
+                <p
+                  role="status"
+                  className="sm:col-span-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-semibold text-primary-deep"
+                >
+                  {notice}
+                </p>
+              )}
+              {error && (
+                <p role="alert" className="sm:col-span-2 text-sm text-destructive">
+                  {error}
+                </p>
+              )}
+            </form>
+          </section>
+        ) : null}
 
         <section className="mx-auto max-w-6xl px-5 pb-10">
           <div
@@ -1030,6 +1058,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
               members={scopedMembers}
               loading={loading}
               onOpenMember={setSelectedMember}
+              canViewContacts={canViewContacts}
             />
           </div>
         </section>
@@ -1101,21 +1130,26 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
               const badges = getMemberEventBadges(member);
               return (
                 <div key={member.id} className="rounded-xl border border-border bg-card p-4">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMember(member)}
-                      className="text-left font-bold text-lg transition hover:text-primary-deep"
-                    >
-                      {member.name}
-                    </button>
-                    <div className="text-xs text-foreground/60">{member.title}</div>
-                  </div>
-                  {member.username && (
-                    <div className="mt-1 text-[11px] font-semibold text-foreground/45">
-                      kullanıcı adı: {member.username}
+                  <div className="flex items-start gap-3">
+                    <MemberAvatar member={member} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedMember(member)}
+                          className="truncate text-left text-lg font-bold transition hover:text-primary-deep"
+                        >
+                          {member.name}
+                        </button>
+                        <div className="text-right text-xs text-foreground/60">{member.title}</div>
+                      </div>
+                      {member.username && (
+                        <div className="mt-1 text-[11px] font-semibold text-foreground/45">
+                          kullanıcı adı: {member.username}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                   {badges.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {badges.map((badge) => (
@@ -1140,38 +1174,42 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                       ))}
                     </div>
                   )}
-                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70 pt-3 text-xs">
-                    {contact.email ? (
-                      <a
-                        href={`mailto:${contact.email}`}
-                        className="font-semibold text-primary-deep transition hover:text-primary"
-                      >
-                        {contact.email}
-                      </a>
-                    ) : (
-                      <span className="text-foreground/40">e-posta eklenmedi</span>
-                    )}
-                    {contact.instagram && (
-                      <a
-                        href={`https://instagram.com/${contact.instagram}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-semibold text-primary-deep transition hover:text-primary"
-                      >
-                        @{contact.instagram} →
-                      </a>
-                    )}
-                    {contact.linkedin && (
-                      <a
-                        href={contact.linkedin}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-semibold text-primary-deep transition hover:text-primary"
-                      >
-                        LinkedIn →
-                      </a>
-                    )}
-                  </div>
+                  {canViewContacts ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70 pt-3 text-xs">
+                      {contact.email ? (
+                        <a
+                          href={`mailto:${contact.email}`}
+                          className="font-semibold text-primary-deep transition hover:text-primary"
+                        >
+                          {contact.email}
+                        </a>
+                      ) : (
+                        <span className="text-foreground/40">e-posta eklenmedi</span>
+                      )}
+                      {contact.instagram && (
+                        <a
+                          href={`https://instagram.com/${contact.instagram}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-semibold text-primary-deep transition hover:text-primary"
+                        >
+                          @{contact.instagram} →
+                        </a>
+                      )}
+                      {contact.linkedin && (
+                        <a
+                          href={contact.linkedin}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-semibold text-primary-deep transition hover:text-primary"
+                        >
+                          LinkedIn →
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <ContactGate compact />
+                  )}
                   {contact.about && (
                     <p className="mt-3 border-t border-border/70 pt-3 text-sm leading-relaxed text-foreground/65">
                       {contact.about}
@@ -1200,6 +1238,8 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
           onClose={() => setSelectedMember(null)}
           onEdit={startEditingMember}
           onOpenMember={setSelectedMember}
+          canViewContacts={canViewContacts}
+          hasMemberSession={Boolean(memberProfile)}
         />
       )}
       <SiteFooter />
@@ -1244,6 +1284,72 @@ function TextArea({
       />
     </label>
   );
+}
+
+function MemberAvatar({
+  member,
+  size = "medium",
+}: {
+  member: Member;
+  size?: "small" | "medium" | "large";
+}) {
+  const [failed, setFailed] = useState(false);
+  const initials = member.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toLocaleUpperCase("tr-TR");
+  const sizeClass = {
+    small: "h-9 w-9 text-[10px]",
+    medium: "h-12 w-12 text-sm",
+    large: "h-20 w-20 text-xl sm:h-24 sm:w-24",
+  }[size];
+
+  return (
+    <div
+      className={`${sizeClass} grid shrink-0 place-items-center overflow-hidden rounded-full border border-primary/35 bg-primary/10 font-black text-primary-deep shadow-sm`}
+      aria-label={`${member.name} profil fotoğrafı`}
+    >
+      {member.photoUrl && !failed ? (
+        <img
+          src={member.photoUrl}
+          alt={`${member.name} profil fotoğrafı`}
+          className="h-full w-full object-cover"
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span aria-hidden="true">{initials || "ntw"}</span>
+      )}
+    </div>
+  );
+}
+
+function ContactGate({ compact = false }: { compact?: boolean }) {
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 text-foreground/65 ${
+        compact ? "mt-3 px-3 py-2 text-[11px]" : "mt-5 p-4 text-sm"
+      }`}
+    >
+      <LockKeyhole className={compact ? "h-3.5 w-3.5 shrink-0" : "h-4 w-4 shrink-0"} />
+      <span className="min-w-0 flex-1">
+        İletişim bilgileri yalnızca giriş yapan doğrulanmış ntw üyelerine açık.
+      </span>
+      <Link
+        to="/profil"
+        className="shrink-0 font-black text-primary-deep underline decoration-primary/40 underline-offset-2"
+      >
+        giriş yap
+      </Link>
+    </div>
+  );
+}
+
+function svgSafeId(value: string) {
+  return value.replace(/[^a-zA-Z0-9_-]/g, "-");
 }
 
 function NtwMascot() {
@@ -1349,10 +1455,12 @@ function RecommendationFinder({
   members,
   loading,
   onOpenMember,
+  canViewContacts,
 }: {
   members: Member[];
   loading: boolean;
   onOpenMember: (member: Member) => void;
+  canViewContacts: boolean;
 }) {
   const [username, setUsername] = useState("");
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -1422,9 +1530,16 @@ function RecommendationFinder({
                   className="rounded-xl border border-border bg-card p-3"
                 >
                   <div className="text-[10px] font-black text-primary-deep">#{index + 1}</div>
-                  <div className="mt-1 font-bold leading-tight">{recommendation.member.name}</div>
-                  <div className="mt-1 text-[11px] text-foreground/50">
-                    {recommendation.member.title}
+                  <div className="mt-2 flex items-center gap-2">
+                    <MemberAvatar member={recommendation.member} size="small" />
+                    <div className="min-w-0">
+                      <div className="truncate font-bold leading-tight">
+                        {recommendation.member.name}
+                      </div>
+                      <div className="mt-1 text-[11px] text-foreground/50">
+                        {recommendation.member.title}
+                      </div>
+                    </div>
                   </div>
                   <p className="mt-2 text-[11px] leading-relaxed text-foreground/60">
                     {recommendation.reasons.join(" · ")}
@@ -1437,13 +1552,15 @@ function RecommendationFinder({
                     >
                       Detay
                     </button>
-                    {contact.email && <a href={`mailto:${contact.email}`}>E-posta</a>}
-                    {contact.linkedin && (
+                    {canViewContacts && contact.email && (
+                      <a href={`mailto:${contact.email}`}>E-posta</a>
+                    )}
+                    {canViewContacts && contact.linkedin && (
                       <a href={contact.linkedin} target="_blank" rel="noreferrer">
                         LinkedIn
                       </a>
                     )}
-                    {contact.instagram && (
+                    {canViewContacts && contact.instagram && (
                       <a
                         href={`https://instagram.com/${contact.instagram}`}
                         target="_blank"
@@ -1642,6 +1759,13 @@ function NetworkGraph({
             >
               <path d="M 0 0 L 10 5 L 0 10 z" className="fill-primary/40" />
             </marker>
+            {layout.nodes
+              .filter((node) => Boolean(node.photoUrl))
+              .map((node) => (
+                <clipPath key={node.id} id={`network-avatar-${svgSafeId(node.id)}`}>
+                  <circle r="20" />
+                </clipPath>
+              ))}
           </defs>
           {layout.clusters.map((cluster) => (
             <g key={cluster.visualId}>
@@ -1708,14 +1832,35 @@ function NetworkGraph({
                   }
                   strokeWidth={1.5}
                 />
-                <text
-                  textAnchor="middle"
-                  dy="0.35em"
-                  className={`text-[8px] font-bold ${active ? "fill-primary-foreground" : "fill-foreground"}`}
+                {node.photoUrl ? (
+                  <image
+                    href={node.photoUrl}
+                    x={-20}
+                    y={-20}
+                    width={40}
+                    height={40}
+                    preserveAspectRatio="xMidYMid slice"
+                    clipPath={`url(#network-avatar-${svgSafeId(node.id)})`}
+                    style={{ pointerEvents: "none" }}
+                  />
+                ) : (
+                  <text
+                    textAnchor="middle"
+                    dy="0.35em"
+                    className={`text-[8px] font-bold ${active ? "fill-primary-foreground" : "fill-foreground"}`}
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {firstName}
+                  </text>
+                )}
+                <circle
+                  r={active ? 25 : 21}
+                  className={
+                    active ? "fill-none stroke-primary-deep" : "fill-none stroke-primary/55"
+                  }
+                  strokeWidth={active ? 2.5 : 1.5}
                   style={{ pointerEvents: "none" }}
-                >
-                  {firstName}
-                </text>
+                />
                 {active && (
                   <g style={{ pointerEvents: "none" }}>
                     <rect
@@ -1758,12 +1903,16 @@ function MemberDetailModal({
   onClose,
   onEdit,
   onOpenMember,
+  canViewContacts,
+  hasMemberSession,
 }: {
   member: Member;
   members: Member[];
   onClose: () => void;
   onEdit: (member: Member) => void;
   onOpenMember: (member: Member) => void;
+  canViewContacts: boolean;
+  hasMemberSession: boolean;
 }) {
   const contact = getMemberContact(member);
   const recommendations = getRecommendations(member, members);
@@ -1792,29 +1941,32 @@ function MemberDetailModal({
         <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
           <section className="bg-[radial-gradient(circle_at_top_left,color-mix(in_oklab,var(--primary)_28%,transparent),transparent_36%),var(--card)] p-5 sm:p-7">
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="text-xs font-black uppercase tracking-[0.24em] text-primary-deep">
-                  kişi kartı
-                </div>
-                <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-4xl">
-                  {member.name}
-                </h2>
-                <p className="mt-2 text-sm font-semibold text-foreground/60">{member.title}</p>
-                {member.username && (
-                  <p className="mt-1 text-xs font-bold text-primary-deep">@{member.username}</p>
-                )}
-                {badges.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {badges.map((badge) => (
-                      <span
-                        key={badge.source}
-                        className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-primary-deep"
-                      >
-                        {badge.label}
-                      </span>
-                    ))}
+              <div className="flex min-w-0 items-start gap-4">
+                <MemberAvatar member={member} size="large" />
+                <div className="min-w-0">
+                  <div className="text-xs font-black uppercase tracking-[0.24em] text-primary-deep">
+                    kişi kartı
                   </div>
-                )}
+                  <h2 className="mt-3 break-words text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+                    {member.name}
+                  </h2>
+                  <p className="mt-2 text-sm font-semibold text-foreground/60">{member.title}</p>
+                  {member.username && (
+                    <p className="mt-1 text-xs font-bold text-primary-deep">@{member.username}</p>
+                  )}
+                  {badges.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {badges.map((badge) => (
+                        <span
+                          key={badge.source}
+                          className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-primary-deep"
+                        >
+                          {badge.label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
@@ -1845,44 +1997,57 @@ function MemberDetailModal({
               </p>
             )}
 
-            <div className="mt-5 grid gap-2 text-sm">
-              {contact.email && (
-                <a
-                  href={`mailto:${contact.email}`}
-                  className="rounded-xl border border-border bg-background px-4 py-3 font-semibold text-primary-deep transition hover:border-primary/60"
-                >
-                  E-posta gönder · {contact.email}
-                </a>
-              )}
-              {contact.instagram && (
-                <a
-                  href={`https://instagram.com/${contact.instagram}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-xl border border-border bg-background px-4 py-3 font-semibold text-primary-deep transition hover:border-primary/60"
-                >
-                  Instagram · @{contact.instagram}
-                </a>
-              )}
-              {contact.linkedin && (
-                <a
-                  href={contact.linkedin}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-xl border border-border bg-background px-4 py-3 font-semibold text-primary-deep transition hover:border-primary/60"
-                >
-                  LinkedIn profiline git
-                </a>
-              )}
-            </div>
+            {canViewContacts ? (
+              <div className="mt-5 grid gap-2 text-sm">
+                {contact.email && (
+                  <a
+                    href={`mailto:${contact.email}`}
+                    className="rounded-xl border border-border bg-background px-4 py-3 font-semibold text-primary-deep transition hover:border-primary/60"
+                  >
+                    E-posta gönder · {contact.email}
+                  </a>
+                )}
+                {contact.instagram && (
+                  <a
+                    href={`https://instagram.com/${contact.instagram}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-xl border border-border bg-background px-4 py-3 font-semibold text-primary-deep transition hover:border-primary/60"
+                  >
+                    Instagram · @{contact.instagram}
+                  </a>
+                )}
+                {contact.linkedin && (
+                  <a
+                    href={contact.linkedin}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-xl border border-border bg-background px-4 py-3 font-semibold text-primary-deep transition hover:border-primary/60"
+                  >
+                    LinkedIn profiline git
+                  </a>
+                )}
+              </div>
+            ) : (
+              <ContactGate />
+            )}
 
-            <button
-              type="button"
-              onClick={() => onEdit(member)}
-              className="mt-5 w-full rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
-            >
-              bilgilerimi güncellemek istiyorum
-            </button>
+            {hasMemberSession ? (
+              <Link
+                to="/profil"
+                className="mt-5 block w-full rounded-full bg-primary px-5 py-3 text-center text-sm font-black text-primary-foreground transition hover:opacity-90"
+              >
+                profilimi düzenle
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onEdit(member)}
+                className="mt-5 w-full rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
+              >
+                bilgilerimi güncellemek istiyorum
+              </button>
+            )}
           </section>
 
           <section className="p-5 sm:p-7">
@@ -1897,6 +2062,7 @@ function MemberDetailModal({
               </div>
               <span className="text-xs text-foreground/45">algoritmik öneri · 5 kişi</span>
             </div>
+            {!canViewContacts && <ContactGate compact />}
             <div className="mt-5 grid gap-3">
               {recommendations.map((recommendation, index) => {
                 const recommendationContact = getMemberContact(recommendation.member);
@@ -1906,38 +2072,49 @@ function MemberDetailModal({
                     className="rounded-2xl border border-border bg-card p-4"
                   >
                     <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
-                      <div>
-                        <div className="text-[10px] font-black text-primary-deep">#{index + 1}</div>
-                        <button
-                          type="button"
-                          onClick={() => onOpenMember(recommendation.member)}
-                          className="mt-1 text-left text-lg font-black transition hover:text-primary-deep"
-                        >
-                          {recommendation.member.name}
-                        </button>
-                        <div className="text-xs text-foreground/50">
-                          {recommendation.member.title}
+                      <div className="flex min-w-0 items-start gap-3">
+                        <MemberAvatar member={recommendation.member} size="small" />
+                        <div className="min-w-0">
+                          <div className="text-[10px] font-black text-primary-deep">
+                            #{index + 1}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => onOpenMember(recommendation.member)}
+                            className="mt-1 text-left text-lg font-black transition hover:text-primary-deep"
+                          >
+                            {recommendation.member.name}
+                          </button>
+                          <div className="text-xs text-foreground/50">
+                            {recommendation.member.title}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-primary-deep">
-                        {recommendationContact.email && (
-                          <a href={`mailto:${recommendationContact.email}`}>E-posta</a>
-                        )}
-                        {recommendationContact.instagram && (
-                          <a
-                            href={`https://instagram.com/${recommendationContact.instagram}`}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Instagram
-                          </a>
-                        )}
-                        {recommendationContact.linkedin && (
-                          <a href={recommendationContact.linkedin} target="_blank" rel="noreferrer">
-                            LinkedIn
-                          </a>
-                        )}
-                      </div>
+                      {canViewContacts && (
+                        <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-primary-deep">
+                          {recommendationContact.email && (
+                            <a href={`mailto:${recommendationContact.email}`}>E-posta</a>
+                          )}
+                          {recommendationContact.instagram && (
+                            <a
+                              href={`https://instagram.com/${recommendationContact.instagram}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Instagram
+                            </a>
+                          )}
+                          {recommendationContact.linkedin && (
+                            <a
+                              href={recommendationContact.linkedin}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              LinkedIn
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <p className="mt-3 text-sm leading-relaxed text-foreground/60">
                       {recommendation.reasons.join(" · ")}

@@ -101,6 +101,21 @@
   }
 }
 
+@layer components {
+  .profile-input {
+    @apply min-h-12 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-primary focus:ring-4 focus:ring-primary/15;
+  }
+
+  .profile-primary-button {
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:-translate-y-0.5 hover:brightness-95 disabled:pointer-events-none disabled:opacity-60;
+  }
+
+  .profile-empty-button {
+    @apply flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-primary/40 bg-primary/5 text-sm font-black hover:bg-primary/10;
+    color: var(--primary-deep);
+  }
+}
+
 @utility blink {
   animation: blink 1.4s ease-in-out infinite;
 }

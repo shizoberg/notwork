@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, ChevronRight, Maximize2, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
@@ -23,6 +23,9 @@ const offerSuggestions = [
 const needSuggestions = ["iş", "ekip", "müşteri", "yatırım", "fikir", "tasarım", "teknoloji"];
 
 export const Route = createFileRoute("/21-agustos/network")({
+  beforeLoad: () => {
+    throw redirect({ to: "/linkler" });
+  },
   head: () => ({
     meta: [
       { title: "21 Ağustos notwork Network Kaydı" },

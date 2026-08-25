@@ -13,14 +13,18 @@ export async function registerEventNetwork(input: {
   lastName: string;
   email: string;
   offers: string[];
+  intro?: string;
+  offersDetail?: string;
   needs: string;
   needTag: string;
+  attendedEvent?: string;
   generalNetworkOptIn: boolean;
   marketingOptIn: boolean;
   eventConsent: boolean;
 }) {
   const response = await fetch(apiUrl, {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "register", ...input }),
   });
@@ -31,8 +35,20 @@ export async function registerEventNetwork(input: {
 export async function getEventNetworkMe(accessToken: string) {
   const response = await fetch(apiUrl, {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "me", accessToken }),
+  });
+  if (!response.ok) throw new Error(await response.text());
+  return response.json() as Promise<EventNetworkRegistration>;
+}
+
+export async function resumeEventNetwork() {
+  const response = await fetch(apiUrl, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "resume" }),
   });
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<EventNetworkRegistration>;
@@ -44,6 +60,7 @@ export async function updateEventNetworkPresence(
 ) {
   const response = await fetch(apiUrl, {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "presence", accessToken, presence }),
   });
@@ -57,6 +74,7 @@ export async function updateEventNetworkPresence(
 export async function getEventNetworkMatch(accessToken: string) {
   const response = await fetch(apiUrl, {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "match", accessToken }),
   });
@@ -88,6 +106,7 @@ export async function completeEventNetworkMatchWithReview(
 ) {
   const response = await fetch(apiUrl, {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "completeMatch", accessToken, ...review }),
   });
@@ -104,6 +123,7 @@ export async function completeEventNetworkMatchWithReview(
 export async function seedEventNetworkSamples() {
   const response = await fetch(apiUrl, {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "seedSamples" }),
   });

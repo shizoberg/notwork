@@ -8,6 +8,7 @@ export type Member = {
   linkedin?: string;
   motivation?: string;
   contact?: string;
+  photoUrl?: string;
   username: string;
   createdAt: number;
   consentAt?: string;
@@ -18,7 +19,7 @@ const API_URL = "/api/networking/members";
 type SheetRow = Record<string, string | number | undefined>;
 
 export async function listMembers(): Promise<Member[]> {
-  const response = await fetch(API_URL, { cache: "no-store" });
+  const response = await fetch(API_URL, { cache: "no-store", credentials: "same-origin" });
   if (!response.ok) throw new Error("Networking kayıtları alınamadı");
   const rows = (await response.json()) as SheetRow[];
   return rows
@@ -35,6 +36,7 @@ export async function listMembers(): Promise<Member[]> {
       linkedin: String(row.linkedin || "").trim() || undefined,
       motivation: String(row.motivation || "").trim() || undefined,
       contact: String(row.contact || "").trim() || undefined,
+      photoUrl: String(row.photoUrl || "").trim() || undefined,
       username: String(row.username || "")
         .trim()
         .toLowerCase(),
