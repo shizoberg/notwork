@@ -356,6 +356,35 @@ function AdminPage() {
     );
   };
 
+  const moderateMemberProfile = async (
+    profile: NotworkMemberProfile,
+    profileStatus: "approved" | "rejected",
+  ) => {
+    setProfileMessage("");
+    const response = await fetch("/api/admin/member-profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        password,
+        action: "moderateProfile",
+        targetUsername: profile.username,
+        profileStatus,
+      }),
+    });
+    if (!response.ok) {
+      setProfileMessage(await response.text());
+      return;
+    }
+    const data = (await response.json()) as MemberProfilesAdminPayload;
+    setMemberProfiles(data.profiles);
+    setMemberReferences(data.references || []);
+    setProfileMessage(
+      profileStatus === "approved"
+        ? `${profile.name} üyeliğe onaylandı.`
+        : `${profile.name} başvurusu reddedildi.`,
+    );
+  };
+
   const seedEventNetwork = async () => {
     setNetworkMessage("");
     try {
@@ -977,6 +1006,7 @@ function AdminPage() {
             refresh={() => loadMemberProfiles(password)}
             syncMembers={() => memberProfileAction("syncMembers")}
             issueCredentials={() => memberProfileAction("issueCredentials")}
+            moderateProfile={moderateMemberProfile}
             moderateReference={moderateMemberReference}
           />
         </div>
@@ -1181,6 +1211,7 @@ function MemberProfilesAdmin({
   refresh,
   syncMembers,
   issueCredentials,
+  moderateProfile,
   moderateReference,
 }: {
   profiles: NotworkMemberProfile[];
@@ -1190,6 +1221,10 @@ function MemberProfilesAdmin({
   refresh: () => Promise<void>;
   syncMembers: () => Promise<void>;
   issueCredentials: () => Promise<void>;
+  moderateProfile: (
+    profile: NotworkMemberProfile,
+    status: "approved" | "rejected",
+  ) => Promise<void>;
   moderateReference: (
     reference: NotworkMemberReference,
     status: "approved" | "rejected",
@@ -1198,6 +1233,7 @@ function MemberProfilesAdmin({
   const verifiedCount = profiles.filter((profile) => profile.verifiedMember).length;
   const issuedCount = profiles.filter((profile) => profile.credentialIssuedAt).length;
   const publicCount = profiles.filter((profile) => profile.publicProfileEnabled).length;
+  const pendingProfileCount = profiles.filter((profile) => profile.status === "pending").length;
   const pendingReferenceCount = references.filter(
     (reference) => reference.status === "pending",
   ).length;
@@ -1210,10 +1246,10 @@ function MemberProfilesAdmin({
           <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
             <ShieldCheck size={16} /> Notwork Profile
           </div>
-          <h2 className="mt-2 text-2xl font-black">Doğrulanmış üye profilleri</h2>
+          <h2 className="mt-2 text-2xl font-black">Üye profilleri ve başvurular</h2>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-foreground/55">
-            En az bir Notwork etkinliğine katılan üyeler özel rozet alır. Geçici şifreler yalnızca
-            üretildiği anda dışa aktarılır; sistemde düz şifre tutulmaz.
+            Etkinlik katılımı veya üye referansı doğrulanan başvuruları onayla. Onaylanmayan
+            profiller giriş yapamaz ve networking ağına eklenmez.
           </p>
         </div>
         <button
@@ -1225,8 +1261,9 @@ function MemberProfilesAdmin({
         </button>
       </div>
 
-      <div className="grid gap-3 border-b border-border bg-muted/35 p-5 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 border-b border-border bg-muted/35 p-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         <Metric icon={Users} label="Profil kaydı" value={profiles.length} highlight />
+        <Metric icon={ShieldCheck} label="Onay bekleyen profil" value={pendingProfileCount} />
         <Metric icon={ShieldCheck} label="Doğrulanmış etkinlik üyesi" value={verifiedCount} />
         <Metric icon={KeyRound} label="Geçici şifre atanmış" value={issuedCount} />
         <Metric icon={Eye} label="Yayındaki business kart" value={publicCount} />
@@ -1276,6 +1313,81 @@ function MemberProfilesAdmin({
         {credentials.length > 0 ? (
           <p className="mt-2 text-xs font-semibold text-destructive">
             Bu şifre listesi sayfa yenilenince kaybolur. CSV dosyasını şimdi indir ve güvenli tut.
+          </p>
+        ) : null}
+      </div>
+
+      <div className="border-b border-border p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xs font-black uppercase tracking-[0.16em] text-primary-deep">
+              Üyelik başvuruları
+            </div>
+            <h3 className="mt-1 text-lg font-black">Admin onay kuyruğu</h3>
+          </div>
+          <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-black text-primary-deep">
+            {pendingProfileCount} bekliyor
+          </span>
+        </div>
+        <div className="mt-4 grid gap-3 xl:grid-cols-2">
+          {profiles
+            .filter((profile) => profile.status === "pending")
+            .map((profile) => (
+              <article
+                key={profile.id}
+                className="rounded-2xl border border-primary/25 bg-primary/5 p-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="font-black">{profile.name}</div>
+                    <div className="mt-1 text-xs font-semibold text-foreground/50">
+                      @{profile.username} · {profile.email}
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-background px-3 py-1 text-[11px] font-black">
+                    {profile.registration?.attendedEventClaim === "referral"
+                      ? "üye referansı"
+                      : profile.registration?.attendedEventClaim || "etkinlik belirtilmedi"}
+                  </span>
+                </div>
+                {profile.registration?.referrer ? (
+                  <p className="mt-3 rounded-xl bg-background p-3 text-xs font-semibold">
+                    Referans: {profile.registration.referrer}
+                  </p>
+                ) : null}
+                <div className="mt-3 space-y-2 text-xs leading-5 text-foreground/65">
+                  <p>
+                    <strong>Kendini tanıt:</strong> {profile.registration?.introduction}
+                  </p>
+                  <p>
+                    <strong>Aradığı:</strong> {profile.registration?.lookingFor}
+                  </p>
+                  <p>
+                    <strong>Katkısı:</strong> {profile.registration?.canHelpWith}
+                  </p>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void moderateProfile(profile, "approved")}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-black text-primary-foreground"
+                  >
+                    <Check size={14} /> üyeliği onayla
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void moderateProfile(profile, "rejected")}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-2 text-xs font-black"
+                  >
+                    <X size={14} /> reddet
+                  </button>
+                </div>
+              </article>
+            ))}
+        </div>
+        {pendingProfileCount === 0 ? (
+          <p className="mt-4 rounded-2xl bg-muted/60 p-4 text-sm font-semibold text-foreground/45">
+            Onay bekleyen profil başvurusu yok.
           </p>
         ) : null}
       </div>
@@ -1370,7 +1482,13 @@ function MemberProfilesAdmin({
                 <td className="px-4 py-3 text-xs font-semibold text-foreground/60">
                   {profile.attendedEvents.join(", ") || "—"}
                 </td>
-                <td className="px-4 py-3">{profile.status}</td>
+                <td className="px-4 py-3">
+                  {profile.status === "pending"
+                    ? "onay bekliyor"
+                    : profile.status === "rejected"
+                      ? "reddedildi"
+                      : profile.status}
+                </td>
                 <td className="px-4 py-3 text-xs font-semibold">
                   {profile.publicProfileEnabled ? (
                     <a

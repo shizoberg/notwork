@@ -24,8 +24,14 @@ export type MemberRegistrationInput = {
   linkedin: string;
   instagram: string;
   phone: string;
+  referrer: string;
   photoDataUrl: string;
   consent: boolean;
+};
+
+export type MemberRegistrationResult = {
+  status: "pending";
+  username: string;
 };
 
 export class MemberProfileApiError extends Error {
@@ -84,7 +90,17 @@ export async function loginMember(identity: string, password: string) {
 }
 
 export async function registerMember(input: MemberRegistrationInput) {
-  return (await requestProfile({ action: "register", ...input })).profile;
+  const response = await fetch("/api/member-profile", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ action: "register", ...input }),
+  });
+  if (!response.ok) {
+    const message = (await response.text()).trim() || "Profil başvurusu tamamlanamadı";
+    throw new MemberProfileApiError(message, response.status);
+  }
+  return (await response.json()) as MemberRegistrationResult;
 }
 
 export async function changeMemberPassword(newPassword: string) {

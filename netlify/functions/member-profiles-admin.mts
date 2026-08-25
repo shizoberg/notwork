@@ -6,6 +6,7 @@ import {
   issueTemporaryCredentials,
   listMemberReferences,
   listMemberProfiles,
+  moderateMemberProfile,
   moderateMemberReference,
   syncVerifiedEventMembers,
   type ImportedMemberCredential,
@@ -18,11 +19,13 @@ type AdminInput = {
     | "syncMembers"
     | "issueCredentials"
     | "importCredentials"
+    | "moderateProfile"
     | "moderateReference";
   credentials?: ImportedMemberCredential[];
   targetUsername?: string;
   authorUsername?: string;
   referenceStatus?: "approved" | "rejected";
+  profileStatus?: "approved" | "rejected";
 };
 
 const fallbackPasswordHash = "bffc46786cfaa3b08499a75d77b037dff9a14f362ab183f72e2ea7bcce0454ee";
@@ -92,6 +95,20 @@ export default async (request: Request, _context: Context) => {
         input.referenceStatus,
         store,
       );
+      return Response.json(
+        {
+          profiles: await listMemberProfiles(store),
+          references: await listMemberReferences(store),
+        },
+        { headers: { "cache-control": "no-store, private" } },
+      );
+    }
+
+    if (action === "moderateProfile") {
+      if (input.profileStatus !== "approved" && input.profileStatus !== "rejected") {
+        return new Response("Geçersiz profil durumu", { status: 400 });
+      }
+      await moderateMemberProfile(input.targetUsername || "", input.profileStatus, store);
       return Response.json(
         {
           profiles: await listMemberProfiles(store),

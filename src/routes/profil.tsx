@@ -116,7 +116,7 @@ const registrationEventOptions = [
   { value: "10-subat-2026", label: "10 Şubat 2026 · İstinye Art" },
   { value: "16-ocak-2026", label: "16 Ocak 2026 · İstinye Art" },
   { value: "8-aralik-2025", label: "8 Aralık 2025 · İstinye Art" },
-  { value: "none", label: "Henüz bir Notwork etkinliğine katılmadım" },
+  { value: "referral", label: "Bir Notwork üyesinin referansıyla başvuruyorum" },
 ];
 
 function getEventDetails(eventId: string) {
@@ -258,7 +258,7 @@ function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile
   }
 
   if (mode === "register") {
-    return <RegisterPanel onRegistered={onLoggedIn} onBack={() => setMode("login")} />;
+    return <RegisterPanel onBack={() => setMode("login")} />;
   }
 
   return (
@@ -337,13 +337,7 @@ function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile
   );
 }
 
-function RegisterPanel({
-  onRegistered,
-  onBack,
-}: {
-  onRegistered: (profile: NotworkMemberProfile) => void;
-  onBack: () => void;
-}) {
+function RegisterPanel({ onBack }: { onBack: () => void }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -355,12 +349,14 @@ function RegisterPanel({
   const [linkedin, setLinkedin] = useState("");
   const [instagram, setInstagram] = useState("");
   const [phone, setPhone] = useState("");
+  const [referrer, setReferrer] = useState("");
   const [photoDataUrl, setPhotoDataUrl] = useState("");
   const [consent, setConsent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [compressingPhoto, setCompressingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [submitted, setSubmitted] = useState(false);
   const photoInput = useRef<HTMLInputElement>(null);
 
   async function selectPhoto(event: ChangeEvent<HTMLInputElement>) {
@@ -391,27 +387,47 @@ function RegisterPanel({
     setSubmitting(true);
     setError("");
     try {
-      onRegistered(
-        await registerMember({
-          name,
-          email,
-          password,
-          attendedEventClaim,
-          introduction,
-          lookingFor,
-          canHelpWith,
-          linkedin,
-          instagram,
-          phone,
-          photoDataUrl,
-          consent,
-        }),
-      );
+      await registerMember({
+        name,
+        email,
+        password,
+        attendedEventClaim,
+        introduction,
+        lookingFor,
+        canHelpWith,
+        linkedin,
+        instagram,
+        phone,
+        referrer,
+        photoDataUrl,
+        consent,
+      });
+      setSubmitted(true);
     } catch (caught) {
       setError(errorMessage(caught));
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (submitted) {
+    return (
+      <section className="mx-auto max-w-lg rounded-[2rem] border border-primary/30 bg-card p-6 text-center shadow-[var(--shadow-card)] sm:p-9">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary-deep">
+          <ShieldCheck className="h-8 w-8" />
+        </div>
+        <h1 className="mt-5 font-display text-4xl font-black tracking-[-0.04em]">
+          başvurun alındı
+        </h1>
+        <p className="mt-4 text-sm leading-6 text-muted-foreground">
+          Profilin Notwork adminleri tarafından incelenecek. Etkinlik katılımın veya üye referansın
+          doğrulandıktan ve başvurun onaylandıktan sonra giriş yapabilirsin.
+        </p>
+        <button type="button" onClick={onBack} className="profile-primary-button mt-6 w-full">
+          Giriş ekranına dön
+        </button>
+      </section>
+    );
   }
 
   return (
@@ -428,12 +444,23 @@ function RegisterPanel({
           notwork profilini oluştur
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Profil fotoğrafın zorunlu. Kendini, aradığın bağlantıyı ve topluluğa neler katabileceğini
-          detaylı anlatarak network ağına katıl.
+          Profil fotoğrafın zorunlu. Başvurun yalnızca Notwork adminleri tarafından onaylandıktan
+          sonra aktif olur.
         </p>
       </div>
 
       <form onSubmit={submit} className="space-y-6 p-5 sm:p-8">
+        <div className="rounded-[1.5rem] border border-primary/30 bg-primary/10 p-4 text-sm leading-6">
+          <div className="flex items-center gap-2 font-black text-primary-deep">
+            <ShieldCheck className="h-5 w-5" /> Notwork üyelik koşulu
+          </div>
+          <p className="mt-2 text-muted-foreground">
+            Notwork üyesi olmak için etkinliklerimizden birine katılmış olman gerekir. Bir Notwork
+            üyesinin referansıyla da başvurabilirsin. Her iki durumda da profilin admin onayından
+            sonra sisteme alınır.
+          </p>
+        </div>
+
         <div className="rounded-[1.5rem] border border-primary/30 bg-primary/5 p-4">
           <div className="flex items-center gap-4">
             <button
@@ -518,10 +545,23 @@ function RegisterPanel({
             ))}
           </select>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Etkinlik katılımı e-posta kayıtlarımızla kontrol edilir. Doğrulandıktan sonra üye rozeti
-            eklenir.
+            Etkinlik katılımı e-posta kayıtlarımızla kontrol edilir. Referans ile başvuruyorsan
+            aşağıdaki alana seni tanıyan üyeyi yaz.
           </p>
         </Field>
+
+        {attendedEventClaim === "referral" ? (
+          <Field label="Notwork referansın *" hint="ad, e-posta veya @kullanıcı adı">
+            <input
+              required
+              maxLength={120}
+              value={referrer}
+              onChange={(event) => setReferrer(event.target.value)}
+              className="profile-input"
+              placeholder="Seni referans gösteren Notwork üyesi"
+            />
+          </Field>
+        ) : null}
 
         <RegistrationQuestion
           label="Kendini tanıt *"
@@ -638,7 +678,7 @@ function RegisterPanel({
           ) : (
             <UserRound className="h-5 w-5" />
           )}
-          Profilimi oluştur
+          Başvurumu gönder
         </button>
       </form>
     </section>

@@ -92,7 +92,7 @@ export type StoredMemberProfile = {
     label: "Doğrulanmış Notwork Üyesi";
     description: "En az bir Notwork etkinliğine katıldı.";
   };
-  status: "invited" | "active" | "suspended";
+  status: "invited" | "pending" | "active" | "suspended" | "rejected";
   credential?: StoredCredential;
   mustChangePassword: boolean;
   registration?: {
@@ -100,7 +100,9 @@ export type StoredMemberProfile = {
     introduction: string;
     lookingFor: string;
     canHelpWith: string;
+    referrer: string;
     submittedAt: string;
+    reviewedAt: string;
   };
   credentialIssuedAt: string;
   createdAt: string;
@@ -527,7 +529,7 @@ export async function syncVerifiedEventMembers(store = getMemberProfileStore()) 
         ? {
             code: "verified-event-member",
             label: "Doğrulanmış Notwork Üyesi",
-            description: "En az bir Notwork etkinliğine katıldı.",
+            description: "Etkinlik katılımı veya üye referansı admin tarafından doğrulandı.",
           }
         : undefined,
       status: existing?.status || "invited",
@@ -580,12 +582,13 @@ type NewMemberRegistration = {
   linkedin?: string;
   instagram?: string;
   phone?: string;
+  referrer?: string;
   photoDataUrl?: string;
   consent?: boolean;
 };
 
 const allowedEventClaims = new Set([
-  "none",
+  "referral",
   "21-agustos-2026",
   "14-temmuz-2026",
   "22-mayis-2026",
@@ -639,6 +642,7 @@ export async function registerMemberProfile(
   const lookingFor = clean(input.lookingFor, 500);
   const canHelpWith = clean(input.canHelpWith, 500);
   const phone = clean(input.phone, 80);
+  const referrer = clean(input.referrer, 120);
   const linkedin = clean(input.linkedin, 240);
   const instagram = clean(input.instagram, 100).replace(/^@/, "");
 
@@ -646,6 +650,9 @@ export async function registerMemberProfile(
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Geçerli bir e-posta yaz");
   if (!input.consent) throw new Error("KVKK ve topluluk onayı zorunludur");
   if (!allowedEventClaims.has(attendedEventClaim)) throw new Error("Etkinlik bilgisini seç");
+  if (attendedEventClaim === "referral" && referrer.length < 3) {
+    throw new Error("Seni referans gösteren Notwork üyesini yaz");
+  }
   if (introduction.length < 140) throw new Error("Kendini tanıt yanıtı en az 140 karakter olmalı");
   if (lookingFor.length < 140) throw new Error("Ne aradığını en az 140 karakterle anlat");
   if (canHelpWith.length < 140) throw new Error("Neler yapabildiğini en az 140 karakterle anlat");
@@ -695,7 +702,7 @@ export async function registerMemberProfile(
     eventCodes: [],
     verifiedMember: false,
     publicProfileEnabled: false,
-    status: "active",
+    status: "pending",
     credential,
     mustChangePassword: false,
     credentialIssuedAt: now,
@@ -704,40 +711,20 @@ export async function registerMemberProfile(
       introduction,
       lookingFor,
       canHelpWith,
+      referrer,
       submittedAt: now,
+      reviewedAt: "",
     },
     createdAt: now,
     updatedAt: now,
   };
 
-  const member: NetworkMemberRow = {
-    id: memberId,
-    name,
-    title: introduction.slice(0, 80),
-    skills: canHelpWith.slice(0, 240),
-    email,
-    instagram,
-    linkedin,
-    motivation: lookingFor.slice(0, 180),
-    contact: phone,
-    createdAt: now,
-    username,
-    consentAt: now,
-  };
-  const memberStore = getStore({ name: memberStoreName, consistency: "strong" });
-  const backupPayload = { ...member, backupReason: "profile-register", backedUpAt: now };
   await Promise.all([
     store.setJSON(profileKey(username), profile),
     store.set(photoKey(profileId), photo.image, { metadata: { contentType: photo.contentType } }),
-    memberStore.setJSON(`members/${username}.json`, member),
-    memberStore.setJSON(`backups/latest/${username}.json`, backupPayload),
-    memberStore.setJSON(
-      `backups/immutable/${username}/${Date.now()}-${crypto.randomUUID()}-profile-register.json`,
-      backupPayload,
-    ),
   ]);
 
-  return createMemberSession(profile, store);
+  return { status: "pending" as const, username };
 }
 
 export async function issueTemporaryCredentials(store = getMemberProfileStore()) {
@@ -821,8 +808,14 @@ export async function loginMemberProfile(
     (candidate) =>
       candidate.username === normalizedIdentity || candidate.email === normalizedIdentity,
   );
-  if (!matchedProfile || matchedProfile.status === "suspended") return null;
+  if (!matchedProfile) return null;
   if (!(await verifyPassword(password, matchedProfile.credential))) return null;
+  if (matchedProfile.status === "pending") {
+    throw new Error("Profil başvurun admin onayı bekliyor");
+  }
+  if (matchedProfile.status === "rejected" || matchedProfile.status === "suspended") {
+    throw new Error("Profilin şu anda girişe açık değil");
+  }
   const profile = await hydrateMemberEventCodes(matchedProfile, store);
 
   return createMemberSession(profile, store);
@@ -844,7 +837,7 @@ export async function getMemberProfileBySession(token: string, store = getMember
     type: "json",
     consistency: "strong",
   })) as StoredMemberProfile | null;
-  if (!storedProfile || storedProfile.status === "suspended") return null;
+  if (!storedProfile || !["active", "invited"].includes(storedProfile.status)) return null;
   const profile = await hydrateMemberEventCodes(storedProfile, store);
   return { profile, tokenHash };
 }
@@ -1111,6 +1104,89 @@ export async function moderateMemberReference(
   };
   await store.setJSON(key, updated);
   return updated;
+}
+
+export async function moderateMemberProfile(
+  username: string,
+  status: "approved" | "rejected",
+  store = getMemberProfileStore(),
+) {
+  const normalizedUsername = clean(username, 80).toLocaleLowerCase("tr-TR");
+  const profile = (await store.get(profileKey(normalizedUsername), {
+    type: "json",
+    consistency: "strong",
+  })) as StoredMemberProfile | null;
+  if (!profile) throw new Error("Profil başvurusu bulunamadı");
+  if (!profile.registration) throw new Error("Bu profil başvuru onayıyla oluşturulmadı");
+
+  const reviewedAt = new Date().toISOString();
+  const approved = status === "approved";
+  const claimedEvent = clean(profile.registration.attendedEventClaim, 80);
+  const attendedEvents =
+    approved && claimedEvent !== "referral"
+      ? [...new Set([...(profile.attendedEvents || []), claimedEvent])]
+      : profile.attendedEvents || [];
+  const updated: StoredMemberProfile = {
+    ...profile,
+    attendedEvents,
+    verifiedMember: approved,
+    publicProfileEnabled: approved ? profile.publicProfileEnabled : false,
+    badge: approved
+      ? {
+          code: "verified-event-member",
+          label: "Doğrulanmış Notwork Üyesi",
+          description: "Etkinlik katılımı veya üye referansı admin tarafından doğrulandı.",
+        }
+      : undefined,
+    status: approved ? "active" : "rejected",
+    registration: {
+      ...profile.registration,
+      referrer: clean(profile.registration.referrer, 120),
+      reviewedAt,
+    },
+    updatedAt: reviewedAt,
+  };
+
+  await store.setJSON(profileKey(normalizedUsername), updated);
+
+  if (approved) {
+    const member: NetworkMemberRow = {
+      id: profile.memberId,
+      name: profile.name,
+      title: profile.registration.introduction.slice(0, 80),
+      skills: profile.registration.canHelpWith.slice(0, 240),
+      email: profile.email,
+      instagram: profile.links.instagram,
+      linkedin: profile.links.linkedin,
+      motivation: profile.registration.lookingFor.slice(0, 180),
+      contact: profile.phone || "",
+      createdAt: profile.createdAt,
+      username: profile.username,
+      consentAt: profile.createdAt,
+    };
+    const memberStore = getStore({ name: memberStoreName, consistency: "strong" });
+    const backupPayload = {
+      ...member,
+      backupReason: "profile-approved",
+      backedUpAt: reviewedAt,
+    };
+    await Promise.all([
+      memberStore.setJSON(`members/${profile.username}.json`, member),
+      memberStore.setJSON(`backups/latest/${profile.username}.json`, backupPayload),
+      memberStore.setJSON(
+        `backups/immutable/${profile.username}/${Date.now()}-${crypto.randomUUID()}-profile-approved.json`,
+        backupPayload,
+      ),
+    ]);
+  } else {
+    const memberStore = getStore({ name: memberStoreName, consistency: "strong" });
+    await Promise.all([
+      memberStore.delete(`members/${profile.username}.json`),
+      memberStore.delete(`backups/latest/${profile.username}.json`),
+    ]);
+  }
+
+  return publicProfile(updated);
 }
 
 export function safeMemberProfile(profile: StoredMemberProfile) {

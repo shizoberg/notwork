@@ -50,6 +50,7 @@ type ProfileInput = {
   linkedin?: string;
   instagram?: string;
   phone?: string;
+  referrer?: string;
   consent?: boolean;
 };
 
@@ -199,10 +200,7 @@ export default async (request: Request, _context: Context) => {
         });
       }
       const result = await registerMemberProfile({ ...input, password });
-      return json(
-        { profile: result.profile },
-        { headers: { "set-cookie": sessionCookie(request, result.token, 7 * 24 * 60 * 60) } },
-      );
+      return json(result, { status: 201 });
     }
 
     if (action === "login") {

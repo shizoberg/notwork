@@ -1,7 +1,7 @@
 export type NotworkMemberBadge = {
   code: "verified-event-member";
   label: "Doğrulanmış Notwork Üyesi";
-  description: "En az bir Notwork etkinliğine katıldı.";
+  description: string;
 };
 
 export type NotworkMemberReference = {
@@ -70,14 +70,16 @@ export type NotworkMemberProfile = {
   verifiedMember: boolean;
   publicProfileEnabled: boolean;
   badge?: NotworkMemberBadge;
-  status: "invited" | "active" | "suspended";
+  status: "invited" | "pending" | "active" | "suspended" | "rejected";
   mustChangePassword: boolean;
   registration?: {
     attendedEventClaim: string;
     introduction: string;
     lookingFor: string;
     canHelpWith: string;
+    referrer: string;
     submittedAt: string;
+    reviewedAt: string;
   };
   credentialIssuedAt: string;
   createdAt: string;
