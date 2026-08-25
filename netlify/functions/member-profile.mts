@@ -10,6 +10,7 @@ import {
   getNetworkingMemberPhoto,
   loginMemberProfile,
   logoutMemberProfile,
+  registerMemberProfile,
   safeMemberProfile,
   saveMemberProfilePhoto,
   submitMemberReference,
@@ -19,6 +20,7 @@ import {
 type ProfileInput = {
   action?:
     | "login"
+    | "register"
     | "me"
     | "connections"
     | "changePassword"
@@ -39,6 +41,16 @@ type ProfileInput = {
   targetUsername?: string;
   skill?: string;
   message?: string;
+  name?: string;
+  email?: string;
+  attendedEventClaim?: string;
+  introduction?: string;
+  lookingFor?: string;
+  canHelpWith?: string;
+  linkedin?: string;
+  instagram?: string;
+  phone?: string;
+  consent?: boolean;
 };
 
 const cookieName = "notwork_profile_session";
@@ -178,6 +190,20 @@ export default async (request: Request, _context: Context) => {
     const input = (await request.json()) as ProfileInput;
     const action = clean(input.action, 30);
     const token = readCookie(request);
+
+    if (action === "register") {
+      const password = clean(input.password, 120);
+      if (!validNewPassword(password)) {
+        return new Response("Şifre en az 10 karakter, bir harf ve bir rakam içermeli", {
+          status: 400,
+        });
+      }
+      const result = await registerMemberProfile({ ...input, password });
+      return json(
+        { profile: result.profile },
+        { headers: { "set-cookie": sessionCookie(request, result.token, 7 * 24 * 60 * 60) } },
+      );
+    }
 
     if (action === "login") {
       const identity = clean(input.identity, 120).toLocaleLowerCase("tr-TR");

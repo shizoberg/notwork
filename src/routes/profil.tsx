@@ -18,6 +18,7 @@ import {
   LoaderCircle,
   Mail,
   LogOut,
+  Phone,
   Plus,
   Save,
   ShieldCheck,
@@ -43,6 +44,7 @@ import {
   getMyMemberProfile,
   loginMember,
   logoutMember,
+  registerMember,
   updateMyMemberProfile,
   uploadMemberPhoto,
   type EditableMemberProfile,
@@ -105,6 +107,18 @@ const eventDetails: Record<string, { title: string; venue: string; href: string 
   },
 };
 
+const registrationEventOptions = [
+  { value: "21-agustos-2026", label: "21 Ağustos 2026 · Rene Lokal" },
+  { value: "14-temmuz-2026", label: "14 Temmuz 2026 · Mahall Bomonti" },
+  { value: "22-mayis-2026", label: "22 Mayıs 2026 · İstinye Art" },
+  { value: "10-nisan-2026", label: "10 Nisan 2026 · İstinye Art" },
+  { value: "8-mart-2026", label: "8 Mart 2026 · İstinye Art" },
+  { value: "10-subat-2026", label: "10 Şubat 2026 · İstinye Art" },
+  { value: "16-ocak-2026", label: "16 Ocak 2026 · İstinye Art" },
+  { value: "8-aralik-2025", label: "8 Aralık 2025 · İstinye Art" },
+  { value: "none", label: "Henüz bir Notwork etkinliğine katılmadım" },
+];
+
 function getEventDetails(eventId: string) {
   return (
     eventDetails[eventId] || {
@@ -134,6 +148,7 @@ function profileDraft(profile: NotworkMemberProfile): EditableMemberProfile {
     experiences: profile.experiences.slice(0, 3).map((item) => ({ ...item })),
     links: { ...profile.links },
     publicProfileEnabled: Boolean(profile.publicProfileEnabled),
+    phone: profile.phone || "",
   };
 }
 
@@ -222,6 +237,7 @@ function MemberProfilePage() {
 }
 
 function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile) => void }) {
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [identity, setIdentity] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -239,6 +255,10 @@ function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (mode === "register") {
+    return <RegisterPanel onRegistered={onLoggedIn} onBack={() => setMode("login")} />;
   }
 
   return (
@@ -296,6 +316,16 @@ function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile
           )}
           Güvenli giriş
         </button>
+        <div className="flex items-center gap-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
+          <span className="h-px flex-1 bg-border" /> veya <span className="h-px flex-1 bg-border" />
+        </div>
+        <button
+          type="button"
+          onClick={() => setMode("register")}
+          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-primary/35 bg-primary/5 px-5 py-3 text-sm font-black text-primary-deep hover:bg-primary/10"
+        >
+          <Plus className="h-5 w-5" /> Yeni profil oluştur
+        </button>
         <Link
           to="/community"
           className="flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground"
@@ -304,6 +334,341 @@ function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile
         </Link>
       </form>
     </section>
+  );
+}
+
+function RegisterPanel({
+  onRegistered,
+  onBack,
+}: {
+  onRegistered: (profile: NotworkMemberProfile) => void;
+  onBack: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const [attendedEventClaim, setAttendedEventClaim] = useState("");
+  const [introduction, setIntroduction] = useState("");
+  const [lookingFor, setLookingFor] = useState("");
+  const [canHelpWith, setCanHelpWith] = useState("");
+  const [linkedin, setLinkedin] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [phone, setPhone] = useState("");
+  const [photoDataUrl, setPhotoDataUrl] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [compressingPhoto, setCompressingPhoto] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const photoInput = useRef<HTMLInputElement>(null);
+
+  async function selectPhoto(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setCompressingPhoto(true);
+    setError("");
+    try {
+      setPhotoDataUrl(await compressProfilePhoto(file));
+    } catch (caught) {
+      setError(errorMessage(caught));
+    } finally {
+      setCompressingPhoto(false);
+    }
+  }
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!photoDataUrl) {
+      setError("Kayıt için profil fotoğrafı yüklemelisin.");
+      return;
+    }
+    if (password !== confirmation) {
+      setError("Şifreler aynı olmalı.");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    try {
+      onRegistered(
+        await registerMember({
+          name,
+          email,
+          password,
+          attendedEventClaim,
+          introduction,
+          lookingFor,
+          canHelpWith,
+          linkedin,
+          instagram,
+          phone,
+          photoDataUrl,
+          consent,
+        }),
+      );
+    } catch (caught) {
+      setError(errorMessage(caught));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section className="mx-auto max-w-2xl overflow-hidden rounded-[2rem] border border-border bg-card shadow-[var(--shadow-card)]">
+      <div className="bg-primary/15 p-5 sm:p-8">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-xs font-black text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" /> Giriş ekranına dön
+        </button>
+        <h1 className="mt-5 font-display text-4xl font-black tracking-[-0.05em] sm:text-5xl">
+          notwork profilini oluştur
+        </h1>
+        <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+          Profil fotoğrafın zorunlu. Kendini, aradığın bağlantıyı ve topluluğa neler katabileceğini
+          detaylı anlatarak network ağına katıl.
+        </p>
+      </div>
+
+      <form onSubmit={submit} className="space-y-6 p-5 sm:p-8">
+        <div className="rounded-[1.5rem] border border-primary/30 bg-primary/5 p-4">
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => photoInput.current?.click()}
+              className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.4rem] border border-dashed border-primary bg-background text-primary-deep"
+              aria-label="Zorunlu profil fotoğrafını seç"
+            >
+              {photoDataUrl ? (
+                <img
+                  src={photoDataUrl}
+                  alt="Profil önizlemesi"
+                  className="h-full w-full object-cover"
+                />
+              ) : compressingPhoto ? (
+                <LoaderCircle className="h-6 w-6 animate-spin" />
+              ) : (
+                <Camera className="h-7 w-7" />
+              )}
+            </button>
+            <div>
+              <div className="text-sm font-black">Profil fotoğrafı *</div>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Zorunlu · yüzünün net göründüğü JPG, PNG veya WebP fotoğraf yükle.
+              </p>
+              <button
+                type="button"
+                onClick={() => photoInput.current?.click()}
+                className="mt-3 text-xs font-black text-primary-deep underline underline-offset-4"
+              >
+                {photoDataUrl ? "fotoğrafı değiştir" : "fotoğraf seç"}
+              </button>
+            </div>
+          </div>
+          <input
+            ref={photoInput}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={selectPhoto}
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Ad soyad *">
+            <input
+              required
+              autoComplete="name"
+              maxLength={100}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              className="profile-input"
+              placeholder="Adın ve soyadın"
+            />
+          </Field>
+          <Field label="E-posta *">
+            <input
+              required
+              type="email"
+              autoComplete="email"
+              maxLength={120}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="profile-input"
+              placeholder="ornek@eposta.com"
+            />
+          </Field>
+        </div>
+
+        <Field label="Hangi Notwork etkinliğine katıldın? *" hint="Doğrulama için">
+          <select
+            required
+            value={attendedEventClaim}
+            onChange={(event) => setAttendedEventClaim(event.target.value)}
+            className="profile-input"
+          >
+            <option value="">Etkinliği seç</option>
+            {registrationEventOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            Etkinlik katılımı e-posta kayıtlarımızla kontrol edilir. Doğrulandıktan sonra üye rozeti
+            eklenir.
+          </p>
+        </Field>
+
+        <RegistrationQuestion
+          label="Kendini tanıt *"
+          value={introduction}
+          onChange={setIntroduction}
+          placeholder="Neler yaptığını, deneyimini ve seni tanımamız gereken detayları anlat."
+        />
+        <RegistrationQuestion
+          label="Ne istiyorsun? *"
+          value={lookingFor}
+          onChange={setLookingFor}
+          placeholder="Aradığın bağlantıları, fırsatları, insanları veya projeleri detaylı anlat."
+        />
+        <RegistrationQuestion
+          label="Neler yapabilirsin? *"
+          value={canHelpWith}
+          onChange={setCanHelpWith}
+          placeholder="Topluluğa katabileceğin yetenekleri, deneyimleri ve desteği detaylı anlat."
+        />
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="LinkedIn" hint="opsiyonel">
+            <input
+              inputMode="url"
+              maxLength={240}
+              value={linkedin}
+              onChange={(event) => setLinkedin(event.target.value)}
+              className="profile-input"
+              placeholder="linkedin.com/in/..."
+            />
+          </Field>
+          <Field label="Instagram" hint="opsiyonel">
+            <input
+              maxLength={100}
+              value={instagram}
+              onChange={(event) => setInstagram(event.target.value)}
+              className="profile-input"
+              placeholder="kullaniciadi"
+            />
+          </Field>
+          <Field label="Telefon" hint="opsiyonel">
+            <input
+              type="tel"
+              autoComplete="tel"
+              maxLength={80}
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              className="profile-input"
+              placeholder="05xx xxx xx xx"
+            />
+          </Field>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Şifre *" hint="10+ karakter, harf ve rakam">
+            <div className="relative">
+              <input
+                required
+                minLength={10}
+                autoComplete="new-password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="profile-input pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((visible) => !visible)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl p-2 text-muted-foreground hover:bg-primary/10"
+                aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+          </Field>
+          <Field label="Şifre tekrar *">
+            <input
+              required
+              minLength={10}
+              autoComplete="new-password"
+              type={showPassword ? "text" : "password"}
+              value={confirmation}
+              onChange={(event) => setConfirmation(event.target.value)}
+              className="profile-input"
+            />
+          </Field>
+        </div>
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-background p-4">
+          <input
+            required
+            type="checkbox"
+            checked={consent}
+            onChange={(event) => setConsent(event.target.checked)}
+            className="mt-1 h-4 w-4 accent-[var(--primary)]"
+          />
+          <span className="text-xs font-semibold leading-5 text-muted-foreground">
+            Bilgilerimin Notwork topluluk ve networking sisteminde işlenmesini, üyelerle
+            paylaşılmasını ve topluluk iletişimleri için kullanılmasını onaylıyorum.{" "}
+            <Link to="/kvkk" className="font-black text-foreground underline underline-offset-2">
+              KVKK metnini oku
+            </Link>
+          </span>
+        </label>
+
+        {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
+        <button
+          disabled={submitting || compressingPhoto}
+          className="profile-primary-button w-full"
+          type="submit"
+        >
+          {submitting ? (
+            <LoaderCircle className="h-5 w-5 animate-spin" />
+          ) : (
+            <UserRound className="h-5 w-5" />
+          )}
+          Profilimi oluştur
+        </button>
+      </form>
+    </section>
+  );
+}
+
+function RegistrationQuestion({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <Field label={label} hint={`${value.length}/500 · en az 140`}>
+      <textarea
+        required
+        minLength={140}
+        maxLength={500}
+        rows={5}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="profile-input min-h-32 resize-y"
+        placeholder={placeholder}
+      />
+    </Field>
   );
 }
 
@@ -643,6 +1008,14 @@ function ProfileEditor({
                     >
                       <Mail className="h-3.5 w-3.5" /> e-posta
                     </a>
+                    {connection.phone ? (
+                      <a
+                        href={`tel:${connection.phone.replace(/\s+/g, "")}`}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-black hover:border-primary"
+                      >
+                        <Phone className="h-3.5 w-3.5" /> telefon
+                      </a>
+                    ) : null}
                     {instagramUrl ? (
                       <a
                         href={instagramUrl}
@@ -869,6 +1242,20 @@ function ProfileEditor({
         </EditorSection>
 
         <EditorSection icon={<Link2 className="h-5 w-5" strokeWidth={1.8} />} title="Bağlantıların">
+          <Field label="Telefon" hint="Yalnızca giriş yapmış üyeler görür">
+            <div className="relative">
+              <Phone className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="tel"
+                autoComplete="tel"
+                maxLength={80}
+                value={draft.phone}
+                onChange={(event) => setDraft({ ...draft, phone: event.target.value })}
+                className="profile-input pl-11"
+                placeholder="05xx xxx xx xx"
+              />
+            </div>
+          </Field>
           <Field label="LinkedIn">
             <input
               inputMode="url"

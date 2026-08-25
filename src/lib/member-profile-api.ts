@@ -11,7 +11,22 @@ type ProfileResponse = {
 export type EditableMemberProfile = Pick<
   NotworkMemberProfile,
   "headline" | "bio" | "skills" | "experiences" | "links" | "publicProfileEnabled"
->;
+> & { phone: string };
+
+export type MemberRegistrationInput = {
+  name: string;
+  email: string;
+  password: string;
+  attendedEventClaim: string;
+  introduction: string;
+  lookingFor: string;
+  canHelpWith: string;
+  linkedin: string;
+  instagram: string;
+  phone: string;
+  photoDataUrl: string;
+  consent: boolean;
+};
 
 export class MemberProfileApiError extends Error {
   status: number;
@@ -66,6 +81,10 @@ export async function getPublicMemberProfile(username: string) {
 
 export async function loginMember(identity: string, password: string) {
   return (await requestProfile({ action: "login", identity, password })).profile;
+}
+
+export async function registerMember(input: MemberRegistrationInput) {
+  return (await requestProfile({ action: "register", ...input })).profile;
 }
 
 export async function changeMemberPassword(newPassword: string) {

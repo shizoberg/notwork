@@ -33,6 +33,7 @@ export type NotworkMemberConnection = {
   instagram: string;
   linkedin: string;
   website: string;
+  phone: string;
   eventId: string;
   publicCode: string;
   sharedGroupCount: number;
@@ -49,6 +50,7 @@ export type NotworkMemberProfile = {
   memberId: string;
   username: string;
   email: string;
+  phone?: string;
   name: string;
   headline: string;
   bio: string;
@@ -70,6 +72,13 @@ export type NotworkMemberProfile = {
   badge?: NotworkMemberBadge;
   status: "invited" | "active" | "suspended";
   mustChangePassword: boolean;
+  registration?: {
+    attendedEventClaim: string;
+    introduction: string;
+    lookingFor: string;
+    canHelpWith: string;
+    submittedAt: string;
+  };
   credentialIssuedAt: string;
   createdAt: string;
   updatedAt: string;

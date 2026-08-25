@@ -71,6 +71,7 @@ export type StoredMemberProfile = {
   memberId: string;
   username: string;
   email: string;
+  phone?: string;
   name: string;
   headline: string;
   bio: string;
@@ -94,6 +95,13 @@ export type StoredMemberProfile = {
   status: "invited" | "active" | "suspended";
   credential?: StoredCredential;
   mustChangePassword: boolean;
+  registration?: {
+    attendedEventClaim: string;
+    introduction: string;
+    lookingFor: string;
+    canHelpWith: string;
+    submittedAt: string;
+  };
   credentialIssuedAt: string;
   createdAt: string;
   updatedAt: string;
@@ -357,7 +365,9 @@ export async function getMemberConnections(
       ),
     ) as Promise<Array<EventNetworkRegistration | null>>,
   ]);
-  const profilesByEmail = new Map(profiles.map((memberProfile) => [memberProfile.email, memberProfile]));
+  const profilesByEmail = new Map(
+    profiles.map((memberProfile) => [memberProfile.email, memberProfile]),
+  );
   const sourceMembersByEmail = new Map(
     sourceMembers.map((member) => [clean(member.email, 120).toLocaleLowerCase("tr-TR"), member]),
   );
@@ -365,7 +375,10 @@ export async function getMemberConnections(
   return connectionRegistrations
     .filter((row): row is EventNetworkRegistration => Boolean(row?.participant?.id))
     .map((row) => {
-      const email = clean(row.profile?.emailNormalized || row.profile?.email, 120).toLocaleLowerCase("tr-TR");
+      const email = clean(
+        row.profile?.emailNormalized || row.profile?.email,
+        120,
+      ).toLocaleLowerCase("tr-TR");
       const memberProfile = profilesByEmail.get(email);
       const sourceMember = sourceMembersByEmail.get(email);
       const username = clean(
@@ -388,16 +401,20 @@ export async function getMemberConnections(
             ? `/api/member-profile?networkPhoto=${encodeURIComponent(username)}&v=${encodeURIComponent(memberProfile.updatedAt)}`
             : "",
         email,
-        instagram: clean(memberProfile?.links.instagram || sourceMember?.instagram, 100).replace(/^@/, ""),
+        instagram: clean(memberProfile?.links.instagram || sourceMember?.instagram, 100).replace(
+          /^@/,
+          "",
+        ),
         linkedin: clean(memberProfile?.links.linkedin || sourceMember?.linkedin, 240),
         website: clean(memberProfile?.links.website, 240),
+        phone: clean(memberProfile?.phone || sourceMember?.contact, 80),
         eventId: clean(row.participant?.eventId, 80),
         publicCode: clean(row.participant?.publicCode, 16).toUpperCase(),
         sharedGroupCount: sharedGroupsByParticipant.get(clean(row.participant?.id, 100)) || 1,
         publicProfileEnabled: Boolean(
           memberProfile?.status === "active" &&
-            !memberProfile.mustChangePassword &&
-            memberProfile.publicProfileEnabled,
+          !memberProfile.mustChangePassword &&
+          memberProfile.publicProfileEnabled,
         ),
       };
     })
@@ -468,8 +485,7 @@ export async function syncVerifiedEventMembers(store = getMemberProfileStore()) 
     const email = member.email;
     const existingByEmailProfile = existingByEmail.get(email);
     const username =
-      existingByEmailProfile?.username ||
-      clean(member.username, 80).toLocaleLowerCase("tr-TR");
+      existingByEmailProfile?.username || clean(member.username, 80).toLocaleLowerCase("tr-TR");
     if (!username || !email) continue;
 
     const existing =
@@ -485,6 +501,7 @@ export async function syncVerifiedEventMembers(store = getMemberProfileStore()) 
       memberId: member.id,
       username,
       email,
+      phone: existing?.phone || clean(member.contact, 80),
       name: clean(member.name, 100),
       headline: existing?.headline || clean(member.title, 120),
       bio: existing?.bio || clean(member.motivation, 240),
@@ -516,6 +533,7 @@ export async function syncVerifiedEventMembers(store = getMemberProfileStore()) 
       status: existing?.status || "invited",
       credential: existing?.credential,
       mustChangePassword: existing?.mustChangePassword ?? true,
+      registration: existing?.registration,
       credentialIssuedAt: existing?.credentialIssuedAt || "",
       createdAt: existing?.createdAt || now,
       updatedAt: now,
@@ -551,16 +569,183 @@ async function verifyPassword(password: string, credential?: StoredCredential) {
   return derived.length === expected.length && timingSafeEqual(derived, expected);
 }
 
+type NewMemberRegistration = {
+  name?: string;
+  email?: string;
+  password?: string;
+  attendedEventClaim?: string;
+  introduction?: string;
+  lookingFor?: string;
+  canHelpWith?: string;
+  linkedin?: string;
+  instagram?: string;
+  phone?: string;
+  photoDataUrl?: string;
+  consent?: boolean;
+};
+
+const allowedEventClaims = new Set([
+  "none",
+  "21-agustos-2026",
+  "14-temmuz-2026",
+  "22-mayis-2026",
+  "10-nisan-2026",
+  "8-mart-2026",
+  "10-subat-2026",
+  "16-ocak-2026",
+  "8-aralik-2025",
+]);
+
+function registrationUsername(name: string) {
+  return (
+    normalizeText(name)
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 48) || "notwork-uye"
+  );
+}
+
+function profilePhotoPayload(photoDataUrl: string) {
+  const match = photoDataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
+  if (!match) throw new Error("Profil fotoğrafı zorunludur. JPG, PNG veya WebP seç.");
+  const image = Buffer.from(match[2], "base64");
+  if (image.byteLength > 700_000) throw new Error("Profil fotoğrafı en fazla 700 KB olabilir");
+  return { image, contentType: match[1] };
+}
+
+async function createMemberSession(profile: StoredMemberProfile, store = getMemberProfileStore()) {
+  const token = randomBytes(32).toString("hex");
+  const tokenHash = hashToken(token);
+  const now = new Date();
+  const session: StoredSession = {
+    tokenHash,
+    username: profile.username,
+    createdAt: now.toISOString(),
+    expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  };
+  await store.setJSON(sessionKey(tokenHash), session);
+  return { profile: publicProfile(profile), token };
+}
+
+export async function registerMemberProfile(
+  input: NewMemberRegistration,
+  store = getMemberProfileStore(),
+) {
+  const name = clean(input.name, 100);
+  const email = clean(input.email, 120).toLocaleLowerCase("tr-TR");
+  const password = clean(input.password, 120);
+  const attendedEventClaim = clean(input.attendedEventClaim, 80);
+  const introduction = clean(input.introduction, 500);
+  const lookingFor = clean(input.lookingFor, 500);
+  const canHelpWith = clean(input.canHelpWith, 500);
+  const phone = clean(input.phone, 80);
+  const linkedin = clean(input.linkedin, 240);
+  const instagram = clean(input.instagram, 100).replace(/^@/, "");
+
+  if (name.length < 3) throw new Error("Ad ve soyadını yaz");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Geçerli bir e-posta yaz");
+  if (!input.consent) throw new Error("KVKK ve topluluk onayı zorunludur");
+  if (!allowedEventClaims.has(attendedEventClaim)) throw new Error("Etkinlik bilgisini seç");
+  if (introduction.length < 140) throw new Error("Kendini tanıt yanıtı en az 140 karakter olmalı");
+  if (lookingFor.length < 140) throw new Error("Ne aradığını en az 140 karakterle anlat");
+  if (canHelpWith.length < 140) throw new Error("Neler yapabildiğini en az 140 karakterle anlat");
+
+  const photo = profilePhotoPayload(clean(input.photoDataUrl, 1_000_000));
+  const [profiles, sourceMembers] = await Promise.all([
+    getRows<StoredMemberProfile>(store, "profiles/"),
+    listSourceMembers(),
+  ]);
+  if (
+    profiles.some((profile) => profile.email === email) ||
+    sourceMembers.some((member) => clean(member.email, 120).toLocaleLowerCase("tr-TR") === email)
+  ) {
+    throw new Error("Bu e-posta için profil zaten var. Giriş ekranını kullan.");
+  }
+
+  const takenUsernames = new Set([
+    ...profiles.map((profile) => profile.username),
+    ...sourceMembers.map((member) => clean(member.username, 80).toLocaleLowerCase("tr-TR")),
+  ]);
+  const baseUsername = registrationUsername(name);
+  let username = baseUsername;
+  let suffix = 2;
+  while (takenUsernames.has(username)) {
+    username = `${baseUsername.slice(0, 42)}-${suffix}`;
+    suffix += 1;
+  }
+
+  const now = new Date().toISOString();
+  const memberId = crypto.randomUUID();
+  const profileId = crypto.randomUUID();
+  const credential = await hashPassword(password);
+  const profile: StoredMemberProfile = {
+    id: profileId,
+    memberId,
+    username,
+    email,
+    phone,
+    name,
+    headline: introduction.slice(0, 120),
+    bio: introduction.slice(0, 320),
+    photoUrl: `/api/member-profile?photo=${encodeURIComponent(profileId)}&v=${Date.now()}`,
+    skills: [],
+    experiences: [],
+    links: { linkedin, instagram, website: "" },
+    attendedEvents: [],
+    eventCodes: [],
+    verifiedMember: false,
+    publicProfileEnabled: false,
+    status: "active",
+    credential,
+    mustChangePassword: false,
+    credentialIssuedAt: now,
+    registration: {
+      attendedEventClaim,
+      introduction,
+      lookingFor,
+      canHelpWith,
+      submittedAt: now,
+    },
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const member: NetworkMemberRow = {
+    id: memberId,
+    name,
+    title: introduction.slice(0, 80),
+    skills: canHelpWith.slice(0, 240),
+    email,
+    instagram,
+    linkedin,
+    motivation: lookingFor.slice(0, 180),
+    contact: phone,
+    createdAt: now,
+    username,
+    consentAt: now,
+  };
+  const memberStore = getStore({ name: memberStoreName, consistency: "strong" });
+  const backupPayload = { ...member, backupReason: "profile-register", backedUpAt: now };
+  await Promise.all([
+    store.setJSON(profileKey(username), profile),
+    store.set(photoKey(profileId), photo.image, { metadata: { contentType: photo.contentType } }),
+    memberStore.setJSON(`members/${username}.json`, member),
+    memberStore.setJSON(`backups/latest/${username}.json`, backupPayload),
+    memberStore.setJSON(
+      `backups/immutable/${username}/${Date.now()}-${crypto.randomUUID()}-profile-register.json`,
+      backupPayload,
+    ),
+  ]);
+
+  return createMemberSession(profile, store);
+}
+
 export async function issueTemporaryCredentials(store = getMemberProfileStore()) {
   const profiles = await getRows<StoredMemberProfile>(store, "profiles/");
   const credentials: TemporaryMemberCredential[] = [];
 
   for (const profile of profiles) {
-    if (
-      profile.status === "suspended" ||
-      profile.credential ||
-      profile.credentialIssuedAt
-    ) {
+    if (profile.status === "suspended" || profile.credential || profile.credentialIssuedAt) {
       continue;
     }
     const temporaryPassword = createTemporaryPassword();
@@ -640,17 +825,7 @@ export async function loginMemberProfile(
   if (!(await verifyPassword(password, matchedProfile.credential))) return null;
   const profile = await hydrateMemberEventCodes(matchedProfile, store);
 
-  const token = randomBytes(32).toString("hex");
-  const tokenHash = hashToken(token);
-  const now = new Date();
-  const session: StoredSession = {
-    tokenHash,
-    username: profile.username,
-    createdAt: now.toISOString(),
-    expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-  };
-  await store.setJSON(sessionKey(tokenHash), session);
-  return { profile: publicProfile(profile), token };
+  return createMemberSession(profile, store);
 }
 
 export async function getMemberProfileBySession(token: string, store = getMemberProfileStore()) {
@@ -705,6 +880,7 @@ type EditableProfileInput = {
   experiences?: unknown;
   links?: unknown;
   publicProfileEnabled?: unknown;
+  phone?: string;
 };
 
 function normalizeSkills(value: unknown) {
@@ -756,6 +932,7 @@ export async function updateMemberProfile(
     skills: normalizeSkills(input.skills),
     experiences: normalizeExperiences(input.experiences),
     links: normalizeLinks(input.links, session.profile.links),
+    phone: clean(input.phone, 80),
     publicProfileEnabled: input.publicProfileEnabled === true,
     updatedAt,
   };
