@@ -258,11 +258,11 @@ function FiveHypePage() {
                       ))}
                     </select>
                   </FiveField>
-                  <FiveField label="problem başlığı" helper={`${form.title.length}/80 · min. 8`}>
+                  <FiveField label="problem başlığı" helper={`${form.title.length}/60 · min. 6`}>
                     <input
                       required
-                      minLength={8}
-                      maxLength={80}
+                      minLength={6}
+                      maxLength={60}
                       value={form.title}
                       onChange={(event) => update("title", event.target.value)}
                       className="profile-input"
@@ -272,11 +272,11 @@ function FiveHypePage() {
                 </div>
 
                 <div className="mt-4 grid gap-4">
-                  <FiveField label="problemini anlat" helper={`${form.description.length}/360 · min. 40`}>
+                  <FiveField label="problemini anlat" helper={`${form.description.length}/240 · min. 24`}>
                     <textarea
                       required
-                      minLength={40}
-                      maxLength={360}
+                      minLength={24}
+                      maxLength={240}
                       rows={4}
                       value={form.description}
                       onChange={(event) => update("description", event.target.value)}
@@ -285,11 +285,11 @@ function FiveHypePage() {
                     />
                   </FiveField>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <FiveField label="şimdiye kadar ne denedin?" helper={`${form.tried.length}/220 · min. 15`}>
+                    <FiveField label="şimdiye kadar ne denedin?" helper={`${form.tried.length}/140 · min. 8`}>
                       <textarea
                         required
-                        minLength={15}
-                        maxLength={220}
+                        minLength={8}
+                        maxLength={140}
                         rows={3}
                         value={form.tried}
                         onChange={(event) => update("tried", event.target.value)}
@@ -297,11 +297,11 @@ function FiveHypePage() {
                         placeholder="denediğin yollar ve tıkandığın yer"
                       />
                     </FiveField>
-                    <FiveField label="5 dakika sonunda ne olsun?" helper={`${form.desiredOutcome.length}/160 · min. 15`}>
+                    <FiveField label="5 dakika sonunda ne olsun?" helper={`${form.desiredOutcome.length}/100 · min. 8`}>
                       <textarea
                         required
-                        minLength={15}
-                        maxLength={160}
+                        minLength={8}
+                        maxLength={100}
                         rows={3}
                         value={form.desiredOutcome}
                         onChange={(event) => update("desiredOutcome", event.target.value)}

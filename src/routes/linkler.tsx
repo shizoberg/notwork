@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Check,
   Clock3,
+  KeyRound,
   MessageCircle,
   Network,
   Star,
@@ -21,20 +22,20 @@ import {
 import {
   getEventSelectionFromLocation,
   getPublicEventContext,
+  defaultEventRegistrationPrompts,
+  type EventRegistrationPrompts,
   type EventProductKey,
   type EventSelection,
   type NotworkEvent,
   withEventSelection,
 } from "@/lib/event-registry";
-import { getMyMemberProfile, MemberProfileApiError } from "@/lib/member-profile-api";
+import {
+  getMyMemberProfile,
+  loginMember,
+  MemberProfileApiError,
+} from "@/lib/member-profile-api";
 import type { NotworkMemberProfile } from "@/lib/member-profile";
 import { createNoIndexSeo } from "@/lib/seo";
-
-function getSafeReturnTo() {
-  if (typeof window === "undefined") return "";
-  const next = new URLSearchParams(window.location.search).get("next") || "";
-  return next.startsWith("/") && !next.startsWith("//") ? next : "";
-}
 
 export const Route = createFileRoute("/linkler")({
   head: () =>
@@ -117,6 +118,9 @@ type LinkRegistrationForm = {
   generalNetworkOptIn: boolean;
 };
 
+type RegistrationPath = "choose" | "login" | "new";
+type RegistrationStep = "standard" | "event";
+
 function LinksPage() {
   const [activeEvent, setActiveEvent] = useState<NotworkEvent | null>(null);
   const [registration, setRegistration] = useState<EventNetworkRegistration | null>(null);
@@ -124,7 +128,11 @@ function LinksPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const returnTo = useMemo(() => getSafeReturnTo(), []);
+  const [registrationPath, setRegistrationPath] = useState<RegistrationPath>("choose");
+  const [registrationStep, setRegistrationStep] = useState<RegistrationStep>("standard");
+  const [loginIdentity, setLoginIdentity] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginConsent, setLoginConsent] = useState(false);
   const eventSelection = useMemo<EventSelection>(
     () => (activeEvent ? { event: activeEvent.slug } : {}),
     [activeEvent],
@@ -143,8 +151,9 @@ function LinksPage() {
         enabled: product
           ? product.enabled && product.visible && product.state !== "disabled"
           : true,
+        order: product?.order || (link.product === "five" ? 1 : link.product === "wordcloud" ? 2 : 3),
       };
-    });
+    }).sort((left, right) => left.order - right.order);
     return [
       ...productLinks,
       {
@@ -175,28 +184,52 @@ function LinksPage() {
     generalNetworkOptIn: false,
   });
 
+  const registrationPrompts = useMemo(
+    () => ({
+      ...defaultEventRegistrationPrompts,
+      ...activeEvent?.entry.registrationPrompts,
+    }),
+    [activeEvent],
+  );
+
+  function applyRegistration(data: EventNetworkRegistration, fallbackEvent = "21-agustos-2026") {
+    setRegistration(data);
+    setForm((current) => ({
+      ...current,
+      firstName: data.profile.firstName,
+      lastName: data.profile.lastName,
+      email: data.profile.email,
+      attendedEvent: data.profile.attendedEvent || fallbackEvent,
+      intro: data.intro || "",
+      offers: data.offers,
+      offersDetail: data.offersDetail || "",
+      needs: data.needs,
+      needTag: data.needTag,
+      marketingOptIn: data.profile.marketingOptIn,
+      generalNetworkOptIn: data.profile.generalNetworkOptIn,
+      eventConsent: true,
+    }));
+  }
+
+  function applyMemberProfile(profile: NotworkMemberProfile, fallbackEvent?: string) {
+    const [firstName = "", ...lastNameParts] = profile.name.trim().split(/\s+/);
+    setMemberProfile(profile);
+    setForm((current) => ({
+      ...current,
+      firstName,
+      lastName: lastNameParts.join(" "),
+      email: profile.email,
+      attendedEvent: current.attendedEvent || fallbackEvent || "",
+      intro: profile.bio || profile.headline || current.intro,
+      offers: profile.skills.slice(0, 3),
+      generalNetworkOptIn: true,
+    }));
+    setRegistrationPath("new");
+    setRegistrationStep("event");
+  }
+
   useEffect(() => {
     let active = true;
-
-    function applyRegistration(data: EventNetworkRegistration, fallbackEvent = "21-agustos-2026") {
-      if (!active) return;
-      setRegistration(data);
-      setForm((current) => ({
-        ...current,
-        firstName: data.profile.firstName,
-        lastName: data.profile.lastName,
-        email: data.profile.email,
-        attendedEvent: data.profile.attendedEvent || fallbackEvent,
-        intro: data.intro || "",
-        offers: data.offers,
-        offersDetail: data.offersDetail || "",
-        needs: data.needs,
-        needTag: data.needTag,
-        marketingOptIn: data.profile.marketingOptIn,
-        generalNetworkOptIn: data.profile.generalNetworkOptIn,
-        eventConsent: true,
-      }));
-    }
 
     async function loadRegistration() {
       let selectedEvent: NotworkEvent | null = null;
@@ -220,7 +253,7 @@ function LinksPage() {
       const token = localStorage.getItem(activeTokenStorageKey);
       if (token) {
         try {
-          applyRegistration(await getEventNetworkMe(token, selection), selectedEvent?.slug);
+          if (active) applyRegistration(await getEventNetworkMe(token, selection), selectedEvent?.slug);
           loadedRegistration = true;
         } catch {
           localStorage.removeItem(activeTokenStorageKey);
@@ -239,21 +272,10 @@ function LinksPage() {
         try {
           const resumed = await resumeEventNetwork(selection);
           if (resumed.accessToken) localStorage.setItem(activeTokenStorageKey, resumed.accessToken);
-          applyRegistration(resumed, selectedEvent?.slug);
+          if (active) applyRegistration(resumed, selectedEvent?.slug);
           loadedRegistration = true;
         } catch {
-          const [firstName = "", ...lastNameParts] = profile.name.trim().split(/\s+/);
-          if (active) {
-            setForm((current) => ({
-              ...current,
-              firstName,
-              lastName: lastNameParts.join(" "),
-              email: profile.email,
-              intro: profile.bio || profile.headline || "",
-              offers: profile.skills.slice(0, 3),
-              generalNetworkOptIn: true,
-            }));
-          }
+          if (active) applyMemberProfile(profile, selectedEvent?.slug);
         }
       }
 
@@ -279,6 +301,18 @@ function LinksPage() {
         form.offers.length > 0 &&
         form.eventConsent &&
         form.generalNetworkOptIn,
+      ),
+    [form],
+  );
+
+  const canContinueStandard = useMemo(
+    () =>
+      Boolean(
+        form.firstName.trim() &&
+          form.lastName.trim() &&
+          form.email.includes("@") &&
+          form.attendedEvent &&
+          form.offers.length > 0,
       ),
     [form],
   );
@@ -335,6 +369,27 @@ function LinksPage() {
     }
   }
 
+  async function submitMemberLogin() {
+    if (!loginConsent) return;
+    setIsSaving(true);
+    setMessage("");
+    try {
+      const profile = await loginMember(loginIdentity.trim(), loginPassword);
+      applyMemberProfile(profile, activeEvent?.slug);
+      try {
+        const resumed = await resumeEventNetwork(eventSelection);
+        if (resumed.accessToken) localStorage.setItem(tokenStorageKey, resumed.accessToken);
+        applyRegistration(resumed, activeEvent?.slug);
+      } catch {
+        setMessage("Üye girişin tamamlandı. Şimdi bu etkinliğe özel soruları yanıtla.");
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Üye girişi tamamlanamadı.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   const hasRegistration = Boolean(registration);
 
   return (
@@ -370,6 +425,19 @@ function LinksPage() {
               submitRegistration={submitRegistration}
               memberProfile={memberProfile}
               activeEvent={activeEvent}
+              registrationPath={registrationPath}
+              registrationStep={registrationStep}
+              setRegistrationPath={setRegistrationPath}
+              setRegistrationStep={setRegistrationStep}
+              canContinueStandard={canContinueStandard}
+              loginIdentity={loginIdentity}
+              loginPassword={loginPassword}
+              loginConsent={loginConsent}
+              setLoginIdentity={setLoginIdentity}
+              setLoginPassword={setLoginPassword}
+              setLoginConsent={setLoginConsent}
+              submitMemberLogin={submitMemberLogin}
+              registrationPrompts={registrationPrompts}
             />
           ) : null}
 
@@ -429,15 +497,6 @@ function LinksPage() {
                 <p className="mt-3 rounded-2xl bg-background/70 px-4 py-3 text-sm font-bold text-primary-deep">
                   {message}
                 </p>
-              ) : null}
-              {returnTo ? (
-                <a
-                  href={withEventSelection(returnTo, eventSelection)}
-                  className="mt-4 flex min-h-12 items-center justify-between rounded-2xl bg-[#071213] px-4 py-3 text-sm font-black text-white"
-                >
-                  ntw.five’a geç
-                  <ArrowRight className="h-4 w-4" />
-                </a>
               ) : null}
             </section>
           ) : null}
@@ -532,6 +591,19 @@ function RegistrationGate({
   submitRegistration,
   memberProfile,
   activeEvent,
+  registrationPath,
+  registrationStep,
+  setRegistrationPath,
+  setRegistrationStep,
+  canContinueStandard,
+  loginIdentity,
+  loginPassword,
+  loginConsent,
+  setLoginIdentity,
+  setLoginPassword,
+  setLoginConsent,
+  submitMemberLogin,
+  registrationPrompts,
 }: {
   form: LinkRegistrationForm;
   setForm: React.Dispatch<React.SetStateAction<LinkRegistrationForm>>;
@@ -543,20 +615,186 @@ function RegistrationGate({
   submitRegistration: () => Promise<void>;
   memberProfile: NotworkMemberProfile | null;
   activeEvent: NotworkEvent | null;
+  registrationPath: RegistrationPath;
+  registrationStep: RegistrationStep;
+  setRegistrationPath: React.Dispatch<React.SetStateAction<RegistrationPath>>;
+  setRegistrationStep: React.Dispatch<React.SetStateAction<RegistrationStep>>;
+  canContinueStandard: boolean;
+  loginIdentity: string;
+  loginPassword: string;
+  loginConsent: boolean;
+  setLoginIdentity: React.Dispatch<React.SetStateAction<string>>;
+  setLoginPassword: React.Dispatch<React.SetStateAction<string>>;
+  setLoginConsent: React.Dispatch<React.SetStateAction<boolean>>;
+  submitMemberLogin: () => Promise<void>;
+  registrationPrompts: EventRegistrationPrompts;
 }) {
+  if (registrationPath === "choose") {
+    return (
+      <section className="mt-5 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-xl shadow-primary/10 sm:p-6">
+        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-primary-deep">
+          <UserRound className="h-4 w-4" />
+          etkinlik girişi
+        </div>
+        <h1 className="mt-4 text-3xl font-black leading-none tracking-[-0.04em] sm:text-4xl">
+          Daha önce notwork profili oluşturdun mu?
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-foreground/60">
+          Kayıtlı üyeler aynı ekranda giriş yapar. Yeni katılımcılar önce temel bilgilerini, sonra
+          bu etkinliğe özel soruları yanıtlar.
+        </p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setRegistrationPath("login")}
+            className="flex min-h-28 flex-col items-start justify-between rounded-[1.5rem] border border-primary/35 bg-primary/10 p-4 text-left transition hover:border-primary hover:bg-primary/15"
+          >
+            <KeyRound className="h-6 w-6 text-primary-deep" />
+            <span>
+              <span className="block text-lg font-black">Kayıtlıyım</span>
+              <span className="mt-1 block text-xs leading-5 text-foreground/55">
+                Kullanıcı adı/e-posta ve şifrenle devam et.
+              </span>
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setRegistrationPath("new");
+              setRegistrationStep("standard");
+            }}
+            className="flex min-h-28 flex-col items-start justify-between rounded-[1.5rem] border border-border bg-background p-4 text-left transition hover:border-primary"
+          >
+            <UserRound className="h-6 w-6 text-primary-deep" />
+            <span>
+              <span className="block text-lg font-black">Kayıtlı değilim</span>
+              <span className="mt-1 block text-xs leading-5 text-foreground/55">
+                Etkinlik profilini burada hızlıca oluştur.
+              </span>
+            </span>
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  if (registrationPath === "login") {
+    return (
+      <section className="mt-5 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-xl shadow-primary/10 sm:p-6">
+        <button
+          type="button"
+          onClick={() => setRegistrationPath("choose")}
+          className="text-xs font-black text-primary-deep"
+        >
+          ← seçeneklere dön
+        </button>
+        <h1 className="mt-4 text-3xl font-black tracking-[-0.04em]">Profilinle devam et</h1>
+        <p className="mt-2 text-sm leading-6 text-foreground/60">
+          Sayfa değişmeden giriş yap; mevcut etkinlik kaydın varsa otomatik bulunur.
+        </p>
+        <div className="mt-5 grid gap-3">
+          <QuickInput
+            label="Kullanıcı adı veya e-posta"
+            value={loginIdentity}
+            onChange={setLoginIdentity}
+          />
+          <QuickInput
+            label="Şifre"
+            type="password"
+            value={loginPassword}
+            onChange={setLoginPassword}
+          />
+          <ConsentBox
+            checked={loginConsent}
+            onChange={setLoginConsent}
+            title="KVKK Aydınlatma Metni’ni okudum; etkinlik kaydımın ve profil bilgilerimin bu etkinlik ürünlerinde kullanılmasını onaylıyorum."
+          />
+        </div>
+        {message ? (
+          <p className="mt-4 rounded-2xl bg-primary/10 px-4 py-3 text-sm font-bold text-primary-deep">
+            {message}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          disabled={!loginIdentity.trim() || !loginPassword || !loginConsent || isSaving}
+          onClick={() => void submitMemberLogin()}
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-4 text-sm font-black text-primary-foreground disabled:opacity-50"
+        >
+          {isSaving ? "Giriş yapılıyor…" : "Giriş yap ve devam et"}
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      </section>
+    );
+  }
+
+  if (registrationStep === "standard") {
+    return (
+      <section className="mt-5 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-xl shadow-primary/10 sm:p-6">
+        <button
+          type="button"
+          onClick={() => setRegistrationPath("choose")}
+          className="text-xs font-black text-primary-deep"
+        >
+          ← seçeneklere dön
+        </button>
+        <p className="mt-4 text-xs font-black uppercase tracking-[0.16em] text-primary-deep">
+          1 / 2 · temel bilgiler
+        </p>
+        <h1 className="mt-2 text-3xl font-black tracking-[-0.04em]">Etkinlik profilini oluştur</h1>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <QuickInput label="Ad" value={form.firstName} onChange={(firstName) => setForm((current) => ({ ...current, firstName }))} />
+          <QuickInput label="Soyad" value={form.lastName} onChange={(lastName) => setForm((current) => ({ ...current, lastName }))} />
+          <QuickInput className="sm:col-span-2" label="E-posta" type="email" value={form.email} onChange={(email) => setForm((current) => ({ ...current, email }))} />
+        </div>
+        <label className="mt-4 block text-sm font-bold">
+          Hangi Notwork etkinliğine katıldın?
+          <select
+            value={form.attendedEvent}
+            onChange={(event) => setForm((current) => ({ ...current, attendedEvent: event.target.value }))}
+            className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-base outline-none focus:border-primary"
+          >
+            <option value="">Etkinliği seç</option>
+            {activeEvent && !notworkEventOptions.some((item) => item.value === activeEvent.slug) ? <option value={activeEvent.slug}>{activeEvent.title}</option> : null}
+            {notworkEventOptions.map((eventOption) => <option key={eventOption.value} value={eventOption.value}>{eventOption.label}</option>)}
+          </select>
+        </label>
+        <div className="mt-4">
+          <h2 className="text-lg font-black">Neler yapabilirsin?</h2>
+          <p className="mt-1 text-xs text-foreground/50">Eşleşmede kullanılacak en fazla 3 alan seç.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {offerSuggestions.map((offer) => (
+              <button key={offer} type="button" onClick={() => toggleOffer(offer)} className={`rounded-full border px-3 py-2 text-sm font-bold ${form.offers.includes(offer) ? "border-primary bg-primary text-primary-foreground" : "border-primary/20 bg-primary/5"}`}>{offer}</button>
+            ))}
+          </div>
+          <div className="mt-3 flex gap-2">
+            <input value={form.customOffer} onChange={(event) => setForm((current) => ({ ...current, customOffer: event.target.value }))} maxLength={36} placeholder="Başka konu" className="min-w-0 flex-1 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none" />
+            <button type="button" onClick={addCustomOffer} className="rounded-2xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground">Ekle</button>
+          </div>
+        </div>
+        <button
+          type="button"
+          disabled={!canContinueStandard}
+          onClick={() => setRegistrationStep("event")}
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-4 text-sm font-black text-primary-foreground disabled:opacity-50"
+        >
+          Etkinlik sorularına geç <ArrowRight className="h-4 w-4" />
+        </button>
+      </section>
+    );
+  }
+
   return (
     <section className="mt-5 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-xl shadow-primary/10 sm:p-6">
       <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-primary-deep">
         <UserRound className="h-4 w-4" />
-        önce hızlı kayıt
+        2 / 2 · etkinlik soruları
       </div>
       <h1 className="mt-4 text-3xl font-black leading-none tracking-[-0.04em] sm:text-4xl">
-        Kendini ekle, sonra ntw.wordcloud veya ntw.matchlab’e geç.
+        {activeEvent?.shortTitle || "Bu etkinlik"} için son adım.
       </h1>
       <p className="mt-3 text-sm leading-6 text-foreground/60">
-        Match’in doğru çalışması için seni, ne aradığını ve neler yapabildiğini bilmemiz gerekiyor.
-        Kodun e-posta ve kullanıcı adına bağlanır; profil oturumun açık kaldığı sürece yeniden form
-        doldurmazsın.
+        Bu sorular etkinliğe özeldir ve admin panelinden her etkinlik için ayrı düzenlenir.
       </p>
 
       <div className="mt-4 rounded-2xl border border-primary/25 bg-primary/10 p-3 text-xs font-semibold leading-5 text-foreground/65">
@@ -567,130 +805,33 @@ function RegistrationGate({
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/8 p-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.14em] text-primary-deep">
-            {memberProfile ? "Profil oturumu açık" : "Daha önce profil oluşturdun mu?"}
+            {memberProfile ? "Profil oturumu açık" : "Temel bilgiler tamamlandı"}
           </p>
           <p className="mt-1 text-xs leading-5 text-foreground/55">
             {memberProfile
               ? `@${memberProfile.username} ile devam ediyorsun.`
-              : "Önce profil hesabına girersen kayıtların farklı cihazlarda da bulunur."}
+              : `${form.firstName} ${form.lastName} · ${form.email}`}
           </p>
         </div>
-        <Link
-          to="/profil"
-          className="rounded-full border border-primary/30 bg-background px-4 py-2 text-xs font-black text-primary-deep"
-        >
-          {memberProfile ? "Profilime git" : "Profil girişi"}
-        </Link>
-      </div>
-
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <QuickInput
-          label="Ad"
-          value={form.firstName}
-          onChange={(firstName) => setForm((current) => ({ ...current, firstName }))}
-        />
-        <QuickInput
-          label="Soyad"
-          value={form.lastName}
-          onChange={(lastName) => setForm((current) => ({ ...current, lastName }))}
-        />
-        <QuickInput
-          className="sm:col-span-2"
-          label="E-posta"
-          type="email"
-          value={form.email}
-          onChange={(email) => setForm((current) => ({ ...current, email }))}
-          disabled={Boolean(memberProfile)}
-        />
+        <button type="button" onClick={() => setRegistrationStep("standard")} className="rounded-full border border-primary/30 bg-background px-4 py-2 text-xs font-black text-primary-deep">bilgileri düzenle</button>
       </div>
 
       <label className="mt-4 block text-sm font-bold">
-        Hangi Notwork etkinliğine katıldın?
-        <select
-          value={form.attendedEvent}
-          onChange={(event) =>
-            setForm((current) => ({ ...current, attendedEvent: event.target.value }))
-          }
-          className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-base outline-none focus:border-primary"
-        >
-          <option value="">Etkinliği seç</option>
-          {activeEvent && !notworkEventOptions.some((item) => item.value === activeEvent.slug) ? (
-            <option value={activeEvent.slug}>{activeEvent.title}</option>
-          ) : null}
-          {notworkEventOptions.map((eventOption) => (
-            <option key={eventOption.value} value={eventOption.value}>
-              {eventOption.label}
-            </option>
-          ))}
-        </select>
-        <span className="mt-1 block text-xs font-normal leading-5 text-foreground/45">
-          Bu yanıt üyelik doğrulamasında etkinlik kayıtlarıyla karşılaştırılır.
-        </span>
-      </label>
-
-      <label className="mt-4 block text-sm font-bold">
-        Kendini tanıt
+        {registrationPrompts.introLabel}
         <textarea
           value={form.intro}
           onChange={(event) => setForm((current) => ({ ...current, intro: event.target.value }))}
           rows={5}
           minLength={140}
           maxLength={600}
-          placeholder="Sen kimsin, neyle uğraşıyorsun ve hangi deneyimler seni bugün olduğun yere getirdi?"
+          placeholder={registrationPrompts.introPlaceholder}
           className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
         />
         <CharacterHint length={form.intro.length} />
       </label>
 
-      <div className="mt-4">
-        <h2 className="text-lg font-black">Neler yapabilirsin?</h2>
-        <p className="mt-1 text-xs text-foreground/50">
-          En fazla 3 konu seç; eşleşmede kullanılır.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {offerSuggestions.map((offer) => (
-            <button
-              key={offer}
-              type="button"
-              onClick={() => toggleOffer(offer)}
-              className={`rounded-full border px-3 py-2 text-sm font-bold ${
-                form.offers.includes(offer)
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-primary/20 bg-primary/5"
-              }`}
-            >
-              {offer}
-            </button>
-          ))}
-        </div>
-        <div className="mt-3 flex gap-2">
-          <input
-            value={form.customOffer}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, customOffer: event.target.value }))
-            }
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                addCustomOffer();
-              }
-            }}
-            maxLength={36}
-            placeholder="Başka konu"
-            className="min-w-0 flex-1 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none"
-          />
-          <button
-            type="button"
-            onClick={addCustomOffer}
-            className="rounded-2xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground"
-          >
-            Ekle
-          </button>
-        </div>
-      </div>
-
       <label className="mt-4 block text-sm font-bold">
-        Neler yapabilirsin? Detaylandır.
+        {registrationPrompts.offersLabel}
         <textarea
           value={form.offersDetail}
           onChange={(event) =>
@@ -699,21 +840,21 @@ function RegistrationGate({
           rows={5}
           minLength={140}
           maxLength={600}
-          placeholder="Seçtiğin alanlarda hangi deneyime sahipsin, bir kişiye veya projeye nasıl katkı sunabilirsin?"
+          placeholder={registrationPrompts.offersPlaceholder}
           className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
         />
         <CharacterHint length={form.offersDetail.length} />
       </label>
 
       <label className="mt-4 block text-sm font-bold">
-        Ne istiyorsun?
+        {registrationPrompts.needsLabel}
         <textarea
           value={form.needs}
           onChange={(event) => setForm((current) => ({ ...current, needs: event.target.value }))}
           rows={5}
           minLength={140}
           maxLength={600}
-          placeholder="Tanışmak istediğin kişiyi, aradığın desteği ve bu bağlantının sana neden önemli olduğunu anlat."
+          placeholder={registrationPrompts.needsPlaceholder}
           className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
         />
         <CharacterHint length={form.needs.length} />

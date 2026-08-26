@@ -320,21 +320,20 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
   const headerClass = dark
     ? "sticky top-0 z-40 border-b border-white/10 bg-[#071112]/72 text-white shadow-[0_12px_50px_rgba(0,0,0,0.25)] backdrop-blur-xl"
     : "sticky top-0 z-40 border-b border-primary/20 bg-background/78 text-foreground shadow-[0_12px_50px_rgba(113,204,210,0.12)] backdrop-blur-xl";
-  const linkClass = dark
-    ? "rounded-full px-3 py-2 text-xs font-black text-white/72 transition hover:bg-white/10 hover:text-white"
-    : "rounded-full px-3 py-2 text-xs font-black text-foreground/65 transition hover:bg-primary/10 hover:text-primary-deep";
-  const primaryClass = dark
+  const passiveClass = dark
+    ? "rounded-full px-3 py-2 text-xs font-black text-white/42"
+    : "rounded-full px-3 py-2 text-xs font-black text-foreground/42";
+  const currentClass = dark
     ? "rounded-full bg-[#8ee4e8] px-4 py-2 text-xs font-black text-[#071112] shadow-[0_0_22px_rgba(142,228,232,0.28)]"
     : "rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground shadow-[0_0_22px_rgba(113,204,210,0.2)]";
   const linksHref = withEventSelection("/linkler", eventSelection);
-  const wordcloudHref = withEventSelection("/21-agustos/wordcloud", eventSelection);
-  const matchlabHref = withEventSelection("/21-agustos/eslesme", eventSelection);
-  const reviewHref = withEventSelection(
-    "/etkinlik-degerlendirme",
-    eventSelection.event || eventSelection.eventId || eventSelection.eventSlug
-      ? eventSelection
-      : { event: "21-agustos-2026" },
-  );
+  const tabs = [
+    { label: "Linkler", active: location.pathname === "/linkler" },
+    { label: "ntw.wordcloud", active: location.pathname.includes("wordcloud") },
+    { label: "ntw.matchlab", active: location.pathname.includes("eslesme") },
+    { label: "ntw.five", active: location.pathname.includes("five") },
+    { label: "Yorum", active: location.pathname.includes("etkinlik-degerlendirme") },
+  ];
 
   return (
     <header className={headerClass}>
@@ -358,19 +357,16 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
           </span>
         </Link>
 
-        <nav className="flex items-center gap-1 overflow-x-auto rounded-full border border-current/10 bg-current/[0.03] p-1">
-          <Link to={linksHref} className={linkClass}>
-            Linkler
-          </Link>
-          <Link to={wordcloudHref} className={linkClass}>
-            Anket
-          </Link>
-          <Link to={matchlabHref} className={linkClass}>
-            Match
-          </Link>
-          <a href={reviewHref} className={primaryClass}>
-            Yorumla
-          </a>
+        <nav aria-label="Etkinlik içindeki konumun" className="flex items-center gap-1 overflow-x-auto rounded-full border border-current/10 bg-current/[0.03] p-1">
+          {tabs.map((tab) => (
+            <span
+              key={tab.label}
+              aria-current={tab.active ? "page" : undefined}
+              className={tab.active ? currentClass : passiveClass}
+            >
+              {tab.label}
+            </span>
+          ))}
           <ProfileLink dark={dark} />
         </nav>
       </div>

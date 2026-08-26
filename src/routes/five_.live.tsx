@@ -128,7 +128,7 @@ function FiveLivePage() {
 
   return (
     <div className="min-h-screen bg-[#f3fafa] text-[#071213]">
-      <SiteNav />
+      <SiteNav variant="eventDark" />
       <main>
         <section className="relative overflow-hidden bg-[#071213] text-white">
           <div className="five-orb five-orb-one opacity-55" />
@@ -876,12 +876,12 @@ function HelpSheet({
         <label className="mt-4 block">
           <span className="mb-2 flex items-center justify-between text-sm font-black">
             Katkını kısaca anlat
-            <span className="text-[10px] text-muted-foreground">{pitch.length}/180 · min. 20</span>
+            <span className="text-[10px] text-muted-foreground">{pitch.length}/120 · min. 12</span>
           </span>
           <textarea
             required
-            minLength={20}
-            maxLength={180}
+            minLength={12}
+            maxLength={120}
             rows={4}
             value={pitch}
             onChange={(event) => setPitch(event.target.value)}
@@ -947,11 +947,11 @@ function ProblemComposer({
               </option>
             ))}
           </select>
-          <ModalField label="problem başlığı" count={`${form.title.length}/80`}>
+          <ModalField label="problem başlığı" count={`${form.title.length}/60`}>
             <input
               required
-              minLength={8}
-              maxLength={80}
+              minLength={6}
+              maxLength={60}
               value={form.title}
               onChange={(event) =>
                 setForm((current) => ({ ...current, title: event.target.value }))
@@ -960,11 +960,11 @@ function ProblemComposer({
               placeholder="tek cümlede problem"
             />
           </ModalField>
-          <ModalField label="problemi anlat" count={`${form.description.length}/360 · min. 40`}>
+          <ModalField label="problemi anlat" count={`${form.description.length}/240 · min. 24`}>
             <textarea
               required
-              minLength={40}
-              maxLength={360}
+              minLength={24}
+              maxLength={240}
               rows={3}
               value={form.description}
               onChange={(event) =>
@@ -975,11 +975,11 @@ function ProblemComposer({
             />
           </ModalField>
           <div className="grid gap-3 sm:grid-cols-2">
-            <ModalField label="ne denedin?" count={`${form.tried.length}/220 · min. 15`}>
+            <ModalField label="ne denedin?" count={`${form.tried.length}/140 · min. 8`}>
               <textarea
                 required
-                minLength={15}
-                maxLength={220}
+                minLength={8}
+                maxLength={140}
                 rows={3}
                 value={form.tried}
                 onChange={(event) =>
@@ -991,12 +991,12 @@ function ProblemComposer({
             </ModalField>
             <ModalField
               label="5 dakika sonunda"
-              count={`${form.desiredOutcome.length}/160 · min. 15`}
+              count={`${form.desiredOutcome.length}/100 · min. 8`}
             >
               <textarea
                 required
-                minLength={15}
-                maxLength={160}
+                minLength={8}
+                maxLength={100}
                 rows={3}
                 value={form.desiredOutcome}
                 onChange={(event) =>

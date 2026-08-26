@@ -6,10 +6,15 @@ import type {
   EventProductConfig,
   EventProductKey,
   EventProductState,
+  EventRegistrationPrompts,
   NotworkEvent,
   NotworkEventLocation,
 } from "../../src/lib/event-registry.ts";
-import { eventProductKeys, getEventProductNamespaces } from "../../src/lib/event-registry.ts";
+import {
+  defaultEventRegistrationPrompts,
+  eventProductKeys,
+  getEventProductNamespaces,
+} from "../../src/lib/event-registry.ts";
 
 export type EventDraft = Partial<
   Omit<
@@ -42,6 +47,12 @@ const productLabels: Record<EventProductKey, string> = {
   matchlab: "ntw.matchlab",
   wordcloud: "ntw.wordcloud",
   five: "ntw.five",
+};
+
+const productOrders: Record<EventProductKey, number> = {
+  five: 1,
+  wordcloud: 2,
+  matchlab: 3,
 };
 
 function clean(value: unknown, maxLength: number) {
@@ -89,6 +100,7 @@ function defaultProduct(product: EventProductKey): EventProductConfig {
     state: "disabled",
     dataMode: "demo",
     label: productLabels[product],
+    order: productOrders[product],
   };
 }
 
@@ -123,6 +135,22 @@ function normalizeProduct(
     state,
     dataMode: requestedMode === "live" ? "live" : requestedMode === "demo" ? "demo" : base.dataMode,
     label: clean(input?.label, 40) || base.label || productLabels[product],
+    order: Math.max(1, Math.min(20, Number(input?.order) || base.order || productOrders[product])),
+  };
+}
+
+function normalizeRegistrationPrompts(
+  input?: Partial<EventRegistrationPrompts>,
+  current?: EventRegistrationPrompts,
+): EventRegistrationPrompts {
+  const base = current || defaultEventRegistrationPrompts;
+  return {
+    introLabel: clean(input?.introLabel, 140) || base.introLabel,
+    introPlaceholder: clean(input?.introPlaceholder, 280) || base.introPlaceholder,
+    offersLabel: clean(input?.offersLabel, 140) || base.offersLabel,
+    offersPlaceholder: clean(input?.offersPlaceholder, 280) || base.offersPlaceholder,
+    needsLabel: clean(input?.needsLabel, 140) || base.needsLabel,
+    needsPlaceholder: clean(input?.needsPlaceholder, 280) || base.needsPlaceholder,
   };
 }
 
@@ -190,6 +218,10 @@ function normalizeEventDraft(input: EventDraft, current?: NotworkEvent) {
         typeof input.entry?.requireRegistration === "boolean"
           ? input.entry.requireRegistration
           : (current?.entry.requireRegistration ?? true),
+      registrationPrompts: normalizeRegistrationPrompts(
+        input.entry?.registrationPrompts,
+        current?.entry.registrationPrompts,
+      ),
     },
     products: normalizeProducts(input.products, current?.products),
   };
@@ -213,7 +245,12 @@ function legacyEvent(): NotworkEvent {
       city: "İzmir",
       mapUrl: "",
     },
-    entry: { isOpen: false, isPrimary: true, requireRegistration: true },
+    entry: {
+      isOpen: false,
+      isPrimary: true,
+      requireRegistration: true,
+      registrationPrompts: defaultEventRegistrationPrompts,
+    },
     products: {
       matchlab: {
         enabled: true,
@@ -221,6 +258,7 @@ function legacyEvent(): NotworkEvent {
         state: "archived",
         dataMode: "live",
         label: "ntw.matchlab",
+        order: 3,
       },
       wordcloud: {
         enabled: true,
@@ -228,6 +266,7 @@ function legacyEvent(): NotworkEvent {
         state: "archived",
         dataMode: "live",
         label: "ntw.wordcloud",
+        order: 2,
       },
       five: {
         enabled: true,
@@ -235,11 +274,25 @@ function legacyEvent(): NotworkEvent {
         state: "archived",
         dataMode: "live",
         label: "ntw.five",
+        order: 1,
       },
     },
     revision: 1,
     createdAt: now,
     updatedAt: now,
+  };
+}
+
+function hydrateEvent(event: NotworkEvent): NotworkEvent {
+  const normalized = normalizeEventDraft(event, event);
+  return {
+    ...event,
+    ...normalized,
+    schemaVersion: 1,
+    id: event.id,
+    revision: event.revision || 1,
+    createdAt: event.createdAt,
+    updatedAt: event.updatedAt,
   };
 }
 
@@ -276,6 +329,7 @@ export async function listEvents() {
   );
   return events
     .filter((event): event is NotworkEvent => Boolean(event?.id))
+    .map(hydrateEvent)
     .sort((left, right) => Date.parse(right.startsAt) - Date.parse(left.startsAt));
 }
 
@@ -289,17 +343,18 @@ export async function getEvent(identifier: string) {
     type: "json",
     consistency: "strong",
   })) as NotworkEvent | null;
-  if (direct) return direct;
+  if (direct) return hydrateEvent(direct);
 
   const pointer = (await store.get(slugKey(slugify(cleanIdentifier)), {
     type: "json",
     consistency: "strong",
   })) as { eventId?: string } | null;
   if (!pointer?.eventId) return null;
-  return (await store.get(eventKey(pointer.eventId), {
+  const event = (await store.get(eventKey(pointer.eventId), {
     type: "json",
     consistency: "strong",
   })) as NotworkEvent | null;
+  return event ? hydrateEvent(event) : null;
 }
 
 async function assertSlugAvailable(slug: string, currentEventId?: string) {

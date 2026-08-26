@@ -11,6 +11,28 @@ export type EventProductConfig = {
   state: EventProductState;
   dataMode: EventDataMode;
   label: string;
+  order: number;
+};
+
+export type EventRegistrationPrompts = {
+  introLabel: string;
+  introPlaceholder: string;
+  offersLabel: string;
+  offersPlaceholder: string;
+  needsLabel: string;
+  needsPlaceholder: string;
+};
+
+export const defaultEventRegistrationPrompts: EventRegistrationPrompts = {
+  introLabel: "Bu etkinlikte kendini nasıl tanıtmak istersin?",
+  introPlaceholder:
+    "Sen kimsin, neyle uğraşıyorsun ve bu etkinlikte insanlara hangi yönünü anlatmak istiyorsun?",
+  offersLabel: "Bu etkinlikte insanlara nasıl katkı sunabilirsin?",
+  offersPlaceholder:
+    "Deneyimini, paylaşabileceğin bilgiyi ve bir kişiye veya projeye nasıl destek olabileceğini anlat.",
+  needsLabel: "Bu etkinlikten hangi bağlantıyla ayrılmak istiyorsun?",
+  needsPlaceholder:
+    "Tanışmak istediğin kişiyi, aradığın desteği ve bu bağlantının senin için neden önemli olduğunu anlat.",
 };
 
 export type NotworkEventLocation = {
@@ -35,6 +57,7 @@ export type NotworkEvent = {
     isOpen: boolean;
     isPrimary: boolean;
     requireRegistration: boolean;
+    registrationPrompts: EventRegistrationPrompts;
   };
   products: Record<EventProductKey, EventProductConfig>;
   revision: number;

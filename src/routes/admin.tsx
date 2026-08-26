@@ -39,6 +39,7 @@ import type { WordcloudAnswer, WordcloudQuestion, WordcloudResults } from "@/lib
 import type { EventNetworkRegistration } from "@/lib/event-network";
 import {
   createEventProductNamespace,
+  defaultEventRegistrationPrompts,
   eventProductKeys,
   updateEventRegistry,
   withEventSelection,
@@ -306,7 +307,11 @@ function blankEventEditorDraft(): EventEditorDraft {
     timezone: "Europe/Istanbul",
     status: "draft",
     location: { name: "", address: "", city: "İzmir", mapUrl: "" },
-    entry: { isOpen: false, requireRegistration: true },
+    entry: {
+      isOpen: false,
+      requireRegistration: true,
+      registrationPrompts: { ...defaultEventRegistrationPrompts },
+    },
     products: Object.fromEntries(
       eventProductKeys.map((product) => [
         product,
@@ -316,6 +321,7 @@ function blankEventEditorDraft(): EventEditorDraft {
           state: "disabled",
           dataMode: "demo",
           label: product === "matchlab" ? "ntw.matchlab" : `ntw.${product}`,
+          order: product === "five" ? 1 : product === "wordcloud" ? 2 : 3,
         },
       ]),
     ) as NotworkEvent["products"],
@@ -337,9 +343,21 @@ function eventToEditorDraft(event: NotworkEvent): EventEditorDraft {
     entry: {
       isOpen: event.entry.isOpen,
       requireRegistration: event.entry.requireRegistration,
+      registrationPrompts: {
+        ...defaultEventRegistrationPrompts,
+        ...event.entry.registrationPrompts,
+      },
     },
     products: Object.fromEntries(
-      eventProductKeys.map((product) => [product, { ...event.products[product] }]),
+      eventProductKeys.map((product) => [
+        product,
+        {
+          ...event.products[product],
+          order:
+            event.products[product].order ||
+            (product === "five" ? 1 : product === "wordcloud" ? 2 : 3),
+        },
+      ]),
     ) as NotworkEvent["products"],
   };
 }
@@ -2831,6 +2849,57 @@ function EventRegistryAdmin({
         </div>
 
         <div className="mt-7 flex items-center gap-2">
+          <MessageSquareQuote size={18} className="text-primary-deep" />
+          <h3 className="font-black">Etkinlik özel soruları</h3>
+        </div>
+        <p className="mt-1 text-sm text-foreground/55">
+          Kayıtlı veya yeni katılımcı standart bilgilerini girdikten sonra bu etkinliğe özel üç
+          soruyu yanıtlar.
+        </p>
+        <div className="mt-4 grid gap-3">
+          {([
+            ["introLabel", "1. soru", "introPlaceholder", "1. soru açıklaması"],
+            ["offersLabel", "2. soru", "offersPlaceholder", "2. soru açıklaması"],
+            ["needsLabel", "3. soru", "needsPlaceholder", "3. soru açıklaması"],
+          ] as const).map(([labelKey, label, placeholderKey, placeholderLabel]) => (
+            <div key={labelKey} className="grid gap-2 rounded-2xl border border-border bg-background p-3 sm:grid-cols-2">
+              <AdminField
+                label={label}
+                value={draft.entry.registrationPrompts[labelKey]}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    entry: {
+                      ...current.entry,
+                      registrationPrompts: {
+                        ...current.entry.registrationPrompts,
+                        [labelKey]: event.target.value,
+                      },
+                    },
+                  }))
+                }
+              />
+              <AdminField
+                label={placeholderLabel}
+                value={draft.entry.registrationPrompts[placeholderKey]}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    entry: {
+                      ...current.entry,
+                      registrationPrompts: {
+                        ...current.entry.registrationPrompts,
+                        [placeholderKey]: event.target.value,
+                      },
+                    },
+                  }))
+                }
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-7 flex items-center gap-2">
           <Database size={18} className="text-primary-deep" />
           <h3 className="font-black">Etkinlik ürünleri</h3>
         </div>
@@ -2882,7 +2951,23 @@ function EventRegistryAdmin({
                   </label>
                 </div>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="mt-4 grid gap-3 sm:grid-cols-4">
+                  <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
+                    Link sırası
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={config.order}
+                      onChange={(event) =>
+                        updateProduct(product, (current) => ({
+                          ...current,
+                          order: Math.max(1, Math.min(20, Number(event.target.value) || 1)),
+                        }))
+                      }
+                      className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-bold outline-none"
+                    />
+                  </label>
                   <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
                     Veri modu
                     <select

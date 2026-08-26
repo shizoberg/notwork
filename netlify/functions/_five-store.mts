@@ -332,20 +332,20 @@ export async function createFiveProblem(
 ) {
   const name = identity?.name || cleanFiveText(input.name, 80);
   const email = identity?.email || normalizeEmail(input.email);
-  const title = cleanFiveText(input.title, 80);
-  const description = cleanFiveText(input.description, 360);
-  const tried = cleanFiveText(input.tried, 220);
-  const desiredOutcome = cleanFiveText(input.desiredOutcome, 160);
+  const title = cleanFiveText(input.title, 60);
+  const description = cleanFiveText(input.description, 240);
+  const tried = cleanFiveText(input.tried, 140);
+  const desiredOutcome = cleanFiveText(input.desiredOutcome, 100);
   const category = Object.hasOwn(categorySignals, input.category || "")
     ? (input.category as FiveCategory)
     : "other";
 
   if (name.length < 2) throw new Error("Adını yazmalısın");
   if (!email.includes("@")) throw new Error("Geçerli bir e-posta gerekli");
-  if (title.length < 8) throw new Error("Problem başlığı en az 8 karakter olmalı");
-  if (description.length < 40) throw new Error("Problemini en az 40 karakterle anlatmalısın");
-  if (tried.length < 15) throw new Error("Şimdiye kadar ne denediğini biraz daha anlatmalısın");
-  if (desiredOutcome.length < 15) throw new Error("Görüşmeden beklediğin sonucu yazmalısın");
+  if (title.length < 6) throw new Error("Problem başlığı en az 6 karakter olmalı");
+  if (description.length < 24) throw new Error("Problemini en az 24 karakterle anlatmalısın");
+  if (tried.length < 8) throw new Error("Şimdiye kadar ne denediğini kısaca anlatmalısın");
+  if (desiredOutcome.length < 8) throw new Error("Görüşmeden beklediğin sonucu kısaca yazmalısın");
   if (!input.consent) throw new Error("KVKK ve etkinlik içi paylaşım onayı gerekli");
   if (containsBlockedLanguage(title, description, tried, desiredOutcome)) {
     throw new Error("Bu metin topluluk kurallarına uygun değil");
@@ -491,7 +491,7 @@ export async function createFiveHelpRequest(
   )
     ? (input.helpType as FiveHelpType)
     : "feedback";
-  const pitch = cleanFiveText(input.pitch, 180);
+  const pitch = cleanFiveText(input.pitch, 120);
   const problem = (await store.get(problemKey(problemId), {
     type: "json",
     consistency: "strong",
@@ -500,7 +500,7 @@ export async function createFiveHelpRequest(
   if (problem.ownerId === identity.id || problem.ownerEmail === identity.email) {
     throw new Error("Kendi problemine yardım talebi gönderemezsin");
   }
-  if (pitch.length < 20) throw new Error("Nasıl katkı sağlayacağını en az 20 karakterle anlat");
+  if (pitch.length < 12) throw new Error("Nasıl katkı sağlayacağını en az 12 karakterle anlat");
   if (containsBlockedLanguage(pitch)) throw new Error("Bu metin topluluk kurallarına uygun değil");
   const existing = (
     await listJson<FiveHelpRequest>(`${getFivePrefix()}/requesters/${hash(identity.id)}/`, store)
