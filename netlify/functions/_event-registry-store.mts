@@ -42,6 +42,7 @@ const auditPrefix = "audit";
 const primaryKey = "meta/primary-event.json";
 const seededKey = "meta/legacy-seeded-v1.json";
 const legacyEventId = "evt_21_agustos_2026";
+const octoberEventId = "evt_9_ekim_2026";
 
 const productLabels: Record<EventProductKey, string> = {
   matchlab: "ntw.matchlab",
@@ -283,6 +284,57 @@ function legacyEvent(): NotworkEvent {
   };
 }
 
+function octoberEvent(): NotworkEvent {
+  const now = "2026-08-27T00:00:00.000Z";
+  return {
+    schemaVersion: 1,
+    id: octoberEventId,
+    slug: "9-ekim-2026",
+    title: "9 Ekim notwork",
+    shortTitle: "9 Ekim",
+    startsAt: "2026-10-09T16:30:00.000Z",
+    endsAt: "2026-10-09T19:30:00.000Z",
+    timezone: "Europe/Istanbul",
+    status: "draft",
+    location: { name: "", address: "", city: "İzmir", mapUrl: "" },
+    entry: {
+      isOpen: false,
+      isPrimary: false,
+      requireRegistration: true,
+      registrationPrompts: defaultEventRegistrationPrompts,
+    },
+    products: {
+      matchlab: {
+        enabled: true,
+        visible: true,
+        state: "draft",
+        dataMode: "demo",
+        label: "ntw.matchlab",
+        order: 1,
+      },
+      five: {
+        enabled: true,
+        visible: true,
+        state: "draft",
+        dataMode: "demo",
+        label: "ntw.five",
+        order: 2,
+      },
+      wordcloud: {
+        enabled: false,
+        visible: false,
+        state: "disabled",
+        dataMode: "demo",
+        label: "ntw.wordcloud",
+        order: 3,
+      },
+    },
+    revision: 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
 function hydrateEvent(event: NotworkEvent): NotworkEvent {
   const normalized = normalizeEventDraft(event, event);
   return {
@@ -303,15 +355,27 @@ export function getEventRegistryStore() {
 export async function ensureEventRegistrySeeded() {
   const store = getEventRegistryStore();
   const seeded = await store.get(seededKey, { type: "json", consistency: "strong" });
-  if (seeded) return;
+  if (!seeded) {
+    const event = legacyEvent();
+    await Promise.all([
+      store.setJSON(eventKey(event.id), event),
+      store.setJSON(slugKey(event.slug), { eventId: event.id }),
+      store.setJSON(primaryKey, { eventId: event.id }),
+      store.setJSON(seededKey, { seededAt: new Date().toISOString(), eventId: event.id }),
+    ]);
+  }
 
-  const event = legacyEvent();
-  await Promise.all([
-    store.setJSON(eventKey(event.id), event),
-    store.setJSON(slugKey(event.slug), { eventId: event.id }),
-    store.setJSON(primaryKey, { eventId: event.id }),
-    store.setJSON(seededKey, { seededAt: new Date().toISOString(), eventId: event.id }),
-  ]);
+  const existingOctoberEvent = await store.get(eventKey(octoberEventId), {
+    type: "json",
+    consistency: "strong",
+  });
+  if (!existingOctoberEvent) {
+    const event = octoberEvent();
+    await Promise.all([
+      store.setJSON(eventKey(event.id), event),
+      store.setJSON(slugKey(event.slug), { eventId: event.id }),
+    ]);
+  }
 }
 
 export async function listEvents() {

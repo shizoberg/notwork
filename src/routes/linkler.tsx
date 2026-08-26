@@ -502,7 +502,16 @@ function LinksPage() {
           ) : null}
 
           <section className="mt-5 grid gap-3">
-            {eventLinks.map(({ title, description, href, icon: Icon, enabled }) => (
+            <div className="rounded-2xl border border-primary/20 bg-card px-4 py-3">
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-primary-deep">
+                Tek profil · adım adım etkinlik akışı
+              </p>
+              <p className="mt-1 text-xs leading-5 text-foreground/55">
+                Verdiğin üç etkinlik cevabı hem ntw.matchlab eşleşmelerini hem de ntw.five problem
+                önerilerini besler. Araçları sırayla veya ihtiyacına göre kullanabilirsin.
+              </p>
+            </div>
+            {eventLinks.map(({ title, description, href, icon: Icon, enabled }, index) => (
               <a
                 key={title}
                 href={href}
@@ -525,7 +534,12 @@ function LinksPage() {
                 }`}
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground sm:h-14 sm:w-14">
-                  <Icon size={25} strokeWidth={1.8} />
+                  <span className="relative">
+                    <Icon size={25} strokeWidth={1.8} />
+                    <span className="absolute -right-3 -top-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-card px-1 text-[9px] font-black text-primary-deep shadow-sm">
+                      {index + 1}
+                    </span>
+                  </span>
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-lg font-black tracking-[-0.03em] sm:text-xl">
@@ -570,8 +584,8 @@ function LinksPage() {
           </section>
 
           <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-5 text-foreground/45">
-            Bu giriş ekranı ntw.wordcloud, ntw.matchlab ve genel notwork networking ağı için
-            kullanılacak temel profilini oluşturur.
+            Bu giriş ekranı ntw.wordcloud, ntw.matchlab, ntw.five ve genel notwork networking ağı
+            için kullanılacak temel profilini oluşturur.
           </p>
         </div>
       </main>
@@ -805,7 +819,8 @@ function RegistrationGate({
         {activeEvent?.shortTitle || "Bu etkinlik"} için son adım.
       </h1>
       <p className="mt-3 text-sm leading-6 text-foreground/60">
-        Bu sorular etkinliğe özeldir ve admin panelinden her etkinlik için ayrı düzenlenir.
+        Bu sorular etkinliğe özeldir ve admin panelinden her etkinlik için ayrı düzenlenir. Aynı
+        cevaplar ntw.matchlab eşleşme algoritmasıyla ntw.five problem önerilerini birlikte besler.
       </p>
 
       <div className="mt-4 rounded-2xl border border-primary/25 bg-primary/10 p-3 text-xs font-semibold leading-5 text-foreground/65">

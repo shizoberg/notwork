@@ -33,6 +33,7 @@ import {
   type FiveChatMessage,
   type FiveEncounter,
   type FiveEncounterParticipant,
+  type FiveHelpRequest,
   type FiveHelpType,
   type FiveIdentity,
   type FiveProblem,
@@ -74,7 +75,7 @@ function FiveLivePage() {
       });
       setSession(nextSession);
       setError("");
-      if (nextSession.state.activeEncounter) setActiveTab("meeting");
+      if (nextSession.state.activeEncounter?.status === "active") setActiveTab("meeting");
     } catch (requestError) {
       if (showLoading) {
         setSession(null);
@@ -107,7 +108,7 @@ function FiveLivePage() {
       });
       setSession(nextSession);
       setSelectedProblem(null);
-      if (nextSession.state.activeEncounter) setActiveTab("meeting");
+      if (nextSession.state.activeEncounter?.status === "active") setActiveTab("meeting");
       else if (successTab) setActiveTab(successTab);
       return true;
     } catch (requestError) {
@@ -201,7 +202,12 @@ function FiveLivePage() {
             />
           ) : null}
           {activeTab === "requests" ? (
-            <RequestCenter session={session} isMutating={isMutating} onMutate={mutate} />
+            <RequestCenter
+              session={session}
+              isMutating={isMutating}
+              onMutate={mutate}
+              onOpenMeeting={() => setActiveTab("meeting")}
+            />
           ) : null}
           {activeTab === "meeting" ? (
             <MeetingRoom session={session} isMutating={isMutating} onMutate={mutate} />
@@ -411,6 +417,11 @@ function ProblemPool({
                 </span>
               ))}
             </div>
+            {!problem.isOwner ? (
+              <div className="mt-3 rounded-xl bg-primary/8 px-3 py-2 text-[10px] font-bold leading-relaxed text-primary-deep">
+                {problem.matchReason}
+              </div>
+            ) : null}
             <div className="mt-auto flex items-center justify-between gap-3 pt-5">
               <div className="min-w-0">
                 <div className="truncate text-sm font-black">{problem.ownerName}</div>
@@ -458,58 +469,103 @@ function RequestCenter({
   session,
   isMutating,
   onMutate,
+  onOpenMeeting,
 }: {
   session: FiveSessionPayload;
   isMutating: boolean;
   onMutate: (input: Record<string, unknown>, tab?: ActiveTab) => Promise<boolean>;
+  onOpenMeeting: () => void;
 }) {
   const problemById = useMemo(
-    () => new Map(session.board.map((problem) => [problem.id, problem])),
-    [session.board],
+    () =>
+      new Map(
+        [...session.board, ...session.state.ownedProblems].map((problem) => [problem.id, problem]),
+      ),
+    [session.board, session.state.ownedProblems],
   );
   const incoming = session.state.incoming;
   const outgoing = session.state.outgoing;
+  const incomingByProblem = useMemo(() => {
+    const grouped = new Map<string, FiveHelpRequest[]>();
+    incoming.forEach((request) => {
+      grouped.set(request.problemId, [...(grouped.get(request.problemId) || []), request]);
+    });
+    return [...grouped.entries()];
+  }, [incoming]);
+  const activeEncounter = session.state.activeEncounter;
   return (
-    <section className="grid gap-5 lg:grid-cols-2">
+    <section>
+      <div className="mb-5 grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-[0.08em] text-muted-foreground">
+        <div className="rounded-xl bg-primary/12 px-2 py-3 text-primary-deep">1 · problemi aç</div>
+        <div className="rounded-xl bg-primary/12 px-2 py-3 text-primary-deep">2 · talepleri seç</div>
+        <div className="rounded-xl bg-primary/12 px-2 py-3 text-primary-deep">3 · görüşmeyi başlat</div>
+      </div>
+      <div className="grid gap-5 lg:grid-cols-2">
       <RequestList title="problemlerine gelenler" empty="Henüz gelen katkı talebi yok.">
-        {incoming.map((request) => (
-          <article key={request.id} className="rounded-2xl border border-border bg-white p-4">
-            <div className="flex items-start justify-between gap-3">
-              <PersonSummary
-                person={{
-                  id: request.requesterId,
-                  name: request.requesterName,
-                  username: request.requesterUsername,
-                  publicCode: request.requesterPublicCode,
-                  photoUrl: request.requesterPhotoUrl || "",
-                  profileUrl: request.requesterProfileUrl || "",
-                  businessCardEnabled: Boolean(request.requesterBusinessCardEnabled),
-                }}
-                subtitle={
-                  fiveHelpTypes.find((type) => type.value === request.helpType)?.label ||
-                  "katkı talebi"
-                }
-              />
-              <StatusPill status={request.status} />
-            </div>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{request.pitch}</p>
-            <div className="mt-3 rounded-xl bg-background px-3 py-2 text-xs font-bold text-muted-foreground">
-              {problemById.get(request.problemId)?.title || "problemin"}
-            </div>
-            {request.status === "pending" ? (
-              <button
-                type="button"
-                disabled={isMutating}
-                onClick={() =>
-                  void onMutate({ action: "accept", requestId: request.id }, "meeting")
-                }
-                className="profile-primary-button mt-3 w-full"
-              >
-                görüşmeye kabul et <Handshake className="h-4 w-4" />
-              </button>
-            ) : null}
-          </article>
-        ))}
+        {incomingByProblem.map(([problemId, requests]) => {
+          const acceptedCount = requests.filter((request) => request.status === "accepted").length;
+          const isActiveProblem = activeEncounter?.problemId === problemId;
+          return (
+            <article key={problemId} className="rounded-[1.5rem] border border-border bg-white p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-black">{problemById.get(problemId)?.title || "problemin"}</div>
+                  <div className="mt-1 text-[10px] font-black uppercase tracking-[0.1em] text-primary-deep">
+                    {acceptedCount}/2 çözüm ortağı seçildi
+                  </div>
+                </div>
+                {isActiveProblem ? <StatusPill status="accepted" /> : null}
+              </div>
+              <div className="mt-3 grid gap-2">
+                {requests.map((request) => (
+                  <div key={request.id} className="rounded-2xl border border-border bg-background p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <PersonSummary
+                        person={{
+                          id: request.requesterId,
+                          name: request.requesterName,
+                          username: request.requesterUsername,
+                          publicCode: request.requesterPublicCode,
+                          photoUrl: request.requesterPhotoUrl || "",
+                          profileUrl: request.requesterProfileUrl || "",
+                          businessCardEnabled: Boolean(request.requesterBusinessCardEnabled),
+                        }}
+                        subtitle={fiveHelpTypes.find((type) => type.value === request.helpType)?.label || "katkı talebi"}
+                      />
+                      <StatusPill status={request.status} />
+                    </div>
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{request.pitch}</p>
+                    {request.status === "pending" ? (
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          disabled={isMutating || acceptedCount >= 2}
+                          onClick={() => void onMutate({ action: "accept", requestId: request.id }, "requests")}
+                          className="profile-primary-button w-full"
+                        >
+                          seç <Handshake className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isMutating}
+                          onClick={() => void onMutate({ action: "decline", requestId: request.id }, "requests")}
+                          className="rounded-xl border border-border bg-white px-3 text-xs font-black"
+                        >
+                          uygun değil
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+              {isActiveProblem ? (
+                <button type="button" onClick={onOpenMeeting} className="profile-primary-button mt-3 w-full">
+                  görüşme alanına geç <ArrowRight className="h-4 w-4" />
+                </button>
+              ) : null}
+            </article>
+          );
+        })}
       </RequestList>
       <RequestList
         title="gönderdiğin talepler"
@@ -532,6 +588,7 @@ function RequestCenter({
           </article>
         ))}
       </RequestList>
+      </div>
     </section>
   );
 }
@@ -638,6 +695,10 @@ function ActiveEncounter({
 }) {
   const participants = [encounter.owner, ...encounter.helpers];
   const confirmed = encounter.confirmations.includes(identityId);
+  const isOwner = encounter.owner.id === identityId;
+  const everyoneReady = participants.every((participant) =>
+    encounter.confirmations.includes(participant.id),
+  );
   const voted = encounter.extensionVotes.includes(identityId);
   const [outcome, setOutcome] = useState<FiveEncounter["outcome"]>("");
   const [message, setMessage] = useState("");
@@ -665,8 +726,8 @@ function ActiveEncounter({
           <FiveCountdown endsAt={encounter.endsAt} />
         ) : (
           <div className="mt-6 rounded-2xl border border-white/10 bg-white/6 p-4 text-sm leading-relaxed text-white/52">
-            Herkes buluştuğunda “hazırım” desin. Sayaç, bütün katılımcılar onayladığında aynı anda
-            başlar.
+            Herkes buluştuğunda “hazırım” desin. Tüm grup hazır olduğunda problem sahibi 5 dakikalık
+            sayacı başlatır.
           </div>
         )}
       </div>
@@ -743,15 +804,31 @@ function ActiveEncounter({
           </form>
         </div>
         {encounter.status === "waiting" ? (
-          <button
-            type="button"
-            disabled={isMutating || confirmed}
-            onClick={() => void onMutate({ action: "confirm" }, "meeting")}
-            className="profile-primary-button mt-5 w-full"
-          >
-            {confirmed ? "diğer katılımcılar bekleniyor" : "buluştuk, hazırım"}
-            <CheckCircle2 className="h-4 w-4" />
-          </button>
+          <div className="mt-5 grid gap-2">
+            <button
+              type="button"
+              disabled={isMutating || confirmed}
+              onClick={() => void onMutate({ action: "confirm" }, "meeting")}
+              className="profile-primary-button w-full"
+            >
+              {confirmed ? "hazır olarak işaretlendin" : "buluştuk, hazırım"}
+              <CheckCircle2 className="h-4 w-4" />
+            </button>
+            {isOwner ? (
+              <button
+                type="button"
+                disabled={isMutating || !everyoneReady}
+                onClick={() => void onMutate({ action: "start" }, "meeting")}
+                className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#071213] px-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-35"
+              >
+                5 dakikayı başlat <Clock3 className="h-4 w-4" />
+              </button>
+            ) : (
+              <p className="rounded-xl bg-background px-4 py-3 text-center text-xs font-bold text-muted-foreground">
+                Problem sahibi herkes hazır olduğunda sayacı başlatacak.
+              </p>
+            )}
+          </div>
         ) : null}
         {encounter.status === "active" ? (
           <div className="mt-5 grid gap-4">
@@ -876,12 +953,12 @@ function HelpSheet({
         <label className="mt-4 block">
           <span className="mb-2 flex items-center justify-between text-sm font-black">
             Katkını kısaca anlat
-            <span className="text-[10px] text-muted-foreground">{pitch.length}/120 · min. 12</span>
+            <span className="text-[10px] text-muted-foreground">{pitch.length}/96 · min. 12</span>
           </span>
           <textarea
             required
             minLength={12}
-            maxLength={120}
+            maxLength={96}
             rows={4}
             value={pitch}
             onChange={(event) => setPitch(event.target.value)}
@@ -947,11 +1024,11 @@ function ProblemComposer({
               </option>
             ))}
           </select>
-          <ModalField label="problem başlığı" count={`${form.title.length}/60`}>
+          <ModalField label="problem başlığı" count={`${form.title.length}/48`}>
             <input
               required
               minLength={6}
-              maxLength={60}
+              maxLength={48}
               value={form.title}
               onChange={(event) =>
                 setForm((current) => ({ ...current, title: event.target.value }))
@@ -960,11 +1037,11 @@ function ProblemComposer({
               placeholder="tek cümlede problem"
             />
           </ModalField>
-          <ModalField label="problemi anlat" count={`${form.description.length}/240 · min. 24`}>
+          <ModalField label="problemi anlat" count={`${form.description.length}/180 · min. 24`}>
             <textarea
               required
               minLength={24}
-              maxLength={240}
+              maxLength={180}
               rows={3}
               value={form.description}
               onChange={(event) =>
@@ -975,11 +1052,11 @@ function ProblemComposer({
             />
           </ModalField>
           <div className="grid gap-3 sm:grid-cols-2">
-            <ModalField label="ne denedin?" count={`${form.tried.length}/140 · min. 8`}>
+            <ModalField label="ne denedin?" count={`${form.tried.length}/100 · min. 8`}>
               <textarea
                 required
                 minLength={8}
-                maxLength={140}
+                maxLength={100}
                 rows={3}
                 value={form.tried}
                 onChange={(event) =>
@@ -991,12 +1068,12 @@ function ProblemComposer({
             </ModalField>
             <ModalField
               label="5 dakika sonunda"
-              count={`${form.desiredOutcome.length}/100 · min. 8`}
+              count={`${form.desiredOutcome.length}/80 · min. 8`}
             >
               <textarea
                 required
                 minLength={8}
-                maxLength={100}
+                maxLength={80}
                 rows={3}
                 value={form.desiredOutcome}
                 onChange={(event) =>

@@ -13,6 +13,14 @@ export type FiveCategory =
   | "community"
   | "other";
 
+export type FiveMatchingProfile = {
+  intro: string;
+  offers: string[];
+  offersDetail: string;
+  needs: string;
+  needTag: string;
+};
+
 export type FiveIdentity = {
   id: string;
   type: "member" | "event";
@@ -24,6 +32,7 @@ export type FiveIdentity = {
   photoUrl: string;
   profileUrl: string;
   businessCardEnabled: boolean;
+  matchingProfile: FiveMatchingProfile;
 };
 
 export type FiveProblem = {
@@ -128,6 +137,8 @@ export type FivePublicProblem = Pick<
 export type FiveLiveProblem = Omit<FiveProblem, "ownerEmail"> & {
   isOwner: boolean;
   hasRequested: boolean;
+  matchScore: number;
+  matchReason: string;
 };
 
 const storeName = "ntw-five";
@@ -274,6 +285,51 @@ function extractSignals(category: FiveCategory, ...values: string[]) {
     : categorySignals[category].slice(0, 3);
 }
 
+function tokenizeFiveText(...values: Array<string | string[]>) {
+  return [values.flat().join(" ")]
+    .join(" ")
+    .toLocaleLowerCase("tr-TR")
+    .replace(/[^a-z0-9çğıöşü\s]/gi, " ")
+    .split(/\s+/)
+    .filter((token) => token.length > 2);
+}
+
+function scoreProblemForIdentity(identity: FiveIdentity, problem: FiveProblem) {
+  if (problem.ownerId === identity.id || problem.ownerEmail === identity.email) {
+    return { score: 1000, reason: "senin problemin" };
+  }
+
+  const profile = identity.matchingProfile;
+  const offerTokens = new Set(
+    tokenizeFiveText(profile.offers, profile.offersDetail, profile.intro),
+  );
+  const needTokens = new Set(tokenizeFiveText(profile.needs, profile.needTag));
+  const problemTokens = new Set(
+    tokenizeFiveText(
+      problem.title,
+      problem.description,
+      problem.tried,
+      problem.desiredOutcome,
+      problem.signals,
+      categorySignals[problem.category],
+    ),
+  );
+  const offerHits = [...offerTokens].filter((token) => problemTokens.has(token));
+  const needHits = [...needTokens].filter((token) => problemTokens.has(token));
+  const categoryHits = problem.signals.filter((signal) =>
+    profile.offers.some((offer) => offer.toLocaleLowerCase("tr-TR").includes(signal)),
+  );
+  const score = offerHits.length * 4 + categoryHits.length * 3 + needHits.length;
+  const reasonSignals = [...new Set([...offerHits, ...categoryHits])].slice(0, 2);
+
+  return {
+    score,
+    reason: reasonSignals.length
+      ? `${reasonSignals.join(" + ")} deneyimin bu probleme katkı sağlayabilir`
+      : "yeni bir bakış veya bağlantı sunabileceğin problem",
+  };
+}
+
 function publicProblem(problem: FiveProblem): FivePublicProblem {
   return {
     id: problem.id,
@@ -332,10 +388,10 @@ export async function createFiveProblem(
 ) {
   const name = identity?.name || cleanFiveText(input.name, 80);
   const email = identity?.email || normalizeEmail(input.email);
-  const title = cleanFiveText(input.title, 60);
-  const description = cleanFiveText(input.description, 240);
-  const tried = cleanFiveText(input.tried, 140);
-  const desiredOutcome = cleanFiveText(input.desiredOutcome, 100);
+  const title = cleanFiveText(input.title, 48);
+  const description = cleanFiveText(input.description, 180);
+  const tried = cleanFiveText(input.tried, 100);
+  const desiredOutcome = cleanFiveText(input.desiredOutcome, 80);
   const category = Object.hasOwn(categorySignals, input.category || "")
     ? (input.category as FiveCategory)
     : "other";
@@ -469,13 +525,20 @@ export async function getFiveLiveBoard(identity: FiveIdentity, store = getFiveSt
   const requested = new Set(requests.map((request) => request.problemId));
   return problems
     .filter((problem) => problem.status === "open")
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .map((problem): FiveLiveProblem => {
+    .map((problem) => ({ problem, match: scoreProblemForIdentity(identity, problem) }))
+    .sort(
+      (left, right) =>
+        right.match.score - left.match.score ||
+        right.problem.createdAt.localeCompare(left.problem.createdAt),
+    )
+    .map(({ problem, match }): FiveLiveProblem => {
       const { ownerEmail, ...safeProblem } = problem;
       return {
         ...safeProblem,
         isOwner: problem.ownerId === identity.id || ownerEmail === identity.email,
         hasRequested: requested.has(problem.id),
+        matchScore: match.score,
+        matchReason: match.reason,
       };
     });
 }
@@ -491,7 +554,7 @@ export async function createFiveHelpRequest(
   )
     ? (input.helpType as FiveHelpType)
     : "feedback";
-  const pitch = cleanFiveText(input.pitch, 120);
+  const pitch = cleanFiveText(input.pitch, 96);
   const problem = (await store.get(problemKey(problemId), {
     type: "json",
     consistency: "strong",
@@ -499,6 +562,14 @@ export async function createFiveHelpRequest(
   if (!problem || problem.status !== "open") throw new Error("Problem artık açık değil");
   if (problem.ownerId === identity.id || problem.ownerEmail === identity.email) {
     throw new Error("Kendi problemine yardım talebi gönderemezsin");
+  }
+  const ownerEncounter = await getActiveEncounter(problem.ownerId, store);
+  if (
+    ownerEncounter?.problemId === problem.id &&
+    ["waiting", "active"].includes(ownerEncounter.status) &&
+    ownerEncounter.helpers.length >= 2
+  ) {
+    throw new Error("Bu problem için iki çözüm ortağı seçildi");
   }
   if (pitch.length < 12) throw new Error("Nasıl katkı sağlayacağını en az 12 karakterle anlat");
   if (containsBlockedLanguage(pitch)) throw new Error("Bu metin topluluk kurallarına uygun değil");
@@ -662,15 +733,64 @@ export async function acceptFiveHelpRequest(
   }
   request.status = "accepted";
   request.updatedAt = now;
-  await Promise.all([
+  const requestWrites: Array<Promise<unknown>> = [
     store.setJSON(encounterKey(encounter.id), encounter),
     store.set(activeEncounterKey(identity.id), encounter.id),
     store.set(activeEncounterKey(request.requesterId), encounter.id),
     store.setJSON(requestKey(request.id), request),
     store.setJSON(problemRequestKey(problem.id, request.id), request),
     store.setJSON(requesterRequestKey(request.requesterId, request.id), request),
-  ]);
+  ];
+  if (encounter.helpers.length >= 2) {
+    const pendingRequests = await listJson<FiveHelpRequest>(
+      `${getFivePrefix()}/problem-requests/${problem.id}/`,
+      store,
+    );
+    requestWrites.push(
+      ...pendingRequests
+        .filter((row) => row.status === "pending" && row.id !== request.id)
+        .flatMap((row) => {
+          const declined = { ...row, status: "declined" as const, updatedAt: now };
+          return [
+            store.setJSON(requestKey(row.id), declined),
+            store.setJSON(problemRequestKey(problem.id, row.id), declined),
+            store.setJSON(requesterRequestKey(row.requesterId, row.id), declined),
+          ];
+        }),
+    );
+  }
+  await Promise.all(requestWrites);
   return encounter;
+}
+
+export async function declineFiveHelpRequest(
+  identity: FiveIdentity,
+  requestId: string,
+  store = getFiveStore(),
+) {
+  const request = (await store.get(requestKey(cleanFiveText(requestId, 80)), {
+    type: "json",
+    consistency: "strong",
+  })) as FiveHelpRequest | null;
+  if (!request || request.status !== "pending") throw new Error("Talep artık beklemiyor");
+  const problem = (await store.get(problemKey(request.problemId), {
+    type: "json",
+    consistency: "strong",
+  })) as FiveProblem | null;
+  if (!problem || (problem.ownerId !== identity.id && problem.ownerEmail !== identity.email)) {
+    throw new Error("Bu talebi yalnızca problem sahibi reddedebilir");
+  }
+  const declined: FiveHelpRequest = {
+    ...request,
+    status: "declined",
+    updatedAt: new Date().toISOString(),
+  };
+  await Promise.all([
+    store.setJSON(requestKey(declined.id), declined),
+    store.setJSON(problemRequestKey(problem.id, declined.id), declined),
+    store.setJSON(requesterRequestKey(declined.requesterId, declined.id), declined),
+  ]);
+  return declined;
 }
 
 export async function sendFiveChatMessage(
@@ -795,12 +915,26 @@ export async function confirmFiveEncounter(identity: FiveIdentity, store = getFi
   const participantIds = encounterParticipantIds(encounter);
   if (!participantIds.includes(identity.id)) throw new Error("Bu görüşmede değilsin");
   encounter.confirmations = [...new Set([...encounter.confirmations, identity.id])];
-  const now = new Date();
-  if (participantIds.every((id) => encounter.confirmations.includes(id))) {
-    encounter.status = "active";
-    encounter.startedAt = now.toISOString();
-    encounter.endsAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
+  encounter.updatedAt = new Date().toISOString();
+  await store.setJSON(encounterKey(encounter.id), encounter);
+  return encounter;
+}
+
+export async function startFiveEncounter(identity: FiveIdentity, store = getFiveStore()) {
+  const encounter = await getActiveEncounter(identity.id, store);
+  if (!encounter || encounter.status !== "waiting") throw new Error("Bekleyen görüşme bulunamadı");
+  if (encounter.owner.id !== identity.id) {
+    throw new Error("Görüşmeyi yalnızca problem sahibi başlatabilir");
   }
+  const participantIds = encounterParticipantIds(encounter);
+  if (!encounter.helpers.length) throw new Error("Önce en az bir çözüm ortağı seçmelisin");
+  if (!participantIds.every((id) => encounter.confirmations.includes(id))) {
+    throw new Error("Sayaç başlamadan önce herkes hazır olmalı");
+  }
+  const now = new Date();
+  encounter.status = "active";
+  encounter.startedAt = now.toISOString();
+  encounter.endsAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
   encounter.updatedAt = now.toISOString();
   await store.setJSON(encounterKey(encounter.id), encounter);
   return encounter;

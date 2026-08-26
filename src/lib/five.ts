@@ -16,6 +16,14 @@ export type FiveCategory =
   | "community"
   | "other";
 
+export type FiveMatchingProfile = {
+  intro: string;
+  offers: string[];
+  offersDetail: string;
+  needs: string;
+  needTag: string;
+};
+
 export type FiveIdentity = {
   id: string;
   type: "member" | "event";
@@ -27,6 +35,7 @@ export type FiveIdentity = {
   photoUrl: string;
   profileUrl: string;
   businessCardEnabled: boolean;
+  matchingProfile: FiveMatchingProfile;
 };
 
 export type FiveProblem = {
@@ -57,6 +66,8 @@ export type FiveProblem = {
   updatedAt: string;
   isOwner: boolean;
   hasRequested: boolean;
+  matchScore: number;
+  matchReason: string;
 };
 
 export type FivePublicProblem = Pick<

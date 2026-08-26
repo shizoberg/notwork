@@ -13,18 +13,21 @@ import {
   createFiveDemoEncounter,
   createFiveHelpRequest,
   createFiveProblem,
+  declineFiveHelpRequest,
   getFiveDatasetInfo,
   getFiveLiveBoard,
   getFiveMyState,
   getFivePublicBoard,
   getFiveStore,
   sendFiveChatMessage,
+  startFiveEncounter,
   syncFiveProblemsForIdentity,
   voteFiveExtension,
   type FiveCategory,
   type FiveEncounter,
   type FiveHelpType,
   type FiveIdentity,
+  type FiveMatchingProfile,
 } from "./_five-store.mjs";
 import { getMemberFiveSummary, getMemberProfileBySession } from "./_member-profile-store.mjs";
 
@@ -85,6 +88,14 @@ function memberIdentity(profile: Awaited<ReturnType<typeof getMemberProfileBySes
   const latestEventCode = [...profile.profile.eventCodes]
     .sort((first, second) => second.issuedAt.localeCompare(first.issuedAt))
     .at(0)?.code;
+  const matchingProfile: FiveMatchingProfile = {
+    intro: profile.profile.registration?.introduction || profile.profile.bio || profile.profile.headline,
+    offers: profile.profile.skills.slice(0, 5),
+    offersDetail:
+      profile.profile.registration?.canHelpWith || profile.profile.skills.join(", "),
+    needs: profile.profile.registration?.lookingFor || "",
+    needTag: "networking",
+  };
   return {
     id: `member:${profile.profile.username}`,
     type: "member",
@@ -101,6 +112,7 @@ function memberIdentity(profile: Awaited<ReturnType<typeof getMemberProfileBySes
       profile.profile.status === "active" &&
       !profile.profile.mustChangePassword &&
       profile.profile.publicProfileEnabled,
+    matchingProfile,
   } satisfies FiveIdentity;
 }
 
@@ -132,6 +144,13 @@ async function resolveIdentity(request: Request, input: FiveInput) {
         ? `/u/${encodeURIComponent(registration.profile.username)}`
         : ""),
     businessCardEnabled: Boolean(memberSummary?.businessCardEnabled),
+    matchingProfile: {
+      intro: registration.intro || "",
+      offers: registration.offers || [],
+      offersDetail: registration.offersDetail || "",
+      needs: registration.needs || "",
+      needTag: registration.needTag || "networking",
+    },
   } satisfies FiveIdentity;
 }
 
@@ -193,8 +212,19 @@ export default async (request: Request, _context: Context) => {
         return json(await fiveSession(identity));
       }
 
+      if (action === "decline") {
+        await declineFiveHelpRequest(identity, cleanFiveText(input.requestId, 80));
+        return json(await fiveSession(identity));
+      }
+
       if (action === "confirm") {
         await confirmFiveEncounter(identity);
+        return json(await fiveSession(identity));
+      }
+
+
+      if (action === "start") {
+        await startFiveEncounter(identity);
         return json(await fiveSession(identity));
       }
 

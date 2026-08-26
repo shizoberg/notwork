@@ -277,6 +277,14 @@ const productStateLabels: Record<EventProductState, string> = {
   archived: "Arşiv",
 };
 
+const productStateDescriptions: Array<{ label: string; description: string }> = [
+  { label: "Hazırlanıyor", description: "Ayar ve test sürüyor; katılımcıya açmaya hazır değil." },
+  { label: "Hazır", description: "Test edildi; etkinlik günü canlıya alınmayı bekliyor." },
+  { label: "Canlı", description: "Katılımcı kullanımı ve anlık veri toplama aktif." },
+  { label: "Duraklatıldı", description: "Yeni işlem geçici olarak durur; mevcut veri korunur." },
+  { label: "Arşiv", description: "Etkinlik tamamlandı; kayıtlar geçmiş veri olarak saklanır." },
+];
+
 const productDescriptions: Record<EventProductKey, string> = {
   matchlab: "Etkinlik içi üçlü eşleşmeler ve görüşme akışı",
   wordcloud: "Canlı anket, cevap moderasyonu ve sahne ekranı",
@@ -3043,6 +3051,35 @@ function EventRegistryAdmin({
               </article>
             );
           })}
+        </div>
+
+        <div className="mt-4 grid gap-3 rounded-2xl border border-border bg-background p-4 lg:grid-cols-[0.75fr_1.25fr]">
+          <div>
+            <h3 className="text-sm font-black">Veri modu ne yapar?</h3>
+            <div className="mt-2 grid gap-2 text-xs leading-5 text-foreground/60">
+              <p>
+                <strong className="text-foreground">Demo:</strong> Güvenli test verisidir; canlı
+                katılımcı kayıtlarına karışmaz.
+              </p>
+              <p>
+                <strong className="text-foreground">Canlı:</strong> Etkinlik günü gerçek
+                katılımcıların kullandığı kalıcı veri alanıdır.
+              </p>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-black">Ürün durumları</h3>
+            <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+              {productStateDescriptions.map((item) => (
+                <p
+                  key={item.label}
+                  className="rounded-xl bg-card px-3 py-2 text-[11px] leading-4 text-foreground/55"
+                >
+                  <strong className="text-foreground">{item.label}:</strong> {item.description}
+                </p>
+              ))}
+            </div>
+          </div>
         </div>
 
         {draft.id && draft.slug ? (
