@@ -1,25 +1,47 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Check, MessageCircle, Network, Star, UserRound, Vote } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Clock3,
+  MessageCircle,
+  Network,
+  Star,
+  UserRound,
+  Vote,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { notworkEventOptions, type EventNetworkRegistration } from "@/lib/event-network";
 import {
   getEventNetworkMe,
+  getEventNetworkTokenStorageKey,
   registerEventNetwork,
   resumeEventNetwork,
 } from "@/lib/event-network-api";
+import {
+  getEventSelectionFromLocation,
+  getPublicEventContext,
+  type EventProductKey,
+  type EventSelection,
+  type NotworkEvent,
+  withEventSelection,
+} from "@/lib/event-registry";
 import { getMyMemberProfile, MemberProfileApiError } from "@/lib/member-profile-api";
 import type { NotworkMemberProfile } from "@/lib/member-profile";
 import { createNoIndexSeo } from "@/lib/seo";
 
-const tokenStorageKey = "notwork_21_agustos_network_token";
+function getSafeReturnTo() {
+  if (typeof window === "undefined") return "";
+  const next = new URLSearchParams(window.location.search).get("next") || "";
+  return next.startsWith("/") && !next.startsWith("//") ? next : "";
+}
 
 export const Route = createFileRoute("/linkler")({
   head: () =>
     createNoIndexSeo({
-      title: "notwork Etkinlik Girişi | Anket ve Match Lab",
+      title: "notwork Etkinlik Girişi | ntw.wordcloud, ntw.matchlab ve ntw.five",
       description:
-        "notwork etkinlik katılımcıları için kayıt, canlı anket, Match Lab, WhatsApp topluluğu ve etkinlik yorumu bağlantıları.",
+        "notwork etkinlik katılımcıları için kayıt, ntw.wordcloud, ntw.matchlab, ntw.five, WhatsApp topluluğu ve etkinlik yorumu bağlantıları.",
       path: "/linkler",
     }),
   component: LinksPage,
@@ -40,24 +62,33 @@ const offerSuggestions = [
 
 const needSuggestions = ["müşteri", "yatırım", "ekip", "mentor", "pazarlama", "fikir", "iş"];
 
-const eventLinks = [
+const eventProductLinks: Array<{
+  product: EventProductKey;
+  title: string;
+  description: string;
+  href: string;
+  icon: typeof Clock3;
+}> = [
   {
-    title: "Anket",
-    description: "Sahnedeki WordCloud için kısa cevaplarını bırak.",
+    product: "five",
+    title: "ntw.five",
+    description: "Problemini seç, katkını sun ve beş dakikalık görüşmeni başlat.",
+    href: "/five/live",
+    icon: Clock3,
+  },
+  {
+    product: "wordcloud",
+    title: "ntw.wordcloud",
+    description: "Canlı soruları yanıtla; ortak fikirlerin sahnede büyüsün.",
     href: "/21-agustos/wordcloud",
     icon: Vote,
   },
   {
-    title: "Notworking Match Lab",
-    description: "Kayıt bilgilerine göre üçlü grubunu gör ve tanışmayı başlat.",
+    product: "matchlab",
+    title: "ntw.matchlab",
+    description: "Profil bilgilerine göre üçlü grubunu gör ve tanışmayı başlat.",
     href: "/21-agustos/eslesme",
     icon: Network,
-  },
-  {
-    title: "Etkinlik Yorumu",
-    description: "Etkinliği puanla; yorum ve fotoğraf ekle.",
-    href: "/etkinlik-degerlendirme?event=21-agustos-2026",
-    icon: Star,
   },
 ];
 
@@ -87,11 +118,47 @@ type LinkRegistrationForm = {
 };
 
 function LinksPage() {
+  const [activeEvent, setActiveEvent] = useState<NotworkEvent | null>(null);
   const [registration, setRegistration] = useState<EventNetworkRegistration | null>(null);
   const [memberProfile, setMemberProfile] = useState<NotworkMemberProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const returnTo = useMemo(() => getSafeReturnTo(), []);
+  const eventSelection = useMemo<EventSelection>(
+    () => (activeEvent ? { event: activeEvent.slug } : {}),
+    [activeEvent],
+  );
+  const tokenStorageKey = useMemo(
+    () => getEventNetworkTokenStorageKey(eventSelection),
+    [eventSelection],
+  );
+  const eventLinks = useMemo(() => {
+    const productLinks = eventProductLinks.map((link) => {
+      const product = activeEvent?.products[link.product];
+      return {
+        ...link,
+        title: product?.label || link.title,
+        href: withEventSelection(link.href, eventSelection),
+        enabled: product
+          ? product.enabled && product.visible && product.state !== "disabled"
+          : true,
+      };
+    });
+    return [
+      ...productLinks,
+      {
+        product: null,
+        title: "Etkinlik Yorumu",
+        description: "Etkinliği puanla; yorum ve fotoğraf ekle.",
+        href: activeEvent
+          ? `/etkinlik-degerlendirme?event=${encodeURIComponent(activeEvent.slug)}`
+          : "/etkinlik-degerlendirme?event=21-agustos-2026",
+        icon: Star,
+        enabled: true,
+      },
+    ];
+  }, [activeEvent, eventSelection]);
   const [form, setForm] = useState<LinkRegistrationForm>({
     firstName: "",
     lastName: "",
@@ -111,7 +178,7 @@ function LinksPage() {
   useEffect(() => {
     let active = true;
 
-    function applyRegistration(data: EventNetworkRegistration) {
+    function applyRegistration(data: EventNetworkRegistration, fallbackEvent = "21-agustos-2026") {
       if (!active) return;
       setRegistration(data);
       setForm((current) => ({
@@ -119,7 +186,7 @@ function LinksPage() {
         firstName: data.profile.firstName,
         lastName: data.profile.lastName,
         email: data.profile.email,
-        attendedEvent: data.profile.attendedEvent || "21-agustos-2026",
+        attendedEvent: data.profile.attendedEvent || fallbackEvent,
         intro: data.intro || "",
         offers: data.offers,
         offersDetail: data.offersDetail || "",
@@ -132,14 +199,31 @@ function LinksPage() {
     }
 
     async function loadRegistration() {
+      let selectedEvent: NotworkEvent | null = null;
+      try {
+        const context = await getPublicEventContext(getEventSelectionFromLocation());
+        selectedEvent = context.event;
+        if (active) {
+          setActiveEvent(context.event);
+          setForm((current) => ({
+            ...current,
+            attendedEvent: current.attendedEvent || context.event.slug,
+          }));
+        }
+      } catch (error) {
+        console.error(error);
+      }
+
+      const selection: EventSelection = selectedEvent ? { event: selectedEvent.slug } : {};
+      const activeTokenStorageKey = getEventNetworkTokenStorageKey(selection);
       let loadedRegistration = false;
-      const token = localStorage.getItem(tokenStorageKey);
+      const token = localStorage.getItem(activeTokenStorageKey);
       if (token) {
         try {
-          applyRegistration(await getEventNetworkMe(token));
+          applyRegistration(await getEventNetworkMe(token, selection), selectedEvent?.slug);
           loadedRegistration = true;
         } catch {
-          localStorage.removeItem(tokenStorageKey);
+          localStorage.removeItem(activeTokenStorageKey);
         }
       }
 
@@ -153,9 +237,9 @@ function LinksPage() {
 
       if (!loadedRegistration && profile) {
         try {
-          const resumed = await resumeEventNetwork();
-          if (resumed.accessToken) localStorage.setItem(tokenStorageKey, resumed.accessToken);
-          applyRegistration(resumed);
+          const resumed = await resumeEventNetwork(selection);
+          if (resumed.accessToken) localStorage.setItem(activeTokenStorageKey, resumed.accessToken);
+          applyRegistration(resumed, selectedEvent?.slug);
           loadedRegistration = true;
         } catch {
           const [firstName = "", ...lastNameParts] = profile.name.trim().split(/\s+/);
@@ -219,24 +303,31 @@ function LinksPage() {
     setIsSaving(true);
     setMessage("");
     try {
-      const data = await registerEventNetwork({
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        email: form.email.trim(),
-        attendedEvent: form.attendedEvent,
-        intro: form.intro.trim(),
-        offers: form.offers,
-        offersDetail: form.offersDetail.trim(),
-        needs: form.needs.trim(),
-        needTag: form.needTag || "networking",
-        generalNetworkOptIn: form.generalNetworkOptIn,
-        marketingOptIn: form.marketingOptIn,
-        eventConsent: form.eventConsent,
-      });
+      const data = await registerEventNetwork(
+        {
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          email: form.email.trim(),
+          attendedEvent: form.attendedEvent,
+          intro: form.intro.trim(),
+          offers: form.offers,
+          offersDetail: form.offersDetail.trim(),
+          needs: form.needs.trim(),
+          needTag: form.needTag || "networking",
+          generalNetworkOptIn: form.generalNetworkOptIn,
+          marketingOptIn: form.marketingOptIn,
+          eventConsent: form.eventConsent,
+        },
+        eventSelection,
+      );
 
       if (data.accessToken) localStorage.setItem(tokenStorageKey, data.accessToken);
       setRegistration(data);
-      setMessage("Kayıt tamamlandı. Kodun hazır; şimdi anket veya Match Lab’e geçebilirsin.");
+      setMessage(
+        data.membership?.verifiedMember
+          ? "Kayıt tamamlandı. Etkinlik katılımcısı üyeliğin otomatik doğrulandı; kodun hazır."
+          : "Kayıt tamamlandı. Kodun hazır; şimdi ntw.wordcloud veya ntw.matchlab’e geçebilirsin.",
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Kayıt tamamlanamadı.");
     } finally {
@@ -257,7 +348,7 @@ function LinksPage() {
               notwork
             </a>
             <p className="mt-2 text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
-              notwork etkinlik giriş ekranı
+              {activeEvent?.shortTitle || "notwork etkinlik giriş ekranı"}
             </p>
           </header>
 
@@ -278,6 +369,7 @@ function LinksPage() {
               addCustomOffer={addCustomOffer}
               submitRegistration={submitRegistration}
               memberProfile={memberProfile}
+              activeEvent={activeEvent}
             />
           ) : null}
 
@@ -297,20 +389,37 @@ function LinksPage() {
                 </div>
               </div>
               <p className="mt-3 text-sm leading-6 text-foreground/60">
-                Bu kod Match Lab’de seni bulmamızı sağlar. Kayıt, {registration.profile.email} ve
-                <strong className="ml-1 text-foreground">@{registration.profile.username}</strong>
+                Bu kod ntw.matchlab’de seni bulmamızı sağlar. Kayıt, {registration.profile.email} ve
+                <strong className="ml-1 text-foreground">
+                  @{registration.membership?.username || registration.profile.username}
+                </strong>
                 kullanıcı adına bağlıdır; profil oturumunla başka bir cihazda da devam edebilirsin.
               </p>
+              {registration.membership?.source === "event-qr" ? (
+                <div className="mt-3 rounded-2xl border border-primary/25 bg-background/75 px-4 py-3">
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-primary-deep">
+                    Etkinlik QR üyesi
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-foreground/55">
+                    Bu etkinlik girişinden geldiğin için profilin admin onayı beklemeden doğrulandı.
+                    Kullanıcı adın @{registration.membership.username}.
+                  </p>
+                </div>
+              ) : null}
               <div className="mt-4 rounded-2xl border border-primary/20 bg-background/70 p-4">
                 <p className="text-sm font-black text-primary-deep">
                   İlk etkinlik hissini ve ortam/selfie fotoğrafını da bekliyoruz.
                 </p>
                 <p className="mt-1 text-xs leading-5 text-foreground/55">
                   Kısa yorumun etkinlik sonrası notwork sayfasında görünebilir; fotoğraf görevi
-                  Match Lab gruplarında rastgele bir kişiye atanır.
+                  ntw.matchlab gruplarında rastgele bir kişiye atanır.
                 </p>
                 <a
-                  href="/etkinlik-degerlendirme?event=21-agustos-2026"
+                  href={
+                    activeEvent
+                      ? `/etkinlik-degerlendirme?event=${encodeURIComponent(activeEvent.slug)}`
+                      : "/etkinlik-degerlendirme?event=21-agustos-2026"
+                  }
                   className="mt-3 inline-flex rounded-full bg-primary px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-primary-foreground"
                 >
                   ilk yorumumu bırak
@@ -321,25 +430,37 @@ function LinksPage() {
                   {message}
                 </p>
               ) : null}
+              {returnTo ? (
+                <a
+                  href={withEventSelection(returnTo, eventSelection)}
+                  className="mt-4 flex min-h-12 items-center justify-between rounded-2xl bg-[#071213] px-4 py-3 text-sm font-black text-white"
+                >
+                  ntw.five’a geç
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              ) : null}
             </section>
           ) : null}
 
           <section className="mt-5 grid gap-3">
-            {eventLinks.map(({ title, description, href, icon: Icon }) => (
+            {eventLinks.map(({ title, description, href, icon: Icon, enabled }) => (
               <a
                 key={title}
                 href={href}
                 onClick={(event) => {
-                  if (!hasRegistration) {
+                  if (!enabled) {
+                    event.preventDefault();
+                    setMessage(`${title}, bu etkinlikte henüz aktif değil.`);
+                  } else if (!hasRegistration) {
                     event.preventDefault();
                     setMessage(
                       "Önce kısa kayıt ve KVKK onayını tamamla; sonra bu alana geçebilirsin.",
                     );
                   }
                 }}
-                aria-disabled={!hasRegistration}
+                aria-disabled={!hasRegistration || !enabled}
                 className={`group flex items-center gap-3 rounded-[1.35rem] border bg-card p-3 shadow-sm transition sm:p-4 ${
-                  hasRegistration
+                  hasRegistration && enabled
                     ? "border-primary/25 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-lg hover:shadow-primary/10"
                     : "border-border opacity-60"
                 }`}
@@ -356,7 +477,7 @@ function LinksPage() {
                   </span>
                 </span>
                 <span className="shrink-0 rounded-full bg-primary px-3 py-2 text-[0.65rem] font-black uppercase tracking-[0.12em] text-primary-foreground sm:px-4">
-                  {hasRegistration ? "Başla" : "Kayıt"}
+                  {!enabled ? "Kapalı" : hasRegistration ? "Başla" : "Kayıt"}
                 </span>
               </a>
             ))}
@@ -390,7 +511,7 @@ function LinksPage() {
           </section>
 
           <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-5 text-foreground/45">
-            Bu giriş ekranı etkinlik içi anket, Match Lab ve genel notwork networking ağı için
+            Bu giriş ekranı ntw.wordcloud, ntw.matchlab ve genel notwork networking ağı için
             kullanılacak temel profilini oluşturur.
           </p>
         </div>
@@ -410,6 +531,7 @@ function RegistrationGate({
   addCustomOffer,
   submitRegistration,
   memberProfile,
+  activeEvent,
 }: {
   form: LinkRegistrationForm;
   setForm: React.Dispatch<React.SetStateAction<LinkRegistrationForm>>;
@@ -420,6 +542,7 @@ function RegistrationGate({
   addCustomOffer: () => void;
   submitRegistration: () => Promise<void>;
   memberProfile: NotworkMemberProfile | null;
+  activeEvent: NotworkEvent | null;
 }) {
   return (
     <section className="mt-5 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-xl shadow-primary/10 sm:p-6">
@@ -428,13 +551,18 @@ function RegistrationGate({
         önce hızlı kayıt
       </div>
       <h1 className="mt-4 text-3xl font-black leading-none tracking-[-0.04em] sm:text-4xl">
-        Kendini ekle, sonra anket veya Match Lab’e geç.
+        Kendini ekle, sonra ntw.wordcloud veya ntw.matchlab’e geç.
       </h1>
       <p className="mt-3 text-sm leading-6 text-foreground/60">
         Match’in doğru çalışması için seni, ne aradığını ve neler yapabildiğini bilmemiz gerekiyor.
         Kodun e-posta ve kullanıcı adına bağlanır; profil oturumun açık kaldığı sürece yeniden form
         doldurmazsın.
       </p>
+
+      <div className="mt-4 rounded-2xl border border-primary/25 bg-primary/10 p-3 text-xs font-semibold leading-5 text-foreground/65">
+        Etkinlik alanındaki QR üzerinden bu özel kayıt butonunu kullanan katılımcılar, admin onayı
+        beklemeden doğrulanmış Notwork etkinlik üyesi olarak eklenir.
+      </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/8 p-3">
         <div>
@@ -486,6 +614,9 @@ function RegistrationGate({
           className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-base outline-none focus:border-primary"
         >
           <option value="">Etkinliği seç</option>
+          {activeEvent && !notworkEventOptions.some((item) => item.value === activeEvent.slug) ? (
+            <option value={activeEvent.slug}>{activeEvent.title}</option>
+          ) : null}
           {notworkEventOptions.map((eventOption) => (
             <option key={eventOption.value} value={eventOption.value}>
               {eventOption.label}
@@ -608,7 +739,7 @@ function RegistrationGate({
         <ConsentBox
           checked={form.eventConsent}
           onChange={(eventConsent) => setForm((current) => ({ ...current, eventConsent }))}
-          title="KVKK metnini okudum; etkinlik içi anket, Match Lab ve kod sistemi için bilgilerimin işlenmesini onaylıyorum."
+          title="KVKK metnini okudum; ntw.wordcloud, ntw.matchlab ve kod sistemi için bilgilerimin işlenmesini onaylıyorum."
         />
         <ConsentBox
           checked={form.generalNetworkOptIn}
@@ -643,7 +774,7 @@ function RegistrationGate({
         onClick={() => void submitRegistration()}
         className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-4 text-sm font-black text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isSaving ? "Kayıt oluşturuluyor…" : "Kayıt ol ve linkleri aç"}
+        {isSaving ? "Kayıt oluşturuluyor…" : "Etkinlik kaydımı tamamla"}
         <Check className="h-4 w-4" />
       </button>
     </section>

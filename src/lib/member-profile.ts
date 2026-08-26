@@ -70,6 +70,8 @@ export type NotworkMemberProfile = {
   verifiedMember: boolean;
   publicProfileEnabled: boolean;
   badge?: NotworkMemberBadge;
+  membershipSource?: "event-qr" | "profile-application" | "event-import";
+  autoApprovedEventId?: string;
   status: "invited" | "pending" | "active" | "suspended" | "rejected";
   mustChangePassword: boolean;
   registration?: {
@@ -111,6 +113,16 @@ export type TemporaryMemberCredential = {
 };
 
 export type MemberProfilesAdminPayload = {
+  database: {
+    storeName: string;
+    memberSourceStoreName: string;
+    eventNetworkStoreName: string;
+    eventNetworkDataset: string;
+    activeDatabaseCode: string;
+    demoDatabaseCode: string;
+    liveDatabaseCode: string;
+    mode: "demo" | "live";
+  };
   profiles: NotworkMemberProfile[];
   references: NotworkMemberReference[];
   credentials?: TemporaryMemberCredential[];

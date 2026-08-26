@@ -1,6 +1,6 @@
-import { getStore } from "@netlify/blobs";
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { Config, Context } from "@netlify/functions";
+import { getEventReviewStore } from "./_event-review-store.mjs";
 
 type AdminInput = {
   action?: "delete" | "removePhoto";
@@ -66,7 +66,7 @@ function publicReview(review: ReviewRow) {
   return publicFields;
 }
 
-async function findReviewBlob(store: ReturnType<typeof getStore>, reviewId: string) {
+async function findReviewBlob(store: ReturnType<typeof getEventReviewStore>, reviewId: string) {
   const { blobs } = await store.list({ prefix: "reviews/" });
 
   for (const blob of blobs) {
@@ -80,14 +80,14 @@ async function findReviewBlob(store: ReturnType<typeof getStore>, reviewId: stri
   return null;
 }
 
-async function deleteReview(store: ReturnType<typeof getStore>, reviewId: string) {
+async function deleteReview(store: ReturnType<typeof getEventReviewStore>, reviewId: string) {
   const match = await findReviewBlob(store, reviewId);
   if (!match) return null;
   await store.delete(match.key);
   return publicReview(match.review);
 }
 
-async function removeReviewPhoto(store: ReturnType<typeof getStore>, reviewId: string) {
+async function removeReviewPhoto(store: ReturnType<typeof getEventReviewStore>, reviewId: string) {
   const match = await findReviewBlob(store, reviewId);
   if (!match) return null;
   const updated = { ...match.review, photoDataUrl: "" };
@@ -95,7 +95,7 @@ async function removeReviewPhoto(store: ReturnType<typeof getStore>, reviewId: s
   return publicReview(updated);
 }
 
-async function listReviews(store: ReturnType<typeof getStore>, eventId: string) {
+async function listReviews(store: ReturnType<typeof getEventReviewStore>, eventId: string) {
   const prefix = eventId ? `reviews/${eventId}/` : "reviews/";
   const { blobs } = await store.list({ prefix });
   const rows = await Promise.all(
@@ -107,7 +107,7 @@ async function listReviews(store: ReturnType<typeof getStore>, eventId: string) 
 }
 
 export default async (request: Request, _context: Context) => {
-  const store = getStore({ name: "event-reviews", consistency: "strong" });
+  const store = getEventReviewStore();
 
   if (request.method === "GET") {
     const url = new URL(request.url);

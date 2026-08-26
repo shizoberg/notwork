@@ -64,6 +64,12 @@ export const Route = createFileRoute("/profil")({
 
 const emptyExperience = { company: "", role: "" };
 
+function getSafeReturnTo() {
+  if (typeof window === "undefined") return "";
+  const next = new URLSearchParams(window.location.search).get("next") || "";
+  return next.startsWith("/") && !next.startsWith("//") ? next : "";
+}
+
 const eventDetails: Record<string, { title: string; venue: string; href: string }> = {
   "21-agustos-2026": {
     title: "21 Ağustos 2026",
@@ -195,11 +201,17 @@ function MemberProfilePage() {
   const [profile, setProfile] = useState<NotworkMemberProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  function applyLoggedInProfile(memberProfile: NotworkMemberProfile) {
+    setProfile(memberProfile);
+    const returnTo = getSafeReturnTo();
+    if (returnTo && !memberProfile.mustChangePassword) window.location.assign(returnTo);
+  }
+
   useEffect(() => {
     let active = true;
     getMyMemberProfile()
       .then((memberProfile) => {
-        if (active) setProfile(memberProfile);
+        if (active) applyLoggedInProfile(memberProfile);
       })
       .catch((error) => {
         if (active && !(error instanceof MemberProfileApiError && error.status === 401)) {
@@ -224,7 +236,7 @@ function MemberProfilePage() {
             <LoaderCircle className="h-8 w-8 animate-spin text-primary-deep" />
           </div>
         ) : !profile ? (
-          <LoginPanel onLoggedIn={setProfile} />
+          <LoginPanel onLoggedIn={applyLoggedInProfile} />
         ) : profile.mustChangePassword ? (
           <PasswordPanel profile={profile} onChanged={setProfile} />
         ) : (

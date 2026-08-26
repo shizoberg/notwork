@@ -32,6 +32,14 @@ export type EventNetworkRegistration = {
   needs: string;
   needTag: string;
   accessToken?: string;
+  membership?: {
+    username: string;
+    status: "invited" | "active" | "suspended" | "rejected";
+    verifiedMember: boolean;
+    source: "event-qr";
+    eventId: string;
+    requiresCredentials: boolean;
+  };
 };
 
 export const notworkEventOptions = [

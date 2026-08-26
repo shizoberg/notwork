@@ -7,6 +7,10 @@ import {
   resetDemoEventNetworkDataset,
   type NetworkAdminInput,
 } from "./_event-network-store.mjs";
+import {
+  eventIdentifierFromRequest,
+  runWithEventRequestContext,
+} from "./_event-product-context.mjs";
 
 const passwordHash = "bffc46786cfaa3b08499a75d77b037dff9a14f362ab183f72e2ea7bcce0454ee";
 
@@ -23,17 +27,27 @@ export default async (request: Request, _context: Context) => {
   try {
     const input = (await request.json()) as NetworkAdminInput;
     if (!validPassword(input.password)) return new Response("Yetkisiz erişim", { status: 401 });
-    const store = getEventNetworkStore();
-    if (input.action === "resetDemo") {
-      await resetDemoEventNetworkDataset(store);
-    }
-    return Response.json(
-      { registrations: await listRegistrations(store), database: getEventNetworkDatasetInfo() },
-      { headers: { "cache-control": "no-store, private" } },
+    const eventIdentifier = eventIdentifierFromRequest(request, input);
+    return runWithEventRequestContext(
+      eventIdentifier,
+      "matchlab",
+      async () => {
+        const store = getEventNetworkStore();
+        if (input.action === "resetDemo") {
+          await resetDemoEventNetworkDataset(store);
+        }
+        return Response.json(
+          { registrations: await listRegistrations(store), database: getEventNetworkDatasetInfo() },
+          { headers: { "cache-control": "no-store, private" } },
+        );
+      },
+      { allowDisabled: true, allowHidden: true, modeOverride: input.mode },
     );
   } catch {
     return new Response("Kayıtlar alınamadı", { status: 500 });
   }
 };
 
-export const config: Config = { path: "/api/admin/events/21-agustos/network" };
+export const config: Config = {
+  path: ["/api/admin/events/21-agustos/network", "/api/admin/event-products/network"],
+};

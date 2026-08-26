@@ -4,51 +4,84 @@ import type {
   EventNetworkPresence,
   EventNetworkRegistration,
 } from "@/lib/event-network";
+import {
+  eventSelectionIdentifier,
+  getEventSelectionFromLocation,
+  type EventSelection,
+  withEventSelectionInput,
+} from "@/lib/event-registry";
 
-const apiUrl = "/api/events/21-agustos/network";
-const adminUrl = "/api/admin/events/21-agustos/network";
+const legacyApiUrl = "/api/events/21-agustos/network";
+const legacyAdminUrl = "/api/admin/events/21-agustos/network";
 
-export async function registerEventNetwork(input: {
-  firstName: string;
-  lastName: string;
-  email: string;
-  offers: string[];
-  intro?: string;
-  offersDetail?: string;
-  needs: string;
-  needTag: string;
-  attendedEvent?: string;
-  generalNetworkOptIn: boolean;
-  marketingOptIn: boolean;
-  eventConsent: boolean;
-}) {
-  const response = await fetch(apiUrl, {
+function resolvedSelection(selection?: EventSelection) {
+  return selection || getEventSelectionFromLocation();
+}
+
+function apiUrl(selection: EventSelection) {
+  return eventSelectionIdentifier(selection) ? "/api/event-products/network" : legacyApiUrl;
+}
+
+function adminUrl(selection: EventSelection) {
+  return eventSelectionIdentifier(selection) ? "/api/admin/event-products/network" : legacyAdminUrl;
+}
+
+export function getEventNetworkTokenStorageKey(selection?: EventSelection) {
+  const identifier = eventSelectionIdentifier(resolvedSelection(selection));
+  return identifier
+    ? `notwork_event_network_token:${identifier}`
+    : "notwork_21_agustos_network_token";
+}
+
+export async function registerEventNetwork(
+  input: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    offers: string[];
+    intro?: string;
+    offersDetail?: string;
+    needs: string;
+    needTag: string;
+    attendedEvent?: string;
+    generalNetworkOptIn: boolean;
+    marketingOptIn: boolean;
+    eventConsent: boolean;
+  },
+  selection?: EventSelection,
+) {
+  const activeSelection = resolvedSelection(selection);
+  const response = await fetch(apiUrl(activeSelection), {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "register", ...input }),
+    body: JSON.stringify(
+      withEventSelectionInput({ action: "register", ...input }, activeSelection),
+    ),
   });
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<EventNetworkRegistration>;
 }
 
-export async function getEventNetworkMe(accessToken: string) {
-  const response = await fetch(apiUrl, {
+export async function getEventNetworkMe(accessToken: string, selection?: EventSelection) {
+  const activeSelection = resolvedSelection(selection);
+  const response = await fetch(apiUrl(activeSelection), {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "me", accessToken }),
+    body: JSON.stringify(withEventSelectionInput({ action: "me", accessToken }, activeSelection)),
   });
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<EventNetworkRegistration>;
 }
 
-export async function resumeEventNetwork() {
-  const response = await fetch(apiUrl, {
+export async function resumeEventNetwork(selection?: EventSelection) {
+  const activeSelection = resolvedSelection(selection);
+  const response = await fetch(apiUrl(activeSelection), {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "resume" }),
+    body: JSON.stringify(withEventSelectionInput({ action: "resume" }, activeSelection)),
   });
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<EventNetworkRegistration>;
@@ -57,12 +90,16 @@ export async function resumeEventNetwork() {
 export async function updateEventNetworkPresence(
   accessToken: string,
   presence: EventNetworkPresence,
+  selection?: EventSelection,
 ) {
-  const response = await fetch(apiUrl, {
+  const activeSelection = resolvedSelection(selection);
+  const response = await fetch(apiUrl(activeSelection), {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "presence", accessToken, presence }),
+    body: JSON.stringify(
+      withEventSelectionInput({ action: "presence", accessToken, presence }, activeSelection),
+    ),
   });
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<{
@@ -71,12 +108,15 @@ export async function updateEventNetworkPresence(
   }>;
 }
 
-export async function getEventNetworkMatch(accessToken: string) {
-  const response = await fetch(apiUrl, {
+export async function getEventNetworkMatch(accessToken: string, selection?: EventSelection) {
+  const activeSelection = resolvedSelection(selection);
+  const response = await fetch(apiUrl(activeSelection), {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "match", accessToken }),
+    body: JSON.stringify(
+      withEventSelectionInput({ action: "match", accessToken }, activeSelection),
+    ),
   });
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<{
@@ -87,12 +127,16 @@ export async function getEventNetworkMatch(accessToken: string) {
   }>;
 }
 
-export async function completeEventNetworkMatch(accessToken: string) {
-  return completeEventNetworkMatchWithReview(accessToken, {
-    rating: 5,
-    comment: "Match Lab görüşmesini tamamladım.",
-    consent: true,
-  });
+export async function completeEventNetworkMatch(accessToken: string, selection?: EventSelection) {
+  return completeEventNetworkMatchWithReview(
+    accessToken,
+    {
+      rating: 5,
+      comment: "Match Lab görüşmesini tamamladım.",
+      consent: true,
+    },
+    selection,
+  );
 }
 
 export async function completeEventNetworkMatchWithReview(
@@ -103,12 +147,16 @@ export async function completeEventNetworkMatchWithReview(
     photoDataUrl?: string;
     consent: boolean;
   },
+  selection?: EventSelection,
 ) {
-  const response = await fetch(apiUrl, {
+  const activeSelection = resolvedSelection(selection);
+  const response = await fetch(apiUrl(activeSelection), {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "completeMatch", accessToken, ...review }),
+    body: JSON.stringify(
+      withEventSelectionInput({ action: "completeMatch", accessToken, ...review }, activeSelection),
+    ),
   });
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<{
@@ -120,32 +168,37 @@ export async function completeEventNetworkMatchWithReview(
   }>;
 }
 
-export async function seedEventNetworkSamples() {
-  const response = await fetch(apiUrl, {
+export async function seedEventNetworkSamples(selection?: EventSelection) {
+  const activeSelection = resolvedSelection(selection);
+  const response = await fetch(apiUrl(activeSelection), {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "seedSamples" }),
+    body: JSON.stringify(withEventSelectionInput({ action: "seedSamples" }, activeSelection)),
   });
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<{ registrations: EventNetworkRegistration[] }>;
 }
 
-export async function getEventNetworkAdmin(password: string) {
-  const response = await fetch(adminUrl, {
+export async function getEventNetworkAdmin(password: string, selection?: EventSelection) {
+  const activeSelection = resolvedSelection(selection);
+  const response = await fetch(adminUrl(activeSelection), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password, action: "list" }),
+    body: JSON.stringify(withEventSelectionInput({ password, action: "list" }, activeSelection)),
   });
   if (!response.ok) throw new Error("21 Ağustos network kayıtları alınamadı.");
   return response.json() as Promise<EventNetworkAdminPayload>;
 }
 
-export async function resetEventNetworkDemo(password: string) {
-  const response = await fetch(adminUrl, {
+export async function resetEventNetworkDemo(password: string, selection?: EventSelection) {
+  const activeSelection = resolvedSelection(selection);
+  const response = await fetch(adminUrl(activeSelection), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password, action: "resetDemo" }),
+    body: JSON.stringify(
+      withEventSelectionInput({ password, action: "resetDemo" }, activeSelection),
+    ),
   });
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<EventNetworkAdminPayload>;

@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { COOKIE_CONSENT_OPEN_EVENT } from "@/lib/cookie-consent";
+import { withEventSelection } from "@/lib/event-registry";
 
 type SiteNavVariant = "default" | "event" | "eventDark";
 
@@ -308,6 +309,13 @@ function MobileSiteMenu() {
 }
 
 function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default"> }) {
+  const location = useLocation();
+  const eventSearch = new URLSearchParams(location.searchStr);
+  const eventSelection = eventSearch.get("eventId")
+    ? { eventId: eventSearch.get("eventId") || "" }
+    : eventSearch.get("eventSlug")
+      ? { eventSlug: eventSearch.get("eventSlug") || "" }
+      : { event: eventSearch.get("event") || "" };
   const dark = variant === "eventDark";
   const headerClass = dark
     ? "sticky top-0 z-40 border-b border-white/10 bg-[#071112]/72 text-white shadow-[0_12px_50px_rgba(0,0,0,0.25)] backdrop-blur-xl"
@@ -318,11 +326,20 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
   const primaryClass = dark
     ? "rounded-full bg-[#8ee4e8] px-4 py-2 text-xs font-black text-[#071112] shadow-[0_0_22px_rgba(142,228,232,0.28)]"
     : "rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground shadow-[0_0_22px_rgba(113,204,210,0.2)]";
+  const linksHref = withEventSelection("/linkler", eventSelection);
+  const wordcloudHref = withEventSelection("/21-agustos/wordcloud", eventSelection);
+  const matchlabHref = withEventSelection("/21-agustos/eslesme", eventSelection);
+  const reviewHref = withEventSelection(
+    "/etkinlik-degerlendirme",
+    eventSelection.event || eventSelection.eventId || eventSelection.eventSlug
+      ? eventSelection
+      : { event: "21-agustos-2026" },
+  );
 
   return (
     <header className={headerClass}>
       <div className="mx-auto hidden h-16 max-w-6xl items-center justify-between gap-3 px-5 sm:flex">
-        <Link to="/linkler" className="flex min-w-0 items-center gap-2">
+        <Link to={linksHref} className="flex min-w-0 items-center gap-2">
           <span className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20">
             <span className="h-2.5 w-2.5 rounded-full bg-primary" />
             <span className="absolute inset-0 rounded-full border border-primary/40" />
@@ -342,16 +359,16 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
         </Link>
 
         <nav className="flex items-center gap-1 overflow-x-auto rounded-full border border-current/10 bg-current/[0.03] p-1">
-          <Link to="/linkler" className={linkClass}>
+          <Link to={linksHref} className={linkClass}>
             Linkler
           </Link>
-          <Link to="/21-agustos/wordcloud" className={linkClass}>
+          <Link to={wordcloudHref} className={linkClass}>
             Anket
           </Link>
-          <Link to="/21-agustos/eslesme" className={linkClass}>
+          <Link to={matchlabHref} className={linkClass}>
             Match
           </Link>
-          <a href="/etkinlik-degerlendirme?event=21-agustos-2026" className={primaryClass}>
+          <a href={reviewHref} className={primaryClass}>
             Yorumla
           </a>
           <ProfileLink dark={dark} />
@@ -359,7 +376,7 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
       </div>
       <div className="mx-auto grid h-16 grid-cols-[72px_1fr_72px] items-center px-3 sm:hidden">
         <MobileSiteMenu />
-        <Link to="/linkler" className="justify-self-center font-brand text-lg leading-none">
+        <Link to={linksHref} className="justify-self-center font-brand text-lg leading-none">
           notwork
         </Link>
         <ProfileLink className="justify-self-end" dark={dark} />

@@ -2,12 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { RefreshCcw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { wordcloudSize, type WordcloudResults } from "@/lib/event-wordcloud";
-import { getWordcloudResults } from "@/lib/wordcloud-api";
+import { getWordcloudResults, getWordcloudStreamUrl } from "@/lib/wordcloud-api";
 
 export const Route = createFileRoute("/21-agustos/sonuclar")({
   head: () => ({
     meta: [
-      { title: "21 Ağustos Canlı WordCloud | notwork" },
+      { title: "ntw.wordcloud canlı sonuçlar | notwork" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -40,7 +40,7 @@ function WordcloudResultsPage() {
     load();
     const interval = window.setInterval(load, 2500);
 
-    const stream = new EventSource("/api/events/21-agustos/wordcloud/stream");
+    const stream = new EventSource(getWordcloudStreamUrl());
     stream.addEventListener("results", (event) => {
       try {
         applyResults(JSON.parse((event as MessageEvent).data) as WordcloudResults);
@@ -70,7 +70,7 @@ function WordcloudResultsPage() {
               notwork live
             </div>
             <h1 className="mt-2 font-display text-4xl font-black tracking-[-0.05em] sm:text-6xl">
-              21 Ağustos WordCloud
+              ntw.wordcloud
             </h1>
           </div>
           <div className="rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-bold text-primary">

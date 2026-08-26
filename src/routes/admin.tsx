@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Activity,
+  Archive,
   BarChart3,
+  CalendarDays,
   Check,
+  Database,
   Eye,
   EyeOff,
   KeyRound,
@@ -34,6 +37,20 @@ import {
 } from "recharts";
 import type { WordcloudAnswer, WordcloudQuestion, WordcloudResults } from "@/lib/event-wordcloud";
 import type { EventNetworkRegistration } from "@/lib/event-network";
+import {
+  createEventProductNamespace,
+  eventProductKeys,
+  updateEventRegistry,
+  withEventSelection,
+  type EventDataMode,
+  type EventLifecycleStatus,
+  type EventProductKey,
+  type EventProductState,
+  type EventRegistryDraft,
+  type EventRegistryInfo,
+  type EventRegistryPayload,
+  type NotworkEvent,
+} from "@/lib/event-registry";
 import type {
   MemberProfilesAdminPayload,
   NotworkMemberReference,
@@ -192,7 +209,7 @@ const eventNames: Record<string, string> = {
   form_submit: "Form gönderimi",
 };
 
-type AdminTab = "events" | "analytics" | "networking" | "profiles" | "applications";
+type AdminTab = "events" | "eventTools" | "analytics" | "networking" | "profiles" | "applications";
 
 type EventDatabaseInfo = {
   storeName: string;
@@ -205,7 +222,16 @@ type EventDatabaseInfo = {
 };
 
 const adminTabs: Array<{ id: AdminTab; label: string; description: string }> = [
-  { id: "events", label: "21 Ağustos", description: "WordCloud, Match Lab ve event kayıtları" },
+  {
+    id: "events",
+    label: "Etkinlikler",
+    description: "Etkinlik oluştur, ürünleri ve veriyi ayarla",
+  },
+  {
+    id: "eventTools",
+    label: "21 Ağustos",
+    description: "Mevcut WordCloud ve Match Lab kayıtları",
+  },
   { id: "analytics", label: "Analiz", description: "Trafik, bilet ve aksiyon grafikleri" },
   { id: "networking", label: "Networking", description: "Genel topluluk ağı ve onaylar" },
   {
@@ -216,7 +242,122 @@ const adminTabs: Array<{ id: AdminTab; label: string; description: string }> = [
   { id: "applications", label: "Başvurular", description: "Network Startup proje başvuruları" },
 ];
 
-const adminUiVersion = "Admin v2 · 21 Ağustos demo";
+const adminUiVersion = "Admin v3 · etkinlik platformu";
+
+type EventEditorDraft = {
+  id: string;
+  revision: number;
+  title: string;
+  shortTitle: string;
+  slug: string;
+  startsAt: string;
+  endsAt: string;
+  timezone: string;
+  status: EventLifecycleStatus;
+  location: NotworkEvent["location"];
+  entry: Omit<NotworkEvent["entry"], "isPrimary">;
+  products: NotworkEvent["products"];
+};
+
+const eventStatusLabels: Record<EventLifecycleStatus, string> = {
+  draft: "Taslak",
+  scheduled: "Planlandı",
+  live: "Canlı",
+  completed: "Tamamlandı",
+  archived: "Arşiv",
+};
+
+const productStateLabels: Record<EventProductState, string> = {
+  disabled: "Kapalı",
+  draft: "Hazırlanıyor",
+  ready: "Hazır",
+  live: "Canlı",
+  paused: "Duraklatıldı",
+  archived: "Arşiv",
+};
+
+const productDescriptions: Record<EventProductKey, string> = {
+  matchlab: "Etkinlik içi üçlü eşleşmeler ve görüşme akışı",
+  wordcloud: "Canlı anket, cevap moderasyonu ve sahne ekranı",
+  five: "Problemler, çözüm talepleri ve beş dakikalık görüşmeler",
+};
+
+function toDateTimeInput(value: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
+function blankEventEditorDraft(): EventEditorDraft {
+  const startsAt = new Date();
+  startsAt.setDate(startsAt.getDate() + 7);
+  startsAt.setHours(19, 30, 0, 0);
+  const endsAt = new Date(startsAt.getTime() + 3 * 60 * 60 * 1000);
+  return {
+    id: "",
+    revision: 0,
+    title: "",
+    shortTitle: "",
+    slug: "",
+    startsAt: toDateTimeInput(startsAt.toISOString()),
+    endsAt: toDateTimeInput(endsAt.toISOString()),
+    timezone: "Europe/Istanbul",
+    status: "draft",
+    location: { name: "", address: "", city: "İzmir", mapUrl: "" },
+    entry: { isOpen: false, requireRegistration: true },
+    products: Object.fromEntries(
+      eventProductKeys.map((product) => [
+        product,
+        {
+          enabled: false,
+          visible: true,
+          state: "disabled",
+          dataMode: "demo",
+          label: product === "matchlab" ? "ntw.matchlab" : `ntw.${product}`,
+        },
+      ]),
+    ) as NotworkEvent["products"],
+  };
+}
+
+function eventToEditorDraft(event: NotworkEvent): EventEditorDraft {
+  return {
+    id: event.id,
+    revision: event.revision,
+    title: event.title,
+    shortTitle: event.shortTitle,
+    slug: event.slug,
+    startsAt: toDateTimeInput(event.startsAt),
+    endsAt: toDateTimeInput(event.endsAt),
+    timezone: event.timezone,
+    status: event.status,
+    location: { ...event.location },
+    entry: {
+      isOpen: event.entry.isOpen,
+      requireRegistration: event.entry.requireRegistration,
+    },
+    products: Object.fromEntries(
+      eventProductKeys.map((product) => [product, { ...event.products[product] }]),
+    ) as NotworkEvent["products"],
+  };
+}
+
+function eventEditorPayload(draft: EventEditorDraft): EventRegistryDraft {
+  return {
+    title: draft.title,
+    shortTitle: draft.shortTitle,
+    slug: draft.slug,
+    startsAt: draft.startsAt ? new Date(draft.startsAt).toISOString() : "",
+    endsAt: draft.endsAt ? new Date(draft.endsAt).toISOString() : "",
+    timezone: draft.timezone,
+    status: draft.status,
+    location: draft.location,
+    entry: draft.entry,
+    products: draft.products,
+  };
+}
 
 function AdminPage() {
   const [password, setPassword] = useState("");
@@ -250,6 +391,11 @@ function AdminPage() {
   const [wordcloudMessage, setWordcloudMessage] = useState("");
   const [eventRegistrations, setEventRegistrations] = useState<EventNetworkRegistration[]>([]);
   const [eventDatabase, setEventDatabase] = useState<EventDatabaseInfo | null>(null);
+  const [eventRegistry, setEventRegistry] = useState<NotworkEvent[]>([]);
+  const [eventRegistryInfo, setEventRegistryInfo] = useState<EventRegistryInfo | null>(null);
+  const [eventEditor, setEventEditor] = useState<EventEditorDraft>(blankEventEditorDraft);
+  const [eventRegistryMessage, setEventRegistryMessage] = useState("");
+  const [eventRegistryLoading, setEventRegistryLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeAdminTab, setActiveAdminTab] = useState<AdminTab>("events");
@@ -280,6 +426,85 @@ function AdminPage() {
     const data = await getEventNetworkAdmin(nextPassword);
     setEventRegistrations(data.registrations);
     setEventDatabase(data.database || null);
+  };
+
+  const applyEventRegistry = (data: EventRegistryPayload, preferredEventId = "") => {
+    setEventRegistry(data.events);
+    setEventRegistryInfo(data.registry);
+    const selected =
+      data.selectedEvent ||
+      data.events.find((event) => event.id === preferredEventId) ||
+      data.events.find((event) => event.id === data.registry.primaryEventId) ||
+      data.events[0];
+    if (selected) setEventEditor(eventToEditorDraft(selected));
+  };
+
+  const loadEventRegistry = async (nextPassword = password, preferredEventId = "") => {
+    const data = await updateEventRegistry(nextPassword, { action: "list" });
+    applyEventRegistry(data, preferredEventId);
+  };
+
+  const selectEventRegistryItem = (event: NotworkEvent) => {
+    setEventRegistryMessage("");
+    setEventEditor(eventToEditorDraft(event));
+  };
+
+  const saveEventRegistryItem = async () => {
+    setEventRegistryLoading(true);
+    setEventRegistryMessage("");
+    try {
+      const data = await updateEventRegistry(password, {
+        action: eventEditor.id ? "update" : "create",
+        eventId: eventEditor.id || undefined,
+        expectedRevision: eventEditor.id ? eventEditor.revision : undefined,
+        event: eventEditorPayload(eventEditor),
+      });
+      applyEventRegistry(data, data.selectedEvent?.id);
+      setEventRegistryMessage(eventEditor.id ? "Etkinlik güncellendi." : "Etkinlik oluşturuldu.");
+    } catch (caught) {
+      setEventRegistryMessage(caught instanceof Error ? caught.message : "Etkinlik kaydedilemedi.");
+    } finally {
+      setEventRegistryLoading(false);
+    }
+  };
+
+  const setPrimaryEventRegistryItem = async () => {
+    if (!eventEditor.id) return;
+    setEventRegistryLoading(true);
+    setEventRegistryMessage("");
+    try {
+      const data = await updateEventRegistry(password, {
+        action: "setPrimary",
+        eventId: eventEditor.id,
+      });
+      applyEventRegistry(data, eventEditor.id);
+      setEventRegistryMessage("Ana etkinlik girişi güncellendi.");
+    } catch (caught) {
+      setEventRegistryMessage(
+        caught instanceof Error ? caught.message : "Ana etkinlik değiştirilemedi.",
+      );
+    } finally {
+      setEventRegistryLoading(false);
+    }
+  };
+
+  const archiveEventRegistryItem = async () => {
+    if (!eventEditor.id) return;
+    setEventRegistryLoading(true);
+    setEventRegistryMessage("");
+    try {
+      const data = await updateEventRegistry(password, {
+        action: "archive",
+        eventId: eventEditor.id,
+        expectedRevision: eventEditor.revision,
+      });
+      applyEventRegistry(data, eventEditor.id);
+      setEventRegistryMessage("Etkinlik ve ürünleri arşivlendi; veriler silinmedi.");
+    } catch (caught) {
+      setEventRegistryMessage(caught instanceof Error ? caught.message : "Etkinlik arşivlenemedi.");
+    } finally {
+      setEventRegistryLoading(false);
+    }
   };
 
   const loadStartupApplications = async (nextPassword = password) => {
@@ -382,6 +607,31 @@ function AdminPage() {
       profileStatus === "approved"
         ? `${profile.name} üyeliğe onaylandı.`
         : `${profile.name} başvurusu reddedildi.`,
+    );
+  };
+
+  const resetMemberPassword = async (profile: NotworkMemberProfile) => {
+    setProfileMessage("");
+    setTemporaryCredentials([]);
+    const response = await fetch("/api/admin/member-profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        password,
+        action: "resetCredential",
+        targetUsername: profile.username,
+      }),
+    });
+    if (!response.ok) {
+      setProfileMessage(await response.text());
+      return;
+    }
+    const data = (await response.json()) as MemberProfilesAdminPayload;
+    setMemberProfiles(data.profiles);
+    setMemberReferences(data.references || []);
+    setTemporaryCredentials(data.credentials || []);
+    setProfileMessage(
+      `${profile.name} için yeni geçici şifre üretildi. CSV dosyasını şimdi indir.`,
     );
   };
 
@@ -545,6 +795,7 @@ function AdminPage() {
         loadNetwork(password),
         loadWordcloud(password),
         loadEventNetwork(password),
+        loadEventRegistry(password),
         loadStartupApplications(password),
         loadMemberProfiles(password),
       ]);
@@ -643,6 +894,9 @@ function AdminPage() {
                 setDailySummaries([]);
                 setAnalyticsCoverage(null);
                 setMissingAnalyticsDays([]);
+                setEventRegistry([]);
+                setEventRegistryInfo(null);
+                setEventEditor(blankEventEditorDraft());
                 setPassword("");
               }}
               className="rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold"
@@ -652,7 +906,7 @@ function AdminPage() {
           </div>
         </header>
 
-        <nav className="mt-6 grid gap-3 lg:grid-cols-5">
+        <nav className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
           {adminTabs.map((tab) => (
             <button
               key={tab.id}
@@ -679,9 +933,29 @@ function AdminPage() {
           </div>
         ) : null}
 
+        <div className={activeAdminTab === "events" ? "" : "hidden"}>
+          <EventRegistryAdmin
+            events={eventRegistry}
+            registry={eventRegistryInfo}
+            draft={eventEditor}
+            message={eventRegistryMessage}
+            loading={eventRegistryLoading}
+            setDraft={setEventEditor}
+            selectEvent={selectEventRegistryItem}
+            createEvent={() => {
+              setEventRegistryMessage("");
+              setEventEditor(blankEventEditorDraft());
+            }}
+            refresh={() => loadEventRegistry(password, eventEditor.id)}
+            saveEvent={saveEventRegistryItem}
+            setPrimaryEvent={setPrimaryEventRegistryItem}
+            archiveEvent={archiveEventRegistryItem}
+          />
+        </div>
+
         <section
           className={`mt-6 rounded-[2rem] border border-primary/25 bg-primary/10 p-5 ${
-            activeAdminTab === "events" ? "" : "hidden"
+            activeAdminTab === "eventTools" ? "" : "hidden"
           }`}
         >
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -961,7 +1235,7 @@ function AdminPage() {
           <ReportList title="Kaydırma derinliği" rows={report.scrollDepth} suffix=" ulaşım" />
         </section>
 
-        <div className={activeAdminTab === "events" ? "" : "hidden"}>
+        <div className={activeAdminTab === "eventTools" ? "" : "hidden"}>
           <WordcloudAdmin
             questions={wordcloudQuestions}
             answers={wordcloudAnswers}
@@ -1007,6 +1281,7 @@ function AdminPage() {
             syncMembers={() => memberProfileAction("syncMembers")}
             issueCredentials={() => memberProfileAction("issueCredentials")}
             moderateProfile={moderateMemberProfile}
+            resetPassword={resetMemberPassword}
             moderateReference={moderateMemberReference}
           />
         </div>
@@ -1212,6 +1487,7 @@ function MemberProfilesAdmin({
   syncMembers,
   issueCredentials,
   moderateProfile,
+  resetPassword,
   moderateReference,
 }: {
   profiles: NotworkMemberProfile[];
@@ -1225,6 +1501,7 @@ function MemberProfilesAdmin({
     profile: NotworkMemberProfile,
     status: "approved" | "rejected",
   ) => Promise<void>;
+  resetPassword: (profile: NotworkMemberProfile) => Promise<void>;
   moderateReference: (
     reference: NotworkMemberReference,
     status: "approved" | "rejected",
@@ -1234,6 +1511,7 @@ function MemberProfilesAdmin({
   const issuedCount = profiles.filter((profile) => profile.credentialIssuedAt).length;
   const publicCount = profiles.filter((profile) => profile.publicProfileEnabled).length;
   const pendingProfileCount = profiles.filter((profile) => profile.status === "pending").length;
+  const eventQrProfiles = profiles.filter((profile) => profile.membershipSource === "event-qr");
   const pendingReferenceCount = references.filter(
     (reference) => reference.status === "pending",
   ).length;
@@ -1248,8 +1526,8 @@ function MemberProfilesAdmin({
           </div>
           <h2 className="mt-2 text-2xl font-black">Üye profilleri ve başvurular</h2>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-foreground/55">
-            Etkinlik katılımı veya üye referansı doğrulanan başvuruları onayla. Onaylanmayan
-            profiller giriş yapamaz ve networking ağına eklenmez.
+            Normal profil başvurularını buradan onayla. Etkinlik alanındaki özel QR akışından kayıt
+            olan katılımcılar otomatik doğrulanır ve ayrı kategoride görünür.
           </p>
         </div>
         <button
@@ -1261,10 +1539,11 @@ function MemberProfilesAdmin({
         </button>
       </div>
 
-      <div className="grid gap-3 border-b border-border bg-muted/35 p-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+      <div className="grid gap-3 border-b border-border bg-muted/35 p-5 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
         <Metric icon={Users} label="Profil kaydı" value={profiles.length} highlight />
         <Metric icon={ShieldCheck} label="Onay bekleyen profil" value={pendingProfileCount} />
         <Metric icon={ShieldCheck} label="Doğrulanmış etkinlik üyesi" value={verifiedCount} />
+        <Metric icon={Ticket} label="Etkinlik QR üyesi" value={eventQrProfiles.length} />
         <Metric icon={KeyRound} label="Geçici şifre atanmış" value={issuedCount} />
         <Metric icon={Eye} label="Yayındaki business kart" value={publicCount} />
         <Metric
@@ -1272,6 +1551,42 @@ function MemberProfilesAdmin({
           label="Onay bekleyen referans"
           value={pendingReferenceCount}
         />
+      </div>
+
+      <div className="border-b border-border p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-xs font-black uppercase tracking-[0.16em] text-primary-deep">
+              Otomatik doğrulanan üyeler
+            </div>
+            <h3 className="mt-1 text-lg font-black">Etkinlik QR katılımcıları</h3>
+            <p className="mt-1 text-xs leading-5 text-foreground/50">
+              Etkinlik girişindeki özel kayıt akışından gelenler admin onayı beklemez.
+            </p>
+          </div>
+          <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-black text-primary-deep">
+            {eventQrProfiles.length} üye
+          </span>
+        </div>
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+          {eventQrProfiles.slice(0, 20).map((profile) => (
+            <div
+              key={profile.id}
+              className="min-w-[220px] rounded-2xl border border-primary/20 bg-primary/5 p-3"
+            >
+              <div className="font-black">{profile.name}</div>
+              <div className="mt-1 text-xs text-foreground/50">@{profile.username}</div>
+              <div className="mt-2 text-[11px] font-bold text-primary-deep">
+                {profile.autoApprovedEventId || profile.attendedEvents.at(-1) || "etkinlik"}
+              </div>
+            </div>
+          ))}
+          {eventQrProfiles.length === 0 ? (
+            <p className="rounded-2xl bg-muted/60 px-4 py-3 text-sm font-semibold text-foreground/45">
+              Henüz etkinlik QR kaydı yok.
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <div className="border-b border-border p-5">
@@ -1288,7 +1603,7 @@ function MemberProfilesAdmin({
             onClick={() => {
               if (
                 confirm(
-                  "Tüm doğrulanmış üyeler için yeni geçici şifre üretilecek ve eski şifreler geçersiz olacak. Devam edilsin mi?",
+                  "Yalnızca henüz şifresi olmayan doğrulanmış üyeler için geçici şifre üretilecek. Devam edilsin mi?",
                 )
               ) {
                 void issueCredentials();
@@ -1450,11 +1765,12 @@ function MemberProfilesAdmin({
       </div>
 
       <div className="max-h-[620px] overflow-auto">
-        <table className="w-full min-w-[880px] text-left text-sm">
+        <table className="w-full min-w-[980px] text-left text-sm">
           <thead className="sticky top-0 bg-muted text-xs text-foreground/50">
             <tr>
               <th className="px-4 py-3">Üye</th>
               <th className="px-4 py-3">Doğrulama</th>
+              <th className="px-4 py-3">Kayıt kaynağı</th>
               <th className="px-4 py-3">Etkinlikler</th>
               <th className="px-4 py-3">Profil durumu</th>
               <th className="px-4 py-3">Business kart</th>
@@ -1478,6 +1794,13 @@ function MemberProfilesAdmin({
                   ) : (
                     <span className="text-xs text-foreground/40">doğrulanmadı</span>
                   )}
+                </td>
+                <td className="px-4 py-3 text-xs font-semibold text-foreground/60">
+                  {profile.membershipSource === "event-qr"
+                    ? "etkinlik QR · otomatik"
+                    : profile.membershipSource === "profile-application"
+                      ? "profil başvurusu"
+                      : "etkinlik aktarımı"}
                 </td>
                 <td className="px-4 py-3 text-xs font-semibold text-foreground/60">
                   {profile.attendedEvents.join(", ") || "—"}
@@ -1504,9 +1827,28 @@ function MemberProfilesAdmin({
                   )}
                 </td>
                 <td className="px-4 py-3 text-xs text-foreground/55">
-                  {profile.credentialIssuedAt
-                    ? `geçici şifre · ${new Date(profile.credentialIssuedAt).toLocaleDateString("tr-TR")}`
-                    : "şifre bekliyor"}
+                  <div>
+                    {profile.credentialIssuedAt
+                      ? `şifre atandı · ${new Date(profile.credentialIssuedAt).toLocaleDateString("tr-TR")}`
+                      : "şifre bekliyor"}
+                  </div>
+                  {profile.status === "active" || profile.status === "invited" ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (
+                          confirm(
+                            `${profile.name} için yeni geçici şifre üretilecek ve açık oturumları kapatılacak. Devam edilsin mi?`,
+                          )
+                        ) {
+                          void resetPassword(profile);
+                        }
+                      }}
+                      className="mt-2 inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1.5 font-black text-foreground hover:bg-muted"
+                    >
+                      <KeyRound size={13} /> şifreyi sıfırla
+                    </button>
+                  ) : null}
                 </td>
               </tr>
             ))}
@@ -2190,6 +2532,525 @@ function EventNetworkAdmin({
           </tbody>
         </table>
       </div>
+    </section>
+  );
+}
+
+function EventRegistryAdmin({
+  events,
+  registry,
+  draft,
+  message,
+  loading,
+  setDraft,
+  selectEvent,
+  createEvent,
+  refresh,
+  saveEvent,
+  setPrimaryEvent,
+  archiveEvent,
+}: {
+  events: NotworkEvent[];
+  registry: EventRegistryInfo | null;
+  draft: EventEditorDraft;
+  message: string;
+  loading: boolean;
+  setDraft: React.Dispatch<React.SetStateAction<EventEditorDraft>>;
+  selectEvent: (event: NotworkEvent) => void;
+  createEvent: () => void;
+  refresh: () => Promise<void>;
+  saveEvent: () => Promise<void>;
+  setPrimaryEvent: () => Promise<void>;
+  archiveEvent: () => Promise<void>;
+}) {
+  const selectedEvent = events.find((event) => event.id === draft.id);
+  const isPrimary = Boolean(draft.id && registry?.primaryEventId === draft.id);
+  const updateProduct = (
+    product: EventProductKey,
+    updater: (
+      current: NotworkEvent["products"][EventProductKey],
+    ) => NotworkEvent["products"][EventProductKey],
+  ) => {
+    setDraft((current) => ({
+      ...current,
+      products: { ...current.products, [product]: updater(current.products[product]) },
+    }));
+  };
+
+  return (
+    <section className="mt-6 grid gap-5 xl:grid-cols-[0.72fr_1.28fr]">
+      <aside className="self-start rounded-[2rem] border border-border bg-card p-4 shadow-sm xl:sticky xl:top-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-xs font-black uppercase tracking-[0.2em] text-primary-deep">
+              Etkinlik merkezi
+            </div>
+            <h2 className="mt-1 text-2xl font-black">Etkinlikler</h2>
+            <p className="mt-1 text-sm text-foreground/55">
+              Her etkinliğin ürünleri ve verisi ayrı tutulur.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={createEvent}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-black text-primary-foreground"
+          >
+            <Plus size={14} /> yeni
+          </button>
+        </div>
+
+        <div className="mt-4 grid max-h-[620px] gap-2 overflow-y-auto pr-1">
+          {events.map((event) => {
+            const enabledProducts = eventProductKeys.filter(
+              (product) => event.products[product].enabled,
+            ).length;
+            const active = draft.id === event.id;
+            return (
+              <button
+                key={event.id}
+                type="button"
+                onClick={() => selectEvent(event)}
+                className={`rounded-2xl border p-3 text-left transition ${
+                  active
+                    ? "border-primary/55 bg-primary/12"
+                    : "border-border bg-background hover:border-primary/30"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="line-clamp-1 font-black">{event.shortTitle}</span>
+                  {event.entry.isPrimary ? (
+                    <span className="rounded-full bg-primary px-2 py-1 text-[10px] font-black uppercase text-primary-foreground">
+                      ana
+                    </span>
+                  ) : null}
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-foreground/55">
+                  <span>{new Date(event.startsAt).toLocaleDateString("tr-TR")}</span>
+                  <span>·</span>
+                  <span>{eventStatusLabels[event.status]}</span>
+                  <span>·</span>
+                  <span>{enabledProducts} ürün</span>
+                </div>
+              </button>
+            );
+          })}
+          {!events.length ? (
+            <div className="rounded-2xl border border-dashed border-border p-5 text-center text-sm text-foreground/50">
+              Henüz etkinlik kaydı yok.
+            </div>
+          ) : null}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => void refresh()}
+          disabled={loading}
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-border px-4 py-2.5 text-xs font-black disabled:opacity-50"
+        >
+          <RefreshCcw size={14} /> listeyi yenile
+        </button>
+      </aside>
+
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          void saveEvent();
+        }}
+        className="rounded-[2rem] border border-border bg-card p-4 shadow-sm sm:p-6"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="text-xs font-black uppercase tracking-[0.2em] text-primary-deep">
+              {draft.id ? "Etkinlik ayarları" : "Yeni etkinlik"}
+            </div>
+            <h2 className="mt-1 text-2xl font-black sm:text-3xl">
+              {draft.title || "Etkinlik bilgilerini gir"}
+            </h2>
+            {draft.id ? (
+              <p className="mt-1 font-mono text-[11px] text-foreground/45">
+                {draft.id} · rev {draft.revision}
+              </p>
+            ) : null}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {draft.id && !isPrimary && draft.status !== "archived" ? (
+              <button
+                type="button"
+                onClick={() => void setPrimaryEvent()}
+                disabled={loading}
+                className="rounded-full border border-primary/35 px-3 py-2 text-xs font-black disabled:opacity-50"
+              >
+                ana etkinlik yap
+              </button>
+            ) : null}
+            {isPrimary ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-2 text-xs font-black text-primary-deep">
+                <Check size={14} /> ana giriş etkinliği
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        {message ? (
+          <div className="mt-4 rounded-2xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm font-semibold">
+            {message}
+          </div>
+        ) : null}
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <AdminField
+            label="Etkinlik adı"
+            value={draft.title}
+            onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
+            required
+          />
+          <AdminField
+            label="Kısa ad"
+            value={draft.shortTitle}
+            onChange={(event) =>
+              setDraft((current) => ({ ...current, shortTitle: event.target.value }))
+            }
+            placeholder="9 Ekim"
+          />
+          <AdminField
+            label="URL adı"
+            value={draft.slug}
+            onChange={(event) => setDraft((current) => ({ ...current, slug: event.target.value }))}
+            placeholder="9-ekim-2026"
+          />
+          <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
+            Durum
+            <select
+              value={draft.status}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  status: event.target.value as EventLifecycleStatus,
+                }))
+              }
+              className="rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+            >
+              {Object.entries(eventStatusLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <AdminField
+            label="Başlangıç"
+            type="datetime-local"
+            value={draft.startsAt}
+            onChange={(event) =>
+              setDraft((current) => ({ ...current, startsAt: event.target.value }))
+            }
+            required
+          />
+          <AdminField
+            label="Bitiş"
+            type="datetime-local"
+            value={draft.endsAt}
+            onChange={(event) =>
+              setDraft((current) => ({ ...current, endsAt: event.target.value }))
+            }
+          />
+          <AdminField
+            label="Mekân"
+            value={draft.location.name}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                location: { ...current.location, name: event.target.value },
+              }))
+            }
+          />
+          <AdminField
+            label="Şehir"
+            value={draft.location.city}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                location: { ...current.location, city: event.target.value },
+              }))
+            }
+          />
+          <AdminField
+            label="Adres"
+            value={draft.location.address}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                location: { ...current.location, address: event.target.value },
+              }))
+            }
+            className="sm:col-span-2"
+          />
+          <AdminField
+            label="Harita bağlantısı"
+            type="url"
+            value={draft.location.mapUrl}
+            onChange={(event) =>
+              setDraft((current) => ({
+                ...current,
+                location: { ...current.location, mapUrl: event.target.value },
+              }))
+            }
+            className="sm:col-span-2"
+          />
+        </div>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <label className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3 text-sm font-bold">
+            <input
+              type="checkbox"
+              checked={draft.entry.isOpen}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  entry: { ...current.entry, isOpen: event.target.checked },
+                }))
+              }
+              className="size-4 accent-[hsl(var(--primary))]"
+            />
+            Katılımcı girişi açık
+          </label>
+          <label className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3 text-sm font-bold">
+            <input
+              type="checkbox"
+              checked={draft.entry.requireRegistration}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  entry: { ...current.entry, requireRegistration: event.target.checked },
+                }))
+              }
+              className="size-4 accent-[hsl(var(--primary))]"
+            />
+            Önce profil/kayıt iste
+          </label>
+        </div>
+
+        <div className="mt-7 flex items-center gap-2">
+          <Database size={18} className="text-primary-deep" />
+          <h3 className="font-black">Etkinlik ürünleri</h3>
+        </div>
+        <p className="mt-1 text-sm text-foreground/55">
+          Ürünü aç, linklerde göster ve demo/canlı verisini etkinlik bazında seç.
+        </p>
+
+        <div className="mt-4 grid gap-3">
+          {eventProductKeys.map((product) => {
+            const config = draft.products[product];
+            const eventIdentity = {
+              id: draft.id || "yeni-etkinlik",
+              slug: draft.slug || "yeni-etkinlik",
+            };
+            const demoNamespace = createEventProductNamespace(eventIdentity, product, "demo");
+            const liveNamespace = createEventProductNamespace(eventIdentity, product, "live");
+            return (
+              <article
+                key={product}
+                className={`rounded-[1.5rem] border p-4 ${
+                  config.enabled ? "border-primary/40 bg-primary/8" : "border-border bg-background"
+                }`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h4 className="text-lg font-black">{config.label}</h4>
+                    <p className="mt-1 text-xs text-foreground/50">
+                      {productDescriptions[product]}
+                    </p>
+                  </div>
+                  <label className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-black">
+                    <input
+                      type="checkbox"
+                      checked={config.enabled}
+                      onChange={(event) =>
+                        updateProduct(product, (current) => ({
+                          ...current,
+                          enabled: event.target.checked,
+                          state: event.target.checked
+                            ? current.state === "disabled"
+                              ? "draft"
+                              : current.state
+                            : "disabled",
+                        }))
+                      }
+                      className="size-4 accent-[hsl(var(--primary))]"
+                    />
+                    {config.enabled ? "aktif" : "kapalı"}
+                  </label>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
+                    Veri modu
+                    <select
+                      value={config.dataMode}
+                      disabled={!config.enabled}
+                      onChange={(event) =>
+                        updateProduct(product, (current) => ({
+                          ...current,
+                          dataMode: event.target.value as EventDataMode,
+                        }))
+                      }
+                      className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-bold outline-none disabled:opacity-45"
+                    >
+                      <option value="demo">Demo</option>
+                      <option value="live">Canlı</option>
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
+                    Ürün durumu
+                    <select
+                      value={config.state}
+                      disabled={!config.enabled}
+                      onChange={(event) =>
+                        updateProduct(product, (current) => ({
+                          ...current,
+                          state: event.target.value as EventProductState,
+                        }))
+                      }
+                      className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-bold outline-none disabled:opacity-45"
+                    >
+                      {Object.entries(productStateLabels)
+                        .filter(([value]) => value !== "disabled")
+                        .map(([value, label]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                  <label className="flex items-center gap-3 self-end rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-bold">
+                    <input
+                      type="checkbox"
+                      checked={config.visible}
+                      disabled={!config.enabled}
+                      onChange={(event) =>
+                        updateProduct(product, (current) => ({
+                          ...current,
+                          visible: event.target.checked,
+                        }))
+                      }
+                      className="size-4 accent-[hsl(var(--primary))]"
+                    />
+                    Linklerde göster
+                  </label>
+                </div>
+
+                {config.enabled ? (
+                  <div className="mt-3 grid gap-2 text-[11px] sm:grid-cols-2">
+                    <div className="rounded-xl bg-card px-3 py-2">
+                      <span className="font-black uppercase tracking-wider text-foreground/40">
+                        Demo
+                      </span>
+                      <div className="mt-1 break-all font-mono">{demoNamespace.keyPrefix}</div>
+                    </div>
+                    <div className="rounded-xl bg-card px-3 py-2">
+                      <span className="font-black uppercase tracking-wider text-foreground/40">
+                        Canlı
+                      </span>
+                      <div className="mt-1 break-all font-mono">{liveNamespace.keyPrefix}</div>
+                    </div>
+                  </div>
+                ) : null}
+              </article>
+            );
+          })}
+        </div>
+
+        {draft.id && draft.slug ? (
+          <div className="mt-5 rounded-[1.5rem] border border-border bg-background p-4">
+            <div className="flex items-start gap-3">
+              <Eye size={18} className="mt-0.5 shrink-0 text-primary-deep" />
+              <div>
+                <h3 className="font-black">Etkinlik kontrol bağlantıları</h3>
+                <p className="mt-1 text-xs text-foreground/50">
+                  Her bağlantı bu etkinliğin seçili demo veya canlı veri alanını kullanır.
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <a
+                href={withEventSelection("/linkler", { event: draft.slug })}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-xl border border-primary/30 bg-primary/10 px-3 py-3 text-sm font-black transition hover:border-primary/60"
+              >
+                Etkinlik girişini aç
+              </a>
+              {([
+                ["matchlab", "/21-agustos/eslesme"],
+                ["wordcloud", "/21-agustos/wordcloud"],
+                ["five", "/five/live"],
+              ] as const).map(([product, path]) => {
+                const config = draft.products[product];
+                return (
+                  <a
+                    key={product}
+                    href={withEventSelection(path, { event: draft.slug })}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-disabled={!config.enabled}
+                    onClick={(event) => {
+                      if (!config.enabled) event.preventDefault();
+                    }}
+                    className={`rounded-xl border px-3 py-3 text-sm font-black transition ${
+                      config.enabled
+                        ? "border-border bg-card hover:border-primary/45"
+                        : "cursor-not-allowed border-border bg-card text-foreground/30"
+                    }`}
+                  >
+                    {config.label} · {config.enabled ? config.dataMode : "kapalı"}
+                  </a>
+                );
+              })}
+              {draft.products.wordcloud.enabled ? (
+                <a
+                  href={withEventSelection("/21-agustos/sonuclar", { event: draft.slug })}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-xl border border-border bg-card px-3 py-3 text-sm font-black transition hover:border-primary/45"
+                >
+                  WordCloud sahne ekranı
+                </a>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
+          <div className="text-xs text-foreground/45">
+            {selectedEvent
+              ? `Son güncelleme: ${new Date(selectedEvent.updatedAt).toLocaleString("tr-TR")}`
+              : "Yeni etkinlik henüz kaydedilmedi."}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {draft.id && !isPrimary && draft.status !== "archived" ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm("Etkinlik arşivlensin mi? Veriler silinmeyecek.")) {
+                    void archiveEvent();
+                  }
+                }}
+                disabled={loading}
+                className="inline-flex items-center gap-2 rounded-full border border-destructive/30 px-4 py-2.5 text-sm font-black text-destructive disabled:opacity-50"
+              >
+                <Archive size={15} /> arşivle
+              </button>
+            ) : null}
+            <button
+              type="submit"
+              disabled={loading || draft.status === "archived"}
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground disabled:opacity-50"
+            >
+              <Check size={16} /> {loading ? "kaydediliyor…" : draft.id ? "kaydet" : "oluştur"}
+            </button>
+          </div>
+        </div>
+      </form>
     </section>
   );
 }

@@ -4,9 +4,31 @@ import { getStore } from "@netlify/blobs";
 import seedMembers from "../data/networking-seed.json" with { type: "json" };
 
 const scrypt = promisify(scryptCallback);
-const profileStoreName = "notwork-member-profiles";
-const memberStoreName = "networking-members";
+const liveProfileStoreName = "notwork-member-profiles";
+const demoProfileStoreName = "notwork-member-profiles-demo";
+const requestedProfileDatabaseMode =
+  process.env.MEMBER_PROFILE_DATABASE?.trim().toLocaleLowerCase("tr-TR") === "demo" ||
+  process.env.NETLIFY_MEMBER_PROFILE_DATABASE?.trim().toLocaleLowerCase("tr-TR") === "demo"
+    ? "demo"
+    : "live";
+const directProfileStoreName =
+  process.env.MEMBER_PROFILE_STORE?.trim() || process.env.NETLIFY_MEMBER_PROFILE_STORE?.trim();
+const profileStoreName =
+  directProfileStoreName ||
+  (requestedProfileDatabaseMode === "demo" ? demoProfileStoreName : liveProfileStoreName);
+const profileDatabaseMode = directProfileStoreName
+  ? profileStoreName === liveProfileStoreName
+    ? "live"
+    : "demo"
+  : requestedProfileDatabaseMode;
+const liveMemberStoreName = "networking-members";
+const demoMemberStoreName = "networking-members-demo";
+const memberStoreName =
+  process.env.MEMBER_SOURCE_STORE?.trim() ||
+  process.env.NETLIFY_MEMBER_SOURCE_STORE?.trim() ||
+  (profileDatabaseMode === "demo" ? demoMemberStoreName : liveMemberStoreName);
 const eventNetworkStoreName = "event-network";
+const demoEventNetworkDataset = "21agustos-demo";
 const liveEventNetworkDataset = "21agustoscanli";
 
 type NetworkMemberRow = {
@@ -45,6 +67,7 @@ type StoredMemberEventCode = {
 
 type EventNetworkRegistration = {
   profile?: {
+    id?: string;
     username?: string;
     firstName?: string;
     lastName?: string;
@@ -58,6 +81,11 @@ type EventNetworkRegistration = {
     publicCode?: string;
     registeredAt?: string;
   };
+  offers?: string[];
+  intro?: string;
+  offersDetail?: string;
+  needs?: string;
+  needTag?: string;
 };
 
 type CompletedEventMatch = {
@@ -90,8 +118,10 @@ export type StoredMemberProfile = {
   badge?: {
     code: "verified-event-member";
     label: "Doğrulanmış Notwork Üyesi";
-    description: "En az bir Notwork etkinliğine katıldı.";
+    description: string;
   };
+  membershipSource?: "event-qr" | "profile-application" | "event-import";
+  autoApprovedEventId?: string;
   status: "invited" | "pending" | "active" | "suspended" | "rejected";
   credential?: StoredCredential;
   mustChangePassword: boolean;
@@ -139,6 +169,10 @@ function profileKey(username: string) {
   return `profiles/${username}.json`;
 }
 
+function profileEmailKey(email: string) {
+  return `profile-emails/${hashToken(email)}.json`;
+}
+
 function sessionKey(tokenHash: string) {
   return `sessions/${tokenHash}.json`;
 }
@@ -155,7 +189,7 @@ function activeEventNetworkDataset() {
   return (
     process.env.EVENT_NETWORK_DATASET?.trim() ||
     process.env.NETLIFY_EVENT_NETWORK_DATASET?.trim() ||
-    liveEventNetworkDataset
+    (profileDatabaseMode === "demo" ? demoEventNetworkDataset : liveEventNetworkDataset)
   );
 }
 
@@ -309,6 +343,19 @@ async function getRows<T>(store: ReturnType<typeof getStore>, prefix: string) {
 
 export function getMemberProfileStore() {
   return getStore({ name: profileStoreName, consistency: "strong" });
+}
+
+export function getMemberProfileDatabaseInfo() {
+  return {
+    storeName: profileStoreName,
+    memberSourceStoreName: memberStoreName,
+    eventNetworkStoreName,
+    eventNetworkDataset: activeEventNetworkDataset(),
+    activeDatabaseCode: profileStoreName,
+    demoDatabaseCode: demoProfileStoreName,
+    liveDatabaseCode: liveProfileStoreName,
+    mode: profileDatabaseMode,
+  };
 }
 
 export async function listMemberProfiles(store = getMemberProfileStore()) {
@@ -532,6 +579,8 @@ export async function syncVerifiedEventMembers(store = getMemberProfileStore()) 
             description: "Etkinlik katılımı veya üye referansı admin tarafından doğrulandı.",
           }
         : undefined,
+      membershipSource: existing?.membershipSource || "event-import",
+      autoApprovedEventId: existing?.autoApprovedEventId,
       status: existing?.status || "invited",
       credential: existing?.credential,
       mustChangePassword: existing?.mustChangePassword ?? true,
@@ -540,7 +589,10 @@ export async function syncVerifiedEventMembers(store = getMemberProfileStore()) 
       createdAt: existing?.createdAt || now,
       updatedAt: now,
     };
-    await store.setJSON(profileKey(username), await hydrateMemberEventCodes(profile, store));
+    await Promise.all([
+      store.setJSON(profileKey(username), await hydrateMemberEventCodes(profile, store)),
+      store.setJSON(profileEmailKey(email), { username }),
+    ]);
     existingByEmail.set(email, profile);
     syncedCount += 1;
   }
@@ -702,6 +754,7 @@ export async function registerMemberProfile(
     eventCodes: [],
     verifiedMember: false,
     publicProfileEnabled: false,
+    membershipSource: "profile-application",
     status: "pending",
     credential,
     mustChangePassword: false,
@@ -721,10 +774,139 @@ export async function registerMemberProfile(
 
   await Promise.all([
     store.setJSON(profileKey(username), profile),
+    store.setJSON(profileEmailKey(email), { username }),
     store.set(photoKey(profileId), photo.image, { metadata: { contentType: photo.contentType } }),
   ]);
 
   return { status: "pending" as const, username };
+}
+
+export async function activateEventAttendeeMember(
+  registration: EventNetworkRegistration,
+  store = getMemberProfileStore(),
+) {
+  const email = clean(
+    registration.profile?.emailNormalized || registration.profile?.email,
+    120,
+  ).toLocaleLowerCase("tr-TR");
+  const eventId = clean(
+    registration.participant?.eventId || registration.profile?.attendedEvent,
+    80,
+  );
+  const publicCode = clean(registration.participant?.publicCode, 16).toUpperCase();
+  const firstName = clean(registration.profile?.firstName, 50);
+  const lastName = clean(registration.profile?.lastName, 50);
+  const name = `${firstName} ${lastName}`.replace(/\s+/g, " ").trim();
+  const requestedUsername = clean(registration.profile?.username, 80).toLocaleLowerCase("tr-TR");
+
+  if (!email || !eventId || !publicCode || !name || !requestedUsername) {
+    throw new Error("Etkinlik üyeliği için kayıt bilgileri eksik");
+  }
+
+  const directProfile = (await store.get(profileKey(requestedUsername), {
+    type: "json",
+    consistency: "strong",
+  })) as StoredMemberProfile | null;
+  let existing = directProfile?.email === email ? directProfile : null;
+
+  if (!existing) {
+    const emailIndex = (await store.get(profileEmailKey(email), {
+      type: "json",
+      consistency: "strong",
+    })) as { username?: string } | null;
+    const indexedUsername = clean(emailIndex?.username, 80).toLocaleLowerCase("tr-TR");
+    existing = indexedUsername
+      ? ((await store.get(profileKey(indexedUsername), {
+          type: "json",
+          consistency: "strong",
+        })) as StoredMemberProfile | null)
+      : null;
+  }
+
+  let username = existing?.username || requestedUsername;
+  if (!existing && directProfile && directProfile.email !== email) {
+    username = `${requestedUsername.slice(0, 70)}-${hashToken(email).slice(0, 6)}`;
+  }
+
+  const now = new Date().toISOString();
+  const intro = clean(registration.intro, 500);
+  const needTag = clean(registration.needTag, 40);
+  const offers = Array.isArray(registration.offers)
+    ? registration.offers
+        .map((skill) => clean(skill, 40))
+        .filter(Boolean)
+        .slice(0, 5)
+    : [];
+  const eventCode: StoredMemberEventCode = {
+    eventId,
+    code: publicCode,
+    issuedAt: clean(registration.participant?.registeredAt, 40) || now,
+  };
+  const blocked = existing?.status === "suspended" || existing?.status === "rejected";
+  const nextStatus =
+    blocked && existing ? existing.status : existing?.credential ? "active" : "invited";
+  const profile: StoredMemberProfile = {
+    id: existing?.id || crypto.randomUUID(),
+    memberId: existing?.memberId || clean(registration.profile?.id, 100) || crypto.randomUUID(),
+    username,
+    email,
+    phone: existing?.phone || "",
+    name: existing?.name || name,
+    headline:
+      existing?.headline || intro.slice(0, 120) || `${needTag || "networking"} · etkinlik üyesi`,
+    bio: existing?.bio || intro.slice(0, 320),
+    photoUrl: existing?.photoUrl || "",
+    skills: existing?.skills?.length ? existing.skills : offers,
+    experiences: existing?.experiences || [],
+    links: existing?.links || { linkedin: "", instagram: "", website: "" },
+    attendedEvents: [...new Set([...(existing?.attendedEvents || []), eventId])],
+    eventCodes: [
+      ...(existing?.eventCodes || []).filter((eventCodeRow) => eventCodeRow.eventId !== eventId),
+      eventCode,
+    ].sort((first, second) => second.issuedAt.localeCompare(first.issuedAt)),
+    verifiedMember: blocked ? Boolean(existing?.verifiedMember) : true,
+    publicProfileEnabled: existing?.publicProfileEnabled ?? false,
+    badge: blocked
+      ? existing?.badge
+      : {
+          code: "verified-event-member",
+          label: "Doğrulanmış Notwork Üyesi",
+          description: "Etkinlik QR kaydı ile doğrulandı.",
+        },
+    membershipSource: "event-qr",
+    autoApprovedEventId: eventId,
+    status: nextStatus,
+    credential: existing?.credential,
+    mustChangePassword: existing?.credential ? existing.mustChangePassword : true,
+    registration: existing?.registration
+      ? { ...existing.registration, reviewedAt: now }
+      : {
+          attendedEventClaim: eventId,
+          introduction: intro,
+          lookingFor: clean(registration.needs, 500),
+          canHelpWith: clean(registration.offersDetail || offers.join(", "), 500),
+          referrer: "",
+          submittedAt: now,
+          reviewedAt: now,
+        },
+    credentialIssuedAt: existing?.credentialIssuedAt || "",
+    createdAt: existing?.createdAt || now,
+    updatedAt: now,
+  };
+
+  await Promise.all([
+    store.setJSON(profileKey(profile.username), profile),
+    store.setJSON(profileEmailKey(profile.email), { username: profile.username }),
+  ]);
+
+  return {
+    username: profile.username,
+    status: profile.status,
+    verifiedMember: profile.verifiedMember,
+    source: "event-qr" as const,
+    eventId,
+    requiresCredentials: !profile.credential,
+  };
 }
 
 export async function issueTemporaryCredentials(store = getMemberProfileStore()) {
@@ -755,6 +937,62 @@ export async function issueTemporaryCredentials(store = getMemberProfileStore())
   }
 
   return credentials.sort((first, second) => first.name.localeCompare(second.name, "tr"));
+}
+
+async function revokeMemberSessions(username: string, store = getMemberProfileStore()) {
+  const { blobs } = await store.list({ prefix: "sessions/" });
+  const sessions = await Promise.all(
+    blobs.map(async (blob) => ({
+      key: blob.key,
+      session: (await store.get(blob.key, {
+        type: "json",
+        consistency: "strong",
+      })) as StoredSession | null,
+    })),
+  );
+  await Promise.all(
+    sessions
+      .filter(({ session }) => session?.username === username)
+      .map(({ key }) => store.delete(key)),
+  );
+}
+
+export async function resetMemberCredential(
+  targetUsername: string,
+  store = getMemberProfileStore(),
+) {
+  const username = clean(targetUsername, 80).toLocaleLowerCase("tr-TR");
+  const profile = (await store.get(profileKey(username), {
+    type: "json",
+    consistency: "strong",
+  })) as StoredMemberProfile | null;
+  if (!profile) throw new Error("Üye profili bulunamadı");
+  if (profile.status === "pending") throw new Error("Önce profil başvurusunu onayla");
+  if (profile.status === "rejected" || profile.status === "suspended") {
+    throw new Error("Bu profil girişe kapalı");
+  }
+
+  const temporaryPassword = createTemporaryPassword();
+  const credential = await hashPassword(temporaryPassword);
+  const updatedAt = new Date().toISOString();
+  await Promise.all([
+    store.setJSON(profileKey(profile.username), {
+      ...profile,
+      credential,
+      status: "invited",
+      mustChangePassword: true,
+      credentialIssuedAt: updatedAt,
+      updatedAt,
+    } satisfies StoredMemberProfile),
+    revokeMemberSessions(profile.username, store),
+  ]);
+
+  return {
+    name: profile.name,
+    email: profile.email,
+    username: profile.username,
+    temporaryPassword,
+  } satisfies TemporaryMemberCredential;
 }
 
 export async function importTemporaryCredentials(
@@ -840,6 +1078,45 @@ export async function getMemberProfileBySession(token: string, store = getMember
   if (!storedProfile || !["active", "invited"].includes(storedProfile.status)) return null;
   const profile = await hydrateMemberEventCodes(storedProfile, store);
   return { profile, tokenHash };
+}
+
+export async function getMemberFiveSummary(identifier: string, store = getMemberProfileStore()) {
+  const normalizedIdentifier = clean(identifier, 120).toLocaleLowerCase("tr-TR");
+  if (!normalizedIdentifier) return null;
+
+  let profile = (await store.get(profileKey(normalizedIdentifier), {
+    type: "json",
+    consistency: "strong",
+  })) as StoredMemberProfile | null;
+
+  if (!profile && normalizedIdentifier.includes("@")) {
+    const emailIndex = (await store.get(profileEmailKey(normalizedIdentifier), {
+      type: "json",
+      consistency: "strong",
+    })) as { username?: string } | null;
+    const indexedUsername = clean(emailIndex?.username, 80).toLocaleLowerCase("tr-TR");
+    profile = indexedUsername
+      ? ((await store.get(profileKey(indexedUsername), {
+          type: "json",
+          consistency: "strong",
+        })) as StoredMemberProfile | null)
+      : null;
+  }
+
+  if (!profile || ["suspended", "rejected"].includes(profile.status)) return null;
+
+  const businessCardEnabled =
+    profile.status === "active" && !profile.mustChangePassword && profile.publicProfileEnabled;
+
+  return {
+    username: profile.username,
+    name: profile.name,
+    photoUrl: profile.photoUrl
+      ? `/api/member-profile?networkPhoto=${encodeURIComponent(profile.username)}&v=${encodeURIComponent(profile.updatedAt)}`
+      : "",
+    profileUrl: `/u/${encodeURIComponent(profile.username)}`,
+    businessCardEnabled,
+  };
 }
 
 export async function logoutMemberProfile(token: string, store = getMemberProfileStore()) {

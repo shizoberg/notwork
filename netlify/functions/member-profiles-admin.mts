@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { Config, Context } from "@netlify/functions";
 import {
+  getMemberProfileDatabaseInfo,
   getMemberProfileStore,
   importTemporaryCredentials,
   issueTemporaryCredentials,
@@ -8,6 +9,7 @@ import {
   listMemberProfiles,
   moderateMemberProfile,
   moderateMemberReference,
+  resetMemberCredential,
   syncVerifiedEventMembers,
   type ImportedMemberCredential,
 } from "./_member-profile-store.mjs";
@@ -18,6 +20,7 @@ type AdminInput = {
     | "list"
     | "syncMembers"
     | "issueCredentials"
+    | "resetCredential"
     | "importCredentials"
     | "moderateProfile"
     | "moderateReference";
@@ -50,6 +53,7 @@ export default async (request: Request, _context: Context) => {
       const syncResult = await syncVerifiedEventMembers(store);
       return Response.json(
         {
+          database: getMemberProfileDatabaseInfo(),
           profiles: await listMemberProfiles(store),
           references: await listMemberReferences(store),
           ...syncResult,
@@ -62,9 +66,23 @@ export default async (request: Request, _context: Context) => {
       const credentials = await issueTemporaryCredentials(store);
       return Response.json(
         {
+          database: getMemberProfileDatabaseInfo(),
           profiles: await listMemberProfiles(store),
           references: await listMemberReferences(store),
           credentials,
+        },
+        { headers: { "cache-control": "no-store, private" } },
+      );
+    }
+
+    if (action === "resetCredential") {
+      const credential = await resetMemberCredential(input.targetUsername || "", store);
+      return Response.json(
+        {
+          database: getMemberProfileDatabaseInfo(),
+          profiles: await listMemberProfiles(store),
+          references: await listMemberReferences(store),
+          credentials: [credential],
         },
         { headers: { "cache-control": "no-store, private" } },
       );
@@ -77,6 +95,7 @@ export default async (request: Request, _context: Context) => {
       const result = await importTemporaryCredentials(input.credentials, store);
       return Response.json(
         {
+          database: getMemberProfileDatabaseInfo(),
           profiles: await listMemberProfiles(store),
           references: await listMemberReferences(store),
           ...result,
@@ -97,6 +116,7 @@ export default async (request: Request, _context: Context) => {
       );
       return Response.json(
         {
+          database: getMemberProfileDatabaseInfo(),
           profiles: await listMemberProfiles(store),
           references: await listMemberReferences(store),
         },
@@ -111,6 +131,7 @@ export default async (request: Request, _context: Context) => {
       await moderateMemberProfile(input.targetUsername || "", input.profileStatus, store);
       return Response.json(
         {
+          database: getMemberProfileDatabaseInfo(),
           profiles: await listMemberProfiles(store),
           references: await listMemberReferences(store),
         },
@@ -120,6 +141,7 @@ export default async (request: Request, _context: Context) => {
 
     return Response.json(
       {
+        database: getMemberProfileDatabaseInfo(),
         profiles: await listMemberProfiles(store),
         references: await listMemberReferences(store),
       },

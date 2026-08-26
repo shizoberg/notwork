@@ -3,21 +3,23 @@ import { ArrowLeft, Check, ChevronRight, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { cleanWordcloudAnswer, type WordcloudQuestion } from "@/lib/event-wordcloud";
-import { getWordcloudBootstrap, submitWordcloudAnswers } from "@/lib/wordcloud-api";
-
-const sessionStorageKey = "notwork_21_agustos_wordcloud_session";
+import { getEventSelectionFromLocation, withEventSelection } from "@/lib/event-registry";
+import {
+  getWordcloudBootstrap,
+  getWordcloudSessionStorageKey,
+  submitWordcloudAnswers,
+} from "@/lib/wordcloud-api";
 
 export const Route = createFileRoute("/21-agustos/wordcloud")({
   head: () => ({
-    meta: [
-      { title: "21 Ağustos WordCloud | notwork" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
+    meta: [{ title: "ntw.wordcloud | notwork" }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: WordcloudParticipantPage,
 });
 
 function WordcloudParticipantPage() {
+  const eventSelection = getEventSelectionFromLocation();
+  const sessionStorageKey = getWordcloudSessionStorageKey(eventSelection);
   const [questions, setQuestions] = useState<WordcloudQuestion[]>([]);
   const [sessionId, setSessionId] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -108,20 +110,20 @@ function WordcloudParticipantPage() {
     <div className="min-h-screen bg-[#f4fbfb] text-foreground">
       <SiteNav variant="event" />
       <main className="mx-auto flex min-h-[calc(100vh-88px)] max-w-xl flex-col px-5 py-8">
-        <Link
-          to="/linkler"
+        <a
+          href={withEventSelection("/linkler", eventSelection)}
           className="mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-primary-deep shadow-sm"
         >
           <ArrowLeft className="h-4 w-4" />
           Linklere geri dön
-        </Link>
+        </a>
         <div className="rounded-[2rem] border border-primary/20 bg-white p-5 shadow-xl shadow-primary/10">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-deep">
             <Sparkles className="h-3.5 w-3.5" />
             21 Ağustos notwork
           </div>
           <h1 className="mt-5 font-display text-4xl font-black leading-none tracking-[-0.04em]">
-            WordCloud’a
+            ntw.wordcloud’a
             <br />
             cevabını bırak
           </h1>
@@ -214,17 +216,17 @@ function WordcloudParticipantPage() {
           {isDone && submitted ? (
             <div className="mt-4 grid gap-3">
               <a
-                href="/21-agustos/sonuclar"
+                href={withEventSelection("/21-agustos/sonuclar", eventSelection)}
                 className="block rounded-full border border-primary/30 px-5 py-3 text-center text-sm font-bold text-primary-deep"
               >
                 Canlı sonuç ekranını gör
               </a>
-              <Link
-                to="/linkler"
+              <a
+                href={withEventSelection("/linkler", eventSelection)}
                 className="block rounded-full bg-primary px-5 py-3 text-center text-sm font-bold text-primary-foreground"
               >
                 Linkler sayfasına geri dön
-              </Link>
+              </a>
             </div>
           ) : null}
         </section>

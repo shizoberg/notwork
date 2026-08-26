@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 import { getStore } from "@netlify/blobs";
+import { getEventProductRuntimeContext } from "./_event-product-context.mjs";
+import { getEventReviewStore } from "./_event-review-store.mjs";
 
 type EventNetworkProfile = {
   id: string;
@@ -95,6 +97,9 @@ type StoredActiveMatch = {
 
 export type NetworkInput = {
   action?: string;
+  event?: string;
+  eventId?: string;
+  eventSlug?: string;
   accessToken?: string;
   presence?: EventNetworkPresence;
   firstName?: string;
@@ -119,17 +124,21 @@ export type NetworkInput = {
 export type NetworkAdminInput = {
   password?: string;
   action?: "list" | "resetDemo";
+  event?: string;
+  eventId?: string;
+  eventSlug?: string;
+  mode?: "demo" | "live";
 };
 
-const eventId = "21-agustos-2026";
+const legacyEventId = "21-agustos-2026";
 const storeName = "event-network";
-const demoDatasetCode = "21agustos-demo";
-const liveDatasetCode = "21agustoscanli";
-const datasetCode =
+const legacyDemoDatasetCode = "21agustos-demo";
+const legacyLiveDatasetCode = "21agustoscanli";
+const legacyDatasetCode =
   process.env.EVENT_NETWORK_DATASET?.trim() ||
   process.env.NETLIFY_EVENT_NETWORK_DATASET?.trim() ||
-  liveDatasetCode;
-const datasetPrefix = `events/${datasetCode}/network`;
+  legacyLiveDatasetCode;
+const legacyDatasetPrefix = `events/${legacyDatasetCode}/network`;
 const codeLetters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const attendedEventValues = new Set([
   "21-agustos-2026",
@@ -147,15 +156,47 @@ export function getEventNetworkStore() {
   return getStore({ name: storeName, consistency: "strong" });
 }
 
+function getNetworkContext() {
+  return getEventProductRuntimeContext("matchlab");
+}
+
+function getNetworkPrefix() {
+  return getNetworkContext()?.keyPrefix || legacyDatasetPrefix;
+}
+
+function getNetworkEventId() {
+  return getNetworkContext()?.eventId || legacyEventId;
+}
+
+function getNetworkEventSlug() {
+  return getNetworkContext()?.eventSlug || legacyEventId;
+}
+
 export function getEventNetworkDatasetInfo() {
+  const context = getNetworkContext();
+  if (context) {
+    return {
+      storeName,
+      eventId: context.eventId,
+      eventSlug: context.eventSlug,
+      datasetCode: `${context.eventSlug}-${context.mode}`,
+      activeDatabaseCode: `${context.eventSlug}-${context.mode}`,
+      demoDatabaseCode: `${context.eventSlug}-demo`,
+      liveDatabaseCode: `${context.eventSlug}-live`,
+      keyPrefix: context.keyPrefix,
+      mode: context.mode,
+    };
+  }
   return {
     storeName,
-    datasetCode,
-    activeDatabaseCode: datasetCode,
-    demoDatabaseCode: demoDatasetCode,
-    liveDatabaseCode: liveDatasetCode,
-    keyPrefix: datasetPrefix,
-    mode: datasetCode === liveDatasetCode ? "live" : "demo",
+    eventId: legacyEventId,
+    eventSlug: legacyEventId,
+    datasetCode: legacyDatasetCode,
+    activeDatabaseCode: legacyDatasetCode,
+    demoDatabaseCode: legacyDemoDatasetCode,
+    liveDatabaseCode: legacyLiveDatasetCode,
+    keyPrefix: legacyDatasetPrefix,
+    mode: legacyDatasetCode === legacyLiveDatasetCode ? "live" : "demo",
   };
 }
 
@@ -163,7 +204,7 @@ export async function resetDemoEventNetworkDataset(store: ReturnType<typeof getE
   if (getEventNetworkDatasetInfo().mode !== "demo") {
     throw new Error("Demo reset sadece demo database üzerinde çalışır");
   }
-  const { blobs } = await store.list({ prefix: `${datasetPrefix}/` });
+  const { blobs } = await store.list({ prefix: `${getNetworkPrefix()}/` });
   await Promise.all(blobs.map((blob) => store.delete(blob.key)));
 }
 
@@ -186,35 +227,35 @@ export function hashToken(value: string) {
 }
 
 function profileKey(emailNormalized: string) {
-  return `${datasetPrefix}/profiles/${encodeURIComponent(emailNormalized)}.json`;
+  return `${getNetworkPrefix()}/profiles/${encodeURIComponent(emailNormalized)}.json`;
 }
 
 function participantKey(participantId: string) {
-  return `${datasetPrefix}/participants/${participantId}.json`;
+  return `${getNetworkPrefix()}/participants/${participantId}.json`;
 }
 
 function codeKey(publicCode: string) {
-  return `${datasetPrefix}/codes/${publicCode}.json`;
+  return `${getNetworkPrefix()}/codes/${publicCode}.json`;
 }
 
 function tokenKey(tokenHash: string) {
-  return `${datasetPrefix}/tokens/${tokenHash}.json`;
+  return `${getNetworkPrefix()}/tokens/${tokenHash}.json`;
 }
 
 function detailKey(participantId: string) {
-  return `${datasetPrefix}/details/${participantId}.json`;
+  return `${getNetworkPrefix()}/details/${participantId}.json`;
 }
 
 function presenceKey(participantId: string) {
-  return `${datasetPrefix}/presence/${participantId}.json`;
+  return `${getNetworkPrefix()}/presence/${participantId}.json`;
 }
 
 function matchCursorKey(participantId: string) {
-  return `${datasetPrefix}/match-cursors/${participantId}.json`;
+  return `${getNetworkPrefix()}/match-cursors/${participantId}.json`;
 }
 
 function activeMatchKey(participantId: string) {
-  return `${datasetPrefix}/active-matches/${participantId}.json`;
+  return `${getNetworkPrefix()}/active-matches/${participantId}.json`;
 }
 
 function normalizeOffers(value: unknown) {
@@ -283,13 +324,16 @@ async function upsertGeneralNetworkingMember(registration: EventNetworkRegistrat
     type: "json",
     consistency: "strong",
   })) as NetworkMemberRow | null;
+  const eventContext = getNetworkContext();
+  const eventLabel = eventContext?.event.shortTitle || "21 Ağustos";
+  const eventSlug = getNetworkEventSlug();
 
   const member: NetworkMemberRow = {
     id: existing?.id || registration.profile.id,
     name: displayName(registration),
     title: registration.needTag
-      ? `21 Ağustos katılımcısı · ${registration.needTag}`
-      : "21 Ağustos notwork katılımcısı",
+      ? `${eventLabel} katılımcısı · ${registration.needTag}`
+      : `${eventLabel} notwork katılımcısı`,
     skills: registration.offers.join(", "),
     email: registration.profile.email,
     instagram: existing?.instagram || "",
@@ -298,7 +342,7 @@ async function upsertGeneralNetworkingMember(registration: EventNetworkRegistrat
       `${registration.intro || ""} ${registration.offersDetail || ""} ${registration.needs}`
         .replace(/\s+/g, " ")
         .trim(),
-    contact: `${registration.profile.email} || event:21agustos || claimed-event:${registration.profile.attendedEvent || "belirtilmedi"}`,
+    contact: `${registration.profile.email} || event:${eventSlug} || claimed-event:${registration.profile.attendedEvent || "belirtilmedi"}`,
     createdAt: existing?.createdAt || registration.profile.createdAt,
     username,
     consentAt: registration.profile.updatedAt,
@@ -327,7 +371,7 @@ function isValidEmail(email: string) {
 }
 
 async function nextPublicCode(store: ReturnType<typeof getEventNetworkStore>) {
-  const { blobs } = await store.list({ prefix: `${datasetPrefix}/codes/` });
+  const { blobs } = await store.list({ prefix: `${getNetworkPrefix()}/codes/` });
   const used = new Set(
     blobs
       .map((blob) => blob.key.split("/").pop()?.replace(".json", ""))
@@ -439,10 +483,15 @@ async function saveMatchLabReview(
   }
 
   const now = new Date().toISOString();
+  const eventContext = getNetworkContext();
+  const reviewEventId = eventContext?.eventSlug || legacyEventId;
+  const reviewEventTitle = eventContext
+    ? `${eventContext.event.shortTitle} · ${eventContext.event.location.name || "notwork"}`
+    : "21 Ağustos notwork · House of Rene Lokal";
   const review = {
     id: crypto.randomUUID(),
-    eventId: "21-agustos-2026",
-    eventTitle: "21 Ağustos notwork · House of Rene Lokal",
+    eventId: reviewEventId,
+    eventTitle: reviewEventTitle,
     name: displayName(registration) || "notwork katılımcısı",
     rating,
     comment,
@@ -453,8 +502,8 @@ async function saveMatchLabReview(
     consentAt: now,
     createdAt: now,
   };
-  const reviewStore = getStore({ name: "event-reviews", consistency: "strong" });
-  await reviewStore.setJSON(`reviews/21-agustos-2026/${Date.now()}-${review.id}.json`, review);
+  const reviewStore = getEventReviewStore();
+  await reviewStore.setJSON(`reviews/${reviewEventId}/${Date.now()}-${review.id}.json`, review);
 }
 
 async function getPresenceMap(
@@ -612,7 +661,11 @@ export async function registerNetworkProfile(
   if (offersDetail.length < 140)
     throw new Error("Neler yapabilirsin yanıtı en az 140 karakter olmalı");
   if (needs.length < 140) throw new Error("Ne istiyorsun yanıtı en az 140 karakter olmalı");
-  if (!attendedEventValues.has(attendedEvent))
+  if (
+    !attendedEventValues.has(attendedEvent) &&
+    attendedEvent !== getNetworkEventSlug() &&
+    attendedEvent !== getNetworkEventId()
+  )
     throw new Error("Katıldığın Notwork etkinliğini seçmelisin");
   if (!input.eventConsent) throw new Error("Etkinlik eşleştirmesi için onay gerekli");
 
@@ -704,7 +757,7 @@ export async function registerNetworkProfile(
   };
   const participant: EventParticipant = {
     id: crypto.randomUUID(),
-    eventId,
+    eventId: getNetworkEventId(),
     networkProfileId: profile.id,
     publicCode,
     accessTokenHash,
@@ -809,7 +862,7 @@ export async function getRegistrationByToken(
     profile: {
       ...existing.profile,
       username,
-      attendedEvent: existing.profile.attendedEvent || "21-agustos-2026",
+      attendedEvent: existing.profile.attendedEvent || getNetworkEventSlug(),
     },
     intro: existing.intro || "",
     offersDetail: existing.offersDetail || "",
@@ -823,7 +876,10 @@ export async function getRegistrationByToken(
 }
 
 export async function listRegistrations(store: ReturnType<typeof getEventNetworkStore>) {
-  const rows = await getJsonRows<EventNetworkRegistration>(store, `${datasetPrefix}/participants/`);
+  const rows = await getJsonRows<EventNetworkRegistration>(
+    store,
+    `${getNetworkPrefix()}/participants/`,
+  );
   const uniqueRows = new Map<string, EventNetworkRegistration>();
   const usedCodes = new Set<string>();
   rows
@@ -1078,7 +1134,7 @@ export async function completeActiveMatchByToken(
           updatedAt: now,
         }),
       ),
-      store.setJSON(`${datasetPrefix}/completed-matches/${updatedMatch.id}.json`, {
+      store.setJSON(`${getNetworkPrefix()}/completed-matches/${updatedMatch.id}.json`, {
         ...updatedMatch,
         completedAt: now,
       }),
@@ -1127,7 +1183,7 @@ export async function seedSampleRegistrations(
         intro: `${sample.firstName} ${sample.lastName}, ${sample.offers.join(", ")} alanlarında çalışan ve farklı ekiplerle üretim yapan bir Notwork katılımcısıdır. Deneyimlerini açıkça paylaşmayı ve yeni insanlarla uzun vadeli bağ kurmayı önemsiyor.`,
         offersDetail: `${sample.offers.join(", ")} konularında uygulamalı deneyim, fikir geliştirme ve ekiplerle birlikte sonuç üretme desteği sunabilir. Bildiklerini açık biçimde paylaşır ve karşısındaki kişinin ihtiyacını dinleyerek somut katkı sağlamaya çalışır.`,
         needs: `${sample.needs}. Bu ihtiyacın neden önemli olduğunu, hangi aşamada olduğunu ve doğru kişiyle tanıştığında birlikte nasıl bir sonuç üretmek istediğini ayrıntılı biçimde anlatmak istiyor.`,
-        attendedEvent: "21-agustos-2026",
+        attendedEvent: getNetworkEventSlug(),
         action: "register",
         eventConsent: true,
         generalNetworkOptIn: true,

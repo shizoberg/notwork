@@ -11,9 +11,9 @@ import {
   completeEventNetworkMatchWithReview,
   getEventNetworkMe,
   getEventNetworkMatch,
+  getEventNetworkTokenStorageKey,
 } from "@/lib/event-network-api";
-
-const tokenStorageKey = "notwork_21_agustos_network_token";
+import { getEventSelectionFromLocation, withEventSelection } from "@/lib/event-registry";
 
 async function imageToDataUrl(file: File) {
   const bitmap = await createImageBitmap(file);
@@ -36,6 +36,8 @@ export const Route = createFileRoute("/21-agustos/eslesme")({
 });
 
 function AugustMatchPage() {
+  const eventSelection = getEventSelectionFromLocation();
+  const tokenStorageKey = getEventNetworkTokenStorageKey(eventSelection);
   const [token, setToken] = useState("");
   const [group, setGroup] = useState<EventNetworkMatchGroup | null>(null);
   const [registration, setRegistration] = useState<EventNetworkRegistration | null>(null);
@@ -73,10 +75,12 @@ function AugustMatchPage() {
   );
 
   const loadMatch = useCallback(
-    async (nextToken = token) => {
+    async (nextToken = token, silent = false) => {
       if (!nextToken) return;
-      setStatus("loading");
-      setMessage("");
+      if (!silent) {
+        setStatus("loading");
+        setMessage("");
+      }
       try {
         const result = await getEventNetworkMatch(nextToken);
         setPresence(result.presence);
@@ -103,6 +107,14 @@ function AugustMatchPage() {
       setStatus("idle");
     }
   }, [loadMatch]);
+
+  useEffect(() => {
+    if (!token || status !== "ready" || !group) return;
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") void loadMatch(token, true);
+    }, 5_000);
+    return () => window.clearInterval(interval);
+  }, [group, loadMatch, status, token]);
 
   const completeMatch = async () => {
     if (!token) return;
@@ -179,13 +191,13 @@ function AugustMatchPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(113,204,210,0.24),transparent_32%),radial-gradient(circle_at_90%_18%,rgba(255,209,102,0.13),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.05),transparent_44%)]" />
           <div className="relative mx-auto max-w-3xl">
             <div className="mb-6 flex items-center justify-center">
-              <Link
-                to="/linkler"
+              <a
+                href={withEventSelection("/linkler", eventSelection)}
                 className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-white/80 backdrop-blur transition hover:bg-white/15"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Linklere dön
-              </Link>
+              </a>
             </div>
             <div className="mb-6 text-center">
               <span className="inline-flex items-center gap-2 rounded-full border border-[#8ee4e8]/25 bg-[#8ee4e8]/10 px-4 py-2 text-[0.68rem] font-black uppercase tracking-[0.18em] text-[#8ee4e8]">
@@ -448,12 +460,12 @@ function AugustMatchPage() {
                   <p className="text-sm text-white/60">
                     Önce QR giriş ekranında kısa kaydı tamamla.
                   </p>
-                  <Link
-                    to="/linkler"
+                  <a
+                    href={withEventSelection("/linkler", eventSelection)}
                     className="mt-4 inline-flex rounded-full bg-white px-5 py-3 text-sm font-black text-[#071112]"
                   >
                     Kayıt ekranına git
-                  </Link>
+                  </a>
                 </div>
               ) : null}
             </section>

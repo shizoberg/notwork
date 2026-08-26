@@ -61,6 +61,12 @@
     <priority>0.72</priority>
   </url>
   <url>
+    <loc>https://notwork.me/five</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.82</priority>
+  </url>
+  <url>
     <loc>https://notwork.me/startup</loc>
     <lastmod>2026-08-23</lastmod>
     <changefreq>weekly</changefreq>

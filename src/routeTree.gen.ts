@@ -20,6 +20,7 @@ import { Route as MatchLabRouteImport } from './routes/match-lab'
 import { Route as LinklerRouteImport } from './routes/linkler'
 import { Route as LegacyRouteImport } from './routes/legacy'
 import { Route as KvkkRouteImport } from './routes/kvkk'
+import { Route as FiveRouteImport } from './routes/five'
 import { Route as EtkinliklerRouteImport } from './routes/etkinlikler'
 import { Route as EtkinlikDegerlendirmeRouteImport } from './routes/etkinlik-degerlendirme'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -30,6 +31,7 @@ import { Route as R14temmuznetworkingRouteImport } from './routes/14temmuznetwor
 import { Route as R14temmuzRouteImport } from './routes/14temmuz'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as FiveLiveRouteImport } from './routes/five_.live'
 import { Route as R21AgustosWordcloudRouteImport } from './routes/21-agustos.wordcloud'
 import { Route as R21AgustosSonuclarRouteImport } from './routes/21-agustos.sonuclar'
 import { Route as R21AgustosNetworkRouteImport } from './routes/21-agustos.network'
@@ -90,6 +92,11 @@ const KvkkRoute = KvkkRouteImport.update({
   path: '/kvkk',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FiveRoute = FiveRouteImport.update({
+  id: '/five',
+  path: '/five',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EtkinliklerRoute = EtkinliklerRouteImport.update({
   id: '/etkinlikler',
   path: '/etkinlikler',
@@ -140,6 +147,11 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FiveLiveRoute = FiveLiveRouteImport.update({
+  id: '/five_/live',
+  path: '/five/live',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const R21AgustosWordcloudRoute = R21AgustosWordcloudRouteImport.update({
   id: '/21-agustos/wordcloud',
   path: '/21-agustos/wordcloud',
@@ -171,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
+  '/five': typeof FiveRoute
   '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
@@ -186,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
+  '/five/live': typeof FiveLiveRoute
   '/u/$username': typeof UUsernameRoute
 }
 export interface FileRoutesByTo {
@@ -198,6 +212,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
+  '/five': typeof FiveRoute
   '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
@@ -213,6 +228,7 @@ export interface FileRoutesByTo {
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
+  '/five/live': typeof FiveLiveRoute
   '/u/$username': typeof UUsernameRoute
 }
 export interface FileRoutesById {
@@ -226,6 +242,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
+  '/five': typeof FiveRoute
   '/kvkk': typeof KvkkRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
@@ -241,6 +258,7 @@ export interface FileRoutesById {
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
+  '/five_/live': typeof FiveLiveRoute
   '/u/$username': typeof UUsernameRoute
 }
 export interface FileRouteTypes {
@@ -255,6 +273,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
+    | '/five'
     | '/kvkk'
     | '/legacy'
     | '/linkler'
@@ -270,6 +289,7 @@ export interface FileRouteTypes {
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
+    | '/five/live'
     | '/u/$username'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -282,6 +302,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
+    | '/five'
     | '/kvkk'
     | '/legacy'
     | '/linkler'
@@ -297,6 +318,7 @@ export interface FileRouteTypes {
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
+    | '/five/live'
     | '/u/$username'
   id:
     | '__root__'
@@ -309,6 +331,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
+    | '/five'
     | '/kvkk'
     | '/legacy'
     | '/linkler'
@@ -324,6 +347,7 @@ export interface FileRouteTypes {
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
+    | '/five_/live'
     | '/u/$username'
   fileRoutesById: FileRoutesById
 }
@@ -337,6 +361,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   EtkinlikDegerlendirmeRoute: typeof EtkinlikDegerlendirmeRoute
   EtkinliklerRoute: typeof EtkinliklerRoute
+  FiveRoute: typeof FiveRoute
   KvkkRoute: typeof KvkkRoute
   LegacyRoute: typeof LegacyRoute
   LinklerRoute: typeof LinklerRoute
@@ -352,6 +377,7 @@ export interface RootRouteChildren {
   R21AgustosNetworkRoute: typeof R21AgustosNetworkRoute
   R21AgustosSonuclarRoute: typeof R21AgustosSonuclarRoute
   R21AgustosWordcloudRoute: typeof R21AgustosWordcloudRoute
+  FiveLiveRoute: typeof FiveLiveRoute
   UUsernameRoute: typeof UUsernameRoute
 }
 
@@ -434,6 +460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KvkkRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/five': {
+      id: '/five'
+      path: '/five'
+      fullPath: '/five'
+      preLoaderRoute: typeof FiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/etkinlikler': {
       id: '/etkinlikler'
       path: '/etkinlikler'
@@ -504,6 +537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/five_/live': {
+      id: '/five_/live'
+      path: '/five/live'
+      fullPath: '/five/live'
+      preLoaderRoute: typeof FiveLiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/21-agustos/wordcloud': {
       id: '/21-agustos/wordcloud'
       path: '/21-agustos/wordcloud'
@@ -545,6 +585,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   EtkinlikDegerlendirmeRoute: EtkinlikDegerlendirmeRoute,
   EtkinliklerRoute: EtkinliklerRoute,
+  FiveRoute: FiveRoute,
   KvkkRoute: KvkkRoute,
   LegacyRoute: LegacyRoute,
   LinklerRoute: LinklerRoute,
@@ -560,6 +601,7 @@ const rootRouteChildren: RootRouteChildren = {
   R21AgustosNetworkRoute: R21AgustosNetworkRoute,
   R21AgustosSonuclarRoute: R21AgustosSonuclarRoute,
   R21AgustosWordcloudRoute: R21AgustosWordcloudRoute,
+  FiveLiveRoute: FiveLiveRoute,
   UUsernameRoute: UUsernameRoute,
 }
 export const routeTree = rootRouteImport
