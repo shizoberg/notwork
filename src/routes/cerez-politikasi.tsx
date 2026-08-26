@@ -92,7 +92,7 @@ function CookiePolicyPage() {
               çalışmayabilir.
             </p>
             <p className="mt-3">
-              <strong className="text-foreground">Son güncelleme:</strong> 15 Temmuz 2026.
+              <strong className="text-foreground">Son güncelleme:</strong> 27 Ağustos 2026.
             </p>
           </div>
         </section>

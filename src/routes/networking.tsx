@@ -571,7 +571,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
       return;
     }
     if (!form.consent) {
-      setError("Kayıt olmak için KVKK ve iletişim onay kutusunu işaretlemelisin.");
+      setError("Ağda görünür olmak için profil görünürlüğü açık rızasını vermelisin.");
       return;
     }
     setSubmitting(true);
@@ -944,6 +944,18 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
               <div className="sm:col-span-2 -mt-2 text-right text-[11px] text-foreground/45">
                 {form.about.length}/140
               </div>
+              <p className="sm:col-span-2 rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs leading-relaxed text-foreground/60">
+                Formu göndermeden önce{" "}
+                <a
+                  href="/kvkk"
+                  target="_blank"
+                  className="font-semibold text-primary-deep underline"
+                >
+                  KVKK Aydınlatma Metni
+                </a>
+                ’ni inceleyebilirsin. Aydınlatma metni bilgi amaçlıdır; aşağıdaki açık rıza
+                tercihinden ayrıdır.
+              </p>
               <label className="sm:col-span-2 flex gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm leading-relaxed text-foreground/70">
                 <input
                   type="checkbox"
@@ -955,24 +967,15 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                   className="mt-1 h-4 w-4 shrink-0 accent-primary"
                 />
                 <span>
-                  Bilgilerimin notwork networking ağı içinde görünmesini, benimle etkinlik/topluluk
-                  iletişimi için e-posta üzerinden iletişime geçilmesini ve{" "}
+                  Profil bilgilerimin notwork networking ağında görünmesine ve bağlantı önerilerinde
+                  kullanılmasına açık rıza veriyorum.{" "}
                   <a
-                    href="/kvkk"
+                    href="/acik-riza"
                     target="_blank"
                     className="font-semibold text-primary-deep underline"
                   >
-                    KVKK Aydınlatma Metni
-                  </a>{" "}
-                  ile{" "}
-                  <a
-                    href="/cerez-politikasi"
-                    target="_blank"
-                    className="font-semibold text-primary-deep underline"
-                  >
-                    Çerez Politikası
+                    Açık Rıza Metni
                   </a>
-                  ’nı okuduğumu/onayladığımı kabul ediyorum.
                 </span>
               </label>
               <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">

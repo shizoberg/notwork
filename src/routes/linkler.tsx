@@ -707,8 +707,19 @@ function RegistrationGate({
           <ConsentBox
             checked={loginConsent}
             onChange={setLoginConsent}
-            title="KVKK Aydınlatma Metni’ni okudum; etkinlik kaydımın ve profil bilgilerimin bu etkinlik ürünlerinde kullanılmasını onaylıyorum."
+            title="Etkinlik kaydımın ve profil cevaplarımın bu etkinliğin ntw ürünlerinde kullanılmasına açık rıza veriyorum."
           />
+          <p className="text-xs leading-5 text-foreground/45">
+            Girişten önce{" "}
+            <Link to="/kvkk" className="font-black text-primary-deep underline">
+              KVKK Aydınlatma Metni
+            </Link>{" "}
+            ve{" "}
+            <Link to="/acik-riza" className="font-black text-primary-deep underline">
+              Açık Rıza Metni
+            </Link>
+            ’ni inceleyebilirsin.
+          </p>
         </div>
         {message ? (
           <p className="mt-4 rounded-2xl bg-primary/10 px-4 py-3 text-sm font-bold text-primary-deep">
@@ -880,24 +891,28 @@ function RegistrationGate({
         <ConsentBox
           checked={form.eventConsent}
           onChange={(eventConsent) => setForm((current) => ({ ...current, eventConsent }))}
-          title="KVKK metnini okudum; ntw.wordcloud, ntw.matchlab ve kod sistemi için bilgilerimin işlenmesini onaylıyorum."
+          title="Etkinlik cevaplarımın ntw.wordcloud, ntw.match.lab, ntw.five ve kod sistemi için kullanılmasına açık rıza veriyorum."
         />
         <ConsentBox
           checked={form.generalNetworkOptIn}
           onChange={(generalNetworkOptIn) =>
             setForm((current) => ({ ...current, generalNetworkOptIn }))
           }
-          title="Profilimin notwork networking ağında görünmesini ve eşleşme için kullanılmasını onaylıyorum."
+          title="Profilimin notwork networking ağında seçtiğim bilgilerle görünmesine ve bağlantı önerilerinde kullanılmasına açık rıza veriyorum."
         />
         <ConsentBox
           checked={form.marketingOptIn}
           onChange={(marketingOptIn) => setForm((current) => ({ ...current, marketingOptIn }))}
-          title="Etkinlik ve topluluk duyurularını e-posta ile almak istiyorum."
+          title="Etkinlik ve topluluk duyurularını e-posta ile almak istiyorum. Bu izin isteğe bağlıdır."
         />
         <p className="text-xs leading-5 text-foreground/45">
           Ayrıntılar için{" "}
           <Link to="/kvkk" className="font-black text-primary-deep underline">
             KVKK Aydınlatma Metni
+          </Link>
+          ’ni ve rıza verilen işlemler için{" "}
+          <Link to="/acik-riza" className="font-black text-primary-deep underline">
+            Açık Rıza Metni
           </Link>
           ’ni inceleyebilirsin.
         </p>

@@ -700,7 +700,7 @@ export async function registerMemberProfile(
 
   if (name.length < 3) throw new Error("Ad ve soyadını yaz");
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Geçerli bir e-posta yaz");
-  if (!input.consent) throw new Error("KVKK ve topluluk onayı zorunludur");
+  if (!input.consent) throw new Error("Profil görünürlüğü açık rızası zorunludur");
   if (!allowedEventClaims.has(attendedEventClaim)) throw new Error("Etkinlik bilgisini seç");
   if (attendedEventClaim === "referral" && referrer.length < 3) {
     throw new Error("Seni referans gösteren Notwork üyesini yaz");

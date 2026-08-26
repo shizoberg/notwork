@@ -291,13 +291,13 @@ function AugustNetworkPage() {
               <ConsentBox
                 checked={form.eventConsent}
                 onChange={(eventConsent) => setForm({ ...form, eventConsent })}
-                title="Etkinlik eşleştirmesi için bilgilerimin kullanılmasını onaylıyorum."
+                title="Etkinlik eşleştirmesi için cevaplarımın kullanılmasına açık rıza veriyorum."
                 required
               />
               <ConsentBox
                 checked={form.generalNetworkOptIn}
                 onChange={(generalNetworkOptIn) => setForm({ ...form, generalNetworkOptIn })}
-                title="Profilim genel notwork ağında da görünebilir."
+                title="Profilimin genel notwork ağında da görünmesine açık rıza veriyorum."
               />
               <ConsentBox
                 checked={form.marketingOptIn}
@@ -310,7 +310,11 @@ function AugustNetworkPage() {
                 <Link to="/kvkk" className="font-bold text-primary-deep underline">
                   KVKK Aydınlatma Metni
                 </Link>{" "}
-                kapsamında bilgilendirildiğini kabul edersin.
+                kapsamında nasıl işlendiğini inceleyebilirsin. Açık rıza verilen işlemler için{" "}
+                <Link to="/acik-riza" className="font-bold text-primary-deep underline">
+                  Açık Rıza Metni
+                </Link>{" "}
+                ayrıca geçerlidir.
               </p>
             </div>
           ) : null}

@@ -335,10 +335,18 @@ function FiveHypePage() {
                     label={
                       <span>
                         Verilerimin etkinlik içi eşleşme amacıyla işlenmesini ve problemimin adımın
-                        ilk kısmıyla görünmesini onaylıyorum. <Link to="/kvkk" className="underline">KVKK</Link>
+                        ilk kısmıyla görünmesini onaylıyorum.{" "}
+                        <Link to="/acik-riza" className="underline">Açık Rıza</Link>
                       </span>
                     }
                   />
+                  <p className="text-xs leading-5 text-white/45">
+                    Veri işleme detayları için{" "}
+                    <Link to="/kvkk" className="font-bold text-white/70 underline">
+                      KVKK Aydınlatma Metni
+                    </Link>
+                    ’ni inceleyebilirsin.
+                  </p>
                 </div>
 
                 {error ? (

@@ -346,7 +346,7 @@ export async function createFiveProblem(
   if (description.length < 24) throw new Error("Problemini en az 24 karakterle anlatmalısın");
   if (tried.length < 8) throw new Error("Şimdiye kadar ne denediğini kısaca anlatmalısın");
   if (desiredOutcome.length < 8) throw new Error("Görüşmeden beklediğin sonucu kısaca yazmalısın");
-  if (!input.consent) throw new Error("KVKK ve etkinlik içi paylaşım onayı gerekli");
+  if (!input.consent) throw new Error("Etkinlik içi paylaşım açık rızası gerekli");
   if (containsBlockedLanguage(title, description, tried, desiredOutcome)) {
     throw new Error("Bu metin topluluk kurallarına uygun değil");
   }

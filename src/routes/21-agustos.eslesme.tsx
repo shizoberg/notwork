@@ -124,7 +124,7 @@ function AugustMatchPage() {
       return;
     }
     if (!reviewConsent) {
-      setMessage("Yorum, puan ve varsa fotoğraf için KVKK onayını işaretlemelisin.");
+      setMessage("Yorum, puan ve varsa fotoğraf için yayınlama açık rızasını vermelisin.");
       return;
     }
     if (isCurrentPhotoOwner && !photoDataUrl) {
@@ -415,7 +415,10 @@ function AugustMatchPage() {
                           />
                           <span>
                             Yorumumun, puanımın ve varsa fotoğrafımın notwork etkinlik alanlarında
-                            yayınlanmasını; KVKK metnini okuduğumu/onayladığımı kabul ediyorum.
+                            yayınlanmasına açık rıza veriyorum.{" "}
+                            <Link to="/acik-riza" className="font-bold text-white/80 underline">
+                              Açık Rıza Metni
+                            </Link>
                           </span>
                         </label>
                       </div>
@@ -474,7 +477,7 @@ function AugustMatchPage() {
         <section className="mx-auto max-w-3xl px-5 pb-8">
           <p className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs leading-5 text-white/45">
             Match Lab sadece üçlü gruplar oluşturur. Yeni grup almak için önce mevcut grubunu
-            tamamlaman gerekir. Kullanım KVKK Aydınlatma Metni kapsamındadır.
+            tamamlaman gerekir. Veri işleme detaylarını KVKK Aydınlatma Metni’nden inceleyebilirsin.
           </p>
         </section>
       </main>

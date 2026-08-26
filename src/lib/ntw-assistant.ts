@@ -257,7 +257,7 @@ const answers: NtwAssistantAnswer[] = [
   {
     id: "privacy",
     answer:
-      "Kayıt formlarında e-posta ve profil bilgilerinin hangi amaçlarla işlendiği KVKK metninde açıklanır. Networking ağına kayıt olurken görünürlük ve iletişim onayını ayrıca vermen gerekir.",
+      "Kayıt formlarında verilerin hangi amaçlarla işlendiği KVKK Aydınlatma Metni’nde açıklanır. Profil görünürlüğü ve etkinlik içeriği için açık rıza, e-posta duyuruları için iletişim izni ayrı ayrı seçilir.",
     cta: "KVKK metnini incele",
     href: "/kvkk",
     keywords: ["kvkk", "gizlilik", "verilerim", "kisisel veri", "onay", "izin"],

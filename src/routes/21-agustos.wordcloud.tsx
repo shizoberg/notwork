@@ -231,11 +231,11 @@ function WordcloudParticipantPage() {
           ) : null}
         </section>
         <p className="mt-4 rounded-2xl border border-primary/15 bg-white/70 px-4 py-3 text-xs leading-5 text-foreground/50">
-          Anket cevapların anonim etkinlik sonucu olarak kullanılabilir. Devam ederek
+          Anket cevapların anonim etkinlik sonucu olarak kullanılabilir. Göndermeden önce
           <Link to="/kvkk" className="mx-1 font-bold text-primary-deep underline">
             KVKK Aydınlatma Metni
           </Link>
-          kapsamında bilgilendirildiğini kabul edersin.
+          kapsamında nasıl işlendiğini inceleyebilirsin.
         </p>
       </main>
       <SiteFooter />

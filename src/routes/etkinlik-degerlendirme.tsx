@@ -93,7 +93,7 @@ function EventReviewPage() {
       return;
     }
     if (!consent) {
-      setError("Yorumunun paylaşılması ve KVKK metni için onay kutusunu işaretlemelisin.");
+      setError("Yorum ve görsel yayınlama açık rızasını vermelisin.");
       return;
     }
     setSubmitting(true);
@@ -244,6 +244,14 @@ function EventReviewPage() {
               />
             </label>
 
+            <p className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs leading-relaxed text-foreground/60">
+              Verilerinin nasıl işlendiğini{" "}
+              <Link to="/kvkk" className="font-semibold text-primary-deep underline">
+                KVKK Aydınlatma Metni
+              </Link>
+              ’nden inceleyebilirsin.
+            </p>
+
             <label className="flex gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm leading-relaxed text-foreground/70">
               <input
                 type="checkbox"
@@ -255,11 +263,10 @@ function EventReviewPage() {
               <span>
                 Paylaşılabilir yorumumun, puanımın ve yüklediğim fotoğrafın notwork geçmiş etkinlik
                 alanlarında yayınlanmasını; ekibe özel notumun sadece notwork ekibi tarafından
-                görülmesini ve{" "}
-                <Link to="/kvkk" className="font-semibold text-primary-deep underline">
-                  KVKK Aydınlatma Metni
+                görülmesini kabul ediyor ve bu yayınlama işlemlerine açık rıza veriyorum.{" "}
+                <Link to="/acik-riza" className="font-semibold text-primary-deep underline">
+                  Açık Rıza Metni
                 </Link>
-                ’ni okuduğumu/onayladığımı kabul ediyorum.
               </span>
             </label>
 

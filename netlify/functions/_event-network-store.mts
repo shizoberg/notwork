@@ -470,7 +470,7 @@ async function saveMatchLabReview(
   const comment = clean(input.comment, 700);
   const photoDataUrl = clean(input.photoDataUrl, 1_100_000);
 
-  if (!input.consent) throw new Error("Yorum ve fotoğraf için KVKK onayı gerekli");
+  if (!input.consent) throw new Error("Yorum ve fotoğraf yayınlama açık rızası gerekli");
   if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
     throw new Error("Puan 1-5 arasında olmalı");
   }

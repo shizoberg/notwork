@@ -135,7 +135,10 @@ export default async (request: Request, _context: Context) => {
           ? await deleteReview(store, reviewId)
           : await removeReviewPhoto(store, reviewId);
       if (!result) return new Response("Yorum bulunamadı", { status: 404 });
-      return Response.json({ ok: true, review: result }, { headers: { "cache-control": "no-store" } });
+      return Response.json(
+        { ok: true, review: result },
+        { headers: { "cache-control": "no-store" } },
+      );
     }
 
     const eventId = clean(input.eventId, 60);
@@ -144,7 +147,8 @@ export default async (request: Request, _context: Context) => {
     const photoDataUrl = clean(input.photoDataUrl, 1_100_000);
 
     if (!allowedEvents[eventId]) return new Response("Etkinlik seçimi gerekli", { status: 400 });
-    if (!input.consent) return new Response("KVKK onayı gerekli", { status: 400 });
+    if (!input.consent)
+      return new Response("Yorum ve görsel yayınlama açık rızası gerekli", { status: 400 });
     if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
       return new Response("Puan 1-5 arasında olmalı", { status: 400 });
     }

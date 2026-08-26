@@ -357,7 +357,10 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
           </span>
         </Link>
 
-        <nav aria-label="Etkinlik içindeki konumun" className="flex items-center gap-1 overflow-x-auto rounded-full border border-current/10 bg-current/[0.03] p-1">
+        <nav
+          aria-label="Etkinlik içindeki konumun"
+          className="flex items-center gap-1 overflow-x-auto rounded-full border border-current/10 bg-current/[0.03] p-1"
+        >
           {tabs.map((tab) => (
             <span
               key={tab.label}
@@ -462,7 +465,10 @@ export function SiteFooter() {
         <span>© {new Date().getFullYear()} notwork</span>
         <div className="flex flex-wrap gap-3">
           <Link to="/kvkk" className="hover:text-foreground hover:underline">
-            KVKK
+            KVKK Aydınlatma
+          </Link>
+          <Link to="/acik-riza" className="hover:text-foreground hover:underline">
+            Açık Rıza
           </Link>
           <Link to="/cerez-politikasi" className="hover:text-foreground hover:underline">
             Çerez Politikası

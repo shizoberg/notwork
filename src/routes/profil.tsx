@@ -662,6 +662,14 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
           </Field>
         </div>
 
+        <p className="rounded-2xl border border-primary/15 bg-primary/5 p-4 text-xs font-semibold leading-5 text-muted-foreground">
+          Kişisel verilerinin nasıl işlendiğini{" "}
+          <Link to="/kvkk" className="font-black text-foreground underline underline-offset-2">
+            KVKK Aydınlatma Metni
+          </Link>
+          ’nden inceleyebilirsin. Bu bilgilendirme, açık rıza tercihinden ayrıdır.
+        </p>
+
         <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-background p-4">
           <input
             required
@@ -671,10 +679,13 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
             className="mt-1 h-4 w-4 accent-[var(--primary)]"
           />
           <span className="text-xs font-semibold leading-5 text-muted-foreground">
-            Bilgilerimin Notwork topluluk ve networking sisteminde işlenmesini, üyelerle
-            paylaşılmasını ve topluluk iletişimleri için kullanılmasını onaylıyorum.{" "}
-            <Link to="/kvkk" className="font-black text-foreground underline underline-offset-2">
-              KVKK metnini oku
+            Profil bilgilerimin notwork networking ağı, business kart ve üye referans sistemi içinde
+            seçtiğim görünürlükte paylaşılmasına açık rıza veriyorum.{" "}
+            <Link
+              to="/acik-riza"
+              className="font-black text-foreground underline underline-offset-2"
+            >
+              Açık Rıza Metni
             </Link>
           </span>
         </label>
