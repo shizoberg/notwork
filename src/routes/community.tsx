@@ -1,6 +1,8 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { CalendarDays, Camera, MessageCircle, Play, Sparkles, Upload, Users } from "lucide-react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { listEventReviews, type EventReview } from "@/lib/event-reviews";
 import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/community")({
@@ -138,6 +140,8 @@ function Community() {
           </div>
         </section>
 
+        <PhotoReviewArchive />
+
         <section className="mx-auto grid max-w-6xl gap-3 px-5 pt-10 sm:gap-5 sm:pt-20 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-[1.5rem] border border-border bg-card p-4 shadow-[var(--shadow-card)] sm:rounded-[2rem] sm:p-8">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary-deep sm:h-14 sm:w-14 sm:rounded-2xl">
@@ -269,5 +273,89 @@ function Community() {
       </main>
       <SiteFooter />
     </div>
+  );
+}
+
+function PhotoReviewArchive() {
+  const [reviews, setReviews] = useState<EventReview[]>([]);
+
+  useEffect(() => {
+    let active = true;
+
+    listEventReviews()
+      .then((items) => {
+        if (!active) return;
+        setReviews(
+          items
+            .filter((review) => Boolean(review.photoDataUrl))
+            .sort((first, second) => second.createdAt.localeCompare(first.createdAt)),
+        );
+      })
+      .catch(() => {
+        if (active) setReviews([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (reviews.length === 0) return null;
+
+  return (
+    <section
+      id="fotografli-yorumlar"
+      className="mx-auto max-w-6xl scroll-mt-24 px-5 pt-10 sm:pt-20"
+    >
+      <div className="mb-5 flex flex-col justify-between gap-3 sm:mb-7 sm:flex-row sm:items-end">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-primary-deep sm:text-sm">
+            <MessageCircle className="h-4 w-4" />
+            gerçek katılımcı yorumları
+          </div>
+          <h2 className="mt-2 font-display text-3xl font-black tracking-[-0.04em] sm:text-5xl">
+            gecelerden kalan kareler ve sözler
+          </h2>
+        </div>
+        <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+          Geçmiş etkinliklerde katılımcıların kendi fotoğraflarıyla bıraktığı gerçek notlar.
+        </p>
+      </div>
+
+      <div className="-mx-5 overflow-x-auto px-5 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex w-max snap-x snap-mandatory gap-3 sm:gap-4">
+          {reviews.map((review) => (
+            <article
+              key={review.id}
+              className="relative aspect-[4/5] w-[68vw] max-w-[270px] shrink-0 snap-start overflow-hidden rounded-[1.5rem] border border-white/30 bg-foreground shadow-[var(--shadow-card)] sm:w-[300px] sm:max-w-[300px] sm:rounded-[2rem]"
+            >
+              <img
+                src={review.photoDataUrl}
+                alt={`${review.name || "notwork katılımcısı"} etkinlik yorumu`}
+                loading="lazy"
+                className="h-full w-full object-cover object-center"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent,rgba(7,17,18,0.92)_34%)] px-4 pb-4 pt-16 text-white sm:px-5 sm:pb-5">
+                <div className="text-sm tracking-[0.04em] text-primary sm:text-base">
+                  {"★".repeat(review.rating)}
+                  {"☆".repeat(Math.max(0, 5 - review.rating))}
+                </div>
+                <p className="mt-1.5 line-clamp-3 text-sm font-semibold leading-relaxed sm:text-base">
+                  “{review.comment}”
+                </p>
+                <div className="mt-3 flex items-end justify-between gap-3 border-t border-white/20 pt-2.5">
+                  <span className="text-[10px] font-black uppercase tracking-[0.16em] text-white/75">
+                    {review.name || "notwork katılımcısı"}
+                  </span>
+                  <span className="max-w-[45%] text-right text-[9px] font-bold leading-tight text-primary">
+                    {review.eventTitle}
+                  </span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

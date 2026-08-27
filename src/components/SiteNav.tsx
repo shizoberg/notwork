@@ -126,7 +126,6 @@ const mobilePrimaryLinks = [
 ] as const;
 
 const mobileSecondaryLinks = [
-  { href: "/#galeri", label: "Gerçek etkinlik fotoğrafları", icon: Camera },
   { to: "/merch", label: "Merch", icon: ShoppingBag },
   { to: "/sponsor", label: "Sponsor", icon: Sparkles },
   { to: "/sunum-yukle", label: "Sunum yap", icon: Presentation },
@@ -276,6 +275,44 @@ function MobileSiteMenu() {
               <ArrowUpRight size={17} className="shrink-0" />
             </a>
           </DropdownMenuItem>
+
+          <div className="mt-2 grid gap-1.5">
+            <DropdownMenuItem asChild className="rounded-[20px] p-0 focus:bg-transparent">
+              <a
+                href="/#galeri"
+                className="group flex min-h-14 items-center gap-3 rounded-[20px] bg-[linear-gradient(110deg,var(--primary),color-mix(in_oklab,var(--primary)_58%,white))] px-4 py-3 text-primary-foreground outline-none shadow-[0_12px_30px_rgba(113,204,210,0.22)] transition hover:-translate-y-0.5"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary-foreground/18">
+                  <Camera size={19} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-black">Gerçek etkinlik fotoğrafları</span>
+                  <span className="mt-0.5 block text-[10px] leading-snug text-primary-foreground/72">
+                    Sahne, sohbet ve network anları.
+                  </span>
+                </span>
+                <ArrowUpRight size={17} className="shrink-0" />
+              </a>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem asChild className="rounded-[20px] p-0 focus:bg-transparent">
+              <a
+                href="/community#fotografli-yorumlar"
+                className="group flex min-h-14 items-center gap-3 rounded-[20px] bg-[linear-gradient(110deg,#071112,#24494b)] px-4 py-3 text-white outline-none shadow-[0_12px_30px_rgba(7,17,18,0.22)] transition hover:-translate-y-0.5"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-white/12">
+                  <MessageCircle size={19} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-black">Fotoğraflı etkinlik yorumları</span>
+                  <span className="mt-0.5 block text-[10px] leading-snug text-white/65">
+                    Katılımcıların gerçek kareleri ve sözleri.
+                  </span>
+                </span>
+                <ArrowUpRight size={17} className="shrink-0" />
+              </a>
+            </DropdownMenuItem>
+          </div>
 
           <div className="mt-2 grid grid-cols-2 gap-1.5">
             {mobileSecondaryLinks.map((item) => {
