@@ -33,9 +33,31 @@ type EventCatalogItem = {
   accent: string;
 };
 
-const filters = ["Tümü", "2026", "Rene Lokal", "Mahal Bomonti", "İstinyeArt", "MatchLab"];
+const filters = [
+  "Tümü",
+  "2026",
+  "Rene Lokal",
+  "Köşk Alsancak",
+  "Mahal Bomonti",
+  "İstinyeArt",
+  "MatchLab",
+  "WordCloud",
+];
 
 const catalogEvents: EventCatalogItem[] = [
+  {
+    id: "9-ekim-2026",
+    date: "9 Ekim 2026",
+    year: "2026",
+    venue: "Rene Lokal",
+    title: "notwork Classic",
+    summary:
+      "Dört ilham veren başarısızlık hikâyesi, canlı WordCloud ve iki networking arasında ntw.match.lab deneyimi.",
+    participants: "Sınırlı kontenjan",
+    tags: ["Rene Lokal", "WordCloud", "MatchLab", "4 konuşmacı"],
+    href: "/9-ekim",
+    accent: "from-[#071416] via-[#6b304e] to-[#d8c6ff]",
+  },
   {
     id: "17-eylul-2026",
     date: "17 Eylül 2026",
