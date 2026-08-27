@@ -31,6 +31,8 @@ type EventCatalogItem = {
   tags: string[];
   href?: string;
   accent: string;
+  image: string;
+  imagePosition?: string;
 };
 
 const filters = [
@@ -57,6 +59,8 @@ const catalogEvents: EventCatalogItem[] = [
     tags: ["Rene Lokal", "WordCloud", "MatchLab", "4 konuşmacı"],
     href: "/9-ekim",
     accent: "from-[#071416] via-[#6b304e] to-[#d8c6ff]",
+    image: "/community/24.jpg",
+    imagePosition: "center 34%",
   },
   {
     id: "17-eylul-2026",
@@ -70,6 +74,8 @@ const catalogEvents: EventCatalogItem[] = [
     tags: ["Köşk Alsancak", "MatchLab", "ntw.five", "DJ"],
     href: "/17-eylul",
     accent: "from-[#071416] via-[#245f66] to-[#d8c6ff]",
+    image: "/community/21.jpg",
+    imagePosition: "center 44%",
   },
   {
     id: "21-agustos-2026",
@@ -83,6 +89,8 @@ const catalogEvents: EventCatalogItem[] = [
     tags: ["Rene Lokal", "MatchLab", "WordCloud", "Networking"],
     href: "/21agustos",
     accent: "from-[#0f2f35] via-[#2f9aa5] to-[#8fcbd0]",
+    image: "/community/25.jpg",
+    imagePosition: "center 46%",
   },
   {
     id: "14-temmuz-2026",
@@ -96,6 +104,8 @@ const catalogEvents: EventCatalogItem[] = [
     tags: ["Mahal Bomonti", "Konuşmacılar", "Networking ağı"],
     href: "/14temmuz",
     accent: "from-[#142643] via-[#111827] to-[#0f172a]",
+    image: "/community/26.jpg",
+    imagePosition: "center 42%",
   },
   {
     id: "22-mayis",
@@ -108,6 +118,8 @@ const catalogEvents: EventCatalogItem[] = [
     participants: "50+ katılımcı",
     tags: ["İstinyeArt", "Kariyer", "Üretim"],
     accent: "from-[#173f68] via-[#265f73] to-[#8fcbd0]",
+    image: "/community/14.jpg",
+    imagePosition: "center 38%",
   },
   {
     id: "10-nisan",
@@ -120,6 +132,8 @@ const catalogEvents: EventCatalogItem[] = [
     participants: "45+ katılımcı",
     tags: ["İstinyeArt", "İletişim", "İş birliği"],
     accent: "from-[#5f2a4f] via-[#8b2c5c] to-[#e3a3bf]",
+    image: "/community/27.jpg",
+    imagePosition: "center 48%",
   },
   {
     id: "8-mart",
@@ -132,6 +146,8 @@ const catalogEvents: EventCatalogItem[] = [
     participants: "55+ katılımcı",
     tags: ["İstinyeArt", "Deneyim", "Topluluk"],
     accent: "from-[#7f1d1d] via-[#b23b3b] to-[#f3a46b]",
+    image: "/community/13.jpg",
+    imagePosition: "center 46%",
   },
   {
     id: "10-subat",
@@ -144,6 +160,8 @@ const catalogEvents: EventCatalogItem[] = [
     participants: "45+ katılımcı",
     tags: ["İstinyeArt", "Yeni başlangıç", "Dersler"],
     accent: "from-[#1e3a8a] via-[#2563eb] to-[#93c5fd]",
+    image: "/community/23.jpg",
+    imagePosition: "center 40%",
   },
   {
     id: "16-ocak",
@@ -156,6 +174,8 @@ const catalogEvents: EventCatalogItem[] = [
     participants: "40+ katılımcı",
     tags: ["İstinyeArt", "Plan", "Dönüşüm"],
     accent: "from-[#134e4a] via-[#0f766e] to-[#99f6e4]",
+    image: "/community/20.jpg",
+    imagePosition: "center 42%",
   },
   {
     id: "8-aralik",
@@ -168,6 +188,8 @@ const catalogEvents: EventCatalogItem[] = [
     participants: "35+ katılımcı",
     tags: ["İstinyeArt", "Başlangıç", "Tanışma"],
     accent: "from-[#3f2d1f] via-[#8a5a32] to-[#f2c078]",
+    image: "/community/8.jpg",
+    imagePosition: "center 40%",
   },
 ];
 
@@ -277,12 +299,20 @@ function CatalogSection({
 function EventCard({ event }: { event: EventCatalogItem }) {
   const card = (
     <article className="group h-full overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:rounded-3xl">
-      <div className={`relative min-h-32 bg-gradient-to-br sm:min-h-48 ${event.accent} text-white`}>
-        <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full border-[24px] border-white/16" />
-        <div className="absolute -bottom-16 left-8 h-44 w-44 rounded-full border-[28px] border-white/12" />
+      <div
+        className={`relative min-h-32 overflow-hidden bg-gradient-to-br sm:min-h-48 ${event.accent} text-white`}
+      >
+        <img
+          src={event.image}
+          alt={`${event.title} etkinliğinden bir kare`}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+          style={{ objectPosition: event.imagePosition ?? "center" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/48 via-black/18 to-black/78" />
         <div className="relative flex min-h-32 flex-col justify-between p-4 sm:min-h-48 sm:p-6">
           <div className="flex items-start justify-between gap-3">
-            <span className="rounded-full bg-white/14 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] sm:px-3 sm:text-xs sm:tracking-[0.18em]">
+            <span className="rounded-full border border-white/15 bg-black/30 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] backdrop-blur-md sm:px-3 sm:text-xs sm:tracking-[0.18em]">
               {event.date}
             </span>
             <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-ink sm:px-3 sm:text-xs">
@@ -290,10 +320,10 @@ function EventCard({ event }: { event: EventCatalogItem }) {
             </span>
           </div>
           <div>
-            <div className="text-[9px] font-black uppercase tracking-[0.18em] text-white/70 sm:text-xs sm:tracking-[0.22em]">
+            <div className="text-[9px] font-black uppercase tracking-[0.18em] text-white/85 drop-shadow-sm sm:text-xs sm:tracking-[0.22em]">
               {event.venue}
             </div>
-            <div className="mt-1 font-display text-2xl font-black leading-none tracking-[-0.05em] sm:mt-2 sm:text-4xl">
+            <div className="mt-1 font-display text-2xl font-black leading-none tracking-[-0.05em] drop-shadow-[0_3px_16px_rgba(0,0,0,0.55)] sm:mt-2 sm:text-4xl">
               notwork
               <br />
               gecesi
