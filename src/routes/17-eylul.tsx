@@ -7,7 +7,7 @@ import { createSeo } from "@/lib/seo";
 const eventConfig: EventProductConfig = {
   eventLabel: "yeni etkinlik",
   imageTitle: "chill & chat",
-  imageSubtitle: "17 eylül · 20.00 · köşk alsancak",
+  imageSubtitle: "17 eylül · 20.00 · alsancak köşk",
   titleLines: ["chill", "& chat"],
   description:
     "ntw.match.lab ile sana uygun bağlantıları bul, ntw.five ile gerçek problemlere beş dakikalık çözümler üret; geceyi DJ ve özgür sohbetle tamamla.",
@@ -21,6 +21,16 @@ const eventConfig: EventProductConfig = {
   experienceLabel: "Networking + DJ & live müzik",
   experienceDetail: "Eşleşme, çözüm ve özgür sohbet",
   gallery: [
+    {
+      src: "/events/17-eylul/alsancak-kosk.mp4",
+      poster: "/events/17-eylul/alsancak-kosk-poster.jpg",
+      alt: "17 Eylül notwork Chill & Chat etkinlik mekânı Alsancak Köşk",
+      label: "mekân",
+      mediaType: "video",
+      title: "alsancak köşk",
+      subtitle: "17 eylül · 20.00 · chill & chat",
+      position: "center",
+    },
     {
       src: "/community/17.jpg",
       alt: "notwork etkinliğinde sohbet eden katılımcılar",

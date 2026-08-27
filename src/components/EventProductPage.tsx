@@ -20,6 +20,14 @@ export type EventGalleryImage = {
   alt: string;
   label: string;
   position?: string;
+  mediaType?: "image" | "video";
+  poster?: string;
+  title?: string;
+  subtitle?: string;
+  autoPlay?: boolean;
+  muted?: boolean;
+  loop?: boolean;
+  controls?: boolean;
 };
 
 export type EventTicketOption = {
@@ -174,23 +182,44 @@ function EventGallery({
     <div className="min-w-0">
       <div className="relative overflow-hidden rounded-[1.55rem] border border-white/80 bg-[#0a1618] shadow-[0_22px_64px_rgba(15,45,50,0.16)] sm:rounded-[2.5rem] sm:shadow-[0_30px_90px_rgba(15,45,50,0.18)]">
         <div className="aspect-[5/6] max-h-[760px] w-full sm:aspect-[5/6] lg:aspect-[4/5]">
-          <img
-            key={image.src}
-            src={image.src}
-            alt={image.alt}
-            className="h-full w-full object-cover animate-in fade-in duration-300"
-            style={{ objectPosition: image.position }}
-          />
+          {image.mediaType === "video" ? (
+            <video
+              key={image.src}
+              src={image.src}
+              poster={image.poster}
+              aria-label={image.alt}
+              autoPlay={image.autoPlay ?? true}
+              muted={image.muted ?? true}
+              loop={image.loop ?? true}
+              controls={image.controls}
+              playsInline
+              preload="metadata"
+              className="h-full w-full object-cover animate-in fade-in duration-300"
+              style={{ objectPosition: image.position }}
+            />
+          ) : (
+            <img
+              key={image.src}
+              src={image.src}
+              alt={image.alt}
+              className="h-full w-full object-cover animate-in fade-in duration-300"
+              style={{ objectPosition: image.position }}
+            />
+          )}
         </div>
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#071416]/75 via-transparent to-black/5" />
         <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full border border-white/25 bg-black/25 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white backdrop-blur-md sm:left-7 sm:top-7 sm:px-3 sm:py-1.5 sm:text-xs sm:tracking-[0.2em]">
           notwork / {image.label}
         </div>
-        <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3 sm:bottom-7 sm:left-7 sm:right-7 sm:gap-4">
+        <div
+          className={`absolute left-3 right-3 flex items-end justify-between gap-3 sm:left-7 sm:right-7 sm:gap-4 ${
+            image.controls ? "bottom-14 sm:bottom-16" : "bottom-3 sm:bottom-7"
+          }`}
+        >
           <div className="text-white">
-            <div className="font-brand text-3xl sm:text-6xl">{imageTitle}</div>
+            <div className="font-brand text-3xl sm:text-6xl">{image.title || imageTitle}</div>
             <div className="mt-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/70 sm:mt-1 sm:text-xs sm:tracking-[0.22em]">
-              {imageSubtitle}
+              {image.subtitle || imageSubtitle}
             </div>
           </div>
           <div className="flex gap-2">
@@ -204,21 +233,21 @@ function EventGallery({
         </div>
       </div>
 
-      <div className="mt-2 grid grid-cols-4 gap-1.5 sm:mt-3 sm:gap-3">
+      <div className="mt-2 flex snap-x gap-1.5 overflow-x-auto pb-1 sm:mt-3 sm:gap-3">
         {gallery.map((item, index) => (
           <button
             key={item.src}
             type="button"
             onClick={() => onSelect(index)}
             aria-label={`${index + 1}. etkinlik görselini aç`}
-            className={`relative aspect-[5/4] overflow-hidden rounded-xl border-2 transition sm:aspect-[4/5] sm:rounded-3xl ${
+            className={`relative aspect-[5/4] w-[22%] min-w-[4.25rem] flex-none snap-start overflow-hidden rounded-xl border-2 transition sm:aspect-[4/5] sm:w-24 sm:rounded-3xl ${
               activeImage === index
                 ? "border-primary shadow-[0_10px_30px_rgba(77,175,184,0.24)]"
                 : "border-transparent opacity-65 hover:opacity-100"
             }`}
           >
             <img
-              src={item.src}
+              src={item.poster || item.src}
               alt=""
               className="h-full w-full object-cover"
               style={{ objectPosition: item.position }}
