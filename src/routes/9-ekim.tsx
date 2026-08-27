@@ -54,6 +54,7 @@ const eventConfig: EventProductConfig = {
       mediaType: "video",
       title: "rene lokal",
       subtitle: "9 ekim · 19.30 · notwork classic",
+      muted: true,
       position: "center",
     },
     {
@@ -65,7 +66,7 @@ const eventConfig: EventProductConfig = {
       title: "rene lokal",
       subtitle: "başarısızlık hikâyelerinden gerçek bir an",
       autoPlay: false,
-      muted: false,
+      muted: true,
       loop: false,
       controls: true,
       position: "center",
