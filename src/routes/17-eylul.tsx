@@ -1,16 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Clock3, Music2, UsersRound } from "lucide-react";
 
-import {
-  EventProductPage,
-  type EventProductConfig,
-} from "@/components/EventProductPage";
+import { EventProductPage, type EventProductConfig } from "@/components/EventProductPage";
 import { createSeo } from "@/lib/seo";
 
 const eventConfig: EventProductConfig = {
   eventLabel: "yeni etkinlik",
   imageTitle: "chill & chat",
-  imageSubtitle: "17 eylül · alsancak",
+  imageSubtitle: "17 eylül · 20.00 · köşk alsancak",
   titleLines: ["chill", "& chat"],
   description:
     "ntw.match.lab ile sana uygun bağlantıları bul, ntw.five ile gerçek problemlere beş dakikalık çözümler üret; geceyi DJ ve özgür sohbetle tamamla.",
@@ -20,6 +17,8 @@ const eventConfig: EventProductConfig = {
   timeDetail: "Kapı açılışı",
   venue: "Köşk Alsancak",
   city: "İzmir",
+  experienceLabel: "Networking + DJ & live müzik",
+  experienceDetail: "Eşleşme, çözüm ve özgür sohbet",
   gallery: [
     {
       src: "/community/17.jpg",

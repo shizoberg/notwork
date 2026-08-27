@@ -1,16 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Cloud, Mic2, MessageCircleQuestion, Sparkles, UsersRound } from "lucide-react";
 
-import {
-  EventProductPage,
-  type EventProductConfig,
-} from "@/components/EventProductPage";
+import { EventProductPage, type EventProductConfig } from "@/components/EventProductPage";
 import { createSeo } from "@/lib/seo";
 
 const eventConfig: EventProductConfig = {
   eventLabel: "classic edition",
   imageTitle: "notwork classic",
-  imageSubtitle: "9 ekim · rene lokal",
+  imageSubtitle: "9 ekim · 19.30 · rene lokal",
   titleLines: ["notwork", "classic"],
   description:
     "Dört ilham veren başarısızlık hikâyesi, canlı ntw.wordcloud ve iki networking arasında ntw.match.lab ile tasarlanmış klasik notwork deneyimi.",
@@ -20,6 +17,8 @@ const eventConfig: EventProductConfig = {
   timeDetail: "Etkinlik başlangıcı",
   venue: "Rene Lokal",
   city: "Bornova · İzmir",
+  experienceLabel: "Networking + ilham veren hikâyeler",
+  experienceDetail: "Sahne, WordCloud ve doğru eşleşmeler",
   gallery: [
     {
       src: "/community/8.jpg",

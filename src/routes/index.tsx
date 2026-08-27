@@ -58,8 +58,6 @@ const gallery = [
   gallery5,
 ];
 
-const whatsappCommunityUrl = "https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE";
-
 const faq = [
   {
     q: "notwork tam olarak ne?",
@@ -287,20 +285,6 @@ function Hero() {
           >
             9 Ekim · notwork Classic
           </Link>
-          <Link
-            to="/notwork-nedir"
-            className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-border bg-card px-3 py-2.5 text-center text-xs font-semibold text-foreground transition hover:border-primary hover:text-primary-deep sm:px-6 sm:py-3 sm:text-sm"
-          >
-            notwork nedir?
-          </Link>
-          <a
-            href={whatsappCommunityUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-3 py-2.5 text-center text-xs font-black text-primary-foreground transition hover:opacity-90 sm:px-6 sm:py-3 sm:text-sm"
-          >
-            WhatsApp duyuru kanalı
-          </a>
         </div>
       </div>
     </section>
@@ -334,6 +318,14 @@ function Benefits() {
               </p>
             </div>
           ))}
+        </div>
+        <div className="mt-4 flex justify-center sm:mt-5">
+          <Link
+            to="/notwork-nedir"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-primary/35 bg-background px-5 py-2.5 text-xs font-black text-primary-deep transition hover:border-primary hover:bg-primary/10 sm:min-h-12 sm:px-7 sm:text-sm"
+          >
+            notwork nedir?
+          </Link>
         </div>
       </div>
     </section>

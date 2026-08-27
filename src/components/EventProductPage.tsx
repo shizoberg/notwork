@@ -4,7 +4,6 @@ import {
   ArrowRight,
   CalendarDays,
   Check,
-  Clock3,
   MapPin,
   Sparkles,
   Ticket,
@@ -52,6 +51,8 @@ export type EventProductConfig = {
   timeDetail: string;
   venue: string;
   city: string;
+  experienceLabel: string;
+  experienceDetail: string;
   capacityLabel?: string;
   gallery: EventGalleryImage[];
   tickets: EventTicketOption[];
@@ -264,10 +265,18 @@ function PurchasePanel({
           {config.description}
         </p>
 
-        <div className="mt-4 grid grid-cols-3 gap-1.5 text-xs sm:mt-6 sm:grid-cols-2 sm:gap-2 sm:text-sm">
-          <EventMeta icon={CalendarDays} label={config.date} detail={config.day} />
-          <EventMeta icon={Clock3} label={config.time} detail={config.timeDetail} />
-          <div className="sm:col-span-2">
+        <div className="mt-4 grid grid-cols-2 gap-1.5 text-xs sm:mt-6 sm:gap-2 sm:text-sm">
+          <EventMeta
+            icon={CalendarDays}
+            label={`${config.date} · ${config.time}`}
+            detail={`${config.day} · ${config.timeDetail}`}
+          />
+          <EventMeta
+            icon={Sparkles}
+            label={config.experienceLabel}
+            detail={config.experienceDetail}
+          />
+          <div className="col-span-2">
             <EventMeta icon={MapPin} label={config.venue} detail={config.city} />
           </div>
         </div>
