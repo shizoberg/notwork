@@ -62,7 +62,7 @@ const eventConfig: EventProductConfig = {
       alt: "notwork Classic sahnesinde başarısızlık hikâyesini anlatan konuşmacı",
       label: "sahne",
       mediaType: "video",
-      title: "notwork classic",
+      title: "rene lokal",
       subtitle: "başarısızlık hikâyelerinden gerçek bir an",
       autoPlay: false,
       muted: false,
