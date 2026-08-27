@@ -1,3 +1,5 @@
+import { serializeStructuredData, type StructuredData } from "./structured-data";
+
 const siteUrl = "https://notwork.me";
 const defaultImage = `${siteUrl}/notwork-social.png`;
 const defaultKeywords = [
@@ -18,6 +20,7 @@ type SeoOptions = {
   canonicalPath?: string;
   robots?: string;
   type?: "website" | "article";
+  structuredData?: StructuredData;
 };
 
 export function createSeo({
@@ -30,6 +33,7 @@ export function createSeo({
   canonicalPath,
   robots = "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
   type = "website",
+  structuredData,
 }: SeoOptions) {
   const canonical = `${siteUrl}${canonicalPath ?? path}`;
   const keywordContent = [...new Set([...defaultKeywords, ...keywords])].join(", ");
@@ -57,6 +61,14 @@ export function createSeo({
       { name: "twitter:image:alt", content: imageAlt },
     ],
     links: [{ rel: "canonical", href: canonical }],
+    scripts: structuredData
+      ? [
+          {
+            type: "application/ld+json",
+            children: serializeStructuredData(structuredData),
+          },
+        ]
+      : undefined,
   };
 }
 

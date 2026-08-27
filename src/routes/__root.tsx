@@ -16,6 +16,7 @@ import { CookieConsent } from "../components/CookieConsent";
 import { MetaPixelTracker } from "../components/MetaPixelTracker";
 import { WhatsAppChannelCta } from "../components/WhatsAppChannelCta";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { notworkSiteStructuredData, serializeStructuredData } from "../lib/structured-data";
 
 function NotFoundComponent() {
   return (
@@ -115,6 +116,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: serializeStructuredData(notworkSiteStructuredData),
+      },
     ],
   }),
   shellComponent: RootShell,

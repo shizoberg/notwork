@@ -1,4 +1,13 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin
 
 Sitemap: https://notwork.me/sitemap.xml

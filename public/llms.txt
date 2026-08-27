@@ -1,0 +1,30 @@
+# notwork
+
+> notwork, İzmir'de başarısızlık hikâyelerini, gerçek deneyimleri ve doğru bağlantıları bir araya getiren bir network club'dır.
+
+## Temel sayfalar
+
+- [notwork ana sayfa](https://notwork.me/): Network club yaklaşımı, community deneyimi ve güncel etkinlikler.
+- [notwork nedir?](https://notwork.me/notwork-nedir): Felsefe, etkinlik akışı ve networking modeli.
+- [Etkinlikler](https://notwork.me/etkinlikler): Güncel ve geçmiş notwork etkinlikleri.
+- [Community](https://notwork.me/community): Etkinlik fotoğrafları, topluluk sistemi ve bağlantılar.
+- [Networking ağı](https://notwork.me/networking): notwork üyeleri ve profesyonel bağlantı ağı.
+- [Sponsor](https://notwork.me/sponsor): Marka iş birlikleri ve sponsorluk modelleri.
+- [Startup](https://notwork.me/startup): Girişimlerin kendilerini ve ihtiyaçlarını paylaşabildiği program.
+
+## Güncel etkinlikler
+
+- [17 Eylül notwork Chill & Chat](https://notwork.me/17-eylul): Köşk Alsancak'ta MatchLab, ntw.five, DJ ve networking.
+- [9 Ekim notwork Classic](https://notwork.me/9-ekim): Rene Lokal'de başarısızlık hikâyeleri, WordCloud, MatchLab ve networking.
+
+## Resmi kanallar
+
+- [Instagram](https://www.instagram.com/notwork.ntw/)
+- [YouTube](https://www.youtube.com/@notwork-izmir)
+- İletişim: berk@carewithki.com
+
+## İçerik ilkeleri
+
+- Ana dil Türkçedir.
+- Etkinlik tarihleri, fiyatlar ve konumlar ilgili etkinliğin kendi sayfasında güncel tutulur.
+- Admin, kullanıcı profili ve etkinlik içi araç ekranları genel bilgi kaynağı değildir.

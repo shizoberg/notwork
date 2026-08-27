@@ -3,6 +3,7 @@ import { Clock3, Music2, UsersRound } from "lucide-react";
 
 import { EventProductPage, type EventProductConfig } from "@/components/EventProductPage";
 import { createSeo } from "@/lib/seo";
+import { createEventStructuredData } from "@/lib/structured-data";
 
 const eventConfig: EventProductConfig = {
   eventLabel: "yeni etkinlik",
@@ -136,6 +137,29 @@ export const Route = createFileRoute("/17-eylul")({
         "İzmir network club",
       ],
       type: "article",
+      structuredData: createEventStructuredData({
+        name: "notwork Chill & Chat",
+        description:
+          "ntw.match.lab, ntw.five, DJ ve gerçek networking deneyimini bir araya getiren notwork Chill & Chat etkinliği.",
+        path: "/17-eylul",
+        startDate: "2026-09-17T20:00:00+03:00",
+        endDate: "2026-09-17T23:59:00+03:00",
+        venueName: "Köşk Alsancak",
+        addressLocality: "Konak",
+        images: ["/notwork-social.png", "/community/17.jpg", "/community/23.jpg"],
+        ticketUrl: eventConfig.ticketUrl,
+        lowPrice: 450,
+        highPrice: 800,
+        videos: [
+          {
+            name: "Alsancak Köşk etkinlik mekânı",
+            description: "17 Eylül notwork Chill & Chat etkinlik mekânının kısa videosu.",
+            contentUrl: "/events/17-eylul/alsancak-kosk.mp4",
+            thumbnailUrl: "/events/17-eylul/alsancak-kosk-poster.jpg",
+            uploadDate: "2026-08-27",
+          },
+        ],
+      }),
     }),
   component: () => <EventProductPage config={eventConfig} />,
 });

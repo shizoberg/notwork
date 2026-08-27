@@ -3,6 +3,7 @@ import { Cloud, Mic2, MessageCircleQuestion, Sparkles, UsersRound } from "lucide
 
 import { EventProductPage, type EventProductConfig } from "@/components/EventProductPage";
 import { createSeo } from "@/lib/seo";
+import { createEventStructuredData } from "@/lib/structured-data";
 
 const eventConfig: EventProductConfig = {
   eventLabel: "classic edition",
@@ -202,6 +203,36 @@ export const Route = createFileRoute("/9-ekim")({
         "başarısızlık hikayeleri",
       ],
       type: "article",
+      structuredData: createEventStructuredData({
+        name: "notwork Classic",
+        description:
+          "Dört başarısızlık hikâyesi, canlı ntw.wordcloud, ntw.match.lab ve networking deneyimini bir araya getiren notwork Classic etkinliği.",
+        path: "/9-ekim",
+        startDate: "2026-10-09T19:30:00+03:00",
+        endDate: "2026-10-09T23:00:00+03:00",
+        venueName: "Rene Lokal",
+        addressLocality: "Bornova",
+        images: ["/notwork-social.png", "/community/8.jpg", "/community/21.jpg"],
+        ticketUrl: eventConfig.ticketUrl,
+        lowPrice: 600,
+        highPrice: 1100,
+        videos: [
+          {
+            name: "Rene Lokal etkinlik mekânı",
+            description: "9 Ekim notwork Classic etkinlik mekânı Rene Lokal'in kısa videosu.",
+            contentUrl: "/events/9-ekim/rene-lokal-1.mp4",
+            thumbnailUrl: "/events/9-ekim/rene-lokal-1-poster.jpg",
+            uploadDate: "2026-08-27",
+          },
+          {
+            name: "notwork Classic etkinlik deneyimi",
+            description: "notwork Classic sahnesinden ve community deneyiminden gerçek bir an.",
+            contentUrl: "/events/9-ekim/classic-son-video.mp4",
+            thumbnailUrl: "/events/9-ekim/classic-son-video-poster.jpg",
+            uploadDate: "2026-08-28",
+          },
+        ],
+      }),
     }),
   component: () => <EventProductPage config={eventConfig} />,
 });
