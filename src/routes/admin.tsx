@@ -100,6 +100,8 @@ type AnalyticsDailySummary = {
   ticketClicksByEvent: {
     july14: number;
     august21: number;
+    september17?: number;
+    october9?: number;
   };
   pageTimeTotal: number;
   pageTimeCount: number;
@@ -1281,16 +1283,34 @@ function AdminPage() {
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <Metric
               icon={Ticket}
-              label="14 Temmuz bilet tıklaması"
-              value={report.ticketClicksByEvent.july14}
+              label="17 Eylül etkinlik tıklaması"
+              value={report.ticketClicksByEvent.september17}
+              highlight
             />
             <Metric
               icon={Ticket}
-              label="21 Ağustos bilet tıklaması"
-              value={report.ticketClicksByEvent.august21}
+              label="9 Ekim etkinlik tıklaması"
+              value={report.ticketClicksByEvent.october9}
               highlight
             />
           </div>
+          <details className="mt-3 rounded-2xl border border-border bg-background px-4 py-3">
+            <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.16em] text-foreground/55">
+              Geçmiş etkinlik verileri
+            </summary>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <Metric
+                icon={Ticket}
+                label="14 Temmuz bilet tıklaması"
+                value={report.ticketClicksByEvent.july14}
+              />
+              <Metric
+                icon={Ticket}
+                label="21 Ağustos bilet tıklaması"
+                value={report.ticketClicksByEvent.august21}
+              />
+            </div>
+          </details>
         </section>
 
         <section
@@ -3820,8 +3840,10 @@ function buildReport(
     (totals, summary) => ({
       july14: totals.july14 + summary.ticketClicksByEvent.july14,
       august21: totals.august21 + summary.ticketClicksByEvent.august21,
+      september17: totals.september17 + (summary.ticketClicksByEvent.september17 || 0),
+      october9: totals.october9 + (summary.ticketClicksByEvent.october9 || 0),
     }),
-    { july14: 0, august21: 0 },
+    { july14: 0, august21: 0, september17: 0, october9: 0 },
   );
   const pageTimeTotal = summaries.reduce((total, summary) => total + summary.pageTimeTotal, 0);
   const pageTimeCount = summaries.reduce((total, summary) => total + summary.pageTimeCount, 0);

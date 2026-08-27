@@ -26,7 +26,14 @@ export default async (request: Request, _context: Context) => {
     );
     const summaries = storedSummaries.flatMap(({ summary }) => (summary ? [summary] : []));
     const missingDays = storedSummaries
-      .filter(({ date, summary }) => rawDays.has(date) && (!summary || !summary.pageMetrics))
+      .filter(
+        ({ date, summary }) =>
+          rawDays.has(date) &&
+          (!summary ||
+            !summary.pageMetrics ||
+            typeof summary.ticketClicksByEvent?.september17 !== "number" ||
+            typeof summary.ticketClicksByEvent?.october9 !== "number"),
+      )
       .map(({ date }) => date);
 
     if (rawDays.has(today)) summaries.push(await summarizeDay(today));
@@ -46,7 +53,7 @@ export default async (request: Request, _context: Context) => {
 
     return Response.json(
       {
-        schemaVersion: 2,
+        schemaVersion: 3,
         events: recent.events,
         summaries,
         days: safeDays,
@@ -58,7 +65,7 @@ export default async (request: Request, _context: Context) => {
       {
         headers: {
           "cache-control": "no-store, private",
-          "x-analytics-schema": "2",
+          "x-analytics-schema": "3",
         },
       },
     );

@@ -275,12 +275,16 @@ function Hero() {
         <div className="mx-auto mt-5 grid w-full max-w-xl grid-cols-2 gap-2 sm:gap-3">
           <Link
             to="/17-eylul"
+            data-analytics="ticket_click"
+            data-analytics-label="17 Eylül ana sayfa etkinlik CTA"
             className="inline-flex min-h-14 w-full items-center justify-center rounded-2xl bg-foreground px-3 py-2.5 text-center text-[11px] font-black leading-tight text-background transition hover:-translate-y-0.5 hover:bg-primary-deep sm:px-5 sm:text-sm"
           >
             17 Eylül · notwork Chill &amp; Chat
           </Link>
           <Link
             to="/9-ekim"
+            data-analytics="ticket_click"
+            data-analytics-label="9 Ekim ana sayfa etkinlik CTA"
             className="inline-flex min-h-14 w-full items-center justify-center rounded-2xl bg-primary px-3 py-2.5 text-center text-[11px] font-black leading-tight text-primary-foreground transition hover:-translate-y-0.5 hover:brightness-95 sm:px-5 sm:text-sm"
           >
             9 Ekim · notwork Classic

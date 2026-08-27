@@ -33,6 +33,8 @@ export type DailyAnalyticsSummary = {
   ticketClicksByEvent: {
     july14: number;
     august21: number;
+    september17: number;
+    october9: number;
   };
   pageTimeTotal: number;
   pageTimeCount: number;
@@ -73,6 +75,24 @@ function isAugust21Ticket(event: StoredAnalyticsEvent) {
   return (
     event.label.includes("21 Ağustos") ||
     event.target.includes("notwork-basarisizlik-hikayeleri-networking-club-29731")
+  );
+}
+
+function isSeptember17Ticket(event: StoredAnalyticsEvent) {
+  return (
+    event.label.includes("17 Eylül") ||
+    event.path.includes("17-eylul") ||
+    event.target.includes("/17-eylul") ||
+    event.target.includes("notwork-chill-amp-chat-networking-event-30394")
+  );
+}
+
+function isOctober9Ticket(event: StoredAnalyticsEvent) {
+  return (
+    event.label.includes("9 Ekim") ||
+    event.path.includes("9-ekim") ||
+    event.target.includes("/9-ekim") ||
+    event.target.includes("notwork-basarisizlik-hikayeleri-network-event-30395")
   );
 }
 
@@ -137,6 +157,8 @@ export function summarizeEvents(
   const sessionIds = new Set<string>();
   let july14 = 0;
   let august21 = 0;
+  let september17 = 0;
+  let october9 = 0;
   let pageTimeTotal = 0;
   let pageTimeCount = 0;
 
@@ -186,6 +208,8 @@ export function summarizeEvents(
     if (event.type === "ticket_click") {
       if (isJuly14Ticket(event)) july14 += 1;
       if (isAugust21Ticket(event)) august21 += 1;
+      if (isSeptember17Ticket(event)) september17 += 1;
+      if (isOctober9Ticket(event)) october9 += 1;
     }
   }
 
@@ -197,7 +221,7 @@ export function summarizeEvents(
     skipped,
     counts,
     sessionIds: [...sessionIds],
-    ticketClicksByEvent: { july14, august21 },
+    ticketClicksByEvent: { july14, august21, september17, october9 },
     pageTimeTotal,
     pageTimeCount,
     topPages,
