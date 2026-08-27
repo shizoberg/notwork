@@ -59,8 +59,8 @@ const catalogEvents: EventCatalogItem[] = [
     tags: ["Rene Lokal", "WordCloud", "MatchLab", "4 konuşmacı"],
     href: "/9-ekim",
     accent: "from-[#071416] via-[#6b304e] to-[#d8c6ff]",
-    image: "/community/24.jpg",
-    imagePosition: "center 34%",
+    image: "/community/8.jpg",
+    imagePosition: "center 38%",
   },
   {
     id: "17-eylul-2026",
@@ -74,8 +74,8 @@ const catalogEvents: EventCatalogItem[] = [
     tags: ["Köşk Alsancak", "MatchLab", "ntw.five", "DJ"],
     href: "/17-eylul",
     accent: "from-[#071416] via-[#245f66] to-[#d8c6ff]",
-    image: "/community/21.jpg",
-    imagePosition: "center 44%",
+    image: "/community/17.jpg",
+    imagePosition: "center 42%",
   },
   {
     id: "21-agustos-2026",
