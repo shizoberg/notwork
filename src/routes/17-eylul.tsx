@@ -16,6 +16,7 @@ const eventConfig: EventProductConfig = {
   time: "20.00",
   timeDetail: "Kapı açılışı",
   venue: "Köşk Alsancak",
+  venueUrl: "https://share.google/gNcA5ZyamrCE1HvXR",
   city: "İzmir",
   experienceLabel: "Networking + DJ & live müzik",
   experienceDetail: "Eşleşme, çözüm ve özgür sohbet",

@@ -4,6 +4,8 @@ import {
   ArrowRight,
   CalendarDays,
   Check,
+  ExternalLink,
+  Gift,
   MapPin,
   Sparkles,
   Ticket,
@@ -50,12 +52,14 @@ export type EventProductConfig = {
   time: string;
   timeDetail: string;
   venue: string;
+  venueUrl?: string;
   city: string;
   experienceLabel: string;
   experienceDetail: string;
   capacityLabel?: string;
   gallery: EventGalleryImage[];
   tickets: EventTicketOption[];
+  ticketGift?: string;
   ticketUrl?: string;
   flowEyebrow: string;
   flowTitleLines: string[];
@@ -277,7 +281,12 @@ function PurchasePanel({
             detail={config.experienceDetail}
           />
           <div className="col-span-2">
-            <EventMeta icon={MapPin} label={config.venue} detail={config.city} />
+            <EventMeta
+              icon={MapPin}
+              label={config.venue}
+              detail={config.city}
+              href={config.venueUrl}
+            />
           </div>
         </div>
 
@@ -333,6 +342,22 @@ function PurchasePanel({
               );
             })}
           </div>
+
+          {config.ticketGift ? (
+            <div className="mt-3 flex items-center gap-3 rounded-2xl border border-[#f2c55b]/45 bg-[#fff3c9] p-3 text-[#523a06]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f2c55b]/35">
+                <Gift size={18} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[10px] font-black uppercase tracking-[0.17em]">
+                  bilet hediyesi
+                </span>
+                <span className="mt-0.5 block text-xs font-bold leading-snug sm:text-sm">
+                  {config.ticketGift}
+                </span>
+              </span>
+            </div>
+          ) : null}
         </div>
 
         <div className="mt-4 flex items-end justify-between border-t border-border pt-4 sm:mt-5 sm:pt-5">
@@ -404,22 +429,44 @@ function EventMeta({
   icon: Icon,
   label,
   detail,
+  href,
 }: {
   icon: LucideIcon;
   label: string;
   detail: string;
+  href?: string;
 }) {
-  return (
-    <div className="flex min-h-16 flex-col items-start gap-1.5 rounded-xl border border-border bg-background/70 p-2 sm:min-h-20 sm:flex-row sm:items-center sm:gap-3 sm:rounded-2xl sm:p-3.5">
+  const content = (
+    <>
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary-deep sm:h-10 sm:w-10 sm:rounded-xl">
         <Icon size={16} />
       </span>
-      <span className="min-w-0">
+      <span className="min-w-0 flex-1">
         <span className="block text-[10px] font-black leading-tight sm:text-base">{label}</span>
         <span className="mt-0.5 hidden text-xs text-muted-foreground sm:block">{detail}</span>
       </span>
-    </div>
+      {href ? <ExternalLink className="ml-auto shrink-0" size={16} aria-hidden="true" /> : null}
+    </>
   );
+
+  const className =
+    "flex min-h-16 flex-col items-start gap-1.5 rounded-xl border border-border bg-background/70 p-2 sm:min-h-20 sm:flex-row sm:items-center sm:gap-3 sm:rounded-2xl sm:p-3.5";
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className={`${className} transition hover:border-primary hover:bg-primary/5`}
+        aria-label={`${label} konumunu Google Maps'te aç`}
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return <div className={className}>{content}</div>;
 }
 
 function EventFlow({ config }: { config: EventProductConfig }) {

@@ -16,6 +16,7 @@ import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as NotworkNedirRouteImport } from './routes/notwork-nedir'
 import { Route as NetworkingRouteImport } from './routes/networking'
 import { Route as NetworkStartupRouteImport } from './routes/network-startup'
+import { Route as MerchRouteImport } from './routes/merch'
 import { Route as MatchLabRouteImport } from './routes/match-lab'
 import { Route as LinklerRouteImport } from './routes/linkler'
 import { Route as LegacyRouteImport } from './routes/legacy'
@@ -73,6 +74,11 @@ const NetworkingRoute = NetworkingRouteImport.update({
 const NetworkStartupRoute = NetworkStartupRouteImport.update({
   id: '/network-startup',
   path: '/network-startup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MerchRoute = MerchRouteImport.update({
+  id: '/merch',
+  path: '/merch',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MatchLabRoute = MatchLabRouteImport.update({
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
   '/match-lab': typeof MatchLabRoute
+  '/merch': typeof MerchRoute
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/notwork-nedir': typeof NotworkNedirRoute
@@ -241,6 +248,7 @@ export interface FileRoutesByTo {
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
   '/match-lab': typeof MatchLabRoute
+  '/merch': typeof MerchRoute
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/notwork-nedir': typeof NotworkNedirRoute
@@ -274,6 +282,7 @@ export interface FileRoutesById {
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
   '/match-lab': typeof MatchLabRoute
+  '/merch': typeof MerchRoute
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/notwork-nedir': typeof NotworkNedirRoute
@@ -308,6 +317,7 @@ export interface FileRouteTypes {
     | '/legacy'
     | '/linkler'
     | '/match-lab'
+    | '/merch'
     | '/network-startup'
     | '/networking'
     | '/notwork-nedir'
@@ -340,6 +350,7 @@ export interface FileRouteTypes {
     | '/legacy'
     | '/linkler'
     | '/match-lab'
+    | '/merch'
     | '/network-startup'
     | '/networking'
     | '/notwork-nedir'
@@ -372,6 +383,7 @@ export interface FileRouteTypes {
     | '/legacy'
     | '/linkler'
     | '/match-lab'
+    | '/merch'
     | '/network-startup'
     | '/networking'
     | '/notwork-nedir'
@@ -405,6 +417,7 @@ export interface RootRouteChildren {
   LegacyRoute: typeof LegacyRoute
   LinklerRoute: typeof LinklerRoute
   MatchLabRoute: typeof MatchLabRoute
+  MerchRoute: typeof MerchRoute
   NetworkStartupRoute: typeof NetworkStartupRoute
   NetworkingRoute: typeof NetworkingRoute
   NotworkNedirRoute: typeof NotworkNedirRoute
@@ -469,6 +482,13 @@ declare module '@tanstack/react-router' {
       path: '/network-startup'
       fullPath: '/network-startup'
       preLoaderRoute: typeof NetworkStartupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/merch': {
+      id: '/merch'
+      path: '/merch'
+      fullPath: '/merch'
+      preLoaderRoute: typeof MerchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/match-lab': {
@@ -653,6 +673,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegacyRoute: LegacyRoute,
   LinklerRoute: LinklerRoute,
   MatchLabRoute: MatchLabRoute,
+  MerchRoute: MerchRoute,
   NetworkStartupRoute: NetworkStartupRoute,
   NetworkingRoute: NetworkingRoute,
   NotworkNedirRoute: NotworkNedirRoute,
