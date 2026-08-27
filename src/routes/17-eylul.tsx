@@ -22,16 +22,6 @@ const eventConfig: EventProductConfig = {
   experienceDetail: "Eşleşme, çözüm ve özgür sohbet",
   gallery: [
     {
-      src: "/events/17-eylul/alsancak-kosk.mp4",
-      poster: "/events/17-eylul/alsancak-kosk-poster.jpg",
-      alt: "17 Eylül notwork Chill & Chat etkinlik mekânı Alsancak Köşk",
-      label: "mekân",
-      mediaType: "video",
-      title: "alsancak köşk",
-      subtitle: "17 eylül · 20.00 · chill & chat",
-      position: "center",
-    },
-    {
       src: "/community/17.jpg",
       alt: "notwork etkinliğinde sohbet eden katılımcılar",
       label: "chill",
@@ -54,6 +44,16 @@ const eventConfig: EventProductConfig = {
       alt: "notwork sahnesinde interaktif anlatım",
       label: "talk",
       position: "center 42%",
+    },
+    {
+      src: "/events/17-eylul/alsancak-kosk.mp4",
+      poster: "/events/17-eylul/alsancak-kosk-poster.jpg",
+      alt: "17 Eylül notwork Chill & Chat etkinlik mekânı Alsancak Köşk",
+      label: "mekân",
+      mediaType: "video",
+      title: "alsancak köşk",
+      subtitle: "17 eylül · 20.00 · chill & chat",
+      position: "center",
     },
   ],
   tickets: [

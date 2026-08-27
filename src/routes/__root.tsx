@@ -105,8 +105,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Başarısızlık hikâyelerini dinle, çıkarılan dersleri keşfet ve İzmir’de doğru insanlarla bağlantı kur.",
       },
-      { property: "og:image", content: "https://notwork.me/notwork-social.jpg" },
+      { property: "og:image", content: "https://notwork.me/notwork-social.png" },
+      { property: "og:image:width", content: "1080" },
+      { property: "og:image:height", content: "1350" },
+      { property: "og:image:alt", content: "notwork network club" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://notwork.me/notwork-social.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

@@ -1,5 +1,5 @@
 const siteUrl = "https://notwork.me";
-const defaultImage = `${siteUrl}/notwork-social.jpg`;
+const defaultImage = `${siteUrl}/notwork-social.png`;
 const defaultKeywords = [
   "notwork",
   "notwork İzmir",
@@ -48,7 +48,7 @@ export function createSeo({
       { property: "og:url", content: canonical },
       { property: "og:image", content: image },
       { property: "og:image:width", content: "1080" },
-      { property: "og:image:height", content: "1080" },
+      { property: "og:image:height", content: "1350" },
       { property: "og:image:alt", content: imageAlt },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: title },
