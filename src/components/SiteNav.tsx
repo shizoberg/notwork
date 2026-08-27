@@ -10,7 +10,6 @@ import {
   Instagram,
   Menu,
   MessageCircle,
-  MessageSquareQuote,
   Presentation,
   Rocket,
   ShoppingBag,
@@ -127,7 +126,6 @@ const mobilePrimaryLinks = [
 ] as const;
 
 const mobileSecondaryLinks = [
-  { href: "/#katilimci-yorumlari", label: "Etkinlik yorumları", icon: MessageSquareQuote },
   { href: "/#galeri", label: "Gerçek etkinlik fotoğrafları", icon: Camera },
   { to: "/merch", label: "Merch", icon: ShoppingBag },
   { to: "/sponsor", label: "Sponsor", icon: Sparkles },

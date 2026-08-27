@@ -388,7 +388,6 @@ function Nedir() {
   const slides = [
     {
       name: "notwork Classic",
-      eyebrow: "hikâye + networking",
       href: "/9-ekim" as const,
       items: [
         {
@@ -414,29 +413,28 @@ function Nedir() {
       ],
     },
     {
-      name: "Chill & Chat",
-      eyebrow: "eşleşme + çözüm + müzik",
+      name: "notwork Chat",
       href: "/17-eylul" as const,
       items: [
         {
           n: "01",
-          t: "ntw.match.lab",
-          d: "Niyetine ve ihtiyacına göre doğru insanlarla eşleşirsin.",
+          t: "Problemini hızlıca çöz",
+          d: "ntw.five ile problemini anlayıp çözüm üretebilecek gerçek bağlantılar edin.",
         },
         {
           n: "02",
-          t: "ntw.five",
-          d: "Gerçek problemleri beş dakikalık görüşmelerle ileri taşırsın.",
+          t: "İşine yarayan bağlantılar",
+          d: "Etkinlikten sonra da iletişimde kalacağın güçlü bir network oluştur.",
         },
         {
           n: "03",
-          t: "Chill & Chat",
-          d: "Sıkıcı kartvizit trafiği yerine rahat ve özgür sohbet.",
+          t: "Doğru insanlarla tanış",
+          d: "ntw.match.lab ile ihtiyacına, niyetine ve katkına uygun insanları bul.",
         },
         {
           n: "04",
-          t: "DJ & live müzik",
-          d: "Yeni bağlantıları müzik ve gece enerjisiyle tamamlarsın.",
+          t: "DJ, canlı müzik, keyifli ortam",
+          d: "Sıkıcı kartvizit trafiği yerine community enerjisiyle rahatça tanış.",
         },
       ],
     },
@@ -448,7 +446,7 @@ function Nedir() {
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3 sm:mb-8">
         <div>
           <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
-            Bir notwork eventinde · {activeEvent.eyebrow}
+            Bir notwork eventinde
           </div>
           <h2 className="mt-2 font-display font-bold text-3xl sm:text-5xl text-foreground max-w-2xl">
             {activeEvent.name}’te seni ne bekliyor?
