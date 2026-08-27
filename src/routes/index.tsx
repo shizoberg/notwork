@@ -255,7 +255,7 @@ function Hero() {
       <div className="mx-auto max-w-5xl px-4 pb-8 pt-5 text-center sm:px-5 sm:pb-10 sm:pt-10">
         <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-foreground/60">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary blink" />
-          <span>Etkinlik duyurusu yakında sizlerle olacak</span>
+          <span>Etkinlikler: 17 Eylül · Chill &amp; Chat, 9 Ekim · notwork Classic</span>
         </div>
 
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
@@ -274,10 +274,22 @@ function Hero() {
           Başarısızlık hikayelerinden çıkarılmış doğru dersleri dinleyeceğin network club.
         </p>
 
-        <div className="mt-5 flex flex-row flex-wrap items-center justify-center gap-2 sm:gap-3">
+        <div className="mx-auto mt-5 grid w-full max-w-xl grid-cols-2 gap-2 sm:gap-3">
+          <Link
+            to="/17-eylul"
+            className="inline-flex min-h-14 w-full items-center justify-center rounded-2xl bg-foreground px-3 py-2.5 text-center text-[11px] font-black leading-tight text-background transition hover:-translate-y-0.5 hover:bg-primary-deep sm:px-5 sm:text-sm"
+          >
+            17 Eylül · notwork Chill &amp; Chat
+          </Link>
+          <Link
+            to="/9-ekim"
+            className="inline-flex min-h-14 w-full items-center justify-center rounded-2xl bg-primary px-3 py-2.5 text-center text-[11px] font-black leading-tight text-primary-foreground transition hover:-translate-y-0.5 hover:brightness-95 sm:px-5 sm:text-sm"
+          >
+            9 Ekim · notwork Classic
+          </Link>
           <Link
             to="/notwork-nedir"
-            className="inline-flex w-fit items-center justify-center rounded-full border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary-deep sm:px-6 sm:py-3"
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-border bg-card px-3 py-2.5 text-center text-xs font-semibold text-foreground transition hover:border-primary hover:text-primary-deep sm:px-6 sm:py-3 sm:text-sm"
           >
             notwork nedir?
           </Link>
@@ -285,7 +297,7 @@ function Hero() {
             href={whatsappCommunityUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex w-fit items-center justify-center rounded-full bg-primary px-4 py-2.5 text-sm font-black text-primary-foreground transition hover:opacity-90 sm:px-6 sm:py-3"
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-primary px-3 py-2.5 text-center text-xs font-black text-primary-foreground transition hover:opacity-90 sm:px-6 sm:py-3 sm:text-sm"
           >
             WhatsApp duyuru kanalı
           </a>

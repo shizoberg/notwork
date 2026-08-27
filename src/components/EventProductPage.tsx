@@ -313,9 +313,13 @@ function PurchasePanel({
                         </span>
                       ) : null}
                     </span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground">{option.note}</span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {option.note}
+                    </span>
                   </span>
-                  <span className="mt-auto shrink-0 text-lg font-black sm:mt-0">{option.price} TL</span>
+                  <span className="mt-auto shrink-0 text-lg font-black sm:mt-0">
+                    {option.price} TL
+                  </span>
                 </button>
               );
             })}
@@ -339,6 +343,10 @@ function PurchasePanel({
         </div>
 
         <TicketButton config={config} selectedOption={selectedOption} />
+
+        <p className="mt-2 text-center text-[10px] font-semibold leading-relaxed text-muted-foreground sm:text-xs">
+          Bilet al dediğinde güvenli ödeme için BiletimGO sayfasına yönlendirileceksin.
+        </p>
 
         <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground sm:mt-4 sm:gap-2 sm:text-xs">
           <Check size={14} className="text-primary-deep" /> Kontenjan sınırlıdır
@@ -554,7 +562,7 @@ function FloatingTicketCta({
   selectedOption: EventTicketOption;
 }) {
   const className =
-    "fixed bottom-3 right-20 z-40 inline-flex min-h-12 items-center gap-2 rounded-full border border-white/20 bg-[#071416]/94 px-4 py-3 text-sm font-black text-white shadow-[0_18px_55px_rgba(5,22,24,0.3)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-primary-deep sm:bottom-6 sm:right-24 sm:min-h-14 sm:px-5";
+    "fixed bottom-3 left-1/2 z-40 inline-flex min-h-12 -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#071416]/94 px-4 py-3 text-sm font-black text-white shadow-[0_18px_55px_rgba(5,22,24,0.3)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-primary-deep sm:bottom-6 sm:min-h-14 sm:px-5";
   const content = (
     <>
       <Ticket size={17} /> Bilet al

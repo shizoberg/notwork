@@ -171,6 +171,8 @@ const catalogEvents: EventCatalogItem[] = [
   },
 ];
 
+const upcomingEventIds = new Set(["17-eylul-2026", "9-ekim-2026"]);
+
 function EventsCatalogPage() {
   const [activeFilter, setActiveFilter] = useState("Tümü");
 
@@ -186,20 +188,23 @@ function EventsCatalogPage() {
     );
   }, [activeFilter]);
 
+  const upcomingEvents = visibleEvents.filter((event) => upcomingEventIds.has(event.id));
+  const pastEvents = visibleEvents.filter((event) => !upcomingEventIds.has(event.id));
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteNav />
-      <main className="mx-auto max-w-6xl px-5 py-12 sm:py-20">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-5 sm:py-20">
         <section className="text-center">
-          <div className="text-sm font-black uppercase tracking-[0.22em] text-primary-deep">
+          <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep sm:text-sm">
             event kataloğu
           </div>
-          <h1 className="mx-auto mt-4 max-w-4xl font-display text-5xl font-black leading-[0.9] tracking-[-0.06em] sm:text-7xl">
+          <h1 className="mx-auto mt-3 max-w-4xl font-display text-4xl font-black leading-[0.9] tracking-[-0.06em] sm:mt-4 sm:text-7xl">
             notwork etkinlikleri
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Geçmiş notwork gecelerini ürün kataloğu gibi gez; lokasyon, akış ve yaklaşık katılımcı
-            sayılarına göre filtrele.
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-lg">
+            Yaklaşan etkinlikleri keşfet; geçmiş notwork gecelerini lokasyon, deneyim ve katılımcı
+            sayılarına göre gez.
           </p>
         </section>
 
@@ -222,37 +227,73 @@ function EventsCatalogPage() {
           </div>
         </div>
 
-        <section className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleEvents.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
-        </section>
+        <CatalogSection
+          title="Yaklaşan etkinlikler"
+          eyebrow="sıradaki notwork geceleri"
+          events={upcomingEvents}
+        />
+        <CatalogSection title="Geçmiş etkinlikler" eyebrow="community arşivi" events={pastEvents} />
       </main>
       <SiteFooter />
     </div>
   );
 }
 
+function CatalogSection({
+  title,
+  eyebrow,
+  events,
+}: {
+  title: string;
+  eyebrow: string;
+  events: EventCatalogItem[];
+}) {
+  if (!events.length) return null;
+
+  return (
+    <section className="mt-8 sm:mt-12">
+      <div className="mb-3 flex items-end justify-between gap-4 sm:mb-5">
+        <div>
+          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-deep sm:text-xs">
+            {eyebrow}
+          </div>
+          <h2 className="mt-1 font-display text-2xl font-black tracking-[-0.04em] sm:text-4xl">
+            {title}
+          </h2>
+        </div>
+        <span className="rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-black text-muted-foreground sm:px-3 sm:text-xs">
+          {events.length} etkinlik
+        </span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+        {events.map((event) => (
+          <EventCard key={event.id} event={event} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function EventCard({ event }: { event: EventCatalogItem }) {
   const card = (
-    <article className="group h-full overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)]">
-      <div className={`relative min-h-48 bg-gradient-to-br ${event.accent} text-white`}>
+    <article className="group h-full overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:rounded-3xl">
+      <div className={`relative min-h-32 bg-gradient-to-br sm:min-h-48 ${event.accent} text-white`}>
         <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full border-[24px] border-white/16" />
         <div className="absolute -bottom-16 left-8 h-44 w-44 rounded-full border-[28px] border-white/12" />
-        <div className="relative flex min-h-48 flex-col justify-between p-6">
+        <div className="relative flex min-h-32 flex-col justify-between p-4 sm:min-h-48 sm:p-6">
           <div className="flex items-start justify-between gap-3">
-            <span className="rounded-full bg-white/14 px-3 py-1 text-xs font-black uppercase tracking-[0.18em]">
+            <span className="rounded-full bg-white/14 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] sm:px-3 sm:text-xs sm:tracking-[0.18em]">
               {event.date}
             </span>
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-ink">
+            <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-ink sm:px-3 sm:text-xs">
               {event.participants}
             </span>
           </div>
           <div>
-            <div className="text-xs font-black uppercase tracking-[0.22em] text-white/70">
+            <div className="text-[9px] font-black uppercase tracking-[0.18em] text-white/70 sm:text-xs sm:tracking-[0.22em]">
               {event.venue}
             </div>
-            <div className="mt-2 font-display text-4xl font-black leading-none tracking-[-0.05em]">
+            <div className="mt-1 font-display text-2xl font-black leading-none tracking-[-0.05em] sm:mt-2 sm:text-4xl">
               notwork
               <br />
               gecesi
@@ -260,20 +301,24 @@ function EventCard({ event }: { event: EventCatalogItem }) {
           </div>
         </div>
       </div>
-      <div className="flex min-h-72 flex-col p-6">
-        <h2 className="font-display text-2xl font-black tracking-[-0.04em]">{event.title}</h2>
-        <p className="mt-4 flex-1 leading-relaxed text-muted-foreground">{event.summary}</p>
-        <div className="mt-5 flex flex-wrap gap-2">
+      <div className="flex flex-col p-4 sm:min-h-72 sm:p-6">
+        <h2 className="font-display text-xl font-black tracking-[-0.04em] sm:text-2xl">
+          {event.title}
+        </h2>
+        <p className="mt-2 line-clamp-3 flex-1 text-sm leading-relaxed text-muted-foreground sm:mt-4 sm:text-base">
+          {event.summary}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-1.5 sm:mt-5 sm:gap-2">
           {event.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-bold"
+              className="rounded-full border border-border bg-background px-2 py-1 text-[9px] font-bold sm:px-3 sm:py-1.5 sm:text-xs"
             >
               {tag}
             </span>
           ))}
         </div>
-        <div className="mt-7 inline-flex items-center gap-2 font-black text-primary-deep">
+        <div className="mt-4 inline-flex items-center gap-2 text-sm font-black text-primary-deep sm:mt-7 sm:text-base">
           {event.href ? "Event sayfasına git" : "Arşiv kaydı"}
           {event.href && <span className="transition group-hover:translate-x-1">→</span>}
         </div>
