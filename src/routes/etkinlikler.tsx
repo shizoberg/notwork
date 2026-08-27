@@ -37,6 +37,19 @@ const filters = ["Tümü", "2026", "Rene Lokal", "Mahal Bomonti", "İstinyeArt",
 
 const catalogEvents: EventCatalogItem[] = [
   {
+    id: "17-eylul-2026",
+    date: "17 Eylül 2026",
+    year: "2026",
+    venue: "Köşk Alsancak",
+    title: "notwork Chill & Chat",
+    summary:
+      "ntw.match.lab, ntw.five ve DJ deneyimini aynı lineer akışta birleştiren yeni nesil notwork gecesi.",
+    participants: "Sınırlı kontenjan",
+    tags: ["Köşk Alsancak", "MatchLab", "ntw.five", "DJ"],
+    href: "/17-eylul",
+    accent: "from-[#071416] via-[#245f66] to-[#d8c6ff]",
+  },
+  {
     id: "21-agustos-2026",
     date: "21 Ağustos 2026",
     year: "2026",
