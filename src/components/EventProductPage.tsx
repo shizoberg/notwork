@@ -75,6 +75,7 @@ export type EventProductConfig = {
 export function EventProductPage({ config }: { config: EventProductConfig }) {
   const [activeImage, setActiveImage] = useState(0);
   const [selectedTicket, setSelectedTicket] = useState(config.tickets[0]?.id || "");
+  const [ticketRedirectNotice, setTicketRedirectNotice] = useState(false);
   const selectedOption =
     config.tickets.find((option) => option.id === selectedTicket) || config.tickets[0];
 
@@ -82,6 +83,11 @@ export function EventProductPage({ config }: { config: EventProductConfig }) {
     setActiveImage(
       (current) => (current + direction + config.gallery.length) % config.gallery.length,
     );
+  };
+
+  const showTicketRedirectNotice = () => {
+    setTicketRedirectNotice(true);
+    window.setTimeout(() => setTicketRedirectNotice(false), 3500);
   };
 
   if (!selectedOption) return null;
@@ -119,6 +125,7 @@ export function EventProductPage({ config }: { config: EventProductConfig }) {
                 selectedTicket={selectedTicket}
                 selectedOption={selectedOption}
                 onTicketChange={setSelectedTicket}
+                onTicketRedirect={showTicketRedirectNotice}
               />
             </div>
           </div>
@@ -127,7 +134,19 @@ export function EventProductPage({ config }: { config: EventProductConfig }) {
         <EventFlow config={config} />
         <CommunitySection config={config} />
       </main>
-      <FloatingTicketCta config={config} selectedOption={selectedOption} />
+      {ticketRedirectNotice ? (
+        <div
+          role="status"
+          className="fixed bottom-20 left-1/2 z-50 w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-full border border-white/20 bg-[#071416]/95 px-4 py-2.5 text-center text-xs font-black text-white shadow-[0_18px_55px_rgba(5,22,24,0.34)] backdrop-blur-xl sm:bottom-24 sm:px-5 sm:text-sm"
+        >
+          Anlaşmalı bilet sayfamıza yönlendiriliyorsunuz.
+        </div>
+      ) : null}
+      <FloatingTicketCta
+        config={config}
+        selectedOption={selectedOption}
+        onTicketRedirect={showTicketRedirectNotice}
+      />
       <SiteFooter />
     </div>
   );
@@ -240,11 +259,13 @@ function PurchasePanel({
   selectedTicket,
   selectedOption,
   onTicketChange,
+  onTicketRedirect,
 }: {
   config: EventProductConfig;
   selectedTicket: string;
   selectedOption: EventTicketOption;
   onTicketChange: (id: string) => void;
+  onTicketRedirect: () => void;
 }) {
   return (
     <aside className="lg:sticky lg:top-24">
@@ -376,10 +397,14 @@ function PurchasePanel({
           </div>
         </div>
 
-        <TicketButton config={config} selectedOption={selectedOption} />
+        <TicketButton
+          config={config}
+          selectedOption={selectedOption}
+          onTicketRedirect={onTicketRedirect}
+        />
 
         <p className="mt-2 text-center text-[10px] font-semibold leading-relaxed text-muted-foreground sm:text-xs">
-          Bilet al dediğinde güvenli ödeme için BiletimGO sayfasına yönlendirileceksin.
+          Bilet aldığında anlaşmalı bilet sayfamız BiletimGO’ya yönlendirileceksin.
         </p>
 
         <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground sm:mt-4 sm:gap-2 sm:text-xs">
@@ -395,9 +420,11 @@ function PurchasePanel({
 function TicketButton({
   config,
   selectedOption,
+  onTicketRedirect,
 }: {
   config: EventProductConfig;
   selectedOption: EventTicketOption;
+  onTicketRedirect: () => void;
 }) {
   if (config.ticketUrl) {
     return (
@@ -407,6 +434,7 @@ function TicketButton({
         rel="noreferrer"
         data-analytics="ticket_click"
         data-analytics-label={`${config.date} ${selectedOption.name} bilet`}
+        onClick={onTicketRedirect}
         className="mt-5 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-foreground px-5 py-4 text-base font-black text-background transition hover:-translate-y-0.5 hover:bg-primary-deep"
       >
         Bileti al <ArrowRight size={18} />
@@ -613,9 +641,11 @@ function CommunitySection({ config }: { config: EventProductConfig }) {
 function FloatingTicketCta({
   config,
   selectedOption,
+  onTicketRedirect,
 }: {
   config: EventProductConfig;
   selectedOption: EventTicketOption;
+  onTicketRedirect: () => void;
 }) {
   const className =
     "fixed bottom-3 left-1/2 z-40 inline-flex min-h-12 -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#071416]/94 px-4 py-3 text-sm font-black text-white shadow-[0_18px_55px_rgba(5,22,24,0.3)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-primary-deep sm:bottom-6 sm:min-h-14 sm:px-5";
@@ -636,6 +666,7 @@ function FloatingTicketCta({
         rel="noreferrer"
         data-analytics="ticket_click"
         data-analytics-label={`${config.date} sabit ${selectedOption.name} bilet`}
+        onClick={onTicketRedirect}
         className={className}
       >
         {content}

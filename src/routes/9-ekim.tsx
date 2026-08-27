@@ -56,13 +56,14 @@ const eventConfig: EventProductConfig = {
     {
       id: "duo",
       name: "İki kişilik",
-      note: "Birlikte gel, kişi başı 500 TL",
-      price: 1000,
-      badge: "200 TL avantaj",
+      note: "Birlikte gel, kişi başı 550 TL",
+      price: 1100,
+      badge: "100 TL avantaj",
     },
   ],
   ticketGift: "Her bilete ntw sticker paketi + ntw anahtarlık hediye.",
-  ticketUrl: "",
+  ticketUrl:
+    "https://www.biletimgo.com/etkinlik/notwork-basarisizlik-hikayeleri-network-event-30395",
   flowEyebrow: "notwork classic akışı",
   flowTitleLines: ["Sor. Dinle.", "Eşleş ve yeniden bağ kur."],
   flowDescription:

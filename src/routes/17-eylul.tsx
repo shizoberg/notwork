@@ -61,7 +61,7 @@ const eventConfig: EventProductConfig = {
       badge: "100 TL avantaj",
     },
   ],
-  ticketUrl: "",
+  ticketUrl: "https://www.biletimgo.com/etkinlik/notwork-chill-amp-chat-networking-event-30394",
   flowEyebrow: "bir gecede üç ritim",
   flowTitleLines: ["Önce eşleş.", "Sonra çöz. En son akışa bırak."],
   flowDescription:
