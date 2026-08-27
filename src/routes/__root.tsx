@@ -14,7 +14,7 @@ import appCss from "../styles.css?url";
 import { AnalyticsTracker } from "../components/AnalyticsTracker";
 import { CookieConsent } from "../components/CookieConsent";
 import { MetaPixelTracker } from "../components/MetaPixelTracker";
-import { NtwAssistant } from "../components/NtwAssistant";
+import { WhatsAppChannelCta } from "../components/WhatsAppChannelCta";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -136,7 +136,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const hideAssistant = pathname === "/17-eylul" || pathname === "/9-ekim";
+  const hideWhatsAppChannel = isEventExperiencePath(pathname);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -144,8 +144,25 @@ function RootComponent() {
       <MetaPixelTracker />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
-      {!hideAssistant && <NtwAssistant />}
+      {!hideWhatsAppChannel && <WhatsAppChannelCta />}
       <CookieConsent />
     </QueryClientProvider>
+  );
+}
+
+function isEventExperiencePath(pathname: string) {
+  return (
+    pathname === "/etkinlikler" ||
+    pathname === "/17-eylul" ||
+    pathname === "/9-ekim" ||
+    pathname === "/14temmuz" ||
+    pathname === "/14temmuznetworking" ||
+    pathname === "/21agustos" ||
+    pathname.startsWith("/21-agustos") ||
+    pathname === "/linkler" ||
+    pathname === "/match-lab" ||
+    pathname === "/five" ||
+    pathname.startsWith("/five/") ||
+    pathname === "/etkinlik-degerlendirme"
   );
 }
