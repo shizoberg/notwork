@@ -137,7 +137,7 @@ type AnalyticsCoverage = {
 };
 
 type AnalyticsAdminResponse = {
-  schemaVersion: 2;
+  schemaVersion: 2 | 3;
   events: AnalyticsEvent[];
   summaries: AnalyticsDailySummary[];
   days: number;
@@ -865,7 +865,11 @@ function AdminPage() {
     if (response.status === 401) throw new Error("Şifre yanlış.");
     if (!response.ok) throw new Error("Rapor şu anda alınamadı.");
     const data = (await response.json()) as Partial<AnalyticsAdminResponse>;
-    if (data.schemaVersion !== 2 || !Array.isArray(data.summaries) || !data.coverage) {
+    if (
+      ![2, 3].includes(Number(data.schemaVersion)) ||
+      !Array.isArray(data.summaries) ||
+      !data.coverage
+    ) {
       throw new Error(
         "Analytics servisi eski sürümde çalışıyor. Son Netlify deploy'unu kontrol edip tekrar dene.",
       );
