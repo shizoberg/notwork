@@ -384,59 +384,174 @@ function Tracks() {
 }
 
 function Nedir() {
-  const items = [
+  const [activeSlide, setActiveSlide] = useState(0);
+  const slides = [
     {
-      n: "01",
-      t: "Başarısızlık hikayeleri dinleyeceksin.",
-      d: "Gerçek deneyimler, kısa sunumlar ve çıkarılan net dersler.",
+      name: "notwork Classic",
+      eyebrow: "hikâye + networking",
+      href: "/9-ekim" as const,
+      items: [
+        {
+          n: "01",
+          t: "Başarısızlık hikâyeleri",
+          d: "Gerçek deneyimler, kısa sunumlar ve çıkarılan net dersler.",
+        },
+        {
+          n: "02",
+          t: "3 hayat kolu",
+          d: "Kariyer, ilişki ve macera tarafında farklı hikâyeler.",
+        },
+        {
+          n: "03",
+          t: "İnteraktif sahne",
+          d: "WordCloud ve mini oyunlarla seyirci de akışa katılır.",
+        },
+        {
+          n: "04",
+          t: "Sonra networking",
+          d: "Sunum sonrası ntw.match.lab ile doğru bağlantı zamanı.",
+        },
+      ],
     },
     {
-      n: "02",
-      t: "3 hayat kolu",
-      d: "Kariyer, ilişki ve macera tarafında farklı hikâyeler.",
-    },
-    {
-      n: "03",
-      t: "Isınma oyunu",
-      d: "Sahneye geçmeden önce interaktif mini oyun.",
-    },
-    {
-      n: "04",
-      t: "Sonra networking",
-      d: "Sunum sonrası tanışma ve doğru bağlantı zamanı.",
+      name: "Chill & Chat",
+      eyebrow: "eşleşme + çözüm + müzik",
+      href: "/17-eylul" as const,
+      items: [
+        {
+          n: "01",
+          t: "ntw.match.lab",
+          d: "Niyetine ve ihtiyacına göre doğru insanlarla eşleşirsin.",
+        },
+        {
+          n: "02",
+          t: "ntw.five",
+          d: "Gerçek problemleri beş dakikalık görüşmelerle ileri taşırsın.",
+        },
+        {
+          n: "03",
+          t: "Chill & Chat",
+          d: "Sıkıcı kartvizit trafiği yerine rahat ve özgür sohbet.",
+        },
+        {
+          n: "04",
+          t: "DJ & live müzik",
+          d: "Yeni bağlantıları müzik ve gece enerjisiyle tamamlarsın.",
+        },
+      ],
     },
   ];
+  const activeEvent = slides[activeSlide];
+
   return (
-    <section id="nedir" className="mx-auto mt-14 max-w-6xl px-4 sm:mt-24 sm:px-5">
-      <div className="flex items-end justify-between flex-wrap gap-3 mb-5 sm:mb-8">
+    <section id="nedir" className="mx-auto mt-14 max-w-6xl overflow-hidden px-4 sm:mt-24 sm:px-5">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3 sm:mb-8">
         <div>
           <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
-            Bir notwork eventinde
+            Bir notwork eventinde · {activeEvent.eyebrow}
           </div>
           <h2 className="mt-2 font-display font-bold text-3xl sm:text-5xl text-foreground max-w-2xl">
-            Seni ne bekliyor?
+            {activeEvent.name}’te seni ne bekliyor?
           </h2>
         </div>
-        <p className="text-sm text-muted-foreground max-w-sm sm:text-base">
-          Kısa hikâyeler, interaktif akış ve gerçek tanışmalar.
-        </p>
+        <Link
+          to={activeEvent.href}
+          className="hidden rounded-full border border-border bg-card px-4 py-2 text-sm font-black transition hover:border-primary hover:bg-primary/10 sm:inline-flex"
+        >
+          Etkinliği incele ↗
+        </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
-        {items.map((i) => (
-          <div
-            key={i.n}
-            className="rounded-2xl border border-border bg-card p-3 transition hover:border-primary/60 hover:shadow-[var(--shadow-card)] sm:p-5"
+      <div className="mb-3 flex items-center justify-between gap-3 sm:mb-5">
+        <div className="flex rounded-full border border-border bg-card p-1">
+          {slides.map((slide, index) => (
+            <button
+              key={slide.name}
+              type="button"
+              onClick={() => setActiveSlide(index)}
+              className={`rounded-full px-3 py-2 text-[11px] font-black transition sm:px-4 sm:text-sm ${
+                activeSlide === index
+                  ? "bg-foreground text-background shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {slide.name}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1.5">
+          <button
+            type="button"
+            onClick={() =>
+              setActiveSlide((current) => (current === 0 ? slides.length - 1 : current - 1))
+            }
+            aria-label="Önceki etkinlik akışı"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-lg font-black transition hover:border-primary hover:bg-primary/10"
           >
-            <div className="font-display text-primary text-xl font-bold sm:text-3xl">{i.n}</div>
-            <h3 className="mt-2 font-display font-semibold text-sm leading-tight sm:text-lg">
-              {i.t}
-            </h3>
-            <p className="mt-1.5 text-xs text-muted-foreground leading-snug sm:mt-2 sm:text-sm sm:leading-relaxed">
-              {i.d}
-            </p>
-          </div>
-        ))}
+            ←
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSlide((current) => (current + 1) % slides.length)}
+            aria-label="Sonraki etkinlik akışı"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-lg font-black transition hover:border-primary hover:bg-primary/10"
+          >
+            →
+          </button>
+        </div>
+      </div>
+
+      <div className="overflow-hidden">
+        <div
+          className="flex w-[200%] transition-transform duration-500 ease-out motion-reduce:transition-none"
+          style={{ transform: `translateX(-${activeSlide * 50}%)` }}
+        >
+          {slides.map((slide) => (
+            <div
+              key={slide.name}
+              className="grid w-1/2 shrink-0 grid-cols-2 gap-2 pr-px sm:grid-cols-4 sm:gap-4"
+            >
+              {slide.items.map((item) => (
+                <article
+                  key={`${slide.name}-${item.n}`}
+                  className="rounded-2xl border border-border bg-card p-3 transition hover:border-primary/60 hover:shadow-[var(--shadow-card)] sm:p-5"
+                >
+                  <div className="font-display text-primary text-xl font-bold sm:text-3xl">
+                    {item.n}
+                  </div>
+                  <h3 className="mt-2 font-display font-semibold text-sm leading-tight sm:text-lg">
+                    {item.t}
+                  </h3>
+                  <p className="mt-1.5 text-xs leading-snug text-muted-foreground sm:mt-2 sm:text-sm sm:leading-relaxed">
+                    {item.d}
+                  </p>
+                </article>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between sm:mt-4">
+        <div className="flex gap-1.5" aria-label="Etkinlik slaytı göstergesi">
+          {slides.map((slide, index) => (
+            <button
+              key={slide.name}
+              type="button"
+              onClick={() => setActiveSlide(index)}
+              aria-label={`${slide.name} akışını göster`}
+              className={`h-1.5 rounded-full transition-all ${
+                activeSlide === index ? "w-8 bg-primary" : "w-3 bg-border"
+              }`}
+            />
+          ))}
+        </div>
+        <Link
+          to={activeEvent.href}
+          className="text-xs font-black text-primary-deep hover:underline sm:hidden"
+        >
+          Etkinliği incele ↗
+        </Link>
       </div>
     </section>
   );

@@ -10,8 +10,10 @@ import {
   Instagram,
   Menu,
   MessageCircle,
+  MessageSquareQuote,
   Presentation,
   Rocket,
+  ShoppingBag,
   Sparkles,
   UserRound,
   UsersRound,
@@ -111,9 +113,9 @@ const mobilePrimaryLinks = [
     icon: Sparkles,
   },
   {
-    href: "/#katilimci-yorumlari",
+    to: "/etkinlikler",
     label: "Etkinlikler",
-    description: "Geçmiş geceler ve katılımcı yorumları.",
+    description: "Yaklaşan ve geçmiş tüm notwork geceleri.",
     icon: CalendarDays,
   },
   {
@@ -125,7 +127,9 @@ const mobilePrimaryLinks = [
 ] as const;
 
 const mobileSecondaryLinks = [
-  { href: "/#galeri", label: "Galeri", icon: Camera },
+  { href: "/#katilimci-yorumlari", label: "Etkinlik yorumları", icon: MessageSquareQuote },
+  { href: "/#galeri", label: "Gerçek etkinlik fotoğrafları", icon: Camera },
+  { to: "/merch", label: "Merch", icon: ShoppingBag },
   { to: "/sponsor", label: "Sponsor", icon: Sparkles },
   { to: "/sunum-yukle", label: "Sunum yap", icon: Presentation },
   { to: "/startup", label: "Startup", icon: Rocket },
