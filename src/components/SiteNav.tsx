@@ -58,6 +58,9 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
           <Link to="/community" className="rounded-lg px-3 py-2 hover:bg-muted">
             Community
           </Link>
+          <Link to="/merch" className="rounded-lg px-3 py-2 hover:bg-muted">
+            Merch
+          </Link>
           <Link
             to="/profil"
             aria-label="Üye profiline git"
