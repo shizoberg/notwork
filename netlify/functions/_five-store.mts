@@ -141,6 +141,13 @@ export type FiveLiveProblem = Omit<FiveProblem, "ownerEmail"> & {
   matchReason: string;
 };
 
+export type FiveAdminSnapshot = {
+  problems: FiveProblem[];
+  requests: FiveHelpRequest[];
+  encounters: FiveEncounter[];
+  database: ReturnType<typeof getFiveDatasetInfo>;
+};
+
 const storeName = "ntw-five";
 const legacyDemoDatasetCode = "five-demo";
 const legacyLiveDatasetCode = "five-live";
@@ -515,6 +522,98 @@ export async function getFivePublicBoard(store = getFiveStore()) {
         .map(([category, count]) => ({ category, count })),
     },
   };
+}
+
+export async function getFiveAdminSnapshot(store = getFiveStore()): Promise<FiveAdminSnapshot> {
+  const [problems, requests, encounters] = await Promise.all([
+    listJson<FiveProblem>(`${getFivePrefix()}/problems/`, store),
+    listJson<FiveHelpRequest>(`${getFivePrefix()}/requests/`, store),
+    listJson<FiveEncounter>(`${getFivePrefix()}/encounters/`, store),
+  ]);
+  return {
+    problems: problems.sort((first, second) => second.createdAt.localeCompare(first.createdAt)),
+    requests: requests.sort((first, second) => second.createdAt.localeCompare(first.createdAt)),
+    encounters: encounters.sort((first, second) => second.createdAt.localeCompare(first.createdAt)),
+    database: getFiveDatasetInfo(),
+  };
+}
+
+export async function resetFiveDemoData(store = getFiveStore()) {
+  const database = getFiveDatasetInfo();
+  if (database.mode !== "demo") throw new Error("Yalnızca demo verisi sıfırlanabilir");
+  const { blobs } = await store.list({ prefix: `${getFivePrefix()}/` });
+  await Promise.all(blobs.map((blob) => store.delete(blob.key)));
+  return getFiveAdminSnapshot(store);
+}
+
+export async function seedFiveDemoData(store = getFiveStore()) {
+  const database = getFiveDatasetInfo();
+  if (database.mode !== "demo")
+    throw new Error("Test verisi yalnızca demo veritabanına eklenebilir");
+  const existing = await listJson<FiveProblem>(`${getFivePrefix()}/problems/`, store);
+  if (existing.length) return getFiveAdminSnapshot(store);
+
+  const samples = [
+    {
+      name: "Deniz Yalın",
+      email: "deniz.demo@notwork.test",
+      title: "Yeni müşterilere nasıl daha hızlı ulaşabilirim?",
+      description:
+        "B2B hizmetim için doğru karar vericilere ulaşacağım sürdürülebilir bir kanal arıyorum.",
+      tried: "Sosyal medya ve soğuk e-posta denedim.",
+      desiredOutcome: "Doğru satış kanalını netleştirmek istiyorum.",
+      category: "marketing" as FiveCategory,
+    },
+    {
+      name: "Selin Aras",
+      email: "selin.demo@notwork.test",
+      title: "Ürün fikrimi hangi müşteriyle test etmeliyim?",
+      description:
+        "Erken aşamadaki dijital ürünüm için doğru kullanıcı profilini ve ilk test grubunu bulamıyorum.",
+      tried: "Yakın çevremden geri bildirim topladım.",
+      desiredOutcome: "İlk gerçek kullanıcı grubuna ulaşmak istiyorum.",
+      category: "product" as FiveCategory,
+    },
+    {
+      name: "Mert Deniz",
+      email: "mert.demo@notwork.test",
+      title: "Yeni girişimime doğru ekip arkadaşını arıyorum",
+      description:
+        "Teknik ürün geliştirebilen ve erken aşama belirsizliğini seven bir ortakla tanışmak istiyorum.",
+      tried: "İlan açtım ve yakın çevreme sordum.",
+      desiredOutcome: "Uygun bir teknik kurucu adayı bulmak istiyorum.",
+      category: "team" as FiveCategory,
+    },
+    {
+      name: "Ece Aydın",
+      email: "ece.demo@notwork.test",
+      title: "Portföyümü doğru insanlara nasıl gösterebilirim?",
+      description:
+        "Video ve tasarım işlerimi potansiyel iş ortaklarına ulaştırmak için daha güçlü bir anlatı arıyorum.",
+      tried: "Portföy sitesi ve sosyal medya paylaşımları hazırladım.",
+      desiredOutcome: "Doğru sunum biçimini ve bağlantıları bulmak istiyorum.",
+      category: "creative" as FiveCategory,
+    },
+    {
+      name: "Arda Kılıç",
+      email: "arda.demo@notwork.test",
+      title: "Topluluğumu düzenli katılıma nasıl dönüştürürüm?",
+      description:
+        "İnsanlar etkinliklere geliyor fakat etkinlik sonrasında bağ ve katılım hızla düşüyor.",
+      tried: "Mesaj grubu ve düzenli duyuru yaptım.",
+      desiredOutcome: "Devamlı katılım sağlayan bir sistem kurmak istiyorum.",
+      category: "community" as FiveCategory,
+    },
+  ];
+
+  for (const sample of samples) {
+    await createFiveProblem(
+      { ...sample, attending: true, consent: true, source: "pre-event" },
+      undefined,
+      store,
+    );
+  }
+  return getFiveAdminSnapshot(store);
 }
 
 export async function getFiveLiveBoard(identity: FiveIdentity, store = getFiveStore()) {

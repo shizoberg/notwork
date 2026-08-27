@@ -42,6 +42,7 @@ const auditPrefix = "audit";
 const primaryKey = "meta/primary-event.json";
 const seededKey = "meta/legacy-seeded-v1.json";
 const legacyEventId = "evt_21_agustos_2026";
+const septemberEventId = "evt_17_eylul_2026";
 const octoberEventId = "evt_9_ekim_2026";
 
 const productLabels: Record<EventProductKey, string> = {
@@ -284,21 +285,26 @@ function legacyEvent(): NotworkEvent {
   };
 }
 
-function octoberEvent(): NotworkEvent {
-  const now = "2026-08-27T00:00:00.000Z";
+function septemberEvent(): NotworkEvent {
+  const now = "2026-08-28T00:00:00.000Z";
   return {
     schemaVersion: 1,
-    id: octoberEventId,
-    slug: "9-ekim-2026",
-    title: "9 Ekim notwork",
-    shortTitle: "9 Ekim",
-    startsAt: "2026-10-09T16:30:00.000Z",
-    endsAt: "2026-10-09T19:30:00.000Z",
+    id: septemberEventId,
+    slug: "17-eylul-2026",
+    title: "notwork Chill & Chat",
+    shortTitle: "17 Eylül",
+    startsAt: "2026-09-17T17:00:00.000Z",
+    endsAt: "2026-09-17T21:00:00.000Z",
     timezone: "Europe/Istanbul",
-    status: "draft",
-    location: { name: "", address: "", city: "İzmir", mapUrl: "" },
+    status: "scheduled",
+    location: {
+      name: "Köşk Alsancak",
+      address: "Alsancak",
+      city: "İzmir",
+      mapUrl: "https://share.google/gNcA5ZyamrCE1HvXR",
+    },
     entry: {
-      isOpen: false,
+      isOpen: true,
       isPrimary: false,
       requireRegistration: true,
       registrationPrompts: defaultEventRegistrationPrompts,
@@ -307,7 +313,7 @@ function octoberEvent(): NotworkEvent {
       matchlab: {
         enabled: true,
         visible: true,
-        state: "draft",
+        state: "ready",
         dataMode: "demo",
         label: "ntw.matchlab",
         order: 1,
@@ -315,7 +321,7 @@ function octoberEvent(): NotworkEvent {
       five: {
         enabled: true,
         visible: true,
-        state: "draft",
+        state: "ready",
         dataMode: "demo",
         label: "ntw.five",
         order: 2,
@@ -327,6 +333,62 @@ function octoberEvent(): NotworkEvent {
         dataMode: "demo",
         label: "ntw.wordcloud",
         order: 3,
+      },
+    },
+    revision: 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function octoberEvent(): NotworkEvent {
+  const now = "2026-08-27T00:00:00.000Z";
+  return {
+    schemaVersion: 1,
+    id: octoberEventId,
+    slug: "9-ekim-2026",
+    title: "notwork Classic",
+    shortTitle: "9 Ekim",
+    startsAt: "2026-10-09T16:30:00.000Z",
+    endsAt: "2026-10-09T19:30:00.000Z",
+    timezone: "Europe/Istanbul",
+    status: "scheduled",
+    location: {
+      name: "Rene Lokal",
+      address: "Alsancak",
+      city: "İzmir",
+      mapUrl: "https://share.google/X6ssk8zMnf49YzrkD",
+    },
+    entry: {
+      isOpen: true,
+      isPrimary: false,
+      requireRegistration: true,
+      registrationPrompts: defaultEventRegistrationPrompts,
+    },
+    products: {
+      matchlab: {
+        enabled: true,
+        visible: true,
+        state: "ready",
+        dataMode: "demo",
+        label: "ntw.matchlab",
+        order: 1,
+      },
+      five: {
+        enabled: false,
+        visible: false,
+        state: "disabled",
+        dataMode: "demo",
+        label: "ntw.five",
+        order: 3,
+      },
+      wordcloud: {
+        enabled: true,
+        visible: true,
+        state: "ready",
+        dataMode: "demo",
+        label: "ntw.wordcloud",
+        order: 2,
       },
     },
     revision: 1,
@@ -365,17 +427,37 @@ export async function ensureEventRegistrySeeded() {
     ]);
   }
 
-  const existingOctoberEvent = await store.get(eventKey(octoberEventId), {
-    type: "json",
-    consistency: "strong",
-  });
-  if (!existingOctoberEvent) {
-    const event = octoberEvent();
-    await Promise.all([
+  const [existingSeptemberEvent, existingOctoberEvent] = await Promise.all([
+    store.get(eventKey(septemberEventId), { type: "json", consistency: "strong" }),
+    store.get(eventKey(octoberEventId), { type: "json", consistency: "strong" }),
+  ]);
+  const writes: Array<Promise<unknown>> = [];
+  if (!existingSeptemberEvent) {
+    const event = septemberEvent();
+    writes.push(
       store.setJSON(eventKey(event.id), event),
       store.setJSON(slugKey(event.slug), { eventId: event.id }),
-    ]);
+    );
   }
+  if (!existingOctoberEvent) {
+    const event = octoberEvent();
+    writes.push(
+      store.setJSON(eventKey(event.id), event),
+      store.setJSON(slugKey(event.slug), { eventId: event.id }),
+    );
+  } else {
+    const current = existingOctoberEvent as NotworkEvent;
+    if (
+      current.revision === 1 &&
+      (current.title === "9 Ekim notwork" ||
+        current.products.five.enabled ||
+        !current.products.wordcloud.enabled)
+    ) {
+      const event = { ...octoberEvent(), createdAt: current.createdAt || octoberEvent().createdAt };
+      writes.push(store.setJSON(eventKey(event.id), event));
+    }
+  }
+  await Promise.all(writes);
 }
 
 export async function listEvents() {

@@ -26,7 +26,7 @@ export default async (request: Request, _context: Context) => {
     );
     const summaries = storedSummaries.flatMap(({ summary }) => (summary ? [summary] : []));
     const missingDays = storedSummaries
-      .filter(({ date, summary }) => rawDays.has(date) && !summary)
+      .filter(({ date, summary }) => rawDays.has(date) && (!summary || !summary.pageMetrics))
       .map(({ date }) => date);
 
     if (rawDays.has(today)) summaries.push(await summarizeDay(today));

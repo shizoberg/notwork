@@ -42,6 +42,18 @@ export type DailyAnalyticsSummary = {
   scrollDepth: Record<string, number>;
   devices: Record<string, number>;
   buttonActions: Record<string, number>;
+  pageMetrics: Record<
+    string,
+    {
+      pageViews: number;
+      clicks: number;
+      ticketClicks: number;
+      pageTimeTotal: number;
+      pageTimeCount: number;
+      sessionIds: string[];
+      buttonActions: Record<string, number>;
+    }
+  >;
 };
 
 function increment(values: Record<string, number>, key: string) {
@@ -110,6 +122,18 @@ export function summarizeEvents(
   const scrollDepth: Record<string, number> = {};
   const devices: Record<string, number> = {};
   const buttonActions: Record<string, number> = {};
+  const pageMetrics = new Map<
+    string,
+    {
+      pageViews: number;
+      clicks: number;
+      ticketClicks: number;
+      pageTimeTotal: number;
+      pageTimeCount: number;
+      sessionIds: Set<string>;
+      buttonActions: Record<string, number>;
+    }
+  >();
   const sessionIds = new Set<string>();
   let july14 = 0;
   let august21 = 0;
@@ -117,6 +141,29 @@ export function summarizeEvents(
   let pageTimeCount = 0;
 
   for (const event of events) {
+    const path = event.path || "/";
+    const page = pageMetrics.get(path) || {
+      pageViews: 0,
+      clicks: 0,
+      ticketClicks: 0,
+      pageTimeTotal: 0,
+      pageTimeCount: 0,
+      sessionIds: new Set<string>(),
+      buttonActions: {},
+    };
+    if (event.sessionId) page.sessionIds.add(event.sessionId);
+    if (event.type === "page_view") page.pageViews += 1;
+    if (["click", "ticket_click"].includes(event.type)) {
+      page.clicks += 1;
+      increment(page.buttonActions, event.label || event.target || "Buton");
+    }
+    if (event.type === "ticket_click") page.ticketClicks += 1;
+    if (event.type === "page_time" && event.value > 0) {
+      page.pageTimeTotal += event.value;
+      page.pageTimeCount += 1;
+    }
+    pageMetrics.set(path, page);
+
     increment(counts, event.type);
     if (event.sessionId) sessionIds.add(event.sessionId);
     if (event.device) increment(devices, event.device);
@@ -159,6 +206,12 @@ export function summarizeEvents(
     scrollDepth,
     devices,
     buttonActions,
+    pageMetrics: Object.fromEntries(
+      [...pageMetrics.entries()].map(([path, page]) => [
+        path,
+        { ...page, sessionIds: [...page.sessionIds] },
+      ]),
+    ),
   };
 }
 

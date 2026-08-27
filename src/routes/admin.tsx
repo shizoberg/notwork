@@ -50,8 +50,10 @@ import {
   type EventRegistryDraft,
   type EventRegistryInfo,
   type EventRegistryPayload,
+  type EventSelection,
   type NotworkEvent,
 } from "@/lib/event-registry";
+import { getFiveAdmin, updateFiveAdmin, type FiveAdminPayload } from "@/lib/five";
 import type {
   MemberProfilesAdminPayload,
   NotworkMemberReference,
@@ -107,6 +109,18 @@ type AnalyticsDailySummary = {
   scrollDepth: Record<string, number>;
   devices: Record<string, number>;
   buttonActions: Record<string, number>;
+  pageMetrics?: Record<
+    string,
+    {
+      pageViews: number;
+      clicks: number;
+      ticketClicks: number;
+      pageTimeTotal: number;
+      pageTimeCount: number;
+      sessionIds: string[];
+      buttonActions: Record<string, number>;
+    }
+  >;
 };
 
 type AnalyticsCoverage = {
@@ -230,8 +244,8 @@ const adminTabs: Array<{ id: AdminTab; label: string; description: string }> = [
   },
   {
     id: "eventTools",
-    label: "21 Ağustos",
-    description: "Mevcut WordCloud ve Match Lab kayıtları",
+    label: "Etkinlik verileri",
+    description: "21 Ağustos, 17 Eylül ve 9 Ekim ürün kayıtları",
   },
   { id: "analytics", label: "Analiz", description: "Trafik, bilet ve aksiyon grafikleri" },
   { id: "networking", label: "Networking", description: "Genel topluluk ağı ve onaylar" },
@@ -244,6 +258,14 @@ const adminTabs: Array<{ id: AdminTab; label: string; description: string }> = [
 ];
 
 const adminUiVersion = "Admin v3 · etkinlik platformu";
+
+const eventToolsSlugs = ["21-agustos-2026", "17-eylul-2026", "9-ekim-2026"];
+
+const eventPageAnalyticsOptions = [
+  { path: "/17-eylul", label: "17 Eylül · Chill & Chat" },
+  { path: "/9-ekim", label: "9 Ekim · Classic" },
+  { path: "/21agustos", label: "21 Ağustos · Rene Lokal" },
+];
 
 type EventEditorDraft = {
   id: string;
@@ -417,6 +439,8 @@ function AdminPage() {
   const [wordcloudMessage, setWordcloudMessage] = useState("");
   const [eventRegistrations, setEventRegistrations] = useState<EventNetworkRegistration[]>([]);
   const [eventDatabase, setEventDatabase] = useState<EventDatabaseInfo | null>(null);
+  const [fiveData, setFiveData] = useState<FiveAdminPayload | null>(null);
+  const [fiveMessage, setFiveMessage] = useState("");
   const [eventRegistry, setEventRegistry] = useState<NotworkEvent[]>([]);
   const [eventRegistryInfo, setEventRegistryInfo] = useState<EventRegistryInfo | null>(null);
   const [eventEditor, setEventEditor] = useState<EventEditorDraft>(blankEventEditorDraft);
@@ -425,8 +449,20 @@ function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeAdminTab, setActiveAdminTab] = useState<AdminTab>("events");
+  const [selectedToolsEventSlug, setSelectedToolsEventSlug] = useState("21-agustos-2026");
+  const [selectedEventAnalyticsPath, setSelectedEventAnalyticsPath] = useState("/17-eylul");
   const backfillRunningRef = useRef(false);
   const selectedDaysRef = useRef(days);
+
+  const selectedToolsEvent = useMemo(
+    () =>
+      eventRegistry.find((event) => event.slug === selectedToolsEventSlug) ||
+      eventRegistry.find((event) => event.slug === "21-agustos-2026") ||
+      null,
+    [eventRegistry, selectedToolsEventSlug],
+  );
+
+  const selectedToolsEventSelection: EventSelection = { event: selectedToolsEventSlug };
 
   const loadNetwork = async (nextPassword = password) => {
     const response = await fetch("/api/networking/admin", {
@@ -440,18 +476,26 @@ function AdminPage() {
     setRequests(data.requests);
   };
 
-  const loadWordcloud = async (nextPassword = password) => {
-    const data = await getWordcloudAdmin(nextPassword);
+  const loadWordcloud = async (nextPassword = password, eventSlug = selectedToolsEventSlug) => {
+    const data = await getWordcloudAdmin(nextPassword, { event: eventSlug });
     setWordcloudQuestions(data.questions);
     setWordcloudAnswers(data.answers);
     setWordcloudResults(data.results);
     setWordcloudDatabase(data.database || null);
+    return data;
   };
 
-  const loadEventNetwork = async (nextPassword = password) => {
-    const data = await getEventNetworkAdmin(nextPassword);
+  const loadEventNetwork = async (nextPassword = password, eventSlug = selectedToolsEventSlug) => {
+    const data = await getEventNetworkAdmin(nextPassword, { event: eventSlug });
     setEventRegistrations(data.registrations);
     setEventDatabase(data.database || null);
+    return data;
+  };
+
+  const loadFive = async (nextPassword = password, eventSlug = selectedToolsEventSlug) => {
+    const data = await getFiveAdmin(nextPassword, { event: eventSlug });
+    setFiveData(data);
+    return data;
   };
 
   const applyEventRegistry = (data: EventRegistryPayload, preferredEventId = "") => {
@@ -468,6 +512,56 @@ function AdminPage() {
   const loadEventRegistry = async (nextPassword = password, preferredEventId = "") => {
     const data = await updateEventRegistry(nextPassword, { action: "list" });
     applyEventRegistry(data, preferredEventId);
+    return data;
+  };
+
+  const loadSelectedEventTools = async (
+    eventSlug: string,
+    nextPassword = password,
+    availableEvents = eventRegistry,
+  ) => {
+    const selectedEvent = availableEvents.find((event) => event.slug === eventSlug);
+    if (!selectedEvent) throw new Error("Etkinlik ürün ayarları bulunamadı.");
+
+    setNetworkMessage("");
+    setWordcloudMessage("");
+    setFiveMessage("");
+
+    const tasks: Array<Promise<unknown>> = [];
+    if (selectedEvent.products.matchlab.enabled) {
+      tasks.push(
+        loadEventNetwork(nextPassword, eventSlug).then(async (data) => {
+          if (
+            eventSlug === "17-eylul-2026" &&
+            selectedEvent.products.matchlab.dataMode === "demo" &&
+            data.registrations.length === 0
+          ) {
+            await seedEventNetworkSamples({ event: eventSlug });
+            await loadEventNetwork(nextPassword, eventSlug);
+          }
+        }),
+      );
+    } else {
+      setEventRegistrations([]);
+      setEventDatabase(null);
+    }
+    if (selectedEvent.products.wordcloud.enabled) {
+      tasks.push(loadWordcloud(nextPassword, eventSlug));
+    } else {
+      setWordcloudQuestions([]);
+      setWordcloudAnswers([]);
+      setWordcloudResults(null);
+      setWordcloudDatabase(null);
+    }
+    if (selectedEvent.products.five.enabled) {
+      tasks.push(loadFive(nextPassword, eventSlug));
+    } else {
+      setFiveData(null);
+    }
+
+    const results = await Promise.allSettled(tasks);
+    const failed = results.filter((result) => result.status === "rejected").length;
+    if (failed) throw new Error(`${failed} etkinlik ürünü yüklenemedi.`);
   };
 
   const selectEventRegistryItem = (event: NotworkEvent) => {
@@ -664,9 +758,11 @@ function AdminPage() {
   const seedEventNetwork = async () => {
     setNetworkMessage("");
     try {
-      await seedEventNetworkSamples();
-      await loadEventNetwork(password);
-      setNetworkMessage("21 Ağustos demo test verisi oluşturuldu.");
+      await seedEventNetworkSamples(selectedToolsEventSelection);
+      await loadEventNetwork(password, selectedToolsEventSlug);
+      setNetworkMessage(
+        `${selectedToolsEvent?.shortTitle || "Etkinlik"} demo test verisi oluşturuldu.`,
+      );
     } catch (caught) {
       setNetworkMessage(caught instanceof Error ? caught.message : "Demo test verisi eklenemedi.");
     }
@@ -675,10 +771,12 @@ function AdminPage() {
   const resetEventNetwork = async () => {
     setNetworkMessage("");
     try {
-      const data = await resetEventNetworkDemo(password);
+      const data = await resetEventNetworkDemo(password, selectedToolsEventSelection);
       setEventRegistrations(data.registrations);
       setEventDatabase(data.database || null);
-      setNetworkMessage("21 Ağustos MatchLab demo verisi sıfırlandı.");
+      setNetworkMessage(
+        `${selectedToolsEvent?.shortTitle || "Etkinlik"} MatchLab demo verisi sıfırlandı.`,
+      );
     } catch (caught) {
       setNetworkMessage(caught instanceof Error ? caught.message : "Demo verisi sıfırlanamadı.");
     }
@@ -694,7 +792,7 @@ function AdminPage() {
   ) => {
     setWordcloudMessage("");
     try {
-      const data = await updateWordcloudAdmin(password, payload);
+      const data = await updateWordcloudAdmin(password, payload, selectedToolsEventSelection);
       setWordcloudQuestions(data.questions);
       setWordcloudAnswers(data.answers);
       setWordcloudResults(data.results);
@@ -709,6 +807,21 @@ function AdminPage() {
       );
     } catch (caught) {
       setWordcloudMessage(caught instanceof Error ? caught.message : "WordCloud güncellenemedi.");
+    }
+  };
+
+  const fiveAction = async (action: "seedDemo" | "resetDemo") => {
+    setFiveMessage("");
+    try {
+      const data = await updateFiveAdmin(password, action, selectedToolsEventSelection);
+      setFiveData(data);
+      setFiveMessage(
+        action === "seedDemo"
+          ? "ntw.five demo verisi hazırlandı."
+          : "ntw.five demo verisi sıfırlandı.",
+      );
+    } catch (caught) {
+      setFiveMessage(caught instanceof Error ? caught.message : "ntw.five güncellenemedi.");
     }
   };
 
@@ -817,15 +930,21 @@ function AdminPage() {
       selectedDaysRef.current = nextDays;
       setDays(nextDays);
       backfillAnalytics(data.missingDays);
+      let registryEvents = eventRegistry;
+      let failedLoads = 0;
+      try {
+        const registryData = await loadEventRegistry(password);
+        registryEvents = registryData.events;
+      } catch {
+        failedLoads += 1;
+      }
       const auxiliaryLoads = await Promise.allSettled([
         loadNetwork(password),
-        loadWordcloud(password),
-        loadEventNetwork(password),
-        loadEventRegistry(password),
+        loadSelectedEventTools(selectedToolsEventSlug, password, registryEvents),
         loadStartupApplications(password),
         loadMemberProfiles(password),
       ]);
-      const failedLoads = auxiliaryLoads.filter((result) => result.status === "rejected").length;
+      failedLoads += auxiliaryLoads.filter((result) => result.status === "rejected").length;
       if (failedLoads > 0) {
         setError(
           `Analiz yüklendi; ${failedLoads} ek admin modülü geçici olarak yüklenemedi. Sekmelerden tekrar deneyebilirsin.`,
@@ -841,6 +960,10 @@ function AdminPage() {
   const report = useMemo(
     () => buildReport(events || [], dailySummaries, days),
     [events, dailySummaries, days],
+  );
+  const eventPageReport = useMemo(
+    () => buildEventPageReport(dailySummaries, selectedEventAnalyticsPath, days),
+    [dailySummaries, selectedEventAnalyticsPath, days],
   );
 
   if (events === null) {
@@ -984,34 +1107,87 @@ function AdminPage() {
             activeAdminTab === "eventTools" ? "" : "hidden"
           }`}
         >
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="text-xs font-bold uppercase tracking-[0.22em] text-primary-deep">
-                Event araçları
+                Etkinlik ürün verileri
               </div>
-              <h2 className="mt-1 text-2xl font-black tracking-[-0.03em]">21 Ağustos WordCloud</h2>
+              <h2 className="mt-1 text-2xl font-black tracking-[-0.03em]">
+                {selectedToolsEvent?.title || "Etkinlik seç"}
+              </h2>
               <p className="mt-1 text-sm text-foreground/60">
-                Soru akışı ve cevap moderasyonu artık bu genel admin panelinden yönetiliyor.
+                MatchLab, WordCloud ve ntw.five verilerini aynı panelden yönet.
               </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {selectedToolsEvent
+                  ? eventProductKeys.map((product) => (
+                      <span
+                        key={product}
+                        className={`rounded-full px-3 py-1 text-xs font-black ${
+                          selectedToolsEvent.products[product].enabled
+                            ? "bg-primary text-primary-foreground"
+                            : "border border-border bg-background/70 text-foreground/40"
+                        }`}
+                      >
+                        {selectedToolsEvent.products[product].label} ·{" "}
+                        {selectedToolsEvent.products[product].enabled ? "aktif" : "kapalı"}
+                      </span>
+                    ))
+                  : null}
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <a
-                href="/21-agustos/wordcloud"
+                href={withEventSelection("/linkler", selectedToolsEventSelection)}
                 target="_blank"
                 rel="noreferrer"
                 className="rounded-full border border-primary/30 bg-background px-4 py-2 text-sm font-bold"
               >
-                Test formu
+                Linkler girişini aç
               </a>
-              <a
-                href="/21-agustos/sonuclar"
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+              <button
+                type="button"
+                onClick={() =>
+                  void loadSelectedEventTools(selectedToolsEventSlug, password, eventRegistry)
+                }
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
               >
-                Canlı ekran
-              </a>
+                <RefreshCcw size={15} /> verileri yenile
+              </button>
             </div>
+          </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {eventToolsSlugs.map((eventSlug) => {
+              const item = eventRegistry.find((event) => event.slug === eventSlug);
+              if (!item) return null;
+              const isActive = eventSlug === selectedToolsEventSlug;
+              return (
+                <button
+                  key={eventSlug}
+                  type="button"
+                  onClick={() => {
+                    setSelectedToolsEventSlug(eventSlug);
+                    void loadSelectedEventTools(eventSlug, password, eventRegistry);
+                  }}
+                  className={`rounded-[1.5rem] border p-4 text-left transition ${
+                    isActive
+                      ? "border-primary bg-background shadow-[0_16px_40px_rgba(143,203,208,0.22)]"
+                      : "border-primary/20 bg-background/55 hover:border-primary/50"
+                  }`}
+                >
+                  <span className="text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
+                    Etkinlik
+                  </span>
+                  <span className="mt-1 block text-xl font-black">{item.shortTitle}</span>
+                  <span className="mt-1 block text-sm text-foreground/50">
+                    {eventProductKeys
+                      .filter((product) => item.products[product].enabled)
+                      .map((product) => item.products[product].label)
+                      .join(" · ") || "Ürün kapalı"}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -1114,6 +1290,99 @@ function AdminPage() {
               value={report.ticketClicksByEvent.august21}
               highlight
             />
+          </div>
+        </section>
+
+        <section
+          className={`mt-6 overflow-hidden rounded-[2rem] border border-border bg-card p-5 ${
+            activeAdminTab === "analytics" ? "" : "hidden"
+          }`}
+        >
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
+                Etkinlik sayfası analizi
+              </div>
+              <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] sm:text-3xl">
+                Sayfa ve bilet performansı
+              </h2>
+              <p className="mt-1 text-sm text-foreground/55">
+                Etkinliği değiştir; grafikler ve buton verileri seçilen sayfaya göre güncellensin.
+              </p>
+            </div>
+            <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
+              {eventPageAnalyticsOptions.map((option) => (
+                <button
+                  key={option.path}
+                  type="button"
+                  onClick={() => setSelectedEventAnalyticsPath(option.path)}
+                  className={`shrink-0 rounded-full px-4 py-2 text-xs font-black ${
+                    selectedEventAnalyticsPath === option.path
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-background"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <Metric icon={Eye} label="Sayfa görüntüleme" value={eventPageReport.pageViews} />
+            <Metric icon={Users} label="Tekil oturum" value={eventPageReport.sessions} />
+            <Metric
+              icon={Ticket}
+              label="Bilet tıklaması"
+              value={eventPageReport.ticketClicks}
+              highlight
+            />
+            <Metric
+              icon={BarChart3}
+              label="Bilet dönüşümü"
+              value={`%${eventPageReport.conversion}`}
+              highlight
+            />
+            <Metric icon={Activity} label="Ort. süre" value={`${eventPageReport.averageTime} sn`} />
+          </div>
+
+          <div className="mt-5 grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
+            <ChartCard
+              title="Etkinlik sayfası trafik grafiği"
+              description={`${days} günlük seçili sayfa görünümü`}
+            >
+              <ResponsiveContainer width="100%" height={260}>
+                <AreaChart data={eventPageReport.timeline}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis
+                    dataKey="day"
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={11}
+                    minTickGap={28}
+                  />
+                  <YAxis tickLine={false} axisLine={false} fontSize={11} />
+                  <Tooltip contentStyle={{ borderRadius: 14, borderColor: "hsl(var(--border))" }} />
+                  <Area
+                    type="monotone"
+                    dataKey="pageViews"
+                    name="Sayfa"
+                    stroke="#2f9aa5"
+                    fill="#8fcbd055"
+                    strokeWidth={2}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="ticketClicks"
+                    name="Bilet"
+                    stroke="#d4af37"
+                    fill="transparent"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </ChartCard>
+            <ReportList title="Bu sayfadaki butonlar" rows={eventPageReport.buttonActions} />
           </div>
         </section>
 
@@ -1262,26 +1531,52 @@ function AdminPage() {
         </section>
 
         <div className={activeAdminTab === "eventTools" ? "" : "hidden"}>
-          <WordcloudAdmin
-            questions={wordcloudQuestions}
-            answers={wordcloudAnswers}
-            results={wordcloudResults}
-            database={wordcloudDatabase}
-            draft={wordcloudDraft}
-            message={wordcloudMessage}
-            setDraft={setWordcloudDraft}
-            refresh={() => loadWordcloud(password)}
-            wordcloudAction={wordcloudAction}
-          />
+          {selectedToolsEvent?.products.wordcloud.enabled ? (
+            <WordcloudAdmin
+              eventTitle={selectedToolsEvent.shortTitle}
+              selection={selectedToolsEventSelection}
+              questions={wordcloudQuestions}
+              answers={wordcloudAnswers}
+              results={wordcloudResults}
+              database={wordcloudDatabase}
+              draft={wordcloudDraft}
+              message={wordcloudMessage}
+              setDraft={setWordcloudDraft}
+              refresh={() => loadWordcloud(password, selectedToolsEventSlug)}
+              wordcloudAction={wordcloudAction}
+            />
+          ) : null}
 
-          <EventNetworkAdmin
-            registrations={eventRegistrations}
-            database={eventDatabase}
-            message={networkMessage}
-            refresh={() => loadEventNetwork(password)}
-            seedSamples={seedEventNetwork}
-            resetDemo={resetEventNetwork}
-          />
+          {selectedToolsEvent?.products.matchlab.enabled ? (
+            <EventNetworkAdmin
+              eventTitle={selectedToolsEvent.shortTitle}
+              selection={selectedToolsEventSelection}
+              registrations={eventRegistrations}
+              database={eventDatabase}
+              message={networkMessage}
+              refresh={() => loadEventNetwork(password, selectedToolsEventSlug)}
+              seedSamples={seedEventNetwork}
+              resetDemo={resetEventNetwork}
+            />
+          ) : null}
+
+          {selectedToolsEvent?.products.five.enabled ? (
+            <FiveAdmin
+              eventTitle={selectedToolsEvent.shortTitle}
+              selection={selectedToolsEventSelection}
+              data={fiveData}
+              message={fiveMessage}
+              refresh={() => loadFive(password, selectedToolsEventSlug)}
+              runAction={fiveAction}
+            />
+          ) : null}
+
+          {selectedToolsEvent &&
+          eventProductKeys.every((product) => !selectedToolsEvent.products[product].enabled) ? (
+            <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-sm text-foreground/55">
+              Bu etkinlik için henüz aktif bir ürün yok. Etkinlikler sekmesinden ürün açabilirsin.
+            </div>
+          ) : null}
         </div>
 
         <div className={activeAdminTab === "networking" ? "" : "hidden"}>
@@ -2095,6 +2390,8 @@ function NetworkingAdmin({
 }
 
 function WordcloudAdmin({
+  eventTitle,
+  selection,
   questions,
   answers,
   results,
@@ -2105,6 +2402,8 @@ function WordcloudAdmin({
   refresh,
   wordcloudAction,
 }: {
+  eventTitle: string;
+  selection: EventSelection;
   questions: WordcloudQuestion[];
   answers: WordcloudAnswer[];
   results: WordcloudResults | null;
@@ -2146,7 +2445,7 @@ function WordcloudAdmin({
       <article className="rounded-2xl border border-border bg-card p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-xl font-black">21 Ağustos WordCloud soruları</h2>
+            <h2 className="text-xl font-black">{eventTitle} WordCloud soruları</h2>
             <p className="mt-1 text-sm text-foreground/50">
               Soruları buradan değiştir; cevap formu ve canlı ekran otomatik güncellenir.
             </p>
@@ -2157,7 +2456,7 @@ function WordcloudAdmin({
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <a
-              href="/21-agustos/sonuclar"
+              href={withEventSelection("/21-agustos/sonuclar", selection)}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1 rounded-full bg-foreground px-3 py-2 text-xs font-black text-background"
@@ -2165,7 +2464,7 @@ function WordcloudAdmin({
               canlı ekranı aç
             </a>
             <a
-              href="/21-agustos/wordcloud"
+              href={withEventSelection("/21-agustos/wordcloud", selection)}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-2 text-xs font-black"
@@ -2406,6 +2705,8 @@ function WordcloudAdmin({
 }
 
 function EventNetworkAdmin({
+  eventTitle,
+  selection,
   registrations,
   database,
   message,
@@ -2413,6 +2714,8 @@ function EventNetworkAdmin({
   seedSamples,
   resetDemo,
 }: {
+  eventTitle: string;
+  selection: EventSelection;
   registrations: EventNetworkRegistration[];
   database: EventDatabaseInfo | null;
   message: string;
@@ -2424,7 +2727,7 @@ function EventNetworkAdmin({
     <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div>
-          <h2 className="text-xl font-black">21 Ağustos network kayıtları</h2>
+          <h2 className="text-xl font-black">{eventTitle} MatchLab kayıtları</h2>
           <p className="mt-1 text-sm text-foreground/50">
             Etkinlik kodu, yetkinlikler, ihtiyaç ve izin tercihleri. Şimdilik demo database ile
             oynuyoruz.
@@ -2432,7 +2735,7 @@ function EventNetworkAdmin({
         </div>
         <div className="flex flex-wrap gap-2">
           <a
-            href="/linkler"
+            href={withEventSelection("/linkler", selection)}
             target="_blank"
             rel="noreferrer"
             className="rounded-full border border-border px-3 py-2 text-xs font-bold"
@@ -2465,16 +2768,16 @@ function EventNetworkAdmin({
       <div className="grid gap-3 border-b border-border bg-muted/35 p-5 md:grid-cols-3">
         <DatabaseBadge
           label="Anlık kullanılan database kodu"
-          value={database?.activeDatabaseCode || "21agustos-demo"}
+          value={database?.activeDatabaseCode || `${selection.event || "event"}-demo`}
           highlight
         />
         <DatabaseBadge
           label="Demo database"
-          value={database?.demoDatabaseCode || "21agustos-demo"}
+          value={database?.demoDatabaseCode || `${selection.event || "event"}-demo`}
         />
         <DatabaseBadge
           label="Canlı gün açılacak database"
-          value={database?.liveDatabaseCode || "21agustoscanli"}
+          value={database?.liveDatabaseCode || `${selection.event || "event"}-live`}
         />
         <div className="rounded-2xl border border-border bg-background p-4 text-xs text-foreground/55 md:col-span-3">
           <div className="font-black text-foreground">Teknik store</div>
@@ -2484,12 +2787,12 @@ function EventNetworkAdmin({
           <div>
             Prefix:{" "}
             <span className="font-bold">
-              {database?.keyPrefix || "events/21agustos-demo/network"}
+              {database?.keyPrefix || `events/${selection.event || "event"}/demo/matchlab`}
             </span>
           </div>
           <div className="mt-2 text-primary-deep">
-            21 Ağustos gününde Netlify ENV `EVENT_NETWORK_DATASET=21agustoscanli` yapılınca canlı
-            database’e geçeriz.
+            Veri modu Etkinlikler sekmesinden demo veya canlı olarak değiştirilebilir. Her etkinlik
+            kendi izole MatchLab verisini kullanır.
           </div>
         </div>
         {message ? (
@@ -2551,7 +2854,137 @@ function EventNetworkAdmin({
             {registrations.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-sm text-foreground/45">
-                  Henüz 21 Ağustos network kaydı yok.
+                  Henüz {eventTitle} MatchLab kaydı yok.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function FiveAdmin({
+  eventTitle,
+  selection,
+  data,
+  message,
+  refresh,
+  runAction,
+}: {
+  eventTitle: string;
+  selection: EventSelection;
+  data: FiveAdminPayload | null;
+  message: string;
+  refresh: () => Promise<FiveAdminPayload>;
+  runAction: (action: "seedDemo" | "resetDemo") => Promise<void>;
+}) {
+  return (
+    <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div>
+          <h2 className="text-xl font-black">{eventTitle} ntw.five</h2>
+          <p className="mt-1 text-sm text-foreground/50">
+            Katılımcı problemleri, çözüm talepleri ve beş dakikalık görüşmeler.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={withEventSelection("/five/live", selection)}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full border border-border px-3 py-2 text-xs font-bold"
+          >
+            ntw.five ekranını aç
+          </a>
+          <button
+            type="button"
+            onClick={() => void runAction("seedDemo")}
+            className="rounded-full border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-bold text-primary-deep"
+          >
+            Demo veriyi hazırla
+          </button>
+          <button
+            type="button"
+            onClick={() => void runAction("resetDemo")}
+            className="rounded-full border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs font-bold text-destructive"
+          >
+            Demo sıfırla
+          </button>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
+          >
+            <RefreshCcw size={14} /> yenile
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-3 border-b border-border bg-muted/35 p-5 sm:grid-cols-2 lg:grid-cols-4">
+        <Metric icon={MessageSquareQuote} label="Problem" value={data?.problems.length || 0} />
+        <Metric icon={MousePointerClick} label="Çözüm talebi" value={data?.requests.length || 0} />
+        <Metric icon={Users} label="Görüşme" value={data?.encounters.length || 0} highlight />
+        <DatabaseBadge
+          label="Aktif database"
+          value={data?.database.activeDatabaseCode || `${selection.event || "event"}-demo`}
+          highlight
+        />
+        <div className="rounded-2xl border border-border bg-background p-4 text-xs text-foreground/55 sm:col-span-2 lg:col-span-4">
+          <div className="font-black text-foreground">İzole ntw.five store</div>
+          <div className="mt-1">
+            Store: <span className="font-bold">{data?.database.storeName || "ntw-five"}</span>
+          </div>
+          <div>
+            Prefix: <span className="font-bold">{data?.database.keyPrefix || "-"}</span>
+          </div>
+          <div className="mt-2 text-primary-deep">
+            Demo verileri yalnızca bu etkinliğin demo alanında tutulur; canlı veriye karışmaz.
+          </div>
+        </div>
+        {message ? (
+          <p className="rounded-2xl bg-primary/10 px-4 py-3 text-sm font-bold text-primary-deep sm:col-span-2 lg:col-span-4">
+            {message}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[900px] text-left text-sm">
+          <thead className="bg-muted text-xs text-foreground/50">
+            <tr>
+              <th className="px-4 py-3">Kod</th>
+              <th className="px-4 py-3">Problem sahibi</th>
+              <th className="px-4 py-3">Problem</th>
+              <th className="px-4 py-3">Kategori</th>
+              <th className="px-4 py-3">Talep</th>
+              <th className="px-4 py-3">Görüşme</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(data?.problems || []).map((problem) => (
+              <tr key={problem.id} className="border-t border-border/70">
+                <td className="px-4 py-3 font-black text-primary-deep">{problem.shortCode}</td>
+                <td className="px-4 py-3">
+                  <div className="font-bold">{problem.ownerName}</div>
+                  <div className="text-xs text-foreground/45">{problem.ownerEmail || "-"}</div>
+                </td>
+                <td className="max-w-sm px-4 py-3">
+                  <div className="font-bold">{problem.title}</div>
+                  <div className="mt-1 line-clamp-2 text-xs text-foreground/50">
+                    {problem.description}
+                  </div>
+                </td>
+                <td className="px-4 py-3">{problem.category}</td>
+                <td className="px-4 py-3 font-black">{problem.requestCount}</td>
+                <td className="px-4 py-3 font-black">{problem.conversationCount}</td>
+              </tr>
+            ))}
+            {!data?.problems.length ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-8 text-center text-sm text-foreground/45">
+                  Bu etkinlik için henüz ntw.five problemi yok.
                 </td>
               </tr>
             ) : null}
@@ -2865,12 +3298,17 @@ function EventRegistryAdmin({
           soruyu yanıtlar.
         </p>
         <div className="mt-4 grid gap-3">
-          {([
-            ["introLabel", "1. soru", "introPlaceholder", "1. soru açıklaması"],
-            ["offersLabel", "2. soru", "offersPlaceholder", "2. soru açıklaması"],
-            ["needsLabel", "3. soru", "needsPlaceholder", "3. soru açıklaması"],
-          ] as const).map(([labelKey, label, placeholderKey, placeholderLabel]) => (
-            <div key={labelKey} className="grid gap-2 rounded-2xl border border-border bg-background p-3 sm:grid-cols-2">
+          {(
+            [
+              ["introLabel", "1. soru", "introPlaceholder", "1. soru açıklaması"],
+              ["offersLabel", "2. soru", "offersPlaceholder", "2. soru açıklaması"],
+              ["needsLabel", "3. soru", "needsPlaceholder", "3. soru açıklaması"],
+            ] as const
+          ).map(([labelKey, label, placeholderKey, placeholderLabel]) => (
+            <div
+              key={labelKey}
+              className="grid gap-2 rounded-2xl border border-border bg-background p-3 sm:grid-cols-2"
+            >
               <AdminField
                 label={label}
                 value={draft.entry.registrationPrompts[labelKey]}
@@ -3102,11 +3540,13 @@ function EventRegistryAdmin({
               >
                 Etkinlik girişini aç
               </a>
-              {([
-                ["matchlab", "/21-agustos/eslesme"],
-                ["wordcloud", "/21-agustos/wordcloud"],
-                ["five", "/five/live"],
-              ] as const).map(([product, path]) => {
+              {(
+                [
+                  ["matchlab", "/21-agustos/eslesme"],
+                  ["wordcloud", "/21-agustos/wordcloud"],
+                  ["five", "/five/live"],
+                ] as const
+              ).map(([product, path]) => {
                 const config = draft.products[product];
                 return (
                   <a
@@ -3416,6 +3856,90 @@ function buildReport(
     formAndNetworkEvents,
     timeline: buildAnalyticsTimeline(summaries, requestedDays),
   };
+}
+
+function buildEventPageReport(
+  summaries: AnalyticsDailySummary[],
+  selectedPath: string,
+  requestedDays: number,
+) {
+  const normalizedPath = normalizeAnalyticsPath(selectedPath);
+  const sessions = new Set<string>();
+  const buttonActions: Record<string, number> = {};
+  let pageViews = 0;
+  let ticketClicks = 0;
+  let pageTimeTotal = 0;
+  let pageTimeCount = 0;
+
+  const metricForSummary = (summary: AnalyticsDailySummary) => {
+    const matching = Object.entries(summary.pageMetrics || {}).filter(
+      ([path]) => normalizeAnalyticsPath(path) === normalizedPath,
+    );
+    const metric = {
+      pageViews: 0,
+      ticketClicks: 0,
+      pageTimeTotal: 0,
+      pageTimeCount: 0,
+      sessionIds: [] as string[],
+      buttonActions: {} as Record<string, number>,
+    };
+    for (const [, page] of matching) {
+      metric.pageViews += page.pageViews || 0;
+      metric.ticketClicks += page.ticketClicks || 0;
+      metric.pageTimeTotal += page.pageTimeTotal || 0;
+      metric.pageTimeCount += page.pageTimeCount || 0;
+      metric.sessionIds.push(...(page.sessionIds || []));
+      for (const [label, value] of Object.entries(page.buttonActions || {})) {
+        metric.buttonActions[label] = (metric.buttonActions[label] || 0) + value;
+      }
+    }
+    return metric;
+  };
+
+  for (const summary of summaries) {
+    const metric = metricForSummary(summary);
+    pageViews += metric.pageViews;
+    ticketClicks += metric.ticketClicks;
+    pageTimeTotal += metric.pageTimeTotal;
+    pageTimeCount += metric.pageTimeCount;
+    metric.sessionIds.forEach((sessionId) => sessions.add(sessionId));
+    for (const [label, value] of Object.entries(metric.buttonActions)) {
+      buttonActions[label] = (buttonActions[label] || 0) + value;
+    }
+  }
+
+  const summariesByDate = new Map(summaries.map((summary) => [summary.date, summary]));
+  const today = new Date();
+  const safeDays = Math.max(1, Math.min(90, requestedDays));
+  const timeline = Array.from({ length: safeDays }, (_, index) => {
+    const offset = safeDays - index - 1;
+    const date = new Date(
+      Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - offset),
+    );
+    const dateKey = date.toISOString().slice(0, 10);
+    const summary = summariesByDate.get(dateKey);
+    const metric = summary ? metricForSummary(summary) : null;
+    return {
+      day: formatAnalyticsDateShort(dateKey),
+      pageViews: metric?.pageViews || 0,
+      ticketClicks: metric?.ticketClicks || 0,
+    };
+  });
+
+  return {
+    pageViews,
+    sessions: sessions.size,
+    ticketClicks,
+    conversion: sessions.size ? ((ticketClicks / sessions.size) * 100).toFixed(1) : "0.0",
+    averageTime: pageTimeCount ? Math.round(pageTimeTotal / pageTimeCount) : 0,
+    buttonActions: topRows(buttonActions),
+    timeline,
+  };
+}
+
+function normalizeAnalyticsPath(value: string) {
+  const path = (value || "/").split(/[?#]/, 1)[0] || "/";
+  return path.length > 1 ? path.replace(/\/+$/, "") : path;
 }
 
 function buildAnalyticsTimeline(summaries: AnalyticsDailySummary[], requestedDays: number) {

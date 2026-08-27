@@ -174,6 +174,13 @@ export type FiveSessionPayload = {
   };
 };
 
+export type FiveAdminPayload = {
+  problems: Array<FiveProblem & { ownerEmail?: string }>;
+  requests: FiveHelpRequest[];
+  encounters: FiveEncounter[];
+  database: FiveSessionPayload["database"] & { eventSlug?: string };
+};
+
 export const fiveEventTokenStorageKey = "notwork_21_agustos_network_token";
 
 export function getFiveEventTokenStorageKey(selection?: EventSelection) {
@@ -219,4 +226,30 @@ export async function fiveRequest<T>(input?: Record<string, unknown>, selection?
   });
   if (!response.ok) throw new Error((await response.text()) || "İşlem tamamlanamadı");
   return (await response.json()) as T;
+}
+
+export async function getFiveAdmin(password: string, selection?: EventSelection) {
+  const activeSelection = selection || getEventSelectionFromLocation();
+  const response = await fetch("/api/admin/event-products/five", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(withEventSelectionInput({ password, action: "list" }, activeSelection)),
+  });
+  if (!response.ok) throw new Error((await response.text()) || "ntw.five verisi alınamadı");
+  return (await response.json()) as FiveAdminPayload;
+}
+
+export async function updateFiveAdmin(
+  password: string,
+  action: "seedDemo" | "resetDemo",
+  selection?: EventSelection,
+) {
+  const activeSelection = selection || getEventSelectionFromLocation();
+  const response = await fetch("/api/admin/event-products/five", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(withEventSelectionInput({ password, action }, activeSelection)),
+  });
+  if (!response.ok) throw new Error((await response.text()) || "ntw.five güncellenemedi");
+  return (await response.json()) as FiveAdminPayload;
 }
