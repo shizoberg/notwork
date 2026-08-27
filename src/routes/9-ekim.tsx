@@ -65,10 +65,10 @@ const eventConfig: EventProductConfig = {
       mediaType: "video",
       title: "rene lokal",
       subtitle: "başarısızlık hikâyelerinden gerçek bir an",
-      autoPlay: false,
+      autoPlay: true,
       muted: true,
-      loop: false,
-      controls: true,
+      loop: true,
+      controls: false,
       position: "center",
     },
     {
