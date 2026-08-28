@@ -56,6 +56,20 @@ const eventConfig: EventProductConfig = {
       subtitle: "17 eylül · 20.00 · chill & chat",
       position: "center",
     },
+    {
+      src: "/events/17-eylul/chill-chat-roportaj.mp4",
+      poster: "/events/17-eylul/chill-chat-roportaj-poster.jpg",
+      alt: "notwork Chill & Chat community etkinlik röportajı",
+      label: "röportaj",
+      mediaType: "video",
+      title: "notwork röportajı",
+      subtitle: "community etkinlik deneyimini anlatıyor",
+      autoPlay: false,
+      muted: false,
+      loop: false,
+      controls: true,
+      position: "center",
+    },
   ],
   tickets: [
     {
@@ -157,6 +171,14 @@ export const Route = createFileRoute("/17-eylul")({
             contentUrl: "/events/17-eylul/alsancak-kosk.mp4",
             thumbnailUrl: "/events/17-eylul/alsancak-kosk-poster.jpg",
             uploadDate: "2026-08-27",
+          },
+          {
+            name: "notwork Chill & Chat community röportajı",
+            description:
+              "notwork community katılımcısının etkinlik deneyimini anlattığı kısa röportaj.",
+            contentUrl: "/events/17-eylul/chill-chat-roportaj.mp4",
+            thumbnailUrl: "/events/17-eylul/chill-chat-roportaj-poster.jpg",
+            uploadDate: "2026-08-28",
           },
         ],
       }),
