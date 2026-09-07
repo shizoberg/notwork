@@ -50,6 +50,8 @@ export type EventFlowStep = {
 };
 
 export type EventProductConfig = {
+  trackingId: string;
+  trackingName: string;
   eventLabel: string;
   imageTitle: string;
   imageSubtitle: string;
@@ -463,6 +465,16 @@ function TicketButton({
         rel="noreferrer"
         data-analytics="ticket_click"
         data-analytics-label={`${config.date} ${selectedOption.name} bilet`}
+        data-meta-event="TicketButtonClick"
+        data-meta-event-type="custom"
+        data-meta-content={`${config.trackingName} bileti`}
+        data-meta-content-id={config.trackingId}
+        data-meta-event-id={config.trackingId}
+        data-meta-event-title={config.trackingName}
+        data-meta-event-date={config.date}
+        data-meta-button-location="purchase_panel"
+        data-meta-ticket-option={selectedOption.id}
+        data-meta-ticket-price={selectedOption.price}
         onClick={onTicketRedirect}
         className="mt-5 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-foreground px-5 py-4 text-base font-black text-background transition hover:-translate-y-0.5 hover:bg-primary-deep"
       >
@@ -695,6 +707,16 @@ function FloatingTicketCta({
         rel="noreferrer"
         data-analytics="ticket_click"
         data-analytics-label={`${config.date} sabit ${selectedOption.name} bilet`}
+        data-meta-event="TicketButtonClick"
+        data-meta-event-type="custom"
+        data-meta-content={`${config.trackingName} bileti`}
+        data-meta-content-id={config.trackingId}
+        data-meta-event-id={config.trackingId}
+        data-meta-event-title={config.trackingName}
+        data-meta-event-date={config.date}
+        data-meta-button-location="floating_cta"
+        data-meta-ticket-option={selectedOption.id}
+        data-meta-ticket-price={selectedOption.price}
         onClick={onTicketRedirect}
         className={className}
       >

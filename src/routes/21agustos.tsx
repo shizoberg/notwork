@@ -107,9 +107,6 @@ function AugustTwentyFirst() {
               href={ticketUrl}
               data-analytics="ticket_click"
               data-analytics-label="21 Ağustos Rene Lokal bilet al"
-              data-meta-event="ViewContent"
-              data-meta-content="notwork 21 Ağustos Rene Lokal Bileti"
-              data-meta-content-id="notwork-21-agustos-rene-lokal"
               target="_blank"
               rel="noreferrer"
               className="rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground transition hover:opacity-90"

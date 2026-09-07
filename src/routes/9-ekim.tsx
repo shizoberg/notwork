@@ -6,6 +6,8 @@ import { createSeo } from "@/lib/seo";
 import { createEventStructuredData } from "@/lib/structured-data";
 
 const eventConfig: EventProductConfig = {
+  trackingId: "notwork-classic-2026-10-09",
+  trackingName: "notwork Classic",
   eventLabel: "classic edition",
   imageTitle: "notwork classic",
   imageSubtitle: "9 ekim · 19.30 · rene lokal",

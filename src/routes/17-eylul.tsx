@@ -6,6 +6,8 @@ import { createSeo } from "@/lib/seo";
 import { createEventStructuredData } from "@/lib/structured-data";
 
 const eventConfig: EventProductConfig = {
+  trackingId: "notwork-chill-chat-2026-09-17",
+  trackingName: "notwork Chill & Chat",
   eventLabel: "yeni etkinlik",
   imageTitle: "chill & chat",
   imageSubtitle: "17 eylül · 20.00 · alsancak köşk",
