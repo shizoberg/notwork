@@ -29,11 +29,7 @@ import {
   type NotworkEvent,
   withEventSelection,
 } from "@/lib/event-registry";
-import {
-  getMyMemberProfile,
-  loginMember,
-  MemberProfileApiError,
-} from "@/lib/member-profile-api";
+import { getMyMemberProfile, loginMember, MemberProfileApiError } from "@/lib/member-profile-api";
 import type { NotworkMemberProfile } from "@/lib/member-profile";
 import { createNoIndexSeo } from "@/lib/seo";
 
@@ -142,18 +138,21 @@ function LinksPage() {
     [eventSelection],
   );
   const eventLinks = useMemo(() => {
-    const productLinks = eventProductLinks.map((link) => {
-      const product = activeEvent?.products[link.product];
-      return {
-        ...link,
-        title: product?.label || link.title,
-        href: withEventSelection(link.href, eventSelection),
-        enabled: product
-          ? product.enabled && product.visible && product.state !== "disabled"
-          : true,
-        order: product?.order || (link.product === "five" ? 1 : link.product === "wordcloud" ? 2 : 3),
-      };
-    }).sort((left, right) => left.order - right.order);
+    const productLinks = eventProductLinks
+      .map((link) => {
+        const product = activeEvent?.products[link.product];
+        return {
+          ...link,
+          title: product?.label || link.title,
+          href: withEventSelection(link.href, eventSelection),
+          enabled: product
+            ? product.enabled && product.visible && product.state !== "disabled"
+            : true,
+          order:
+            product?.order || (link.product === "five" ? 1 : link.product === "wordcloud" ? 2 : 3),
+        };
+      })
+      .sort((left, right) => left.order - right.order);
     return [
       ...productLinks,
       {
@@ -179,7 +178,7 @@ function LinksPage() {
     offersDetail: "",
     needs: "",
     needTag: "",
-    marketingOptIn: true,
+    marketingOptIn: false,
     eventConsent: false,
     generalNetworkOptIn: false,
   });
@@ -205,7 +204,9 @@ function LinksPage() {
       offersDetail: data.offersDetail || "",
       needs: data.needs,
       needTag: data.needTag,
-      marketingOptIn: data.profile.marketingOptIn,
+      marketingOptIn: Boolean(
+        data.profile.marketingPreferenceVersion === "2026-09-09" && data.profile.marketingOptIn,
+      ),
       generalNetworkOptIn: data.profile.generalNetworkOptIn,
       eventConsent: true,
     }));
@@ -253,7 +254,8 @@ function LinksPage() {
       const token = localStorage.getItem(activeTokenStorageKey);
       if (token) {
         try {
-          if (active) applyRegistration(await getEventNetworkMe(token, selection), selectedEvent?.slug);
+          if (active)
+            applyRegistration(await getEventNetworkMe(token, selection), selectedEvent?.slug);
           loadedRegistration = true;
         } catch {
           localStorage.removeItem(activeTokenStorageKey);
@@ -309,10 +311,10 @@ function LinksPage() {
     () =>
       Boolean(
         form.firstName.trim() &&
-          form.lastName.trim() &&
-          form.email.includes("@") &&
-          form.attendedEvent &&
-          form.offers.length > 0,
+        form.lastName.trim() &&
+        form.email.includes("@") &&
+        form.attendedEvent &&
+        form.offers.length > 0,
       ),
     [form],
   );
@@ -350,6 +352,7 @@ function LinksPage() {
           needTag: form.needTag || "networking",
           generalNetworkOptIn: form.generalNetworkOptIn,
           marketingOptIn: form.marketingOptIn,
+          marketingPreferenceVersion: "2026-09-09",
           eventConsent: form.eventConsent,
         },
         eventSelection,
@@ -768,33 +771,78 @@ function RegistrationGate({
         </p>
         <h1 className="mt-2 text-3xl font-black tracking-[-0.04em]">Etkinlik profilini oluştur</h1>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <QuickInput label="Ad" value={form.firstName} onChange={(firstName) => setForm((current) => ({ ...current, firstName }))} />
-          <QuickInput label="Soyad" value={form.lastName} onChange={(lastName) => setForm((current) => ({ ...current, lastName }))} />
-          <QuickInput className="sm:col-span-2" label="E-posta" type="email" value={form.email} onChange={(email) => setForm((current) => ({ ...current, email }))} />
+          <QuickInput
+            label="Ad"
+            value={form.firstName}
+            onChange={(firstName) => setForm((current) => ({ ...current, firstName }))}
+          />
+          <QuickInput
+            label="Soyad"
+            value={form.lastName}
+            onChange={(lastName) => setForm((current) => ({ ...current, lastName }))}
+          />
+          <QuickInput
+            className="sm:col-span-2"
+            label="E-posta"
+            type="email"
+            value={form.email}
+            onChange={(email) => setForm((current) => ({ ...current, email }))}
+          />
         </div>
         <label className="mt-4 block text-sm font-bold">
           Hangi Notwork etkinliğine katıldın?
           <select
             value={form.attendedEvent}
-            onChange={(event) => setForm((current) => ({ ...current, attendedEvent: event.target.value }))}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, attendedEvent: event.target.value }))
+            }
             className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-base outline-none focus:border-primary"
           >
             <option value="">Etkinliği seç</option>
-            {activeEvent && !notworkEventOptions.some((item) => item.value === activeEvent.slug) ? <option value={activeEvent.slug}>{activeEvent.title}</option> : null}
-            {notworkEventOptions.map((eventOption) => <option key={eventOption.value} value={eventOption.value}>{eventOption.label}</option>)}
+            {activeEvent && !notworkEventOptions.some((item) => item.value === activeEvent.slug) ? (
+              <option value={activeEvent.slug}>{activeEvent.title}</option>
+            ) : null}
+            {notworkEventOptions.map((eventOption) => (
+              <option key={eventOption.value} value={eventOption.value}>
+                {eventOption.label}
+              </option>
+            ))}
           </select>
         </label>
         <div className="mt-4">
           <h2 className="text-lg font-black">Neler yapabilirsin?</h2>
-          <p className="mt-1 text-xs text-foreground/50">Eşleşmede kullanılacak en fazla 3 alan seç.</p>
+          <p className="mt-1 text-xs text-foreground/50">
+            Eşleşmede kullanılacak en fazla 3 alan seç.
+          </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {offerSuggestions.map((offer) => (
-              <button key={offer} type="button" onClick={() => toggleOffer(offer)} className={`rounded-full border px-3 py-2 text-sm font-bold ${form.offers.includes(offer) ? "border-primary bg-primary text-primary-foreground" : "border-primary/20 bg-primary/5"}`}>{offer}</button>
+              <button
+                key={offer}
+                type="button"
+                onClick={() => toggleOffer(offer)}
+                className={`rounded-full border px-3 py-2 text-sm font-bold ${form.offers.includes(offer) ? "border-primary bg-primary text-primary-foreground" : "border-primary/20 bg-primary/5"}`}
+              >
+                {offer}
+              </button>
             ))}
           </div>
           <div className="mt-3 flex gap-2">
-            <input value={form.customOffer} onChange={(event) => setForm((current) => ({ ...current, customOffer: event.target.value }))} maxLength={36} placeholder="Başka konu" className="min-w-0 flex-1 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none" />
-            <button type="button" onClick={addCustomOffer} className="rounded-2xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground">Ekle</button>
+            <input
+              value={form.customOffer}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, customOffer: event.target.value }))
+              }
+              maxLength={36}
+              placeholder="Başka konu"
+              className="min-w-0 flex-1 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none"
+            />
+            <button
+              type="button"
+              onClick={addCustomOffer}
+              className="rounded-2xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground"
+            >
+              Ekle
+            </button>
           </div>
         </div>
         <button
@@ -812,8 +860,7 @@ function RegistrationGate({
   return (
     <section className="mt-5 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-xl shadow-primary/10 sm:p-6">
       <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-primary-deep">
-        <UserRound className="h-4 w-4" />
-        2 / 2 · etkinlik soruları
+        <UserRound className="h-4 w-4" />2 / 2 · etkinlik soruları
       </div>
       <h1 className="mt-4 text-3xl font-black leading-none tracking-[-0.04em] sm:text-4xl">
         {activeEvent?.shortTitle || "Bu etkinlik"} için son adım.
@@ -839,7 +886,13 @@ function RegistrationGate({
               : `${form.firstName} ${form.lastName} · ${form.email}`}
           </p>
         </div>
-        <button type="button" onClick={() => setRegistrationStep("standard")} className="rounded-full border border-primary/30 bg-background px-4 py-2 text-xs font-black text-primary-deep">bilgileri düzenle</button>
+        <button
+          type="button"
+          onClick={() => setRegistrationStep("standard")}
+          className="rounded-full border border-primary/30 bg-background px-4 py-2 text-xs font-black text-primary-deep"
+        >
+          bilgileri düzenle
+        </button>
       </div>
 
       <label className="mt-4 block text-sm font-bold">
@@ -918,7 +971,7 @@ function RegistrationGate({
         <ConsentBox
           checked={form.marketingOptIn}
           onChange={(marketingOptIn) => setForm((current) => ({ ...current, marketingOptIn }))}
-          title="Etkinlik ve topluluk duyurularını e-posta ile almak istiyorum. Bu izin isteğe bağlıdır."
+          title="Adımın ve e-posta adresimin notwork etkinlik, bilet ve topluluk duyuruları için kullanılmasına ve bana e-posta ile ticari elektronik ileti gönderilmesine izin veriyorum. İzin isteğe bağlıdır; dilediğim zaman ücretsiz ayrılabilirim."
         />
         <p className="text-xs leading-5 text-foreground/45">
           Ayrıntılar için{" "}

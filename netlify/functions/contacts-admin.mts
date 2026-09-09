@@ -63,6 +63,7 @@ export async function collectContacts() {
   if (database.mode !== "live")
     throw new Error("E-posta dışa aktarımı canlı üye veritabanını gerektirir");
   const specs = [
+    { store: "notwork-announcements", prefix: "public-preferences/", source: "Duyuru formu" },
     { store: database.memberSourceStoreName, prefix: "members/", source: "Networking" },
     { store: database.storeName, prefix: "profiles/", source: "Üye profilleri" },
     { store: "startup-applications", prefix: "applications/", source: "Startup başvuruları" },

@@ -33,6 +33,11 @@ const dataGroups = [
   },
   {
     icon: Eye,
+    title: "Duyuru ve iletişim tercihleri",
+    text: "E-posta adresi, izin veya ret tercihi, tercih zamanı, kaynak ve gösterilen izin metninin sürümü; abonelikten çıkma kaydı ve gönderimle ilgili işlem kayıtları.",
+  },
+  {
+    icon: Eye,
     title: "Teknik ve kullanım",
     text: "Oturum bilgisi, işlem zamanı, cihaz/tarayıcı türü, sayfa görüntüleme, tıklama, form gönderimi, kaydırma, yönlendiren kaynak ve çerez tercihi.",
   },
@@ -43,7 +48,7 @@ const sections = [
     id: "sorumlu",
     title: "1. Veri sorumlusu ve iletişim",
     body: [
-      "Veri sorumlusu, notwork topluluk organizasyonudur. İletişim ve KVKK başvuruları için berk@carewithki.com adresini kullanabilirsiniz.",
+      "Veri sorumlusu Berk Aktaş’tır (notwork · Kurucu ortak). İletişim ve KVKK başvuruları için berk@notwork.me adresini kullanabilirsiniz.",
       "İletişim adresi: Çınarlı, 1572/1. Sk. No:33, 35170 Konak/İzmir.",
     ],
   },
@@ -61,6 +66,7 @@ const sections = [
     body: [
       "Üyelik ve giriş işlemlerini yürütmek; etkinlik katılımını doğrulamak; profilleri, business kartları ve QR kodlarını oluşturmak; kişilerin kendi verilerini güncellemesini sağlamak; networking ağını göstermek ve topluluk güvenliğini korumak.",
       "ntw.match.lab ile kişilerin katkı, ihtiyaç ve niyetlerine göre bağlantı önerileri oluşturmak; ntw.five içinde problem, çözüm talebi, görüşme ve zaman akışını yürütmek; ntw.wordcloud sonuçlarını etkinlik sırasında toplu veya anonim biçimde göstermek.",
+      "Tercihiniz varsa etkinlik, bilet ve topluluk duyurularını e-posta ile göndermek; izin ve ret tercihlerinizi yönetmek ve duyuru almak istemeyen adresleri sonraki gönderimlerden çıkarmak.",
       "Başvuru, sunum, startup ve sponsorluk taleplerini değerlendirmek; etkinlik geri bildirimlerini analiz etmek; açık rıza verilen yorum ve görselleri notwork sayfalarında yayınlamak; site güvenliği, hata tespiti, performans ve istatistik çalışmalarını yürütmek.",
     ],
   },
@@ -68,8 +74,8 @@ const sections = [
     id: "hukuk",
     title: "4. Hukuki sebepler",
     body: [
-      "Kişisel veriler, KVKK madde 5 kapsamında bir sözleşmenin kurulması veya ifası, hukuki yükümlülük, bir hakkın tesisi/kullanılması, veri sorumlusunun meşru menfaati ve gerektiğinde açık rıza hukuki sebeplerine dayanılarak işlenir.",
-      "Aydınlatma metni bilgi verme amacı taşır ve onaya bağlı değildir. Profilin herkese açık gösterilmesi, fotoğraf/yorum yayınlanması veya etkinlik dışı tanıtım iletişimi gibi açık rıza gerektiren işlemler için form üzerinde ayrı seçim sunulur. Ticari elektronik ileti izni ayrıca ve isteğe bağlı alınır.",
+      "Üyelik, giriş ve talep ettiğiniz etkinlik hizmetlerinin sağlanması için gerekli kimlik, iletişim ve işlem bilgileri KVKK madde 5/2-c kapsamında sözleşmenin kurulması veya ifası için işlenir. Güvenlik ve kötüye kullanımın önlenmesine yönelik gerekli teknik kayıtlar, temel haklarınıza zarar vermemek koşuluyla madde 5/2-f kapsamındaki meşru menfaate dayanır. Hak arama ve uyuşmazlıklara ilişkin gerekli kayıtlar madde 5/2-e; kanunen zorunlu kayıtlar madde 5/2-ç kapsamında saklanır.",
+      "Etkinlik, bilet ve topluluk tanıtımlarının e-posta ile iletilmesi için kullanılan ad ve e-posta bilgileri, isteğe bağlı seçiminiz doğrultusunda KVKK madde 5/1 kapsamında açık rızaya dayanır. Ticari elektronik ileti onayı ayrıca 6563 sayılı Kanun kapsamındadır. İzin ve ret kayıtları, tercihinizi uygulamak ve gerektiğinde ispat etmek amacıyla sınırlı olarak tutulur. Üyelik veya geçmiş etkinlik katılımı tek başına pazarlama izni sayılmaz. Aydınlatma metni bilgi verme amacı taşır ve onaya bağlı değildir. Profilin herkese açık gösterilmesi, fotoğraf/yorum yayınlanması veya etkinlik dışı tanıtım iletişimi gibi açık rıza gerektiren işlemler için form üzerinde ayrı seçim sunulur. Ticari elektronik ileti izni ayrıca ve isteğe bağlı alınır.",
     ],
   },
   {
@@ -85,16 +91,16 @@ const sections = [
     id: "aktarim",
     title: "6. Aktarım ve hizmet sağlayıcılar",
     body: [
-      "Veriler; barındırma ve veri saklama için Netlify/Netlify Blobs, kod ve dağıtım altyapısı için GitHub, e-posta bildirimleri için Resend ve güvenlik/yedekleme hizmeti veren teknik sağlayıcılarla amaçla sınırlı olarak paylaşılabilir.",
+      "Veriler; barındırma ve veri saklama için Netlify/Netlify Blobs, kod ve dağıtım altyapısı için GitHub, e-posta iletişimi için Google/Gmail ve kullanıldığı ölçüde Resend ve güvenlik/yedekleme hizmeti veren teknik sağlayıcılarla amaçla sınırlı olarak paylaşılabilir.",
       "Analitik veya pazarlama çerezlerine izin verilirse Meta Pixel gibi ölçüm araçları çalışabilir. YouTube, Instagram, LinkedIn, WhatsApp ve harici bilet bağlantıları açıldığında ilgili platformların kendi gizlilik koşulları uygulanır.",
-      "Yurt dışındaki bir hizmet sağlayıcının kullanıldığı hallerde aktarım, KVKK madde 9 ve yürürlükteki uygun güvence mekanizmalarına göre yürütülür. Kanuni zorunluluk halinde yetkili kurumlarla paylaşım yapılabilir.",
+      "Bu hizmetlerin yurt dışındaki altyapılarının kullanılması, verilerin yurt dışına aktarılmasına yol açabilir. KVKK madde 9 kapsamında uygulanabilir bir aktarım şartı ve gerekli güvenceler sağlanmalıdır. Duyuru izni, tek başına yurt dışına veri aktarımı izni değildir. Kanuni zorunluluk halinde yetkili kurumlarla amaçla sınırlı paylaşım yapılabilir.",
     ],
   },
   {
     id: "saklama",
     title: "7. Saklama ve silme",
     body: [
-      "Veriler, ilgili üyelik veya etkinlik süreci ve işleme amacı devam ettiği sürece; sonrasında ise yasal yükümlülükler, uyuşmazlık süreleri ve güvenli yedekleme gereksinimleriyle sınırlı olarak saklanır. Pazarlama izni geri çekildiğinde iletişim listesi kullanımı durdurulur.",
+      "Veriler, ilgili üyelik veya etkinlik süreci ve işleme amacı devam ettiği sürece; sonrasında ise yasal yükümlülükler, uyuşmazlık süreleri ve güvenli yedekleme gereksinimleriyle sınırlı olarak saklanır. Duyuru izni geri çekildiğinde adres yeni duyuru gönderimlerinden çıkarılır. Tekrar gönderimi önlemek için gerekli ret kaydı ile izin ve ret işlemlerinin ispatı için gerekli kayıtlar, ilgili yükümlülük ve hak arama süreleriyle sınırlı olarak tutulabilir; bunlar tanıtım göndermek için kullanılamaz. Abonelikten çıkma hesabı veya etkinlik kaydını silmez.",
       "İşleme sebebi ortadan kalktığında veriler periyodik kontrollerle veya talep üzerine silinir, yok edilir ya da anonim hale getirilir. Yayındaki profil, business kart, referans, yorum ve fotoğraflar için gizleme, düzeltme veya kaldırma talebi iletebilirsiniz.",
     ],
   },
@@ -110,7 +116,7 @@ const sections = [
     title: "9. Haklarınız ve başvuru",
     body: [
       "KVKK madde 11 kapsamında verilerinizin işlenip işlenmediğini öğrenme, bilgi ve aktarım yapılan tarafları isteme, amacına uygun kullanımı öğrenme, eksik/yanlış veriyi düzeltme, şartları varsa silme veya yok etme, bu işlemlerin üçüncü kişilere bildirilmesini isteme, yalnızca otomatik analiz sonucu aleyhinize çıkan sonuca itiraz etme ve zarar halinde giderim talep etme haklarına sahipsiniz.",
-      "Talebinizi kimliğinizi doğrulamaya elverişli bilgilerle berk@carewithki.com adresine iletebilirsiniz. Başvurular, niteliğine göre en kısa sürede ve en geç 30 gün içinde sonuçlandırılır.",
+      "Talebinizi kimliğinizi doğrulamaya elverişli bilgilerle berk@notwork.me adresine iletebilirsiniz. Başvurular, niteliğine göre en kısa sürede ve en geç 30 gün içinde sonuçlandırılır.",
     ],
   },
 ];
@@ -136,7 +142,7 @@ function KvkkPage() {
               </p>
             </div>
             <div className="rounded-3xl border border-primary/20 bg-primary/10 p-5 text-sm leading-6">
-              <p className="font-black">Son güncelleme · 27 Ağustos 2026</p>
+              <p className="font-black">Son güncelleme · 9 Eylül 2026</p>
               <p className="mt-2 text-foreground/60">
                 Aydınlatma ve açık rıza birbirinden ayrıdır. Rıza gerektiren tercihler için{" "}
                 <Link to="/acik-riza" className="font-black text-primary-deep underline">
@@ -192,7 +198,7 @@ function KvkkPage() {
 
           <div className="mt-6 flex flex-wrap gap-3 rounded-3xl border border-primary/20 bg-primary/10 p-5 sm:p-6">
             <a
-              href="mailto:berk@carewithki.com?subject=notwork%20KVKK%20ba%C5%9Fvurusu"
+              href="mailto:berk@notwork.me?subject=notwork%20KVKK%20ba%C5%9Fvurusu"
               className="rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground"
             >
               KVKK başvurusu gönder

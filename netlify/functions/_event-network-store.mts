@@ -1,3 +1,4 @@
+import { recordMarketingPreference } from "./_announcements.mjs";
 import { createHash } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import { getEventProductRuntimeContext } from "./_event-product-context.mjs";
@@ -13,6 +14,8 @@ type EventNetworkProfile = {
   attendedEvent: string;
   generalNetworkOptIn: boolean;
   marketingOptIn: boolean;
+  marketingPreferenceVersion?: string;
+  marketingPreferenceRecordedAt?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -119,6 +122,7 @@ export type NetworkInput = {
   eventConsent?: boolean;
   generalNetworkOptIn?: boolean;
   marketingOptIn?: boolean;
+  marketingPreferenceVersion?: string;
 };
 
 export type NetworkAdminInput = {
@@ -673,6 +677,11 @@ export async function registerNetworkProfile(
     type: "json",
     consistency: "strong",
   })) as EventNetworkRegistration | null;
+  // Old clients and historical checked-by-default values are not new consent evidence.
+  const marketingPreference =
+    input.marketingPreferenceVersion === "2026-09-09" && typeof input.marketingOptIn === "boolean"
+      ? await recordMarketingPreference(emailNormalized, input.marketingOptIn)
+      : null;
   if (existing) {
     const accessToken = crypto.randomUUID();
     const accessTokenHash = hashToken(accessToken);
@@ -693,7 +702,16 @@ export async function registerNetworkProfile(
       generalNetworkOptIn: Boolean(
         input.generalNetworkOptIn || existing.profile.generalNetworkOptIn,
       ),
-      marketingOptIn: Boolean(input.marketingOptIn || existing.profile.marketingOptIn),
+      marketingOptIn:
+        typeof input.marketingOptIn === "boolean"
+          ? input.marketingOptIn
+          : existing.profile.marketingOptIn,
+      ...(marketingPreference
+        ? {
+            marketingPreferenceVersion: marketingPreference.version,
+            marketingPreferenceRecordedAt: marketingPreference.recordedAt,
+          }
+        : {}),
       updatedAt: now,
     };
     const participant: EventParticipant = {
@@ -751,7 +769,13 @@ export async function registerNetworkProfile(
     emailNormalized,
     attendedEvent,
     generalNetworkOptIn: Boolean(input.generalNetworkOptIn),
-    marketingOptIn: Boolean(input.marketingOptIn),
+    marketingOptIn: input.marketingOptIn === true,
+    ...(marketingPreference
+      ? {
+          marketingPreferenceVersion: marketingPreference.version,
+          marketingPreferenceRecordedAt: marketingPreference.recordedAt,
+        }
+      : {}),
     createdAt: now,
     updatedAt: now,
   };

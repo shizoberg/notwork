@@ -1,6 +1,7 @@
 import { useState } from "react";
 type Draft = {
   id: string;
+  greeting: string;
   subject: string;
   preheader: string;
   body: string;
@@ -17,6 +18,7 @@ type Payload = {
 export function AnnouncementAdmin({ password }: { password: string }) {
   const [data, setData] = useState<Payload | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [previewName, setPreviewName] = useState("Berk");
   const [email, setEmail] = useState("");
   const [evidence, setEvidence] = useState("");
   const [busy, setBusy] = useState(false);
@@ -29,7 +31,7 @@ export function AnnouncementAdmin({ password }: { password: string }) {
       const response = await fetch("/api/admin/announcements", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ password, action, draft, email, evidence }),
+        body: JSON.stringify({ password, action, draft, email, evidence, previewName }),
       });
       if (!response.ok) throw new Error(await response.text());
       const result = (await response.json()) as Payload;
@@ -75,9 +77,27 @@ export function AnnouncementAdmin({ password }: { password: string }) {
               ? "Resend anahtarı yapılandırılmış. Gönderimden önce alan adı ve teslimat testi doğrulanmalı."
               : "Resend gönderimi için RESEND_API_KEY ve gönderen alan adı doğrulaması gerekiyor."}
           </p>
+          <label className="block text-sm">
+            Önizlemede kullanılacak isim
+            <input
+              className={field}
+              value={previewName}
+              maxLength={80}
+              onChange={(event) => {
+                setPreviewName(event.target.value);
+                setDirty(true);
+              }}
+            />
+          </label>
+          <p className="text-xs text-foreground/60">
+            Hitap, konu veya içerikte {"{{isim}}"} yazabilirsin. Her alıcının kendi adı kullanılır;
+            isim yoksa boş bırakılır. İçerikte zaten selam varsa hitap alanıyla birlikte
+            düzenleyebilirsin. İzin istemek için izni bilinmeyen kişilere duyuru gönderilmez.
+          </p>
           <div className="grid gap-3">
             {(
               [
+                ["greeting", "Kişiye özel hitap"],
                 ["subject", "Konu"],
                 ["preheader", "Önizleme metni"],
                 ["body", "E-posta içeriği"],

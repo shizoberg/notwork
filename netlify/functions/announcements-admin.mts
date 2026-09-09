@@ -22,6 +22,7 @@ export default async (request: Request) => {
       draft?: Partial<AnnouncementDraft>;
       email?: string;
       evidence?: string;
+      previewName?: string;
     };
     const actual = Buffer.from(
       createHash("sha256")
@@ -56,14 +57,18 @@ export default async (request: Request) => {
       draft: AnnouncementDraft;
       updatedAt: string;
     } | null;
-    const draft = saved?.draft || defaultDraft;
+    const draft = normalizeDraft(saved?.draft || defaultDraft);
     const { contacts } = await collectContacts();
     const counts = { total: contacts.length, subscribed: 0, unknown: 0, unsubscribed: 0 };
     for (const contact of contacts) counts[contact.announcementConsent]++;
     return Response.json(
       {
         draft,
-        html: renderAnnouncement(draft, "#taslak-onizleme"),
+        html: renderAnnouncement(
+          draft,
+          "#taslak-onizleme",
+          typeof input.previewName === "string" ? input.previewName.slice(0, 80) : "Berk",
+        ),
         updatedAt: saved?.updatedAt || null,
         counts,
         providerConfigured: Boolean(process.env.RESEND_API_KEY),

@@ -46,6 +46,7 @@ export async function registerEventNetwork(
     attendedEvent?: string;
     generalNetworkOptIn: boolean;
     marketingOptIn: boolean;
+    marketingPreferenceVersion?: string;
     eventConsent: boolean;
   },
   selection?: EventSelection,

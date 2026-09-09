@@ -8,6 +8,8 @@ export type EventNetworkProfile = {
   attendedEvent: string;
   generalNetworkOptIn: boolean;
   marketingOptIn: boolean;
+  marketingPreferenceVersion?: string;
+  marketingPreferenceRecordedAt?: string;
   createdAt: string;
   updatedAt: string;
 };

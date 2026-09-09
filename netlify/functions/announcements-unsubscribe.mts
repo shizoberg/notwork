@@ -1,5 +1,5 @@
 import type { Config } from "@netlify/functions";
-import { tokenEmail, unsubscribe } from "./_announcements.mjs";
+import { tokenEmail, unsubscribe, subscriptionStatus, recordConsent } from "./_announcements.mjs";
 const headers = {
   "content-type": "text/html; charset=utf-8",
   "cache-control": "no-store, private",
@@ -16,11 +16,22 @@ export default async (request: Request) => {
     return new Response("Method not allowed", { status: 405 });
   try {
     const token = new URL(request.url).searchParams.get("token") || "";
-    if (!(await tokenEmail(token)))
+    const email = await tokenEmail(token);
+    if (!email)
       return new Response(
         page("Bu bağlantı geçersiz. E-postandaki abonelikten çık bağlantısını kullan."),
         { status: 404, headers },
       );
+    const wantsToContinue = new URL(request.url).searchParams.get("preference") === "subscribe";
+    if (request.method === "GET" && wantsToContinue) {
+      return new Response(
+        page(
+          "notwork etkinlik, bilet ve topluluk duyuruları için adının ve e-posta adresinin kullanılmasına ve e-posta ile ticari elektronik ileti almaya devam etmek istiyorsan tercihini onaylayabilirsin. Bu seçim isteğe bağlıdır ve hesabını etkilemez.",
+          '<p><a href="/kvkk">KVKK aydınlatma metni</a> · <a href="/acik-riza">Açık rıza metni</a></p><form method="post"><label><input type="checkbox" name="consent" value="2026-09-09" required> Duyuru amaçlı veri işlemeye ve e-posta ile ticari elektronik ileti almaya izin veriyorum. Ücretsiz olarak istediğim zaman ayrılabilirim.</label><p><button name="confirm" value="subscribe">Duyuruları almaya devam et</button></p></form>',
+        ),
+        { headers },
+      );
+    }
     // GET is deliberately read-only: email security scanners must not unsubscribe recipients.
     if (request.method === "GET")
       return new Response(
@@ -33,6 +44,30 @@ export default async (request: Request) => {
     if (Number(request.headers.get("content-length") || 0) > 2048)
       return new Response("Payload too large", { status: 413 });
     const body = new URLSearchParams(await request.text());
+    if (body.get("confirm") === "subscribe") {
+      if (body.get("consent") !== "2026-09-09")
+        return new Response("İsteğe bağlı izin seçimini işaretlemelisin.", {
+          status: 400,
+          headers,
+        });
+      if ((await subscriptionStatus(email)) !== "subscribed")
+        return new Response(
+          page(
+            "Bu bağlantı mevcut duyuru iznini doğrulamak içindir. Yeni abonelik veya yeniden abonelik için berk@notwork.me adresinden iletişime geçebilirsin.",
+          ),
+          { status: 409, headers },
+        );
+      await recordConsent(
+        email,
+        "E-posta bağlantısında ayrı, boş başlayan kutuyla yeniden onay. Metin sürümü 2026-09-09: Duyuru amaçlı veri işlemeye ve e-posta ile ticari elektronik ileti almaya izin veriyorum. Ücretsiz olarak istediğim zaman ayrılabilirim.",
+      );
+      return new Response(
+        page(
+          "Tercihin kaydedildi. notwork duyurularını almaya devam edeceksin. İstediğin zaman e-postadaki abonelikten çık bağlantısını kullanabilirsin.",
+        ),
+        { headers },
+      );
+    }
     if (body.get("confirm") !== "unsubscribe" && body.get("List-Unsubscribe") !== "One-Click")
       return new Response("Geçersiz istek", { status: 400 });
     await unsubscribe(token);

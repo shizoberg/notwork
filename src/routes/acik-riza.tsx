@@ -29,7 +29,7 @@ const choices = [
   {
     icon: Mail,
     title: "Etkinlik ve topluluk duyuruları",
-    text: "Yeni etkinlik, bilet, topluluk ve ürün duyurularının e-posta yoluyla gönderilmesine isteğe bağlı olarak izin verebilirim. Bu tercih, üyeliğin zorunlu şartı değildir.",
+    text: "Adımın ve e-posta adresimin notwork etkinlik, bilet ve topluluk duyuruları için kullanılmasına ve bana e-posta ile ticari elektronik ileti gönderilmesine izin veriyorum. İzin isteğe bağlıdır; dilediğim zaman ücretsiz ayrılabilirim. Bu tercih üyelik veya etkinlik katılımının şartı değildir. Bu sayfayı okumak ya da formu göndermek tek başına duyuru izni vermez.",
   },
 ];
 
@@ -54,8 +54,8 @@ function ExplicitConsentPage() {
             ise verilerin nasıl işlendiğine dair bilgilendirmedir; iki metin birbirinden ayrıdır.
           </p>
           <div className="mt-6 rounded-3xl border border-primary/20 bg-primary/10 p-5 text-sm leading-6 text-foreground/70">
-            <strong className="text-foreground">Son güncelleme:</strong> 27 Ağustos 2026. Rıza;
-            belirli bir işlem için, bilgilendirmeye dayalı ve özgür iradeyle verilir.
+            <strong className="text-foreground">Son güncelleme:</strong> 9 Eylül 2026. Rıza; belirli
+            bir işlem için, bilgilendirmeye dayalı ve özgür iradeyle verilir.
           </div>
         </section>
 
@@ -92,12 +92,15 @@ function ExplicitConsentPage() {
                   Profil görünürlüğü, yayınlanan içerik veya iletişim tercihleri için{" "}
                   <a
                     className="font-black text-primary-deep underline"
-                    href="mailto:berk@carewithki.com?subject=notwork%20a%C3%A7%C4%B1k%20r%C4%B1za%20tercihi"
+                    href="mailto:berk@notwork.me?subject=notwork%20a%C3%A7%C4%B1k%20r%C4%B1za%20tercihi"
                   >
-                    berk@carewithki.com
+                    berk@notwork.me
                   </a>{" "}
-                  adresine yazabilirsin. Geri çekme öncesindeki hukuka uygun işlemler bundan
-                  etkilenmez.
+                  adresine yazabilirsin. Duyuru e-postasındaki abonelikten çık bağlantısıyla
+                  ücretsiz ve hesabına giriş yapmadan ayrılabilirsin. Duyuru iznini geri çekmen
+                  hesabını veya etkinlik kaydını kapatmaz. Kayıtlı etkinliğinle ilgili zorunlu
+                  hizmet bildirimleri tanıtım içermeden ayrıca iletilebilir. Geri çekme öncesindeki
+                  hukuka uygun işlemler bundan etkilenmez.
                 </p>
               </div>
             </div>

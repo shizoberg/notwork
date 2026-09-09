@@ -31,9 +31,12 @@ try {
   );
   for (const file of [
     "_test-members",
+    "_event-network-store",
+    "_event-review-store",
     "_announcements",
     "announcements-unsubscribe",
     "announcements-admin",
+    "announcements-subscribe",
     "_member-profile-store",
     "contacts-admin",
     "member-profiles-admin",
@@ -46,6 +49,10 @@ try {
     });
     await fs.writeFile(path.join(temp, `functions/${file}.mjs`), compiled.outputText);
   }
+  await fs.writeFile(
+    path.join(temp, "functions/_event-product-context.mjs"),
+    "export const getEventProductRuntimeContext = () => null;",
+  );
   const load = (name) => import(pathToFileURL(path.join(temp, `functions/${name}.mjs`)));
   const { getStore } = await load("mock");
   const members = await load("_member-profile-store");
@@ -185,6 +192,108 @@ try {
     ),
   );
   const announcements = await load("_announcements");
+  const personalDraft = announcements.personalizeDraft(
+    { ...announcements.defaultDraft, body: "selam,\n\netkinlikte görüşelim {{isim}}" },
+    "Seckin Ozbek",
+  );
+  assert.equal(personalDraft.greeting, "selam Seckin");
+  assert.equal(personalDraft.body, "etkinlikte görüşelim Seckin");
+  assert.equal(announcements.personalizeDraft(announcements.defaultDraft).greeting, "selam");
+  assert.ok(
+    !announcements
+      .renderAnnouncement(announcements.defaultDraft, "#preview", "<script>")
+      .includes("<script>"),
+  );
+  const subscribe = (await load("announcements-subscribe")).default;
+  const subscribeInput = {
+    name: "Public Member",
+    email: "public@real-domain.org",
+    noticeRead: true,
+    marketingOptIn: true,
+    version: "2026-09-09",
+  };
+  const subscribeRequest = (input, origin = "https://notwork.me") =>
+    new Request("https://notwork.me/api/announcements/subscribe", {
+      method: "POST",
+      headers: { origin },
+      body: JSON.stringify(input),
+    });
+  assert.equal(
+    (await subscribe(subscribeRequest(subscribeInput, "https://bad.example"))).status,
+    403,
+  );
+  assert.equal(
+    (await subscribe(subscribeRequest({ ...subscribeInput, marketingOptIn: false }))).status,
+    400,
+  );
+  assert.equal(
+    (await subscribe(subscribeRequest({ ...subscribeInput, noticeRead: false }))).status,
+    400,
+  );
+  assert.equal((await subscribe(subscribeRequest(subscribeInput))).status, 200);
+  assert.equal((await subscribe(subscribeRequest(subscribeInput))).status, 429);
+  assert.equal(await announcements.subscriptionStatus(subscribeInput.email), "unknown");
+  const publicContacts = await contacts.collectContacts();
+  assert.ok(
+    publicContacts.contacts.some(
+      (row) => row.email === subscribeInput.email && row.names.includes(subscribeInput.name),
+    ),
+    "public form is available for admin review",
+  );
+  const preferenceEmail = "preference@example.org";
+  const preference = await announcements.recordMarketingPreference(preferenceEmail, true);
+  assert.equal(preference.version, "2026-09-09");
+  assert.equal(preference.verification, "unverified");
+  assert.equal(await announcements.subscriptionStatus(preferenceEmail), "unknown");
+  await announcements.recordConsent(
+    preferenceEmail,
+    "Independently verified email consent evidence",
+  );
+  await announcements.recordMarketingPreference(preferenceEmail, false);
+  assert.equal(await announcements.subscriptionStatus(preferenceEmail), "unsubscribed");
+  assert.equal(
+    await announcements.prepareMessage(preferenceEmail, announcements.defaultDraft),
+    null,
+  );
+  await announcements.recordMarketingPreference(preferenceEmail, true);
+  assert.equal(await announcements.subscriptionStatus(preferenceEmail), "unsubscribed");
+  const preferenceRows = await announcements.announcementStore().list({ prefix: "preferences/" });
+  assert.equal(preferenceRows.blobs.length, 4, "preference history is append-only");
+  const formSource = await fs.readFile(
+    new URL("../src/routes/linkler.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.ok(
+    formSource.includes(preference.text),
+    "recorded wording matches the displayed checkbox",
+  );
+  const network = await load("_event-network-store");
+  const networkStore = getStore({ name: "consent-regression-test" });
+  const networkInput = {
+    firstName: "Consent",
+    lastName: "Test",
+    email: "network-consent@example.org",
+    offers: ["tasarım"],
+    intro: "a".repeat(140),
+    offersDetail: "b".repeat(140),
+    needs: "c".repeat(140),
+    attendedEvent: "ilk-etkinligim",
+    eventConsent: true,
+    generalNetworkOptIn: false,
+    marketingOptIn: true,
+    marketingPreferenceVersion: "2026-09-09",
+  };
+  const optedIn = await network.registerNetworkProfile(networkStore, networkInput);
+  assert.equal(optedIn.profile.marketingOptIn, true);
+  assert.equal(optedIn.profile.marketingPreferenceVersion, "2026-09-09");
+  const optedOut = await network.registerNetworkProfile(networkStore, {
+    ...networkInput,
+    marketingOptIn: false,
+  });
+  assert.equal(optedOut.profile.marketingOptIn, false, "explicit false replaces a previous true");
+  assert.equal(await announcements.subscriptionStatus(networkInput.email), "unsubscribed");
+  const reloaded = await network.getRegistrationByToken(networkStore, optedOut.accessToken);
+  assert.equal(reloaded.profile.marketingOptIn, false, "withdrawal survives a store read");
   const unsubscribeHandler = (await load("announcements-unsubscribe")).default;
   const recipient = "member@real-domain.org";
   assert.equal(await announcements.subscriptionStatus(recipient), "unknown");
@@ -192,6 +301,32 @@ try {
   await announcements.recordConsent(
     recipient,
     "Explicit newsletter checkbox accepted on 2026-09-09",
+  );
+  const preferenceTokenUrl = await announcements.createUnsubscribeUrl(recipient);
+  const continueUrl = `${preferenceTokenUrl}&preference=subscribe`;
+  const beforeContinue = await announcements.subscriptionStatus(recipient);
+  const continuePage = await unsubscribeHandler(new Request(continueUrl));
+  assert.equal(continuePage.status, 200);
+  assert.equal(
+    await announcements.subscriptionStatus(recipient),
+    beforeContinue,
+    "GET is read-only",
+  );
+  assert.equal(
+    (
+      await unsubscribeHandler(
+        new Request(continueUrl, { method: "POST", body: "confirm=subscribe" }),
+      )
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await unsubscribeHandler(
+        new Request(continueUrl, { method: "POST", body: "confirm=subscribe&consent=2026-09-09" }),
+      )
+    ).status,
+    200,
   );
   const prepared = await announcements.prepareMessage(recipient, announcements.defaultDraft);
   assert.deepEqual(prepared.to, [recipient]);
@@ -210,6 +345,16 @@ try {
     200,
   );
   assert.equal(await announcements.subscriptionStatus(recipient), "unsubscribed");
+  assert.equal(
+    (
+      await unsubscribeHandler(
+        new Request(continueUrl, { method: "POST", body: "confirm=subscribe&consent=2026-09-09" }),
+      )
+    ).status,
+    409,
+    "old positive link cannot reverse withdrawal",
+  );
+
   assert.equal(await announcements.prepareMessage(recipient, announcements.defaultDraft), null);
   assert.equal(
     (

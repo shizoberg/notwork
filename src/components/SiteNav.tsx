@@ -487,6 +487,9 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-6xl flex-col gap-3 border-t border-border/60 px-5 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
         <span>© {new Date().getFullYear()} notwork</span>
         <div className="flex flex-wrap gap-3">
+          <Link to="/duyurular" className="font-bold text-primary-deep hover:underline">
+            Duyurulara katıl
+          </Link>
           <Link to="/kvkk" className="hover:text-foreground hover:underline">
             KVKK Aydınlatma
           </Link>
