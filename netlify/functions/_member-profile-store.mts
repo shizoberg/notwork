@@ -1,3 +1,4 @@
+import { recordMarketingPreference } from "./_announcements.mjs";
 import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 import { getStore } from "@netlify/blobs";
@@ -641,6 +642,8 @@ type NewMemberRegistration = {
   referrer?: string;
   photoDataUrl?: string;
   consent?: boolean;
+  marketingOptIn?: boolean;
+  marketingPreferenceVersion?: string;
 };
 
 const allowedEventClaims = new Set([
@@ -782,6 +785,8 @@ export async function registerMemberProfile(
     store.set(photoKey(profileId), photo.image, { metadata: { contentType: photo.contentType } }),
   ]);
 
+  if (input.marketingPreferenceVersion === "2026-09-09" && input.marketingOptIn === true)
+    await recordMarketingPreference(email, true);
   return { status: "pending" as const, username };
 }
 

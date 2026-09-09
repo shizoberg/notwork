@@ -27,6 +27,8 @@ export type MemberRegistrationInput = {
   referrer: string;
   photoDataUrl: string;
   consent: boolean;
+  marketingOptIn?: boolean;
+  marketingPreferenceVersion?: string;
 };
 
 export type MemberRegistrationResult = {

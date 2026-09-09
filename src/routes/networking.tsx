@@ -1,3 +1,4 @@
+import { AnnouncementConsent } from "@/components/AnnouncementConsent";
 import { promptForAnnouncements } from "@/lib/announcement-prompt";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LockKeyhole } from "lucide-react";
@@ -496,6 +497,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
     linkedin: "",
     about: "",
     consent: false,
+    marketingOptIn: false,
   });
   const [submitting, setSubmitting] = useState(false);
   const [updateMode, setUpdateMode] = useState(false);
@@ -590,6 +592,8 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
         motivation: about.replace(/\|\|/g, "|").slice(0, 140),
         contact: config.eventSource ? `event:${config.eventSource}` : undefined,
         consentAt: new Date().toISOString(),
+        marketingOptIn: form.marketingOptIn,
+        marketingPreferenceVersion: "2026-09-09",
       };
       if (editingUsername) {
         await updateMember(editingUsername, memberData);
@@ -614,6 +618,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
         linkedin: "",
         about: "",
         consent: false,
+        marketingOptIn: false,
       });
       setEditingUsername("");
       setUsernameInput("");
@@ -647,6 +652,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
       linkedin: member.linkedin || "",
       about: member.motivation || "",
       consent: false,
+      marketingOptIn: false,
     });
     setNotice(`${member.username} kaydı açıldı. Alanları değiştirip güncelleyebilirsin.`);
   };
@@ -837,6 +843,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                         linkedin: "",
                         about: "",
                         consent: false,
+                        marketingOptIn: false,
                       });
                     }
                     setUpdateMode((current) => !current);
@@ -958,6 +965,12 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                   </a>
                 </span>
               </label>
+              <AnnouncementConsent
+                checked={form.marketingOptIn}
+                onChange={(marketingOptIn) =>
+                  setForm((current) => ({ ...current, marketingOptIn }))
+                }
+              />
               <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">
                 <p className="text-xs text-foreground/50">
                   {config.formNote}

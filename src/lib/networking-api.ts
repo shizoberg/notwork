@@ -12,6 +12,8 @@ export type Member = {
   username: string;
   createdAt: number;
   consentAt?: string;
+  marketingOptIn?: boolean;
+  marketingPreferenceVersion?: string;
 };
 
 const API_URL = "/api/networking/members";

@@ -100,6 +100,7 @@ function AugustNetworkPage() {
         needTag: form.needTag,
         generalNetworkOptIn: form.generalNetworkOptIn,
         marketingOptIn: form.marketingOptIn,
+        marketingPreferenceVersion: "2026-09-09",
         eventConsent: form.eventConsent,
       });
       if (data.accessToken) localStorage.setItem(tokenStorageKey, data.accessToken);
@@ -302,7 +303,7 @@ function AugustNetworkPage() {
               <ConsentBox
                 checked={form.marketingOptIn}
                 onChange={(marketingOptIn) => setForm({ ...form, marketingOptIn })}
-                title="Etkinlik ve topluluk e-postalarını almak istiyorum."
+                title="Adımın ve e-posta adresimin notwork etkinlik, bilet ve topluluk duyuruları için kullanılmasına ve bana e-posta ile ticari elektronik ileti gönderilmesine izin veriyorum. İzin isteğe bağlıdır; dilediğim zaman ücretsiz ayrılabilirim."
               />
               <p className="text-xs leading-relaxed text-foreground/45">
                 Etkinlik eşleştirmesi için verdiğin bilgilerin işlenmesini, görünmesini seçtiğin

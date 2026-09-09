@@ -1,3 +1,4 @@
+import { AnnouncementConsent } from "@/components/AnnouncementConsent";
 import { promptForAnnouncements } from "@/lib/announcement-prompt";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
@@ -367,6 +368,7 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
   const [referrer, setReferrer] = useState("");
   const [photoDataUrl, setPhotoDataUrl] = useState("");
   const [consent, setConsent] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [compressingPhoto, setCompressingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -416,6 +418,8 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
         referrer,
         photoDataUrl,
         consent,
+        marketingOptIn,
+        marketingPreferenceVersion: "2026-09-09",
       });
       setSubmitted(true);
       promptForAnnouncements({ name, email }, "/profil");
@@ -695,6 +699,7 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
         </label>
 
         {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
+        <AnnouncementConsent checked={marketingOptIn} onChange={setMarketingOptIn} />
         <button
           disabled={submitting || compressingPhoto}
           className="profile-primary-button w-full"

@@ -1,3 +1,4 @@
+import { recordMarketingPreference } from "./_announcements.mjs";
 import { getStore } from "@netlify/blobs";
 import type { Config, Context } from "@netlify/functions";
 import { isTestMemberEmail } from "./_test-members.mjs";
@@ -35,6 +36,8 @@ type MemberInput = {
   createdAt?: number | string;
   username?: string;
   consentAt?: string;
+  marketingOptIn?: boolean;
+  marketingPreferenceVersion?: string;
 };
 
 type ChangeRequest = {
@@ -219,6 +222,8 @@ export default async (request: Request, _context: Context) => {
       store.setJSON(memberKey(member), member),
       backupMember(store, member, "create"),
     ]);
+    if (input.marketingPreferenceVersion === "2026-09-09" && input.marketingOptIn === true)
+      await recordMarketingPreference(member.email, true);
     return Response.json({ ok: true }, { status: 201 });
   }
 
@@ -240,6 +245,8 @@ export default async (request: Request, _context: Context) => {
       proposed: member,
     };
     await store.setJSON(changeRequestKey(changeRequest), changeRequest);
+    if (input.marketingPreferenceVersion === "2026-09-09" && input.marketingOptIn === true)
+      await recordMarketingPreference(member.email, true);
     return Response.json({ ok: true, pendingApproval: true });
   }
 

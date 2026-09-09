@@ -260,6 +260,16 @@ try {
     ),
     "public form is available for admin review",
   );
+  const topControls = announcements.renderAnnouncement(
+    { ...announcements.defaultDraft, body: "MAIN_CONTENT_MARKER" },
+    "#preview",
+    "Berk",
+  );
+  assert.ok(
+    topControls.indexOf("Abonelikten çık</a>") < topControls.indexOf("MAIN_CONTENT_MARKER"),
+  );
+  assert.ok(topControls.includes("notwork community’nin parçası olmaya devam et"));
+  assert.ok(topControls.includes("üyeliğini etkilemez"));
   const preferenceEmail = "preference@example.org";
   const preference = await announcements.recordMarketingPreference(preferenceEmail, true);
   assert.equal(preference.version, "2026-09-09");
