@@ -1,3 +1,4 @@
+import { AnnouncementAdmin } from "@/components/AnnouncementAdmin";
 import { MemberOperationsAdmin } from "@/components/MemberOperationsAdmin";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -1618,6 +1619,7 @@ function AdminPage() {
         </div>
 
         <div className={activeAdminTab === "profiles" ? "" : "hidden"}>
+          <AnnouncementAdmin password={password} />
           <MemberOperationsAdmin password={password} refresh={() => loadMemberProfiles(password)} />
           <MemberProfilesAdmin
             profiles={memberProfiles}

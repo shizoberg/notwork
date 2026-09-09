@@ -1,3 +1,4 @@
+import { subscriptionStatus, type SubscriptionStatus } from "./_announcements.mjs";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import type { Config } from "@netlify/functions";
@@ -10,7 +11,7 @@ type Contact = {
   names: string[];
   groups: string[];
   sources: string[];
-  announcementConsent: "unknown";
+  announcementConsent: SubscriptionStatus;
 };
 const hash = (value: string) => createHash("sha256").update(value).digest("hex");
 const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
@@ -105,6 +106,11 @@ export async function collectContacts() {
       }
     }
   }
+  await Promise.all(
+    [...contacts.values()].map(async (contact) => {
+      contact.announcementConsent = await subscriptionStatus(contact.email);
+    }),
+  );
   return {
     contacts: [...contacts.values()].sort((a, b) => a.email.localeCompare(b.email)),
     excludedTestRows,

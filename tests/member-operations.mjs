@@ -31,6 +31,9 @@ try {
   );
   for (const file of [
     "_test-members",
+    "_announcements",
+    "announcements-unsubscribe",
+    "announcements-admin",
     "_member-profile-store",
     "contacts-admin",
     "member-profiles-admin",
@@ -180,6 +183,73 @@ try {
       "Collaboration",
       "This suspended member must not receive a reference.",
     ),
+  );
+  const announcements = await load("_announcements");
+  const unsubscribeHandler = (await load("announcements-unsubscribe")).default;
+  const recipient = "member@real-domain.org";
+  assert.equal(await announcements.subscriptionStatus(recipient), "unknown");
+  assert.equal(await announcements.prepareMessage(recipient, announcements.defaultDraft), null);
+  await announcements.recordConsent(
+    recipient,
+    "Explicit newsletter checkbox accepted on 2026-09-09",
+  );
+  const prepared = await announcements.prepareMessage(recipient, announcements.defaultDraft);
+  assert.deepEqual(prepared.to, [recipient]);
+  assert.equal(prepared.from, "Berk · notwork <berk@notwork.me>");
+  assert.equal(prepared.headers["List-Unsubscribe-Post"], "List-Unsubscribe=One-Click");
+  const unsubUrl = prepared.headers["List-Unsubscribe"].slice(1, -1);
+  assert.equal(unsubUrl.includes(recipient), false);
+  assert.equal((await unsubscribeHandler(new Request(unsubUrl))).status, 200);
+  assert.equal(await announcements.subscriptionStatus(recipient), "subscribed");
+  assert.equal(
+    (
+      await unsubscribeHandler(
+        new Request(unsubUrl, { method: "POST", body: "List-Unsubscribe=One-Click" }),
+      )
+    ).status,
+    200,
+  );
+  assert.equal(await announcements.subscriptionStatus(recipient), "unsubscribed");
+  assert.equal(await announcements.prepareMessage(recipient, announcements.defaultDraft), null);
+  assert.equal(
+    (
+      await unsubscribeHandler(
+        new Request(unsubUrl, { method: "POST", body: "confirm=unsubscribe" }),
+      )
+    ).status,
+    200,
+  );
+  await assert.rejects(() =>
+    announcements.recordConsent(recipient, "Attempt to overwrite a suppression record"),
+  );
+  const excluded = (await contacts.collectContacts()).contacts.find(
+    (row) => row.email === recipient,
+  );
+  assert.equal(excluded.announcementConsent, "unsubscribed");
+  assert.equal(
+    (
+      await unsubscribeHandler(
+        new Request("https://notwork.me/api/announcements/unsubscribe?token=invalid"),
+      )
+    ).status,
+    404,
+  );
+  const escapedHtml = announcements.renderAnnouncement(
+    { ...announcements.defaultDraft, body: "<script>alert(1)</script>" },
+    "#preview",
+  );
+  assert.equal(escapedHtml.includes("<script>"), false);
+  const announcementHandler = (await load("announcements-admin")).default;
+  assert.equal(
+    (
+      await announcementHandler(
+        new Request("https://notwork.me/api/admin/announcements", { method: "POST", body: "{}" }),
+      )
+    ).status,
+    401,
+  );
+  console.log(
+    "PASS: one-recipient messages, consent enforcement, scanner-safe GET, RFC8058 POST, repeated unsubscribe, suppression precedence, export status, HTML escaping, draft auth.",
   );
   const endpoint = (await load("member-profiles-admin")).default;
   const unauthorized = await endpoint(
