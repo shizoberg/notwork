@@ -1,3 +1,4 @@
+import { promptForAnnouncements } from "@/lib/announcement-prompt";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LockKeyhole } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -520,7 +521,10 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
     let active = true;
     void getMyMemberProfile()
       .then((profile) => {
-        if (active) setMemberProfile(profile);
+        if (active) {
+          setMemberProfile(profile);
+          if (!profile.mustChangePassword) promptForAnnouncements(profile, "/networking");
+        }
       })
       .catch((caught) => {
         if (!(caught instanceof MemberProfileApiError && caught.status === 401)) {

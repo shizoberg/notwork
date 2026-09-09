@@ -1,4 +1,8 @@
-import { subscriptionStatus, type SubscriptionStatus } from "./_announcements.mjs";
+import {
+  announcementStore,
+  subscriptionStatus,
+  type SubscriptionStatus,
+} from "./_announcements.mjs";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import type { Config } from "@netlify/functions";
@@ -153,10 +157,66 @@ export async function testMembers(remove = false) {
   return { members: deleted, removed: remove };
 }
 
+export async function deleteContact(email: string) {
+  email = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Geçerli e-posta gerekli");
+  const database = getMemberProfileDatabaseInfo();
+  if (database.mode !== "live") throw new Error("Canlı üye veritabanı gerekli");
+  const announcements = announcementStore();
+  // Suppress first: a partially failed deletion must never re-enable sending.
+  await announcements.setJSON(`suppressions/${hash(email)}.json`, {
+    email,
+    reason: "admin-removal",
+    updatedAt: new Date().toISOString(),
+  });
+  await announcements.delete(`consents/${hash(email)}.json`);
+  await announcements.delete(`public-preferences/${hash(email)}.json`);
+  for (const { key } of await rows(announcements, `preferences/${hash(email)}/`))
+    await announcements.delete(key);
+  for (const { key, row } of await rows(announcements, "tokens/"))
+    if (text(row.email).toLowerCase() === email) await announcements.delete(key);
+  let removed = 0;
+  const usernames = new Set<string>();
+  const profileStore = getMemberProfileStore();
+  for (const { key, row } of await rows(profileStore, "profiles/")) {
+    if (text(row.email).toLowerCase() !== email) continue;
+    usernames.add(text(row.username));
+    await profileStore.delete(`photos/${text(row.id)}`);
+    await profileStore.delete(key);
+    removed++;
+  }
+  await profileStore.delete(`profile-emails/${hash(email)}.json`);
+  const memberStore = getStore({ name: database.memberSourceStoreName, consistency: "strong" });
+  for (const { key, row } of await rows(memberStore, "members/")) {
+    if (text(row.email).toLowerCase() !== email) continue;
+    usernames.add(text(row.username));
+    await memberStore.delete(key);
+    removed++;
+  }
+  usernames.delete("");
+  for (const prefix of ["sessions/", "references/"]) {
+    for (const { key, row } of await rows(profileStore, prefix)) {
+      if (
+        [row.username, row.authorUsername, row.targetUsername].some((value) =>
+          usernames.has(text(value)),
+        )
+      )
+        await profileStore.delete(key);
+    }
+  }
+  return {
+    email,
+    removed,
+    announcementConsent: await subscriptionStatus(email),
+    remainingSources:
+      (await collectContacts()).contacts.find((contact) => contact.email === email)?.sources || [],
+  };
+}
+
 export default async (request: Request) => {
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
   try {
-    const input = (await request.json()) as { password?: string; action?: string };
+    const input = (await request.json()) as { password?: string; action?: string; email?: string };
     const expected = Buffer.from(
       process.env.ADMIN_PASSWORD_HASH ||
         "bffc46786cfaa3b08499a75d77b037dff9a14f362ab183f72e2ea7bcce0454ee",
@@ -164,12 +224,17 @@ export default async (request: Request) => {
     const actual = Buffer.from(hash(input.password || ""));
     if (actual.length !== expected.length || !timingSafeEqual(actual, expected))
       return new Response("Yetkisiz erişim", { status: 401 });
-    if (input.action && !["export", "testMembers", "deleteTestMembers"].includes(input.action))
+    if (
+      input.action &&
+      !["export", "testMembers", "deleteTestMembers", "deleteContact"].includes(input.action)
+    )
       return new Response("Geçersiz işlem", { status: 400 });
     const result =
-      input.action === "testMembers" || input.action === "deleteTestMembers"
-        ? await testMembers(input.action === "deleteTestMembers")
-        : await collectContacts();
+      input.action === "deleteContact"
+        ? await deleteContact(input.email || "")
+        : input.action === "testMembers" || input.action === "deleteTestMembers"
+          ? await testMembers(input.action === "deleteTestMembers")
+          : await collectContacts();
     return Response.json(result, { headers: { "cache-control": "no-store, private" } });
   } catch (error) {
     return new Response(error instanceof Error ? error.message : "İşlem tamamlanamadı", {

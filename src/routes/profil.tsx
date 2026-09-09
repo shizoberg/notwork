@@ -1,3 +1,4 @@
+import { promptForAnnouncements } from "@/lib/announcement-prompt";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -203,6 +204,8 @@ function MemberProfilePage() {
 
   function applyLoggedInProfile(memberProfile: NotworkMemberProfile) {
     setProfile(memberProfile);
+    if (!memberProfile.mustChangePassword && promptForAnnouncements(memberProfile, "/profil"))
+      return;
     const returnTo = getSafeReturnTo();
     if (returnTo && !memberProfile.mustChangePassword) window.location.assign(returnTo);
   }
@@ -415,6 +418,7 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
         consent,
       });
       setSubmitted(true);
+      promptForAnnouncements({ name, email }, "/profil");
     } catch (caught) {
       setError(errorMessage(caught));
     } finally {

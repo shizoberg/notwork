@@ -191,6 +191,26 @@ try {
       "This suspended member must not receive a reference.",
     ),
   );
+  const deleteEmail = "remove-only@real-domain.org";
+  await profileStore.setJSON("profiles/remove-only.json", {
+    id: "remove-only-id",
+    username: "remove-only",
+    email: deleteEmail,
+  });
+  await profileStore.setJSON("sessions/remove-only.json", { username: "remove-only" });
+  await profileStore.setJSON("references/remove-only/other.json", {
+    targetUsername: "remove-only",
+    authorUsername: "other",
+  });
+  await profileStore.setJSON("photos/remove-only-id", "private-photo");
+  const deletion = await contacts.deleteContact(deleteEmail);
+  assert.equal(deletion.removed, 1);
+  assert.equal(deletion.announcementConsent, "unsubscribed");
+  assert.equal(await profileStore.get("profiles/remove-only.json"), null);
+  assert.equal(await profileStore.get("sessions/remove-only.json"), null);
+  assert.equal(await profileStore.get("references/remove-only/other.json"), null);
+  assert.equal(await profileStore.get("photos/remove-only-id"), null);
+  assert.equal((await contacts.deleteContact(deleteEmail)).removed, 0);
   const announcements = await load("_announcements");
   const personalDraft = announcements.personalizeDraft(
     { ...announcements.defaultDraft, body: "selam,\n\netkinlikte görüşelim {{isim}}" },

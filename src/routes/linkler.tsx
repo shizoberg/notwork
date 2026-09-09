@@ -1,3 +1,4 @@
+import { promptForAnnouncements } from "@/lib/announcement-prompt";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -192,6 +193,10 @@ function LinksPage() {
   );
 
   function applyRegistration(data: EventNetworkRegistration, fallbackEvent = "21-agustos-2026") {
+    promptForAnnouncements(
+      { name: `${data.profile.firstName} ${data.profile.lastName}`, email: data.profile.email },
+      window.location.pathname + window.location.search,
+    );
     setRegistration(data);
     setForm((current) => ({
       ...current,
@@ -359,6 +364,10 @@ function LinksPage() {
       );
 
       if (data.accessToken) localStorage.setItem(tokenStorageKey, data.accessToken);
+      promptForAnnouncements(
+        { name: `${data.profile.firstName} ${data.profile.lastName}`, email: data.profile.email },
+        window.location.pathname + window.location.search,
+      );
       setRegistration(data);
       setMessage(
         data.membership?.verifiedMember

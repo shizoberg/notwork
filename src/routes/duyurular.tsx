@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { pendingAnnouncementPrompt, finishAnnouncementPrompt } from "@/lib/announcement-prompt";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { createSeo } from "@/lib/seo";
@@ -19,6 +20,17 @@ function AnnouncementPreferences() {
   const [website, setWebsite] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [returnTo, setReturnTo] = useState("/networking");
+  useEffect(() => {
+    const pending = pendingAnnouncementPrompt();
+    if (pending) {
+      setName(pending.name);
+      setEmail(pending.email);
+    }
+  }, []);
+  function skip() {
+    window.location.assign(finishAnnouncementPrompt(email));
+  }
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -39,6 +51,7 @@ function AnnouncementPreferences() {
       if (!response.ok) throw new Error(await response.text());
       const result = await response.json();
       setMessage(result.message);
+      setReturnTo(finishAnnouncementPrompt(email));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Lütfen yeniden dene.");
     } finally {
@@ -145,6 +158,14 @@ function AnnouncementPreferences() {
           >
             {busy ? "kaydediliyor" : "duyuru tercihimi kaydet"}
           </button>
+          <button type="button" onClick={skip} className="text-sm underline">
+            şimdilik geç · izin vermeden devam et
+          </button>
+          {message && (
+            <a href={returnTo} className="text-center text-sm underline">
+              siteye devam et
+            </a>
+          )}
           {message && (
             <p role="status" className="rounded-xl bg-primary/10 p-4 text-sm">
               {message}
