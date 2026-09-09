@@ -52,13 +52,14 @@ export async function recordMarketingPreference(
   email: string,
   optedIn: boolean,
   store = announcementStore(),
+  source = "event-registration",
 ) {
   email = normalizeEmail(email);
   const record = {
     email,
     optedIn,
     version: "2026-09-09",
-    source: "linkler-form",
+    source,
     recordedAt: new Date().toISOString(),
     verification: "unverified",
     text: "Adımın ve e-posta adresimin notwork etkinlik, bilet ve topluluk duyuruları için kullanılmasına ve bana e-posta ile ticari elektronik ileti gönderilmesine izin veriyorum. İzin isteğe bağlıdır; dilediğim zaman ücretsiz ayrılabilirim.",
@@ -74,7 +75,17 @@ export async function recordMarketingPreference(
       updatedAt: record.recordedAt,
     });
   }
-  return record;
+  let verificationDelivery = "not-requested";
+  if (optedIn) {
+    try {
+      verificationDelivery = await (
+        await import("./_email-verification.mjs")
+      ).requestEmailVerification(email);
+    } catch {
+      verificationDelivery = "pending-review";
+    }
+  }
+  return { ...record, verificationDelivery };
 }
 export async function createUnsubscribeUrl(email: string, store = announcementStore()) {
   const token = randomBytes(32).toString("base64url");

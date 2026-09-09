@@ -786,7 +786,7 @@ export async function registerMemberProfile(
   ]);
 
   if (input.marketingPreferenceVersion === "2026-09-09" && input.marketingOptIn === true)
-    await recordMarketingPreference(email, true);
+    await recordMarketingPreference(email, true, undefined, "profile-registration");
   return { status: "pending" as const, username };
 }
 

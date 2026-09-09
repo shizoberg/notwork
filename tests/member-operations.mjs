@@ -19,7 +19,7 @@ try {
         const data = new Map();
         stores.set(name, {
           get: async (key) => structuredClone(data.get(key) ?? null),
-          setJSON: async (key, value) => { data.set(key, structuredClone(value)); },
+          setJSON: async (key, value, options = {}) => { if (options.onlyIfNew && data.has(key)) return { modified: false }; data.set(key, structuredClone(value)); return { modified: true }; },
           set: async (key, value) => { data.set(key, value); },
           delete: async (key) => { data.delete(key); },
           list: async ({ prefix = '' }) => ({ blobs: [...data.keys()].filter(key => key.startsWith(prefix)).map(key => ({ key })) }),
@@ -34,6 +34,10 @@ try {
     "_event-network-store",
     "_event-review-store",
     "_announcements",
+    "_gmail",
+    "gmail-callback",
+    "_email-verification",
+    "announcements-verify",
     "announcements-unsubscribe",
     "announcements-admin",
     "announcements-subscribe",
@@ -441,6 +445,164 @@ try {
   console.log(
     "PASS: account creation, duplicate safety, password/login/edit flow, contact deduplication, demo exclusion, test cleanup, and authorization.",
   );
+  const gmail = await load("_gmail");
+  const verification = await load("_email-verification");
+  const verifyHandler = (await load("announcements-verify")).default;
+  const originalFetch = globalThis.fetch;
+  const savedEnv = { ...process.env };
+  try {
+    process.env.GOOGLE_CLIENT_ID = "test-client";
+    process.env.GOOGLE_CLIENT_SECRET = "test-secret";
+    process.env.GMAIL_TOKEN_ENCRYPTION_KEY = Buffer.alloc(32, 7).toString("base64");
+    let sentCount = 0;
+    let throwOnSend = false;
+    let identityEmail = "berk@notwork.me";
+    let lastRaw = "";
+    globalThis.fetch = async (url, options) => {
+      if (String(url).includes("oauth2.googleapis.com/token"))
+        return Response.json({
+          access_token: "fake-access",
+          refresh_token: "fake-refresh",
+          scope: "openid email https://www.googleapis.com/auth/gmail.send",
+        });
+      if (String(url).includes("openidconnect.googleapis.com"))
+        return Response.json({ email: identityEmail, email_verified: true });
+      if (String(url).includes("gmail.googleapis.com")) {
+        sentCount++;
+        lastRaw = JSON.parse(options.body).raw;
+        if (throwOnSend) throw new Error("network timeout");
+        return Response.json({ id: `message-${sentCount}` });
+      }
+      throw new Error("Unexpected URL " + url);
+    };
+    const connection = await gmail.startGmailConnection();
+    const state = new URL(connection.url).searchParams.get("state");
+    await assert.rejects(gmail.completeGmailConnection(state, "wrong-cookie", "code"));
+    await gmail.completeGmailConnection(state, state, "code");
+    await assert.rejects(gmail.completeGmailConnection(state, state, "code"));
+    const storedConnection = await gmail.mailStore().get("connection.json");
+    assert.ok(!JSON.stringify(storedConnection).includes("fake-refresh"));
+    assert.equal((await gmail.gmailStatus()).connected, true);
+    const wrong = await gmail.startGmailConnection();
+    identityEmail = "wrong@example.org";
+    const wrongState = new URL(wrong.url).searchParams.get("state");
+    await assert.rejects(gmail.completeGmailConnection(wrongState, wrongState, "code"));
+    identityEmail = "berk@notwork.me";
+    const mail = {
+      to: ["one@example.org"],
+      subject: "Türkçe konu",
+      text: "merhaba",
+      html: "<p>merhaba</p>",
+    };
+    assert.throws(() => gmail.rawMessage({ ...mail, to: ["a@example.org", "b@example.org"] }));
+    assert.throws(() =>
+      gmail.rawMessage({ ...mail, subject: "hello\r\nBcc: injected@example.org" }),
+    );
+    const concurrent = await Promise.all([
+      gmail.sendGmailOnce("same-operation", mail),
+      gmail.sendGmailOnce("same-operation", mail),
+    ]);
+    assert.equal(sentCount, 1);
+    assert.ok(concurrent.some((row) => row.status === "accepted"));
+    const mime = Buffer.from(lastRaw, "base64url").toString();
+    assert.ok(mime.includes("To: one@example.org\r\n"));
+    assert.ok(!mime.includes("Bcc:"));
+    throwOnSend = true;
+    assert.equal((await gmail.sendGmailOnce("uncertain-operation", mail)).status, "uncertain");
+    assert.equal(
+      (await gmail.sendGmailOnce("uncertain-operation", mail)).status,
+      "already-attempted",
+    );
+    assert.equal(sentCount, 2);
+    throwOnSend = false;
+    const verifyToken = "z".repeat(43),
+      verifyEmail = "verified-new@example.org";
+    await announcements
+      .announcementStore()
+      .setJSON(`verification-tokens/${gmail.hash(verifyToken)}.json`, {
+        email: verifyEmail,
+        expiresAt: Date.now() + 60000,
+        version: "2026-09-09",
+      });
+    const verifyUrl = `https://notwork.me/api/announcements/verify?token=${verifyToken}`;
+    assert.equal((await verifyHandler(new Request(verifyUrl))).status, 200);
+    assert.equal(await announcements.subscriptionStatus(verifyEmail), "unknown");
+    assert.equal(
+      (await verifyHandler(new Request(verifyUrl, { method: "POST", body: "confirm=verify" })))
+        .status,
+      200,
+    );
+    assert.equal(await announcements.subscriptionStatus(verifyEmail), "subscribed");
+    assert.equal(
+      (await verifyHandler(new Request(verifyUrl, { method: "POST", body: "confirm=verify" })))
+        .status,
+      409,
+    );
+    const deniedToken = "y".repeat(43);
+    await announcements
+      .announcementStore()
+      .setJSON(`verification-tokens/${gmail.hash(deniedToken)}.json`, {
+        email: deleteEmail,
+        expiresAt: Date.now() + 60000,
+        version: "2026-09-09",
+      });
+    await assert.rejects(verification.verifyEmail(deniedToken));
+    assert.equal(
+      (await gmail.sendGmailOnce("blocked-recipient", { ...mail, to: [deleteEmail] })).status,
+      "skipped",
+    );
+    assert.equal(sentCount, 2);
+    const expiryToken = "x".repeat(43);
+    await announcements
+      .announcementStore()
+      .setJSON(`verification-tokens/${gmail.hash(expiryToken)}.json`, {
+        email: verifyEmail,
+        expiresAt: Date.now() - 1,
+      });
+    assert.equal(await verification.verificationToken(expiryToken), null);
+    process.env.ADMIN_PASSWORD_HASH = gmail.hash("test-admin-password");
+    const adminRequest = (action) =>
+      new Request("https://notwork.me/api/admin/announcements", {
+        method: "POST",
+        body: JSON.stringify({ password: "test-admin-password", action }),
+      });
+    // The existing verified profile recipient is the only eligible contact in this fixture.
+    await sourceStore.setJSON("members/campaign-recipient.json", {
+      email: "campaign-recipient@example.org",
+      name: "Campaign Recipient",
+      username: "campaign-recipient",
+    });
+    await announcements.recordConsent(
+      "campaign-recipient@example.org",
+      "Verified test evidence for campaign",
+    );
+    const dispatch = await announcementHandler(adminRequest("send"));
+    assert.equal(dispatch.status, 200);
+    const progress = await dispatch.json();
+    assert.ok(progress.progress.accepted >= 1);
+    const afterCampaign = sentCount;
+    await announcementHandler(adminRequest("send"));
+    assert.equal(sentCount, afterCampaign, "replayed campaign never duplicates messages");
+    assert.equal(
+      (await announcementHandler(adminRequest("save"))).status,
+      400,
+      "campaign snapshot is immutable",
+    );
+    console.log(
+      "PASS: Gmail state/cookie binding, replay protection, sender restriction, encryption, MIME, concurrent send deduplication, uncertain sends, suppression, confirmation expiry/POST, campaign replay.",
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const key of [
+      "GOOGLE_CLIENT_ID",
+      "GOOGLE_CLIENT_SECRET",
+      "GMAIL_TOKEN_ENCRYPTION_KEY",
+      "ADMIN_PASSWORD_HASH",
+    ]) {
+      if (savedEnv[key] === undefined) delete process.env[key];
+      else process.env[key] = savedEnv[key];
+    }
+  }
 } finally {
   await fs.rm(temp, { recursive: true, force: true });
 }

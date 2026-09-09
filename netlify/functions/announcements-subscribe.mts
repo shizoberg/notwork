@@ -45,7 +45,7 @@ export default async (request: Request) => {
         status: 429,
         headers,
       });
-    const record = await recordMarketingPreference(email, true, store);
+    const record = await recordMarketingPreference(email, true, store, "duyurular-public-form");
     await store.setJSON(`public-preferences/${key}.json`, {
       ...record,
       name,
@@ -56,8 +56,11 @@ export default async (request: Request) => {
     });
     return Response.json(
       {
-        message:
-          "Duyuru tercihin kaydedildi. E-posta adresin ve izin kaydın doğrulandıktan sonra duyurulara dahil edilebilirsin. Bu işlemle e-posta gönderilmedi.",
+        message: ["accepted", "already-requested"].includes(record.verificationDelivery)
+          ? "Tercihin kaydedildi. Gelen kutundaki doğrulama bağlantısıyla işlemi tamamla. Spam klasörünü de kontrol edebilirsin."
+          : record.verificationDelivery === "already-verified"
+            ? "Tercihin kaydedildi. Adresin zaten doğrulanmış."
+            : "Tercihin kaydedildi. Adres doğrulaması henüz tamamlanmadı; doğrulama yapılmadan duyuru gönderilmeyecek.",
       },
       { headers },
     );

@@ -223,7 +223,7 @@ export default async (request: Request, _context: Context) => {
       backupMember(store, member, "create"),
     ]);
     if (input.marketingPreferenceVersion === "2026-09-09" && input.marketingOptIn === true)
-      await recordMarketingPreference(member.email, true);
+      await recordMarketingPreference(member.email, true, undefined, "networking-registration");
     return Response.json({ ok: true }, { status: 201 });
   }
 
@@ -246,7 +246,7 @@ export default async (request: Request, _context: Context) => {
     };
     await store.setJSON(changeRequestKey(changeRequest), changeRequest);
     if (input.marketingPreferenceVersion === "2026-09-09" && input.marketingOptIn === true)
-      await recordMarketingPreference(member.email, true);
+      await recordMarketingPreference(member.email, true, undefined, "networking-registration");
     return Response.json({ ok: true, pendingApproval: true });
   }
 

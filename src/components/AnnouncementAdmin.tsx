@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 type Draft = {
   id: string;
   greeting: string;
@@ -13,9 +13,26 @@ type Payload = {
   html: string;
   counts: { total: number; subscribed: number; unknown: number; unsubscribed: number };
   providerConfigured: boolean;
+  gmail: {
+    configured: boolean;
+    connected: boolean;
+    email: string | null;
+    missing: string[];
+    callbackUrl: string;
+  };
+  operation: { status: string } | null;
+  progress: {
+    total: number;
+    accepted: number;
+    skipped: number;
+    attention: number;
+    remaining: number;
+  };
+  campaignLocked: boolean;
   updatedAt: string | null;
 };
 export function AnnouncementAdmin({ password }: { password: string }) {
+  const stopSending = useRef(false);
   const [data, setData] = useState<Payload | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [previewName, setPreviewName] = useState("Berk");
@@ -28,23 +45,52 @@ export function AnnouncementAdmin({ password }: { password: string }) {
     setBusy(true);
     setMessage("");
     try {
-      const response = await fetch("/api/admin/announcements", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ password, action, draft, email, evidence, previewName }),
-      });
-      if (!response.ok) throw new Error(await response.text());
-      const result = (await response.json()) as Payload;
-      setData(result);
-      setDraft(result.draft);
-      setDirty(false);
-      setMessage(
-        action === "save"
-          ? "Taslak kaydedildi. E-posta gönderilmedi."
-          : action === "consent"
-            ? "İzin kaydı eklendi. E-posta gönderilmedi."
-            : "Taslak hazır. E-posta gönderilmedi.",
-      );
+      stopSending.current = false;
+      const operationId = crypto.randomUUID();
+      let more = false;
+      do {
+        const response = await fetch("/api/admin/announcements", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            password,
+            action,
+            draft,
+            email,
+            evidence,
+            previewName,
+            operationId,
+          }),
+        });
+        if (!response.ok) throw new Error(await response.text());
+        const result = (await response.json()) as Payload & { authorizeUrl?: string };
+        if (result.authorizeUrl) {
+          window.location.assign(result.authorizeUrl);
+          return;
+        }
+        setData(result);
+        setDraft(result.draft);
+        setDirty(false);
+        setMessage(
+          action === "send"
+            ? `Gmail’e kabul edilen: ${result.progress.accepted} · Kalan: ${result.progress.remaining} · İnceleme gereken: ${result.progress.attention}${result.operation?.status === "blocked-limit" ? " · Günlük uygulama sınırına ulaşıldı, sonraki gün devam edebilirsin." : ""}`
+            : action === "test"
+              ? result.operation?.status === "accepted"
+                ? "Test Gmail tarafından kabul edildi. berk@carewithki.com gelen kutusunu kontrol et."
+                : "Test sonucu: " + result.operation?.status
+              : action === "save"
+                ? "Taslak kaydedildi. E-posta gönderilmedi."
+                : action === "consent"
+                  ? "İzin kaydı eklendi. E-posta gönderilmedi."
+                  : "Taslak hazır. E-posta gönderilmedi.",
+        );
+        more =
+          action === "send" &&
+          result.progress.remaining > 0 &&
+          result.progress.attention === 0 &&
+          result.operation?.status !== "blocked-limit" &&
+          !stopSending.current;
+      } while (more);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "İşlem başarısız");
     } finally {
@@ -58,8 +104,8 @@ export function AnnouncementAdmin({ password }: { password: string }) {
     <section className="my-6 space-y-4 rounded-2xl border border-border bg-card p-6">
       <h2 className="text-xl font-semibold">17 Eylül · Etkinlik duyurusu</h2>
       <p className="text-sm text-foreground/65">
-        Gönderen: Berk · notwork &lt;berk@notwork.me&gt;. Yanıtlar aynı adrese gelir. Bu ekran
-        taslak hazırlar; toplu gönderim başlatmaz.
+        Gönderen: Berk · notwork &lt;berk@notwork.me&gt;. Yanıtlar aynı adrese gelir. Gmail
+        bağlantısı kurulduktan sonra test ve izinli alıcılara gönderim yapılabilir.
       </p>
       {!data && (
         <button className={button} disabled={busy} onClick={() => void run("load")}>
@@ -72,11 +118,76 @@ export function AnnouncementAdmin({ password }: { password: string }) {
             {data.counts.total} adres · {data.counts.subscribed} izinli · {data.counts.unknown} izni
             bilinmiyor · {data.counts.unsubscribed} abonelikten çıktı
           </p>
-          <p className="text-sm text-foreground/60">
-            {data.providerConfigured
-              ? "Resend anahtarı yapılandırılmış. Gönderimden önce alan adı ve teslimat testi doğrulanmalı."
-              : "Resend gönderimi için RESEND_API_KEY ve gönderen alan adı doğrulaması gerekiyor."}
-          </p>
+          <div className="space-y-3 rounded-xl border border-border p-4 text-sm">
+            <p>
+              {data.gmail.connected
+                ? `Gmail bağlı: ${data.gmail.email}`
+                : "Gmail henüz bağlı değil."}
+            </p>
+            {!data.gmail.configured && (
+              <div>
+                <p>Netlify Functions ortamında tamamlanacak ayarlar:</p>
+                <ul>
+                  {data.gmail.missing.map((key) => (
+                    <li key={key}>
+                      <code>{key}</code>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2">
+                  Google OAuth yönlendirme adresi:{" "}
+                  <code className="break-all">{data.gmail.callbackUrl}</code>
+                </p>
+              </div>
+            )}
+            <button
+              className={button}
+              disabled={busy || dirty || !data.gmail.configured}
+              onClick={() => void run("connectGmail")}
+            >
+              Google hesabını bağla / yenile
+            </button>
+            <button
+              className={button}
+              disabled={busy || dirty || !data.gmail.connected}
+              onClick={() => void run("test")}
+            >
+              berk@carewithki.com’a test gönder
+            </button>
+            <button
+              className={button}
+              disabled={
+                busy ||
+                dirty ||
+                !data.gmail.connected ||
+                (!data.counts.subscribed && !data.progress.remaining) ||
+                data.progress.attention > 0 ||
+                (data.campaignLocked && !data.progress.remaining)
+              }
+              onClick={() => void run("send")}
+            >
+              İzinli alıcılara gönder {data.progress.remaining ? "· devam et" : ""}
+            </button>
+            {busy && (
+              <button
+                className={button}
+                onClick={() => {
+                  stopSending.current = true;
+                }}
+              >
+                Bu grup bitince durdur
+              </button>
+            )}
+            <p>
+              {data.progress.accepted} Gmail tarafından kabul edildi · {data.progress.remaining}{" "}
+              bekliyor · {data.progress.skipped} atlandı · {data.progress.attention} inceleme
+              gerekiyor
+            </p>
+            <p className="text-xs text-foreground/60">
+              Gönderim başlatıldığında kampanya içeriği ve alıcıları sabitlenir. Gmail kabulü
+              teslimat garantisi değildir. Hatalı veya belirsiz işlemler otomatik tekrarlanmaz.
+            </p>
+          </div>
           <label className="block text-sm">
             Önizlemede kullanılacak isim
             <input
@@ -130,7 +241,11 @@ export function AnnouncementAdmin({ password }: { password: string }) {
               </label>
             ))}
           </div>
-          <button className={button} disabled={busy} onClick={() => void run("save")}>
+          <button
+            className={button}
+            disabled={busy || data.campaignLocked}
+            onClick={() => void run("save")}
+          >
             Taslağı kaydet ve önizlemeyi yenile
           </button>
           <p className="text-xs text-foreground/60">
