@@ -1,5 +1,6 @@
 import { getStore } from "@netlify/blobs";
 import type { Config, Context } from "@netlify/functions";
+import { isTestMemberEmail } from "./_test-members.mjs";
 import seedMembers from "../data/networking-seed.json" with { type: "json" };
 import {
   getMemberProfileBySession,
@@ -141,7 +142,10 @@ async function ensureSeeded(store: ReturnType<typeof getStore>) {
 
   const members = (seedMembers as MemberRow[])
     .map((member) => normalizeMember(member))
-    .filter((member) => member.name && member.title && member.username);
+    .filter(
+      (member) =>
+        member.name && member.title && member.username && !isTestMemberEmail(member.email),
+    );
   await Promise.all(members.map((member) => store.setJSON(memberKey(member), member)));
   await backupMembers(store, members, "seed");
   await store.set("meta/seeded-v1", new Date().toISOString());
@@ -153,7 +157,7 @@ async function getBlobRows(store: ReturnType<typeof getStore>) {
   const rows = await Promise.all(
     blobs.map((blob) => store.get(blob.key, { type: "json", consistency: "strong" })),
   );
-  return rows.filter(Boolean) as MemberRow[];
+  return (rows.filter(Boolean) as MemberRow[]).filter((row) => !isTestMemberEmail(row.email));
 }
 
 async function getRows(store: ReturnType<typeof getStore>) {

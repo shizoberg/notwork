@@ -1,3 +1,4 @@
+import { MemberOperationsAdmin } from "@/components/MemberOperationsAdmin";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Activity,
@@ -1617,6 +1618,7 @@ function AdminPage() {
         </div>
 
         <div className={activeAdminTab === "profiles" ? "" : "hidden"}>
+          <MemberOperationsAdmin password={password} refresh={() => loadMemberProfiles(password)} />
           <MemberProfilesAdmin
             profiles={memberProfiles}
             references={memberReferences}

@@ -1,6 +1,8 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { Config, Context } from "@netlify/functions";
 import {
+  createAdminMemberProfile,
+  type AdminMemberInput,
   getMemberProfileDatabaseInfo,
   getMemberProfileStore,
   importTemporaryCredentials,
@@ -17,6 +19,7 @@ import {
 type AdminInput = {
   password?: string;
   action?:
+    | "create"
     | "list"
     | "syncMembers"
     | "issueCredentials"
@@ -24,6 +27,7 @@ type AdminInput = {
     | "importCredentials"
     | "moderateProfile"
     | "moderateReference";
+  member?: AdminMemberInput;
   credentials?: ImportedMemberCredential[];
   targetUsername?: string;
   authorUsername?: string;
@@ -48,6 +52,11 @@ export default async (request: Request, _context: Context) => {
     if (!validPassword(input.password)) return new Response("Yetkisiz erişim", { status: 401 });
     const store = getMemberProfileStore();
     const action = input.action || "list";
+
+    if (action === "create") {
+      const result = await createAdminMemberProfile(input.member || {}, store);
+      return Response.json(result, { headers: { "cache-control": "no-store, private" } });
+    }
 
     if (action === "syncMembers") {
       const syncResult = await syncVerifiedEventMembers(store);

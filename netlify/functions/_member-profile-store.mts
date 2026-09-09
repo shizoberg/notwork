@@ -3,6 +3,8 @@ import { promisify } from "node:util";
 import { getStore } from "@netlify/blobs";
 import seedMembers from "../data/networking-seed.json" with { type: "json" };
 
+import { isTestMemberEmail } from "./_test-members.mjs";
+
 const scrypt = promisify(scryptCallback);
 const liveProfileStoreName = "notwork-member-profiles";
 const demoProfileStoreName = "notwork-member-profiles-demo";
@@ -477,7 +479,8 @@ export async function getMemberConnections(
 async function listSourceMembers() {
   const store = getStore({ name: memberStoreName, consistency: "strong" });
   const rows = await getRows<NetworkMemberRow>(store, "members/");
-  if (rows.length || process.env.NETLIFY_DEV !== "true") return rows;
+  if (rows.length || process.env.NETLIFY_DEV !== "true")
+    return rows.filter((row) => !isTestMemberEmail(row.email));
   return (seedMembers as NetworkMemberRow[]).map((member) => ({
     ...member,
     contact: `${member.contact || ""} || event:21agustos`,
@@ -500,6 +503,7 @@ function groupSourceMembersByEmail(sourceMembers: NetworkMemberRow[]) {
   const grouped = new Map<string, NetworkMemberRow[]>();
 
   for (const member of sourceMembers) {
+    if (isTestMemberEmail(member.email)) continue;
     const email = clean(member.email, 120).toLocaleLowerCase("tr-TR");
     if (!email) continue;
     grouped.set(email, [...(grouped.get(email) || []), member]);
@@ -1207,6 +1211,22 @@ export async function updateMemberProfile(
     updatedAt,
   };
   await store.setJSON(profileKey(profile.username), profile);
+  const memberStore = getStore({ name: memberStoreName, consistency: "strong" });
+  const key = `members/${profile.username}.json`;
+  const member = (await memberStore.get(key, {
+    type: "json",
+    consistency: "strong",
+  })) as NetworkMemberRow | null;
+  if (member && member.email.trim().toLowerCase() === profile.email.trim().toLowerCase()) {
+    await memberStore.setJSON(key, {
+      ...member,
+      title: profile.headline.slice(0, 80),
+      motivation: profile.bio.slice(0, 180),
+      skills: profile.skills.join(", "),
+      linkedin: profile.links.linkedin,
+      instagram: profile.links.instagram,
+    });
+  }
   return publicProfile(profile);
 }
 
@@ -1468,4 +1488,86 @@ export async function moderateMemberProfile(
 
 export function safeMemberProfile(profile: StoredMemberProfile) {
   return publicProfile(profile);
+}
+
+export type AdminMemberInput = {
+  name?: string;
+  email?: string;
+  headline?: string;
+  bio?: string;
+  website?: string;
+};
+
+export async function createAdminMemberProfile(
+  input: AdminMemberInput,
+  store = getMemberProfileStore(),
+) {
+  const name = clean(input.name, 100);
+  const email = clean(input.email, 120).toLowerCase();
+  if (name.length < 3 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || isTestMemberEmail(email)) {
+    throw new Error("Geçerli ad ve e-posta gerekli");
+  }
+  const profiles = await getRows<StoredMemberProfile>(store, "profiles/");
+  const existing = profiles.find((profile) => profile.email.trim().toLowerCase() === email);
+  if (existing) return { created: false, profile: publicProfile(existing), credentials: [] };
+  const sourceMembers = await listSourceMembers();
+  const source = sourceMembers.find((member) => member.email.trim().toLowerCase() === email);
+  const taken = new Set([...profiles, ...sourceMembers].map((row) => row.username));
+  const base = registrationUsername(name);
+  let username = source?.username || base;
+  for (let suffix = 2; taken.has(username) && username !== source?.username; suffix++)
+    username = `${base}-${suffix}`;
+  if (profiles.some((profile) => profile.username === username))
+    throw new Error("Kullanıcı adı başka bir profile ait");
+  const now = new Date().toISOString();
+  const temporaryPassword = `NTW-${randomBytes(18).toString("base64url")}`;
+  const website = clean(input.website, 240);
+  if (website && !/^https?:\/\//i.test(website))
+    throw new Error("Web sitesi https:// ile başlamalı");
+  const profile: StoredMemberProfile = {
+    id: crypto.randomUUID(),
+    memberId: source?.id || crypto.randomUUID(),
+    username,
+    email,
+    name,
+    headline: clean(input.headline, 120),
+    bio: clean(input.bio, 320),
+    photoUrl: "",
+    skills: [],
+    experiences: [],
+    links: { linkedin: source?.linkedin || "", instagram: source?.instagram || "", website },
+    attendedEvents: [],
+    eventCodes: [],
+    verifiedMember: false,
+    publicProfileEnabled: true,
+    status: "invited",
+    credential: await hashPassword(temporaryPassword),
+    mustChangePassword: true,
+    credentialIssuedAt: now,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await store.setJSON(profileKey(username), profile);
+  await store.setJSON(profileEmailKey(email), { username });
+  const memberStore = getStore({ name: memberStoreName, consistency: "strong" });
+  const member: NetworkMemberRow = {
+    id: profile.memberId,
+    username,
+    name,
+    email,
+    title: profile.headline.slice(0, 80),
+    skills: source?.skills || "",
+    instagram: profile.links.instagram,
+    linkedin: profile.links.linkedin,
+    motivation: profile.bio.slice(0, 180),
+    contact: source?.contact || "",
+    createdAt: source?.createdAt || now,
+    consentAt: source?.consentAt || "",
+  };
+  await memberStore.setJSON(`members/${username}.json`, member);
+  return {
+    created: true,
+    profile: publicProfile(profile),
+    credentials: [{ name, email, username, temporaryPassword }],
+  };
 }
