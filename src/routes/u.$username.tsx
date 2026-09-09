@@ -36,6 +36,8 @@ export const Route = createFileRoute("/u/$username")({
 });
 
 function safeExternalUrl(value: string, fallbackPrefix = "") {
+  value = value.trim();
+  if (!value) return "";
   const candidate = /^https?:\/\//i.test(value) ? value : `${fallbackPrefix}${value}`;
   try {
     const url = new URL(candidate);
