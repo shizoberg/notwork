@@ -55,6 +55,8 @@ function PublicMemberProfilePage() {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setProfile(null);
     getPublicMemberProfile(username)
       .then((memberProfile) => {
         if (active) setProfile(memberProfile);
@@ -211,7 +213,7 @@ function PublicMemberProfilePage() {
                 ) : null}
 
                 <ProfileLinks profile={profile} />
-                <ReferenceSection profile={profile} viewer={viewer} />
+                <ReferenceSection key={profile.username} profile={profile} viewer={viewer} />
               </div>
             </article>
 
@@ -266,7 +268,7 @@ function ReferenceSection({
   }
 
   return (
-    <section className="mt-8 border-t border-border pt-7">
+    <section id="referanslar" className="mt-8 scroll-mt-24 border-t border-border pt-7">
       <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em]">
         <MessageSquareQuote className="h-4 w-4 text-primary-deep" /> Üye referansları
       </div>

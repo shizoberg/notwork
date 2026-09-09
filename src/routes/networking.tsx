@@ -647,30 +647,6 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
     setNotice(`${member.username} kaydı açıldı. Alanları değiştirip güncelleyebilirsin.`);
   };
 
-  const startEditingMember = (member: Member) => {
-    setUpdateMode(true);
-    setEditingUsername(member.username);
-    setUsernameInput(member.username);
-    setForm({
-      name: member.name,
-      title: member.title,
-      skills: member.skills.join(", "),
-      email: member.email || "",
-      instagram: member.instagram ? `@${member.instagram}` : "",
-      linkedin: member.linkedin || "",
-      about: member.motivation || "",
-      consent: false,
-    });
-    setSelectedMember(null);
-    setNotice(`${member.username} kaydı açıldı. Alanları değiştirip güncelleyebilirsin.`);
-    window.setTimeout(() => {
-      document.getElementById("networking-form")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 50);
-  };
-
   const addExistingToEvent = async () => {
     if (!config.eventSource) return;
     setError("");
@@ -1056,12 +1032,13 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
               hint={config.graphHint}
               emptyText={config.graphEmpty}
               onSelectMember={setSelectedMember}
+              viewerUsername={memberProfile?.username}
             />
             <RecommendationFinder
               members={scopedMembers}
               loading={loading}
               onOpenMember={setSelectedMember}
-              canViewContacts={canViewContacts}
+              viewerUsername={memberProfile?.username}
             />
           </div>
         </section>
@@ -1092,6 +1069,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                 hint="notwork community ağını gez"
                 emptyText="community ağı henüz yüklenmedi."
                 onSelectMember={setSelectedMember}
+                viewerUsername={memberProfile?.username}
               />
             </div>
           </section>
@@ -1223,7 +1201,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                     onClick={() => setSelectedMember(member)}
                     className="mt-3 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary-deep transition hover:bg-primary hover:text-primary-foreground"
                   >
-                    bağlantılarını gör
+                    profili incele
                   </button>
                 </div>
               );
@@ -1239,10 +1217,9 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
           member={selectedMember}
           members={scopedMembers.length > 0 ? scopedMembers : members}
           onClose={() => setSelectedMember(null)}
-          onEdit={startEditingMember}
           onOpenMember={setSelectedMember}
           canViewContacts={canViewContacts}
-          hasMemberSession={Boolean(memberProfile)}
+          viewerUsername={memberProfile?.username}
         />
       )}
       <SiteFooter />
@@ -1458,130 +1435,32 @@ function RecommendationFinder({
   members,
   loading,
   onOpenMember,
-  canViewContacts,
+  viewerUsername,
 }: {
   members: Member[];
   loading: boolean;
   onOpenMember: (member: Member) => void;
-  canViewContacts: boolean;
+  viewerUsername?: string;
 }) {
-  const [username, setUsername] = useState("");
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [message, setMessage] = useState("");
-  const recommendations = useMemo(
-    () => (selectedMember ? getRecommendations(selectedMember, members) : []),
-    [members, selectedMember],
-  );
-
-  const findMatches = () => {
-    const normalized = normalizeLookup(username.trim().replace(/^@/, ""));
-    const member =
-      members.find((item) => normalizeLookup(item.username) === normalized) ||
-      members.find((item) => normalizeLookup(item.name) === normalized);
-    if (!member) {
-      setSelectedMember(null);
-      setMessage("Bu kullanıcı adı veya ad soyad ile eşleşen bir kayıt bulunamadı.");
-      return;
-    }
-    setSelectedMember(member);
-    setMessage("");
-    onOpenMember(member);
-  };
-
+  const ownMember = members.find((member) => member.username === viewerUsername);
   return (
-    <div className="mt-3 overflow-hidden rounded-xl border border-primary/25 bg-primary/5 transition-all">
-      <div className="flex flex-col gap-2 p-2.5 sm:flex-row sm:items-center">
-        <div className="px-2 text-xs font-bold text-primary-deep sm:whitespace-nowrap">
-          Beni bul · bağlantılarımı göster
-        </div>
-        <input
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") findMatches();
-          }}
-          placeholder="username veya ad soyad"
-          disabled={loading}
-          className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-        />
+    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4">
+      <p className="text-sm text-foreground/65">
+        Sana önerilen kişiler ve iletişim yolları kendi kartında görünür.
+      </p>
+      {ownMember ? (
         <button
           type="button"
-          onClick={findMatches}
           disabled={loading}
-          className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          onClick={() => onOpenMember(ownMember)}
+          className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
         >
-          beni bul
+          Bağlantı önerilerimi gör
         </button>
-      </div>
-      {message && (
-        <p className="border-t border-border px-4 py-2 text-sm text-destructive">{message}</p>
-      )}
-      {selectedMember && (
-        <div className="border-t border-primary/20 p-3 sm:p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="font-black">{selectedMember.name} için önerilen bağlantılar</h3>
-            <span className="text-[11px] text-foreground/45">
-              ortak yetenek + tamamlayıcı rol + ortak hedef
-            </span>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-            {recommendations.map((recommendation, index) => {
-              const contact = getMemberContact(recommendation.member);
-              return (
-                <article
-                  key={recommendation.member.id}
-                  className="rounded-xl border border-border bg-card p-3"
-                >
-                  <div className="text-[10px] font-black text-primary-deep">#{index + 1}</div>
-                  <div className="mt-2 flex items-center gap-2">
-                    <MemberAvatar member={recommendation.member} size="small" />
-                    <div className="min-w-0">
-                      <div className="truncate font-bold leading-tight">
-                        {recommendation.member.name}
-                      </div>
-                      <div className="mt-1 text-[11px] text-foreground/50">
-                        {recommendation.member.title}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="mt-2 text-[11px] leading-relaxed text-foreground/60">
-                    {recommendation.reasons.join(" · ")}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold text-primary-deep">
-                    <button
-                      type="button"
-                      onClick={() => onOpenMember(recommendation.member)}
-                      className="hover:underline"
-                    >
-                      Detay
-                    </button>
-                    {canViewContacts && contact.email && (
-                      <a href={`mailto:${contact.email}`}>E-posta</a>
-                    )}
-                    {canViewContacts && contact.linkedin && (
-                      <a href={contact.linkedin} target="_blank" rel="noreferrer">
-                        LinkedIn
-                      </a>
-                    )}
-                    {canViewContacts && contact.instagram && (
-                      <a
-                        href={`https://instagram.com/${contact.instagram}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Instagram
-                      </a>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-          <p className="mt-3 text-[10px] text-foreground/40">
-            Öneriler profilindeki yetenekler, rolün, motivasyon metnin ve tamamlayıcı iş alanları
-            puanlanarak oluşturulur.
-          </p>
-        </div>
+      ) : (
+        <Link to="/profil" className="text-sm font-bold text-primary-deep">
+          {viewerUsername ? "Profilime git" : "Önerilerim için giriş yap"}
+        </Link>
       )}
     </div>
   );
@@ -1593,12 +1472,14 @@ function NetworkGraph({
   hint = "kaydırarak ağı gez",
   emptyText = "henüz kimse yok — formdan ekle.",
   onSelectMember,
+  viewerUsername,
 }: {
   members: Member[];
   loading: boolean;
   hint?: string;
   emptyText?: string;
   onSelectMember?: (member: Member) => void;
+  viewerUsername?: string;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(320);
@@ -1698,6 +1579,7 @@ function NetworkGraph({
   const edges = useMemo(() => {
     const connections = new Map<string, { first: number; second: number; weight: number }>();
     layout.nodes.forEach((node, firstIndex) => {
+      if (!viewerUsername || node.username !== viewerUsername) return;
       const matches = getRecommendations(node, layout.nodes)
         .filter((match) => match.member.id !== node.id)
         .slice(0, 1);
@@ -1713,7 +1595,7 @@ function NetworkGraph({
       }
     });
     return [...connections.values()];
-  }, [layout.nodes]);
+  }, [layout.nodes, viewerUsername]);
 
   if (loading) {
     return (
@@ -1904,21 +1786,20 @@ function MemberDetailModal({
   member,
   members,
   onClose,
-  onEdit,
   onOpenMember,
   canViewContacts,
-  hasMemberSession,
+  viewerUsername,
 }: {
   member: Member;
   members: Member[];
   onClose: () => void;
-  onEdit: (member: Member) => void;
   onOpenMember: (member: Member) => void;
   canViewContacts: boolean;
-  hasMemberSession: boolean;
+  viewerUsername?: string;
 }) {
   const contact = getMemberContact(member);
-  const recommendations = getRecommendations(member, members);
+  const isOwnProfile = Boolean(viewerUsername && viewerUsername === member.username);
+  const recommendations = isOwnProfile ? getRecommendations(member, members) : [];
   const badges = getMemberEventBadges(member);
 
   useEffect(() => {
@@ -2035,7 +1916,7 @@ function MemberDetailModal({
               <ContactGate />
             )}
 
-            {hasMemberSession ? (
+            {isOwnProfile ? (
               <Link
                 to="/profil"
                 className="mt-5 block w-full rounded-full bg-primary px-5 py-3 text-center text-sm font-black text-primary-foreground transition hover:opacity-90"
@@ -2043,94 +1924,119 @@ function MemberDetailModal({
                 profilimi düzenle
               </Link>
             ) : (
-              <button
-                type="button"
-                onClick={() => onEdit(member)}
-                className="mt-5 w-full rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
+              <Link
+                to="/u/$username"
+                params={{ username: member.username }}
+                className="mt-5 block w-full rounded-full bg-primary px-5 py-3 text-center text-sm font-black text-primary-foreground transition hover:opacity-90"
               >
-                bilgilerimi güncellemek istiyorum
-              </button>
+                Profile git
+              </Link>
             )}
           </section>
 
-          <section className="p-5 sm:p-7">
-            <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
-              <div>
-                <div className="text-xs font-black uppercase tracking-[0.24em] text-primary-deep">
-                  potansiyel bağlantılar
+          {isOwnProfile ? (
+            <section className="p-5 sm:p-7">
+              <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+                <div>
+                  <div className="text-xs font-black uppercase tracking-[0.24em] text-primary-deep">
+                    sana özel bağlantılar
+                  </div>
+                  <h3 className="mt-2 text-2xl font-black tracking-[-0.03em]">
+                    Kimlerle iletişime geçebilirsin?
+                  </h3>
                 </div>
-                <h3 className="mt-2 text-2xl font-black tracking-[-0.03em]">
-                  Bu kişi kimlerle eşleşebilir?
-                </h3>
+                <span className="text-xs text-foreground/45">
+                  sana önerilen · {recommendations.length} kişi
+                </span>
               </div>
-              <span className="text-xs text-foreground/45">algoritmik öneri · 5 kişi</span>
-            </div>
-            {!canViewContacts && <ContactGate compact />}
-            <div className="mt-5 grid gap-3">
-              {recommendations.map((recommendation, index) => {
-                const recommendationContact = getMemberContact(recommendation.member);
-                return (
-                  <article
-                    key={recommendation.member.id}
-                    className="rounded-2xl border border-border bg-card p-4"
-                  >
-                    <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
-                      <div className="flex min-w-0 items-start gap-3">
-                        <MemberAvatar member={recommendation.member} size="small" />
-                        <div className="min-w-0">
-                          <div className="text-[10px] font-black text-primary-deep">
-                            #{index + 1}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => onOpenMember(recommendation.member)}
-                            className="mt-1 text-left text-lg font-black transition hover:text-primary-deep"
-                          >
-                            {recommendation.member.name}
-                          </button>
-                          <div className="text-xs text-foreground/50">
-                            {recommendation.member.title}
+              {!canViewContacts && <ContactGate compact />}
+              <div className="mt-5 grid gap-3">
+                {recommendations.map((recommendation, index) => {
+                  const recommendationContact = getMemberContact(recommendation.member);
+                  return (
+                    <article
+                      key={recommendation.member.id}
+                      className="rounded-2xl border border-border bg-card p-4"
+                    >
+                      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <MemberAvatar member={recommendation.member} size="small" />
+                          <div className="min-w-0">
+                            <div className="text-[10px] font-black text-primary-deep">
+                              #{index + 1}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => onOpenMember(recommendation.member)}
+                              className="mt-1 text-left text-lg font-black transition hover:text-primary-deep"
+                            >
+                              {recommendation.member.name}
+                            </button>
+                            <div className="text-xs text-foreground/50">
+                              {recommendation.member.title}
+                            </div>
                           </div>
                         </div>
+                        {canViewContacts && (
+                          <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-primary-deep">
+                            {recommendationContact.email && (
+                              <a href={`mailto:${recommendationContact.email}`}>E-posta</a>
+                            )}
+                            {recommendationContact.instagram && (
+                              <a
+                                href={`https://instagram.com/${recommendationContact.instagram}`}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Instagram
+                              </a>
+                            )}
+                            {recommendationContact.linkedin && (
+                              <a
+                                href={recommendationContact.linkedin}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                LinkedIn
+                              </a>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {canViewContacts && (
-                        <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-primary-deep">
-                          {recommendationContact.email && (
-                            <a href={`mailto:${recommendationContact.email}`}>E-posta</a>
-                          )}
-                          {recommendationContact.instagram && (
-                            <a
-                              href={`https://instagram.com/${recommendationContact.instagram}`}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              Instagram
-                            </a>
-                          )}
-                          {recommendationContact.linkedin && (
-                            <a
-                              href={recommendationContact.linkedin}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              LinkedIn
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <p className="mt-3 text-sm leading-relaxed text-foreground/60">
-                      {recommendation.reasons.join(" · ")}
-                    </p>
-                  </article>
-                );
-              })}
-            </div>
-            <p className="mt-4 text-xs leading-relaxed text-foreground/45">
-              Eşleşmeler; ortak yetenekler, tamamlayıcı rol grupları, benzer hedef kelimeleri ve
-              profil doluluğu üzerinden puanlanır.
-            </p>
-          </section>
+                      <p className="mt-3 text-sm leading-relaxed text-foreground/60">
+                        {recommendation.reasons.join(" · ")}
+                      </p>
+                    </article>
+                  );
+                })}
+              </div>
+              <p className="mt-4 text-xs leading-relaxed text-foreground/45">
+                Eşleşmeler; ortak yetenekler, tamamlayıcı rol grupları, benzer hedef kelimeleri ve
+                profil doluluğu üzerinden puanlanır.
+              </p>
+            </section>
+          ) : (
+            <section className="p-5 sm:p-7">
+              <div className="text-xs font-black uppercase tracking-[0.24em] text-primary-deep">
+                Profili incele
+              </div>
+              <h3 className="mt-2 text-2xl font-black tracking-[-0.03em]">
+                {member.name} ile tanış
+              </h3>
+              <p className="mt-4 text-sm leading-relaxed text-foreground/65">
+                Profilindeki deneyimleri ve paylaştığı bilgileri inceleyebilir, birlikte çalışma
+                deneyimin varsa referans olabilirsin.
+              </p>
+              <Link
+                to="/u/$username"
+                params={{ username: member.username }}
+                hash="referanslar"
+                className="mt-5 inline-flex rounded-full border border-primary/30 px-5 py-3 text-sm font-bold text-primary-deep"
+              >
+                Referans ol
+              </Link>
+            </section>
+          )}
         </div>
       </div>
     </div>

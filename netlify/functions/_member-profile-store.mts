@@ -1290,6 +1290,36 @@ export async function getNetworkingMemberPhotoVersions(store = getMemberProfileS
   );
 }
 
+// Unpublished cards expose only the information already present in the networking directory.
+async function networkingDirectoryProfile(profile: StoredMemberProfile) {
+  if (!["active", "invited"].includes(profile.status) || isTestMemberEmail(profile.email))
+    return null;
+  const sourceStore = getStore({ name: memberStoreName, consistency: "strong" });
+  const member = (await sourceStore.get(`members/${profile.username}.json`, {
+    type: "json",
+    consistency: "strong",
+  })) as NetworkMemberRow | null;
+  if (!member || member.email.trim().toLowerCase() !== profile.email.trim().toLowerCase())
+    return null;
+  return {
+    username: member.username,
+    name: member.name,
+    headline: member.title,
+    bio: member.motivation,
+    photoUrl: "",
+    skills: member.skills
+      .split(/[,;]/)
+      .map((skill) => skill.trim())
+      .filter(Boolean)
+      .slice(0, 5),
+    experiences: [],
+    links: { linkedin: "", instagram: "", website: "" },
+    attendedEvents: [],
+    verifiedMember: profile.verifiedMember,
+    badge: profile.badge,
+  };
+}
+
 export async function getPublicMemberProfile(username: string, store = getMemberProfileStore()) {
   const normalizedUsername = clean(username, 80).toLocaleLowerCase("tr-TR");
   if (!normalizedUsername) return null;
@@ -1297,14 +1327,13 @@ export async function getPublicMemberProfile(username: string, store = getMember
     type: "json",
     consistency: "strong",
   })) as StoredMemberProfile | null;
-  if (
-    !profile ||
-    profile.status !== "active" ||
-    profile.mustChangePassword ||
-    !profile.publicProfileEnabled
-  ) {
-    return null;
-  }
+  if (!profile) return null;
+  const published =
+    profile.status === "active" && !profile.mustChangePassword && profile.publicProfileEnabled;
+  const visibleProfile = published
+    ? shareableProfile(profile)
+    : await networkingDirectoryProfile(profile);
+  if (!visibleProfile) return null;
   const references = (
     await getRows<StoredMemberReference>(store, `references/${profile.username}/`)
   )
@@ -1313,7 +1342,7 @@ export async function getPublicMemberProfile(username: string, store = getMember
     .map(publicReference);
   return {
     storedProfile: profile,
-    profile: { ...shareableProfile(profile), references },
+    profile: { ...visibleProfile, references },
   };
 }
 
@@ -1342,12 +1371,12 @@ export async function submitMemberReference(
     type: "json",
     consistency: "strong",
   })) as StoredMemberProfile | null;
-  if (
-    !target ||
-    target.status !== "active" ||
-    !target.verifiedMember ||
-    !target.publicProfileEnabled
-  ) {
+  if (!target || !["active", "invited"].includes(target.status)) {
+    throw new Error("Referans verilecek profil yayında değil");
+  }
+  const published =
+    target.status === "active" && !target.mustChangePassword && target.publicProfileEnabled;
+  if (!published && !(await networkingDirectoryProfile(target))) {
     throw new Error("Referans verilecek profil yayında değil");
   }
 

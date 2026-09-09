@@ -143,7 +143,7 @@ export default async (request: Request, _context: Context) => {
 
   if (request.method === "GET" && url.searchParams.has("publicPhoto")) {
     const result = await getPublicMemberProfile(url.searchParams.get("publicPhoto") || "");
-    if (!result) return new Response("Fotoğraf bulunamadı", { status: 404 });
+    if (!result?.profile.photoUrl) return new Response("Fotoğraf bulunamadı", { status: 404 });
     const photo = await getMemberProfilePhoto(result.storedProfile.id);
     if (!photo) return new Response("Fotoğraf bulunamadı", { status: 404 });
     return new Response(photo.image, {

@@ -125,6 +125,62 @@ try {
   assert.ok(await sourceStore.get("members/real-tester.json"));
   assert.ok((await profileStore.list({ prefix: "test-cleanup-backups/" })).blobs.length);
   assert.equal((await contacts.testMembers(true)).members.length, 0);
+  const author = await profileStore.get("profiles/example-member.json");
+  await profileStore.setJSON("profiles/example-member.json", { ...author, verifiedMember: true });
+  const invited = await members.createAdminMemberProfile({
+    name: "Directory Target",
+    email: "target@real-domain.org",
+    headline: "Public headline",
+    bio: "Directory introduction",
+    website: "https://private-link.org",
+  });
+  const targetKey = "profiles/directory-target.json";
+  const target = await profileStore.get(targetKey);
+  await profileStore.setJSON(targetKey, {
+    ...target,
+    bio: "Unpublished private biography",
+    publicProfileEnabled: false,
+    experiences: [{ company: "Private company", role: "Private role" }],
+  });
+  const directory = await members.getPublicMemberProfile(invited.profile.username);
+  assert.equal(directory.profile.bio, "Directory introduction");
+  assert.equal(directory.profile.links.website, "");
+  assert.deepEqual(directory.profile.experiences, []);
+  assert.equal(directory.profile.photoUrl, "");
+  assert.equal("email" in directory.profile, false);
+  await members.submitMemberReference(
+    login.token,
+    invited.profile.username,
+    "Collaboration",
+    "We worked together and delivered a successful project.",
+  );
+  assert.equal(
+    (await members.getPublicMemberProfile(invited.profile.username)).profile.references.length,
+    0,
+  );
+  await members.moderateMemberReference(invited.profile.username, author.username, "approved");
+  assert.equal(
+    (await members.getPublicMemberProfile(invited.profile.username)).profile.references.length,
+    1,
+  );
+  await assert.rejects(() =>
+    members.submitMemberReference(
+      login.token,
+      author.username,
+      "Collaboration",
+      "This must not create a reference for myself.",
+    ),
+  );
+  await profileStore.setJSON(targetKey, { ...target, status: "suspended" });
+  assert.equal(await members.getPublicMemberProfile(invited.profile.username), null);
+  await assert.rejects(() =>
+    members.submitMemberReference(
+      login.token,
+      invited.profile.username,
+      "Collaboration",
+      "This suspended member must not receive a reference.",
+    ),
+  );
   const endpoint = (await load("member-profiles-admin")).default;
   const unauthorized = await endpoint(
     new Request("https://notwork.me/api/admin/member-profiles", {
