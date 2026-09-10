@@ -182,6 +182,7 @@ function isEventExperiencePath(pathname: string) {
     pathname === "/etkinlikler" ||
     pathname === "/17-eylul" ||
     pathname === "/9-ekim" ||
+    pathname === "/11-ekim" ||
     pathname === "/14temmuz" ||
     pathname === "/14temmuznetworking" ||
     pathname === "/21agustos" ||

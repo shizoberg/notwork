@@ -53,6 +53,9 @@ const eventPageContent: Record<
     contentName: "notwork Classic · 9 Ekim 2026",
     value: 600,
   },
+  "/11-ekim": {
+    contentName: "notwork Classic · 11 Ekim 2026",
+  },
 };
 
 function sendMetaEvent(

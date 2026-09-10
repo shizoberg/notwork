@@ -1,20 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Cloud, Mic2, MessageCircleQuestion, Sparkles, UsersRound } from "lucide-react";
 
 import { EventProductPage, type EventProductConfig } from "@/components/EventProductPage";
 import { createSeo } from "@/lib/seo";
 import { createEventStructuredData } from "@/lib/structured-data";
 
-const eventConfig: EventProductConfig = {
+export const eventConfig: EventProductConfig = {
   trackingId: "notwork-classic-2026-10-09",
   trackingName: "notwork Classic",
   eventLabel: "classic edition",
   imageTitle: "notwork classic",
-  imageSubtitle: "9 ekim · 19.30 · rene lokal",
+  imageSubtitle: "11 ekim · 19.30 · rene lokal",
   titleLines: ["notwork", "classic"],
   description:
     "Dört ilham veren başarısızlık hikâyesi, canlı ntw.wordcloud ve iki networking arasında ntw.match.lab ile tasarlanmış klasik notwork deneyimi.",
-  date: "9 Ekim 2026",
+  date: "11 Ekim 2026",
   day: "Cuma",
   time: "19.30",
   timeDetail: "Etkinlik başlangıcı",
@@ -182,6 +182,9 @@ const eventConfig: EventProductConfig = {
 };
 
 export const Route = createFileRoute("/9-ekim")({
+  beforeLoad: () => {
+    throw redirect({ to: "/11-ekim", replace: true });
+  },
   head: () =>
     createSeo({
       title: "9 Ekim notwork Classic | İzmir Networking Etkinliği",

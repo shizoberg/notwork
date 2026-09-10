@@ -49,7 +49,7 @@ const filters = [
 const catalogEvents: EventCatalogItem[] = [
   {
     id: "9-ekim-2026",
-    date: "9 Ekim 2026",
+    date: "11 Ekim 2026",
     year: "2026",
     venue: "Rene Lokal",
     title: "notwork Classic",
@@ -57,7 +57,7 @@ const catalogEvents: EventCatalogItem[] = [
       "Dört ilham veren başarısızlık hikâyesi, canlı WordCloud ve iki networking arasında ntw.match.lab deneyimi.",
     participants: "Sınırlı kontenjan",
     tags: ["Rene Lokal", "WordCloud", "MatchLab", "4 konuşmacı"],
-    href: "/9-ekim",
+    href: "/11-ekim",
     accent: "from-[#071416] via-[#6b304e] to-[#d8c6ff]",
     image: "/community/8.jpg",
     imagePosition: "center 38%",

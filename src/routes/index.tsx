@@ -28,7 +28,7 @@ export const Route = createFileRoute("/")({
         "İzmir networking event",
         "networking club İzmir",
         "girişimcilik hikâyeleri",
-        "f*ckup nights İzmir",
+        "notwork Classic İzmir",
       ],
     }),
   component: Landing,
@@ -264,14 +264,14 @@ function Hero() {
             <Ticket className="hero-event-ticket" size={18} strokeWidth={1.5} aria-hidden="true" />
           </Link>
           <Link
-            to="/9-ekim"
+            to="/11-ekim"
             data-analytics="ticket_click"
-            data-analytics-label="9 Ekim ana sayfa etkinlik CTA"
+            data-analytics-label="11 Ekim ana sayfa etkinlik CTA"
             className="hero-event-link"
           >
             <span className="hero-event-date">11 EKİM</span>
             <span className="hero-event-logo font-brand">notwork</span>
-            <span className="hero-event-name">f*ckup stories</span>
+            <span className="hero-event-name">classic</span>
             <Ticket className="hero-event-ticket" size={18} strokeWidth={1.5} aria-hidden="true" />
           </Link>
         </div>
@@ -284,8 +284,8 @@ function Nedir() {
   const [activeSlide, setActiveSlide] = useState(0);
   const slides = [
     {
-      name: "f*ckup stories",
-      href: "/9-ekim" as const,
+      name: "classic",
+      href: "/11-ekim" as const,
       items: [
         {
           n: "01",

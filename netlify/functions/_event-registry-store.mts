@@ -354,9 +354,9 @@ function octoberEvent(): NotworkEvent {
     id: octoberEventId,
     slug: "9-ekim-2026",
     title: "notwork Classic",
-    shortTitle: "9 Ekim",
-    startsAt: "2026-10-09T16:30:00.000Z",
-    endsAt: "2026-10-09T19:30:00.000Z",
+    shortTitle: "11 Ekim",
+    startsAt: "2026-10-11T16:30:00.000Z",
+    endsAt: "2026-10-11T19:30:00.000Z",
     timezone: "Europe/Istanbul",
     status: "scheduled",
     location: {
@@ -454,12 +454,22 @@ export async function ensureEventRegistrySeeded() {
   } else {
     const current = existingOctoberEvent as NotworkEvent;
     if (
-      current.revision === 1 &&
-      (current.title === "9 Ekim notwork" ||
-        current.products.five.enabled ||
-        !current.products.wordcloud.enabled)
+      current.startsAt.includes("2026-10-09") ||
+      (current.revision === 1 &&
+        (current.title === "9 Ekim notwork" ||
+          current.products.five.enabled ||
+          !current.products.wordcloud.enabled))
     ) {
-      const event = { ...octoberEvent(), createdAt: current.createdAt || octoberEvent().createdAt };
+      const seeded = octoberEvent();
+      const event = current.startsAt.includes("2026-10-09")
+        ? {
+            ...current,
+            shortTitle: seeded.shortTitle,
+            startsAt: seeded.startsAt,
+            endsAt: seeded.endsAt,
+            updatedAt: new Date().toISOString(),
+          }
+        : { ...seeded, createdAt: current.createdAt || seeded.createdAt };
       writes.push(store.setJSON(eventKey(event.id), event));
     }
   }

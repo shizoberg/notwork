@@ -35,6 +35,7 @@ import { Route as R21agustosRouteImport } from './routes/21agustos'
 import { Route as R17EylulRouteImport } from './routes/17-eylul'
 import { Route as R14temmuznetworkingRouteImport } from './routes/14temmuznetworking'
 import { Route as R14temmuzRouteImport } from './routes/14temmuz'
+import { Route as R11EkimRouteImport } from './routes/11-ekim'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as FiveLiveRouteImport } from './routes/five_.live'
@@ -173,6 +174,11 @@ const R14temmuzRoute = R14temmuzRouteImport.update({
   path: '/14temmuz',
   getParentRoute: () => rootRouteImport,
 } as any)
+const R11EkimRoute = R11EkimRouteImport.update({
+  id: '/11-ekim',
+  path: '/11-ekim',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -211,6 +217,7 @@ const R21AgustosEslesmeRoute = R21AgustosEslesmeRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/11-ekim': typeof R11EkimRoute
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
   '/17-eylul': typeof R17EylulRoute
@@ -246,6 +253,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/11-ekim': typeof R11EkimRoute
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
   '/17-eylul': typeof R17EylulRoute
@@ -282,6 +290,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/11-ekim': typeof R11EkimRoute
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
   '/17-eylul': typeof R17EylulRoute
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/11-ekim'
     | '/14temmuz'
     | '/14temmuznetworking'
     | '/17-eylul'
@@ -354,6 +364,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/11-ekim'
     | '/14temmuz'
     | '/14temmuznetworking'
     | '/17-eylul'
@@ -389,6 +400,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/11-ekim'
     | '/14temmuz'
     | '/14temmuznetworking'
     | '/17-eylul'
@@ -425,6 +437,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  R11EkimRoute: typeof R11EkimRoute
   R14temmuzRoute: typeof R14temmuzRoute
   R14temmuznetworkingRoute: typeof R14temmuznetworkingRoute
   R17EylulRoute: typeof R17EylulRoute
@@ -643,6 +656,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof R14temmuzRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/11-ekim': {
+      id: '/11-ekim'
+      path: '/11-ekim'
+      fullPath: '/11-ekim'
+      preLoaderRoute: typeof R11EkimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -697,6 +717,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  R11EkimRoute: R11EkimRoute,
   R14temmuzRoute: R14temmuzRoute,
   R14temmuznetworkingRoute: R14temmuznetworkingRoute,
   R17EylulRoute: R17EylulRoute,
