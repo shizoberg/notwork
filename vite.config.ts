@@ -7,6 +7,20 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  vite: {
+    server: {
+      proxy: {
+        "/api/event-reviews": {
+          target: "https://notwork.me",
+          changeOrigin: true,
+          bypass(req) {
+            // Only preview public reviews; never forward local form submissions.
+            if (req.method !== "GET") return req.url;
+          },
+        },
+      },
+    },
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this

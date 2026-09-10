@@ -163,7 +163,7 @@ export const Route = createFileRoute("/17-eylul")({
         venueName: "Köşk Alsancak",
         addressLocality: "Konak",
         images: ["/notwork-social.png", "/community/17.jpg", "/community/23.jpg"],
-        ticketUrl: eventConfig.ticketUrl,
+        ticketUrl: eventConfig.ticketUrl || "https://notwork.me/17-eylul",
         lowPrice: 450,
         highPrice: 800,
         videos: [

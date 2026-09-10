@@ -119,6 +119,13 @@ type RegistrationPath = "choose" | "login" | "new";
 type RegistrationStep = "standard" | "event";
 
 function LinksPage() {
+  const preview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("preview") === "event";
+  const [previewReady, setPreviewReady] = useState(
+    preview && new URLSearchParams(window.location.search).get("step") === "apps",
+  );
   const [activeEvent, setActiveEvent] = useState<NotworkEvent | null>(null);
   const [registration, setRegistration] = useState<EventNetworkRegistration | null>(null);
   const [memberProfile, setMemberProfile] = useState<NotworkMemberProfile | null>(null);
@@ -235,6 +242,10 @@ function LinksPage() {
   }
 
   useEffect(() => {
+    if (preview) {
+      setIsLoading(false);
+      return;
+    }
     let active = true;
 
     async function loadRegistration() {
@@ -302,9 +313,9 @@ function LinksPage() {
         form.lastName.trim() &&
         form.email.includes("@") &&
         form.attendedEvent &&
-        form.intro.trim().length >= 140 &&
-        form.offersDetail.trim().length >= 140 &&
-        form.needs.trim().length >= 140 &&
+        form.intro.trim().length >= 30 &&
+        form.offersDetail.trim().length >= 30 &&
+        form.needs.trim().length >= 30 &&
         form.offers.length > 0 &&
         form.eventConsent &&
         form.generalNetworkOptIn,
@@ -341,6 +352,10 @@ function LinksPage() {
   }
 
   async function submitRegistration() {
+    if (preview) {
+      setPreviewReady(true);
+      return;
+    }
     setIsSaving(true);
     setMessage("");
     try {
@@ -382,6 +397,10 @@ function LinksPage() {
   }
 
   async function submitMemberLogin() {
+    if (preview) {
+      setPreviewReady(true);
+      return;
+    }
     if (!loginConsent) return;
     setIsSaving(true);
     setMessage("");
@@ -402,22 +421,44 @@ function LinksPage() {
     }
   }
 
-  const hasRegistration = Boolean(registration);
+  const hasRegistration = Boolean(registration) || (preview && previewReady);
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () =>
+        window.dispatchEvent(new CustomEvent("notwork-entry-ready", { detail: hasRegistration })),
+      0,
+    );
+    return () => window.clearTimeout(timer);
+  }, [hasRegistration]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="event-entry min-h-screen bg-background text-foreground">
       <SiteNav variant="event" />
-      <main className="px-4 py-5 sm:py-10">
+      <main id="etkinlik-girisi" className="scroll-mt-24 px-4 py-5 sm:py-10">
         <div className="mx-auto max-w-3xl">
-          <header className="text-center sm:text-left">
-            <a href="/" className="inline-flex items-center gap-2 font-brand text-3xl">
-              <span className="h-3 w-3 rounded-full bg-primary" />
-              notwork
-            </a>
-            <p className="mt-2 text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
-              {activeEvent?.shortTitle || "notwork etkinlik giriş ekranı"}
-            </p>
+          <header className="entry-heading">
+            <div
+              className="entry-progress"
+              aria-label={hasRegistration ? "Son adım: keşfet" : "Kayıt adımları"}
+            >
+              <span className="is-current">01 · Sen</span>
+              <span className={registrationStep === "event" || hasRegistration ? "is-current" : ""}>
+                02 · Tanışalım
+              </span>
+              <span className={hasRegistration ? "is-current" : ""}>03 · Keşfet</span>
+            </div>
+            {hasRegistration && (
+              <>
+                <h1>{activeEvent?.entry.appsTitle || "Şimdi notwork zamanı"}</h1>
+                <p>{activeEvent?.entry.appsSubtitle || "Akışa göre uygulamanı seç"}</p>
+              </>
+            )}
           </header>
+          {preview && !hasRegistration && (
+            <button className="entry-preview" onClick={() => setPreviewReady(true)}>
+              Örnek katılımcıyla uygulamaları incele →
+            </button>
+          )}
 
           {isLoading ? (
             <section className="mt-5 rounded-[2rem] border border-primary/20 bg-card p-6 text-center text-sm font-bold text-foreground/55 shadow-sm">
@@ -453,155 +494,96 @@ function LinksPage() {
             />
           ) : null}
 
-          {hasRegistration && registration ? (
-            <section className="mt-5 rounded-[2rem] border border-primary/25 bg-primary/10 p-5 shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
-                    Kayıt tamamlandı
-                  </p>
-                  <h1 className="mt-2 text-3xl font-black tracking-[-0.04em]">
-                    Merhaba {registration.profile.firstName}, kodun hazır.
-                  </h1>
+          {hasRegistration && (
+            <>
+              {registration && (
+                <div className="entry-code">
+                  Merhaba {registration.profile.firstName}
+                  <span>
+                    Kodun <strong>{registration.participant.publicCode}</strong>
+                  </span>
                 </div>
-                <div className="rounded-3xl bg-primary px-5 py-3 text-4xl font-black tracking-[-0.08em] text-primary-foreground">
-                  {registration.participant.publicCode}
-                </div>
-              </div>
-              <p className="mt-3 text-sm leading-6 text-foreground/60">
-                Bu kod ntw.matchlab’de seni bulmamızı sağlar. Kayıt, {registration.profile.email} ve
-                <strong className="ml-1 text-foreground">
-                  @{registration.membership?.username || registration.profile.username}
-                </strong>
-                kullanıcı adına bağlıdır; profil oturumunla başka bir cihazda da devam edebilirsin.
-              </p>
-              {registration.membership?.source === "event-qr" ? (
-                <div className="mt-3 rounded-2xl border border-primary/25 bg-background/75 px-4 py-3">
-                  <p className="text-xs font-black uppercase tracking-[0.14em] text-primary-deep">
-                    Etkinlik QR üyesi
-                  </p>
-                  <p className="mt-1 text-xs leading-5 text-foreground/55">
-                    Bu etkinlik girişinden geldiğin için profilin admin onayı beklemeden doğrulandı.
-                    Kullanıcı adın @{registration.membership.username}.
-                  </p>
-                </div>
-              ) : null}
-              <div className="mt-4 rounded-2xl border border-primary/20 bg-background/70 p-4">
-                <p className="text-sm font-black text-primary-deep">
-                  İlk etkinlik hissini ve ortam/selfie fotoğrafını da bekliyoruz.
-                </p>
-                <p className="mt-1 text-xs leading-5 text-foreground/55">
-                  Kısa yorumun etkinlik sonrası notwork sayfasında görünebilir; fotoğraf görevi
-                  ntw.matchlab gruplarında rastgele bir kişiye atanır.
-                </p>
-                <a
-                  href={
-                    activeEvent
-                      ? `/etkinlik-degerlendirme?event=${encodeURIComponent(activeEvent.slug)}`
-                      : "/etkinlik-degerlendirme?event=21-agustos-2026"
-                  }
-                  className="mt-3 inline-flex rounded-full bg-primary px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-primary-foreground"
-                >
-                  ilk yorumumu bırak
-                </a>
-              </div>
-              {message ? (
-                <p className="mt-3 rounded-2xl bg-background/70 px-4 py-3 text-sm font-bold text-primary-deep">
-                  {message}
-                </p>
-              ) : null}
-            </section>
-          ) : null}
-
-          <section className="mt-5 grid gap-3">
-            <div className="rounded-2xl border border-primary/20 bg-card px-4 py-3">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-primary-deep">
-                Tek profil · adım adım etkinlik akışı
-              </p>
-              <p className="mt-1 text-xs leading-5 text-foreground/55">
-                Verdiğin üç etkinlik cevabı hem ntw.matchlab eşleşmelerini hem de ntw.five problem
-                önerilerini besler. Araçları sırayla veya ihtiyacına göre kullanabilirsin.
-              </p>
-            </div>
-            {eventLinks.map(({ title, description, href, icon: Icon, enabled }, index) => (
-              <a
-                key={title}
-                href={href}
-                onClick={(event) => {
-                  if (!enabled) {
-                    event.preventDefault();
-                    setMessage(`${title}, bu etkinlikte henüz aktif değil.`);
-                  } else if (!hasRegistration) {
-                    event.preventDefault();
-                    setMessage(
-                      "Önce kısa kayıt ve KVKK onayını tamamla; sonra bu alana geçebilirsin.",
-                    );
-                  }
-                }}
-                aria-disabled={!hasRegistration || !enabled}
-                className={`group flex items-center gap-3 rounded-[1.35rem] border bg-card p-3 shadow-sm transition sm:p-4 ${
-                  hasRegistration && enabled
-                    ? "border-primary/25 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-lg hover:shadow-primary/10"
-                    : "border-border opacity-60"
-                }`}
-              >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground sm:h-14 sm:w-14">
-                  <span className="relative">
-                    <Icon size={25} strokeWidth={1.8} />
-                    <span className="absolute -right-3 -top-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-card px-1 text-[9px] font-black text-primary-deep shadow-sm">
-                      {index + 1}
+              )}
+              <section className="mt-5 grid gap-3">
+                {eventLinks.map(({ title, description, href, icon: Icon, enabled }, index) => (
+                  <a
+                    key={title}
+                    href={
+                      preview && href.startsWith("/")
+                        ? `${href}${href.includes("?") ? "&" : "?"}preview=event`
+                        : href
+                    }
+                    onClick={(event) => {
+                      if (!enabled) {
+                        event.preventDefault();
+                        setMessage(`${title}, bu etkinlikte henüz aktif değil.`);
+                      } else if (!hasRegistration) {
+                        event.preventDefault();
+                        setMessage(
+                          "Önce kısa kayıt ve KVKK onayını tamamla; sonra bu alana geçebilirsin.",
+                        );
+                      }
+                    }}
+                    aria-disabled={!hasRegistration || !enabled}
+                    className={`group flex items-center gap-3 rounded-[1.35rem] border bg-card p-3 shadow-sm transition sm:p-4 ${
+                      hasRegistration && enabled
+                        ? "border-primary/25 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-lg hover:shadow-primary/10"
+                        : "border-border opacity-60"
+                    }`}
+                  >
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground sm:h-14 sm:w-14">
+                      <span className="relative">
+                        <Icon size={25} strokeWidth={1.8} />
+                        <span className="absolute -right-3 -top-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-card px-1 text-[9px] font-black text-primary-deep shadow-sm">
+                          {index + 1}
+                        </span>
+                      </span>
                     </span>
-                  </span>
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-lg font-black tracking-[-0.03em] sm:text-xl">
-                    {title}
-                  </span>
-                  <span className="mt-1 block text-xs leading-5 text-foreground/55 sm:text-sm">
-                    {description}
-                  </span>
-                </span>
-                <span className="shrink-0 rounded-full bg-primary px-3 py-2 text-[0.65rem] font-black uppercase tracking-[0.12em] text-primary-foreground sm:px-4">
-                  {!enabled ? "Kapalı" : hasRegistration ? "Başla" : "Kayıt"}
-                </span>
-              </a>
-            ))}
-          </section>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-lg font-black tracking-[-0.03em] sm:text-xl">
+                        {title}
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-foreground/55 sm:text-sm">
+                        {description}
+                      </span>
+                    </span>
+                    <span className="shrink-0 rounded-full bg-primary px-3 py-2 text-[0.65rem] font-black uppercase tracking-[0.12em] text-primary-foreground sm:px-4">
+                      {!enabled ? "Kapalı" : hasRegistration ? "Başla" : "Kayıt"}
+                    </span>
+                  </a>
+                ))}
+              </section>
 
-          <section className="mx-auto mt-7 grid max-w-xl gap-3">
-            <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-foreground/35">
-              Diğer bağlantılar
-            </p>
-            {externalLinks.map(({ title, description, href, icon: Icon }) => (
-              <a
-                key={title}
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
-              >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary-deep">
-                  <Icon size={24} strokeWidth={1.8} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-bold">{title}</span>
-                  <span className="mt-0.5 block text-xs text-foreground/50">{description}</span>
-                </span>
-                <ArrowRight
-                  size={18}
-                  className="shrink-0 text-foreground/35 transition group-hover:text-primary-deep"
-                />
-              </a>
-            ))}
-          </section>
-
-          <p className="mx-auto mt-6 max-w-2xl text-center text-xs leading-5 text-foreground/45">
-            Bu giriş ekranı ntw.wordcloud, ntw.matchlab, ntw.five ve genel notwork networking ağı
-            için kullanılacak temel profilini oluşturur.
-          </p>
+              <section className="mx-auto mt-7 grid max-w-xl gap-3">
+                <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-foreground/35">
+                  Diğer bağlantılar
+                </p>
+                {externalLinks.map(({ title, description, href, icon: Icon }) => (
+                  <a
+                    key={title}
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
+                  >
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary-deep">
+                      <Icon size={24} strokeWidth={1.8} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-bold">{title}</span>
+                      <span className="mt-0.5 block text-xs text-foreground/50">{description}</span>
+                    </span>
+                    <ArrowRight
+                      size={18}
+                      className="shrink-0 text-foreground/35 transition group-hover:text-primary-deep"
+                    />
+                  </a>
+                ))}
+              </section>
+            </>
+          )}
         </div>
       </main>
-      <SiteFooter />
     </div>
   );
 }
@@ -660,14 +642,13 @@ function RegistrationGate({
       <section className="mt-5 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-xl shadow-primary/10 sm:p-6">
         <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-primary-deep">
           <UserRound className="h-4 w-4" />
-          etkinlik girişi
+          hoş geldin
         </div>
         <h1 className="mt-4 text-3xl font-black leading-none tracking-[-0.04em] sm:text-4xl">
-          Daha önce notwork profili oluşturdun mu?
+          İyi ki geldin.
         </h1>
         <p className="mt-3 text-sm leading-6 text-foreground/60">
-          Kayıtlı üyeler aynı ekranda giriş yapar. Yeni katılımcılar önce temel bilgilerini, sonra
-          bu etkinliğe özel soruları yanıtlar.
+          Birbirimizi tanıyarak başlayalım. Profilin varsa giriş yap, yoksa birlikte oluşturalım.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <button
@@ -677,7 +658,7 @@ function RegistrationGate({
           >
             <KeyRound className="h-6 w-6 text-primary-deep" />
             <span>
-              <span className="block text-lg font-black">Kayıtlıyım</span>
+              <span className="block text-lg font-black">Giriş yap</span>
               <span className="mt-1 block text-xs leading-5 text-foreground/55">
                 Kullanıcı adı/e-posta ve şifrenle devam et.
               </span>
@@ -693,7 +674,7 @@ function RegistrationGate({
           >
             <UserRound className="h-6 w-6 text-primary-deep" />
             <span>
-              <span className="block text-lg font-black">Kayıtlı değilim</span>
+              <span className="block text-lg font-black">Profil oluştur</span>
               <span className="mt-1 block text-xs leading-5 text-foreground/55">
                 Etkinlik profilini burada hızlıca oluştur.
               </span>
@@ -910,8 +891,7 @@ function RegistrationGate({
           value={form.intro}
           onChange={(event) => setForm((current) => ({ ...current, intro: event.target.value }))}
           rows={5}
-          minLength={140}
-          maxLength={600}
+          minLength={30}
           placeholder={registrationPrompts.introPlaceholder}
           className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
         />
@@ -926,8 +906,7 @@ function RegistrationGate({
             setForm((current) => ({ ...current, offersDetail: event.target.value }))
           }
           rows={5}
-          minLength={140}
-          maxLength={600}
+          minLength={30}
           placeholder={registrationPrompts.offersPlaceholder}
           className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
         />
@@ -940,8 +919,7 @@ function RegistrationGate({
           value={form.needs}
           onChange={(event) => setForm((current) => ({ ...current, needs: event.target.value }))}
           rows={5}
-          minLength={140}
-          maxLength={600}
+          minLength={30}
           placeholder={registrationPrompts.needsPlaceholder}
           className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
         />
@@ -1044,14 +1022,14 @@ function QuickInput({
 }
 
 function CharacterHint({ length }: { length: number }) {
-  const remaining = Math.max(0, 140 - length);
+  const remaining = Math.max(0, 30 - length);
   return (
     <span
       className={`mt-1 block text-right text-[11px] font-bold ${
         remaining === 0 ? "text-primary-deep" : "text-foreground/40"
       }`}
     >
-      {remaining === 0 ? `${length}/600 · yeterli detay` : `en az ${remaining} karakter daha`}
+      {remaining === 0 ? `${length} karakter · yeterli detay` : `en az ${remaining} karakter daha`}
     </span>
   );
 }

@@ -211,6 +211,12 @@ function normalizeEventDraft(input: EventDraft, current?: NotworkEvent) {
     status: normalizeStatus(input.status, current?.status || "draft"),
     location: normalizeLocation(input.location, current?.location),
     entry: {
+      appsTitle:
+        clean(input.entry?.appsTitle, 120) || current?.entry.appsTitle || "Şimdi notwork zamanı",
+      appsSubtitle:
+        clean(input.entry?.appsSubtitle, 240) ||
+        current?.entry.appsSubtitle ||
+        "Akışa göre uygulamanı seç",
       isOpen:
         typeof input.entry?.isOpen === "boolean"
           ? input.entry.isOpen

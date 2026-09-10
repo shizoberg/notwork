@@ -376,6 +376,8 @@ function eventToEditorDraft(event: NotworkEvent): EventEditorDraft {
     location: { ...event.location },
     entry: {
       isOpen: event.entry.isOpen,
+      appsTitle: event.entry.appsTitle || "Şimdi notwork zamanı",
+      appsSubtitle: event.entry.appsSubtitle || "Akışa göre uygulamanı seç",
       requireRegistration: event.entry.requireRegistration,
       registrationPrompts: {
         ...defaultEventRegistrationPrompts,
@@ -1103,7 +1105,7 @@ function AdminPage() {
               setEventRegistryMessage("");
               setEventEditor(blankEventEditorDraft());
             }}
-            refresh={() => loadEventRegistry(password, eventEditor.id)}
+            refresh={async () => { await loadEventRegistry(password, eventEditor.id); }}
             saveEvent={saveEventRegistryItem}
             setPrimaryEvent={setPrimaryEventRegistryItem}
             archiveEvent={archiveEventRegistryItem}
@@ -1568,7 +1570,7 @@ function AdminPage() {
               draft={wordcloudDraft}
               message={wordcloudMessage}
               setDraft={setWordcloudDraft}
-              refresh={() => loadWordcloud(password, selectedToolsEventSlug)}
+              refresh={async () => { await loadWordcloud(password, selectedToolsEventSlug); }}
               wordcloudAction={wordcloudAction}
             />
           ) : null}
@@ -1580,7 +1582,7 @@ function AdminPage() {
               registrations={eventRegistrations}
               database={eventDatabase}
               message={networkMessage}
-              refresh={() => loadEventNetwork(password, selectedToolsEventSlug)}
+              refresh={async () => { await loadEventNetwork(password, selectedToolsEventSlug); }}
               seedSamples={seedEventNetwork}
               resetDemo={resetEventNetwork}
             />
@@ -3319,8 +3321,32 @@ function EventRegistryAdmin({
 
         <div className="mt-7 flex items-center gap-2">
           <MessageSquareQuote size={18} className="text-primary-deep" />
-          <h3 className="font-black">Etkinlik özel soruları</h3>
+          <h3 className="font-black">Etkinlik akışı</h3>
         </div>
+        <div className="mt-4 grid gap-3">
+          {(
+            [
+              ["appsTitle", "Uygulama ekranı başlığı", "Şimdi notwork zamanı"],
+              ["appsSubtitle", "Uygulama ekranı açıklaması", "Akışa göre uygulamanı seç"],
+            ] as const
+          ).map(([key, label, fallback]) => (
+            <label key={key} className="text-sm font-bold">
+              {label}
+              <input
+                className="mt-2 w-full rounded-xl border border-border bg-background p-3"
+                maxLength={key === "appsTitle" ? 120 : 240}
+                value={draft.entry[key] ?? fallback}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    entry: { ...current.entry, [key]: event.target.value },
+                  }))
+                }
+              />
+            </label>
+          ))}
+        </div>
+        <h3 className="mt-7 font-black">Etkinlik özel soruları</h3>
         <p className="mt-1 text-sm text-foreground/55">
           Kayıtlı veya yeni katılımcı standart bilgilerini girdikten sonra bu etkinliğe özel üç
           soruyu yanıtlar.

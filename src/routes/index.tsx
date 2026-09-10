@@ -1,3 +1,4 @@
+import { Ticket } from "lucide-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import gallery2 from "@/assets/gallery/notwork-2.jpg";
@@ -77,7 +78,7 @@ const faq = [
   },
   {
     q: "Ben de sahneye çıkabilir miyim?",
-    a: "Evet. Community sayfasından sunumunu ve hikâyeni gönder, sana WhatsApp'tan dönelim.",
+    a: "Evet. Sunum yükle sayfasından sunumunu ve hikâyeni gönder, sana WhatsApp'tan dönelim.",
   },
 ];
 
@@ -87,38 +88,17 @@ function Landing() {
       <SiteNav />
       <main className="flex-1">
         <Hero />
-        <Benefits />
         <Nedir />
         <InterviewReels />
-        <PastEvents />
         <EventReviewsFlow />
-        <Tracks />
+        <PastEvents />
         <Gallery />
         <FAQ />
-        <SubmitCTA />
       </main>
       <SiteFooter />
     </div>
   );
 }
-
-const tracks = [
-  {
-    tag: "KARİYER",
-    desc: "Başarmaya çalışırken arka planda dönenler: olmayan projeler, kaçan fırsatlar, görünmeyen bedeller, yanlış tercihler ve seni dönüştüren süreçler.",
-    color: "#1e3a8a",
-  },
-  {
-    tag: "İLİŞKİLER",
-    desc: "İş ilişkileri ve arkadaşlıkta yapılan yanlışlar, yakınlık, kopuş, içte kalan şeyler ve iletişimi yeniden kurmanın yolları.",
-    color: "#8b2c5c",
-  },
-  {
-    tag: "MACERA",
-    desc: "Seyahat hikâyeleri, deneyip paylaşamamış veya adım atılamamış farklı maceralar, cesaret edilmemiş yollar.",
-    color: "#e8743b",
-  },
-];
 
 const pastEvents = [
   {
@@ -251,11 +231,11 @@ function Hero() {
   return (
     <section className="relative">
       <div className="mx-auto max-w-5xl px-4 pb-8 pt-5 text-center sm:px-5 sm:pb-10 sm:pt-10">
-        <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-foreground/60">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary blink" />
-          <span>Etkinlikler: 17 Eylül · Chill &amp; Chat, 9 Ekim · notwork Classic</span>
-        </div>
-
+        <p className="hero-dates">
+          <span className="hero-date-pulse">17 Eylül</span>
+          <span aria-hidden="true"> – </span>
+          <span className="hero-date-pulse">11 Ekim</span>
+        </p>
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
 
         <h1
@@ -268,120 +248,33 @@ function Hero() {
           </span>
         </h1>
 
-        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-lg">
-          Başarısızlık hikayelerinden çıkarılmış doğru dersleri dinleyeceğin network club.
+        <p className="hero-description">
+          Network etkinlikleri ve çözümleri üreten networking platformu.
         </p>
-
-        <div className="mx-auto mt-5 grid w-full max-w-xl grid-cols-2 gap-2 sm:gap-3">
+        <div className="hero-event-links">
           <Link
             to="/17-eylul"
             data-analytics="ticket_click"
             data-analytics-label="17 Eylül ana sayfa etkinlik CTA"
-            className="inline-flex min-h-14 w-full items-center justify-center rounded-2xl bg-foreground px-3 py-2.5 text-center text-[11px] font-black leading-tight text-background transition hover:-translate-y-0.5 hover:bg-primary-deep sm:px-5 sm:text-sm"
+            className="hero-event-link"
           >
-            17 Eylül · notwork Chill &amp; Chat
+            <span className="hero-event-date">17 EYLÜL</span>
+            <span className="hero-event-logo font-brand">notwork</span>
+            <span className="hero-event-name">Chill &amp; Chat</span>
+            <Ticket className="hero-event-ticket" size={18} strokeWidth={1.5} aria-hidden="true" />
           </Link>
           <Link
             to="/9-ekim"
             data-analytics="ticket_click"
             data-analytics-label="9 Ekim ana sayfa etkinlik CTA"
-            className="inline-flex min-h-14 w-full items-center justify-center rounded-2xl bg-primary px-3 py-2.5 text-center text-[11px] font-black leading-tight text-primary-foreground transition hover:-translate-y-0.5 hover:brightness-95 sm:px-5 sm:text-sm"
+            className="hero-event-link"
           >
-            9 Ekim · notwork Classic
+            <span className="hero-event-date">11 EKİM</span>
+            <span className="hero-event-logo font-brand">notwork</span>
+            <span className="hero-event-name">f*ckup stories</span>
+            <Ticket className="hero-event-ticket" size={18} strokeWidth={1.5} aria-hidden="true" />
           </Link>
         </div>
-      </div>
-    </section>
-  );
-}
-
-function Benefits() {
-  return (
-    <section className="mx-auto max-w-5xl px-4 sm:px-5">
-      <div className="mx-auto max-w-2xl w-full rounded-xl border border-border bg-card p-3 sm:p-5 text-left">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-          <h2 className="text-sm sm:text-lg font-bold text-foreground/80 uppercase tracking-widest">
-            Sana ne katacak?
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { tag: "Doğru Network", desc: "Doğru insanlarla tanışmak." },
-            { tag: "Doğru Kişiler", desc: "Senin gibi deneyim paylaşan insanlarla bağ kurmak." },
-            { tag: "Başarıya Nasıl Gidilir", desc: "Hataları başarıya çeviren yolları öğrenmek." },
-          ].map((b) => (
-            <div key={b.tag} className="rounded-lg border border-border bg-background p-2.5">
-              <h3 className="font-display font-bold text-[10px] sm:text-sm tracking-tight text-primary-deep">
-                {b.tag}
-              </h3>
-              <div className="mt-1 h-px w-5 bg-primary/40" />
-              <p className="mt-1.5 text-[10px] sm:text-xs text-foreground/80 leading-snug">
-                {b.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 flex justify-center sm:mt-5">
-          <Link
-            to="/notwork-nedir"
-            className="inline-flex min-h-11 items-center justify-center rounded-full border border-primary/35 bg-background px-5 py-2.5 text-xs font-black text-primary-deep transition hover:border-primary hover:bg-primary/10 sm:min-h-12 sm:px-7 sm:text-sm"
-          >
-            notwork nedir?
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Tracks() {
-  return (
-    <section className="mx-auto mt-14 max-w-5xl px-4 sm:mt-24 sm:px-5">
-      <div className="rounded-2xl border border-border bg-card p-3 sm:p-5">
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <span className="inline-block w-2 h-2 rounded-full bg-primary" />
-          <h2 className="text-sm sm:text-lg font-bold text-foreground/80 uppercase tracking-[0.2em] leading-relaxed">
-            BAŞARISIZLIK HİKAYELERİ
-            <br />3 FARKLI AÇIDA
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-left">
-          {tracks.map((t) => (
-            <div
-              key={t.tag}
-              className="rounded-xl border p-3 sm:p-4"
-              style={{ borderColor: `${t.color}30`, backgroundColor: `${t.color}08` }}
-            >
-              <h3
-                className="font-display font-bold text-lg sm:text-2xl tracking-tight"
-                style={{ color: t.color }}
-              >
-                {t.tag}
-              </h3>
-              <div className="mt-1.5 h-px w-10 opacity-40" style={{ backgroundColor: t.color }} />
-              <p className="mt-2 text-xs sm:text-sm text-foreground/80 leading-relaxed">{t.desc}</p>
-            </div>
-          ))}
-        </div>
-
-        <p className="mt-3 text-xs sm:text-base text-muted-foreground max-w-2xl mx-auto text-center">
-          Her etkinlikte 3–4 konuk. Her gecede en az{" "}
-          <span className="font-semibold" style={{ color: "#1e3a8a" }}>
-            1 kariyer
-          </span>
-          ,{" "}
-          <span className="font-semibold" style={{ color: "#8b2c5c" }}>
-            1 ilişki/iletişim
-          </span>{" "}
-          ve{" "}
-          <span className="font-semibold" style={{ color: "#e8743b" }}>
-            1 macera
-          </span>{" "}
-          hikâyesi.
-        </p>
       </div>
     </section>
   );
@@ -391,19 +284,15 @@ function Nedir() {
   const [activeSlide, setActiveSlide] = useState(0);
   const slides = [
     {
-      name: "notwork Classic",
+      name: "f*ckup stories",
       href: "/9-ekim" as const,
       items: [
         {
           n: "01",
-          t: "Başarısızlık hikâyeleri",
-          d: "Gerçek deneyimler, kısa sunumlar ve çıkarılan net dersler.",
+          t: "Başarısızlık hikayeleri",
+          d: "Deneyip olmadığında yaşananları ilk ağızdan dinle.",
         },
-        {
-          n: "02",
-          t: "3 hayat kolu",
-          d: "Kariyer, ilişki ve macera tarafında farklı hikâyeler.",
-        },
+        { n: "02", t: "İşe yarayan dersler", d: "Deneyimlerden kendi yoluna bir şeyler al." },
         {
           n: "03",
           t: "İnteraktif sahne",
@@ -417,7 +306,7 @@ function Nedir() {
       ],
     },
     {
-      name: "notwork Chat",
+      name: "Chill & Chat",
       href: "/17-eylul" as const,
       items: [
         {
@@ -717,10 +606,6 @@ function EventReviewsFlow() {
   if (reviews.length === 0) return null;
 
   const sortedReviews = [...reviews].sort((first, second) => {
-    const firstIsFeatured = first.name.toLocaleLowerCase("tr-TR").includes("yaren şen");
-    const secondIsFeatured = second.name.toLocaleLowerCase("tr-TR").includes("yaren şen");
-    if (firstIsFeatured !== secondIsFeatured) return firstIsFeatured ? -1 : 1;
-
     const photoPriority =
       Number(Boolean(second.photoDataUrl)) - Number(Boolean(first.photoDataUrl));
     if (photoPriority !== 0) return photoPriority;
@@ -729,7 +614,7 @@ function EventReviewsFlow() {
   return (
     <section
       id="katilimci-yorumlari"
-      className="mx-auto mt-14 max-w-6xl scroll-mt-24 px-4 sm:mt-24 sm:px-5"
+      className="photo-reviews mx-auto mt-14 max-w-6xl scroll-mt-24 px-4 sm:mt-24 sm:px-5"
     >
       <div className="mb-5 flex flex-col justify-between gap-3 sm:mb-7 sm:flex-row sm:items-end">
         <div>
@@ -737,15 +622,9 @@ function EventReviewsFlow() {
             katılımcı yorumları
           </div>
           <h2 className="mt-2 font-display font-bold text-3xl sm:text-5xl text-foreground">
-            Etkinlikte ne söylendi?
+            O geceden kalanlar.
           </h2>
         </div>
-        <Link
-          to="/etkinlik-degerlendirme"
-          className="inline-flex w-fit rounded-full bg-primary px-4 py-2.5 text-sm font-black text-primary-foreground transition hover:opacity-90 sm:px-5 sm:py-3"
-        >
-          Etkinlik yorumla
-        </Link>
       </div>
 
       <div className="-mx-4 overflow-x-auto px-4 pb-3 [scrollbar-width:thin] sm:-mx-5 sm:px-5 sm:pb-4">
@@ -755,33 +634,25 @@ function EventReviewsFlow() {
             const isExpanded = !!expandedReviews[review.id];
             const canExpand = review.comment.length > 170;
             return (
-              <article
-                key={review.id}
-                className={`flex w-[80vw] max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-[22px] border border-border bg-card shadow-[var(--shadow-card)] transition-all sm:w-[340px] sm:max-w-[340px] sm:rounded-3xl ${
-                  isExpanded
-                    ? "h-auto"
-                    : review.photoDataUrl
-                      ? "h-[350px] sm:h-[420px]"
-                      : "h-[240px] sm:h-[280px]"
-                }`}
-              >
-                {review.photoDataUrl && (
-                  <img
-                    src={review.photoDataUrl}
-                    alt={`${review.eventTitle} yorumu`}
-                    loading="lazy"
-                    className="h-48 w-full shrink-0 object-cover object-center sm:h-64"
-                  />
-                )}
-                <div className="flex flex-1 flex-col p-3 sm:p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm text-primary-deep sm:text-base">
+              <article key={review.id} className="photo-review-card">
+                <div className="photo-review-visual">
+                  {review.photoDataUrl && (
+                    <img
+                      src={review.photoDataUrl}
+                      alt={`${review.eventTitle} yorumu`}
+                      loading="lazy"
+                      className="photo-review-image"
+                    />
+                  )}
+                  <div className="photo-review-overlay">
+                    <span className="photo-review-stars" aria-label={`${review.rating} / 5 yıldız`}>
                       {renderEventStars(review.rating)}
-                    </div>
-                    <div className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-black text-primary-deep">
-                      {event?.date || review.eventTitle}
-                    </div>
+                    </span>
+                    <strong>{review.name || "notwork katılımcısı"}</strong>
+                    <span>{event?.date || review.eventTitle}</span>
                   </div>
+                </div>
+                <div className="photo-review-copy">
                   <p
                     className={`mt-2 text-xs leading-relaxed text-foreground/75 sm:text-sm ${
                       isExpanded ? "" : "line-clamp-2 sm:line-clamp-3"
@@ -803,14 +674,6 @@ function EventReviewsFlow() {
                       {isExpanded ? "Daha az göster" : "Devamını oku"}
                     </button>
                   )}
-                  <div className="mt-auto border-t border-border pt-2.5">
-                    <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/45">
-                      {review.name || "notwork katılımcısı"}
-                    </div>
-                    <div className="mt-0.5 text-xs font-semibold text-foreground">
-                      {event?.title || review.eventTitle}
-                    </div>
-                  </div>
                 </div>
               </article>
             );
@@ -962,46 +825,5 @@ function FaqItem({ q, a, defaultOpen }: { q: string; a: string; defaultOpen?: bo
         <div className="overflow-hidden text-muted-foreground leading-relaxed">{a}</div>
       </div>
     </button>
-  );
-}
-
-function SubmitCTA() {
-  return (
-    <section className="mx-auto mt-14 max-w-6xl px-4 sm:mt-24 sm:px-5">
-      <div className="relative overflow-hidden rounded-3xl bg-ink p-6 text-cream sm:p-14">
-        <div
-          className="absolute -right-20 -top-20 w-80 h-80 rounded-full blur-3xl opacity-50"
-          style={{ background: "var(--primary)" }}
-        />
-        <div className="relative max-w-2xl">
-          <div className="text-primary font-medium uppercase tracking-widest text-sm">
-            Sahneye çık
-          </div>
-          <h2 className="mt-3 font-display text-3xl font-bold leading-tight sm:text-5xl">
-            Denedin, olmadı, sonra öğrendin ve başardın. Şimdi anlatma zamanı.
-          </h2>
-          <p className="mt-4 text-cream/75 max-w-lg">
-            Sunumunu yükle, hikâyeni ve bu deneyimden çıkardığın dersi birkaç cümleyle anlat.
-            WhatsApp üzerinden sana hızlıca dönüyoruz.
-          </p>
-          <div className="mt-6 flex flex-col gap-2.5 sm:mt-7 sm:flex-row sm:gap-3">
-            <Link
-              to="/sunum-yukle"
-              className="inline-flex items-center justify-center px-6 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition"
-            >
-              Sunumu gönder →
-            </Link>
-            <a
-              href="https://wa.me/905457210929?text=Merhaba%20notwork%2C%20etkinlik%20hakk%C4%B1nda%20bilgi%20almak%20istiyorum."
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center px-6 py-3.5 rounded-full border border-cream/30 text-cream font-medium hover:bg-cream/10 transition"
-            >
-              WhatsApp mesajı gönder
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
   );
 }

@@ -121,7 +121,7 @@ export function EventProductPage({ config }: { config: EventProductConfig }) {
               </div>
             </div>
 
-            <div className="grid items-start gap-4 sm:gap-7 lg:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)] lg:gap-10">
+            <div className="grid grid-cols-1 items-start gap-4 sm:gap-7 lg:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)] lg:gap-10">
               <EventGallery
                 gallery={config.gallery}
                 imageTitle={config.imageTitle}
@@ -299,8 +299,22 @@ function PurchasePanel({
   onTicketRedirect: () => void;
 }) {
   return (
-    <aside className="lg:sticky lg:top-24">
+    <aside className="min-w-0 lg:sticky lg:top-24">
       <div className="rounded-[1.55rem] border border-white/90 bg-white/85 p-4 shadow-[0_20px_60px_rgba(15,45,50,0.1)] backdrop-blur-xl sm:rounded-[2rem] sm:p-7 sm:shadow-[0_25px_80px_rgba(15,45,50,0.12)] lg:rounded-[2.5rem]">
+        <div className="event-meta-line" aria-label="Etkinlik bilgileri">
+          <span>
+            <CalendarDays size={14} aria-hidden="true" />
+            {config.date} · {config.time}
+          </span>
+          <span>
+            <Sparkles size={14} aria-hidden="true" />
+            {config.experienceLabel}
+          </span>
+          <a href={config.venueUrl} target="_blank" rel="noreferrer">
+            <MapPin size={14} aria-hidden="true" />
+            {config.venue} · {config.city} ↗
+          </a>
+        </div>
         <div className="flex flex-wrap gap-2">
           <span className="rounded-full bg-foreground px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-background">
             notwork experience
@@ -320,27 +334,6 @@ function PurchasePanel({
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-lg">
           {config.description}
         </p>
-
-        <div className="mt-4 grid grid-cols-2 gap-1.5 text-xs sm:mt-6 sm:gap-2 sm:text-sm">
-          <EventMeta
-            icon={CalendarDays}
-            label={`${config.date} · ${config.time}`}
-            detail={`${config.day} · ${config.timeDetail}`}
-          />
-          <EventMeta
-            icon={Sparkles}
-            label={config.experienceLabel}
-            detail={config.experienceDetail}
-          />
-          <div className="col-span-2">
-            <EventMeta
-              icon={MapPin}
-              label={config.venue}
-              detail={config.city}
-              href={config.venueUrl}
-            />
-          </div>
-        </div>
 
         <div id="biletler" className="mt-5 scroll-mt-24 sm:mt-7">
           <div className="flex items-end justify-between gap-3">
@@ -636,7 +629,7 @@ function CommunitySection({ config }: { config: EventProductConfig }) {
             </p>
             <div className="mt-4 flex flex-wrap gap-2 sm:mt-7 sm:gap-3">
               <Link
-                to="/community"
+                to="/networking"
                 className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-xs font-black text-background transition hover:bg-primary-deep sm:px-5 sm:py-3 sm:text-sm"
               >
                 Community’ye katıl <ArrowRight size={16} />

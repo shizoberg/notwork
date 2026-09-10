@@ -1,15 +1,34 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { NetworkStartupPage } from "./network-startup";
+import { Rocket } from "lucide-react";
+import { SiteNav, SiteFooter } from "@/components/SiteNav";
 import { createSeo } from "@/lib/seo";
-
 export const Route = createFileRoute("/startup")({
   head: () =>
     createSeo({
-      title: "İzmir Startup Ağı ve Proje Desteği | notwork",
-      description:
-        "İzmir’de startup projesini anlat, pazarlama ihtiyacını paylaş ve notwork network club topluluğundan doğru bağlantılarla destek al.",
+      title: "Startup · Coming soon | notwork",
+      description: "Fikirlerin doğru insanlarla buluşacağı alan. Yakında notwork’te.",
       path: "/startup",
-      keywords: ["İzmir startup", "İzmir girişimci ağı", "startup proje desteği"],
     }),
-  component: NetworkStartupPage,
+  component: StartupComingSoon,
 });
+function StartupComingSoon() {
+  return (
+    <div className="min-h-screen">
+      <SiteNav />
+      <main className="startup-coming-soon">
+        <span className="ntw-glass-mark">
+          <Rocket size={27} strokeWidth={1.4} />
+        </span>
+        <p className="ntw-eyebrow">notwork startup</p>
+        <h1>
+          Fikirler burada
+          <br />
+          yolunu bulacak.
+        </h1>
+        <p>Doğru insanlar ve yeni başlangıçlar için bir alan.</p>
+        <span className="ntw-availability">Coming soon · Yakında</span>
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}

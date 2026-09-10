@@ -110,11 +110,11 @@ function NotworkNedirPage() {
                 WhatsApp community
               </a>
               <Link
-                to="/community"
+                to="/networking"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-primary/30 bg-card px-3 py-3 text-center text-xs font-black leading-tight transition hover:border-primary hover:bg-primary/10 sm:rounded-full sm:px-6 sm:text-sm"
               >
                 <Users className="h-4 w-4 shrink-0 text-primary-deep" />
-                Community’yi gör
+                Networking’i gör
               </Link>
             </div>
           </div>
@@ -315,10 +315,10 @@ function NotworkNedirPage() {
                 WhatsApp community’ye katıl
               </a>
               <Link
-                to="/community"
+                to="/networking"
                 className="inline-flex items-center justify-center rounded-full border border-border bg-background px-6 py-3 text-sm font-black transition hover:border-primary hover:text-primary-deep"
               >
-                community sayfasını gör
+                networking’i gör
               </Link>
               <Link
                 to="/"

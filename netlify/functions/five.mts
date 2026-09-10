@@ -1,4 +1,5 @@
 import type { Config, Context } from "@netlify/functions";
+import { fiveTables, hasFiveTable } from "./_five-tables.mjs";
 
 import {
   eventIdentifierFromRequest,
@@ -34,6 +35,9 @@ import { getMemberFiveSummary, getMemberProfileBySession } from "./_member-profi
 const memberSessionCookieName = "notwork_profile_session";
 
 type FiveInput = {
+  tableId?: string;
+  round?: number;
+  photoDataUrl?: string;
   action?: string;
   event?: string;
   eventId?: string;
@@ -89,10 +93,10 @@ function memberIdentity(profile: Awaited<ReturnType<typeof getMemberProfileBySes
     .sort((first, second) => second.issuedAt.localeCompare(first.issuedAt))
     .at(0)?.code;
   const matchingProfile: FiveMatchingProfile = {
-    intro: profile.profile.registration?.introduction || profile.profile.bio || profile.profile.headline,
+    intro:
+      profile.profile.registration?.introduction || profile.profile.bio || profile.profile.headline,
     offers: profile.profile.skills.slice(0, 5),
-    offersDetail:
-      profile.profile.registration?.canHelpWith || profile.profile.skills.join(", "),
+    offersDetail: profile.profile.registration?.canHelpWith || profile.profile.skills.join(", "),
     needs: profile.profile.registration?.lookingFor || "",
     needTag: "networking",
   };
@@ -175,7 +179,7 @@ export default async (request: Request, _context: Context) => {
   }
 
   if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
-  if (Number(request.headers.get("content-length") || 0) > 24_000) {
+  if (Number(request.headers.get("content-length") || 0) > 1_200_000) {
     return new Response("Payload too large", { status: 413 });
   }
 
@@ -194,6 +198,15 @@ export default async (request: Request, _context: Context) => {
       const identity = await resolveIdentity(request, input);
       if (!identity)
         return new Response("Notwork oturumu veya etkinlik kaydı gerekli", { status: 401 });
+
+      if (action.startsWith("table")) return json(await fiveTables(identity, input));
+      if (
+        ["help", "accept", "confirm", "start", "extend", "complete", "demoEncounter"].includes(
+          action,
+        ) &&
+        (await hasFiveTable(identity.id))
+      )
+        return new Response("Önce problem masasından ayrıl.", { status: 409 });
 
       if (action === "session" || action === "state") return json(await fiveSession(identity));
 
@@ -221,7 +234,6 @@ export default async (request: Request, _context: Context) => {
         await confirmFiveEncounter(identity);
         return json(await fiveSession(identity));
       }
-
 
       if (action === "start") {
         await startFiveEncounter(identity);

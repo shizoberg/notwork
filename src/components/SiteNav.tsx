@@ -1,6 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
-import { createPortal } from "react-dom";
 import {
   ArrowUpRight,
   CalendarDays,
@@ -52,11 +51,11 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
           <Link to="/networking" className="rounded-lg px-3 py-2 hover:bg-muted">
             Networking
           </Link>
+          <Link to="/ntw" className="rounded-full border border-white/80 bg-white/50 px-4 py-2">
+            ntw
+          </Link>
           <Link to="/sponsor" className="rounded-lg px-3 py-2 hover:bg-muted">
             Sponsor
-          </Link>
-          <Link to="/community" className="rounded-lg px-3 py-2 hover:bg-muted">
-            Community
           </Link>
           <Link to="/merch" className="rounded-lg px-3 py-2 hover:bg-muted">
             Merch
@@ -106,228 +105,72 @@ function ProfileLink({ className = "", dark = false }: { className?: string; dar
   );
 }
 
-const mobilePrimaryLinks = [
-  {
-    to: "/notwork-nedir",
-    label: "notwork nedir?",
-    description: "Felsefeyi ve event akışını keşfet.",
-    icon: Sparkles,
-  },
-  {
-    to: "/etkinlikler",
-    label: "Etkinlikler",
-    description: "Yaklaşan ve geçmiş tüm notwork geceleri.",
-    icon: CalendarDays,
-  },
-  {
-    to: "/networking",
-    label: "Networking ağı",
-    description: "Topluluktaki insanları ve bağlantıları gör.",
-    icon: Handshake,
-  },
-] as const;
-
 const mobileSecondaryLinks = [
   { to: "/merch", label: "Merch", icon: ShoppingBag },
   { to: "/sponsor", label: "Sponsor", icon: Sparkles },
   { to: "/sunum-yukle", label: "Sunum yap", icon: Presentation },
-  { to: "/startup", label: "Startup", icon: Rocket },
 ] as const;
 
 function MobileSiteMenu() {
   const [open, setOpen] = useState(false);
-  const backdrop =
-    open && typeof document !== "undefined"
-      ? createPortal(
-          <div
-            aria-hidden="true"
-            className="pointer-events-none fixed inset-0 z-[9998] bg-[#020707]/55 backdrop-blur-[12px] animate-in fade-in duration-200 sm:hidden"
-          />,
-          document.body,
-        )
-      : null;
-
   return (
-    <>
-      {backdrop}
-      <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            aria-label="Site menüsünü aç"
-            className="group inline-flex h-10 items-center gap-1.5 rounded-lg px-1 text-[11px] font-medium leading-none text-foreground outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary sm:hidden"
-          >
-            <Menu size={15} strokeWidth={2.2} />
-            <span>Menü</span>
-            <ChevronDown
-              size={13}
-              strokeWidth={2.2}
-              className="transition-transform duration-200 group-data-[state=open]:rotate-180"
-            />
-          </button>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent
-          align="start"
-          sideOffset={10}
-          className="z-[9999] w-[calc(100vw-1.5rem)] max-w-[370px] rounded-[30px] border border-white/90 bg-background p-2.5 shadow-[0_32px_100px_rgba(7,17,18,0.34)] ring-1 ring-foreground/5 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200 sm:hidden"
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Site menüsünü aç"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/90 bg-white/55 text-xs sm:hidden"
         >
-          <div className="flex items-start justify-between gap-3 rounded-[22px] bg-primary/10 px-4 py-3.5">
-            <div className="min-w-0">
-              <DropdownMenuLabel className="p-0 text-[10px] font-black uppercase tracking-[0.22em] text-primary-deep">
-                notwork’ü keşfet
-              </DropdownMenuLabel>
-              <div className="mt-1 text-sm font-medium leading-snug text-muted-foreground">
-                Hikâyelerden doğru bağlantılara.
-              </div>
-            </div>
-            <button
-              type="button"
-              aria-label="Menüyü kapat"
-              onClick={() => setOpen(false)}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/25 bg-background/80 text-foreground transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <X size={17} strokeWidth={2.2} />
-            </button>
-          </div>
-
-          <div className="mt-2 grid gap-1">
-            {mobilePrimaryLinks.map((item) => {
-              const Icon = item.icon;
-              const content = (
-                <>
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground">
-                    <Icon size={19} strokeWidth={2} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-black text-foreground">{item.label}</span>
-                    <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
-                      {item.description}
-                    </span>
-                  </span>
-                  <ArrowUpRight
-                    size={16}
-                    className="shrink-0 text-muted-foreground transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary-deep"
-                  />
-                </>
-              );
-
-              return (
-                <DropdownMenuItem
-                  key={item.label}
-                  asChild
-                  className="rounded-2xl p-0 focus:bg-primary/8"
-                >
-                  {"to" in item ? (
-                    <Link
-                      to={item.to}
-                      className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 outline-none"
-                    >
-                      {content}
-                    </Link>
-                  ) : (
-                    <a
-                      href={item.href}
-                      className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 outline-none"
-                    >
-                      {content}
-                    </a>
-                  )}
-                </DropdownMenuItem>
-              );
-            })}
-          </div>
-
-          <DropdownMenuSeparator className="my-2 bg-border/70" />
-
-          <DropdownMenuItem asChild className="rounded-[20px] p-0 focus:bg-primary/10">
+          <Menu size={19} strokeWidth={1.5} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        sideOffset={12}
+        className="glass-menu z-[9999] w-64 p-3 sm:hidden"
+      >
+        <DropdownMenuLabel className="flex items-center gap-3 px-3 py-3">
+          <span className="menu-wordmark">ntw</span>
+          <span className="text-xs font-normal text-muted-foreground">
+            network topluluğu
+            <br />
+            ve platform.
+          </span>
+        </DropdownMenuLabel>
+        {[
+          { to: "/notwork-nedir", label: "notwork nedir?", icon: Sparkles },
+          ...mobileSecondaryLinks,
+        ].map(({ to, label, icon: Icon }) => (
+          <DropdownMenuItem key={to} asChild className="rounded-2xl p-0">
             <Link
-              to="/community"
-              className="group flex items-center gap-3 rounded-[20px] bg-foreground px-4 py-3.5 text-background outline-none transition hover:bg-primary-deep"
+              to={to}
+              onClick={() => setOpen(false)}
+              className="flex min-h-12 items-center gap-3 px-3 text-sm"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-background/12">
-                <UsersRound size={20} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-black">Community</span>
-                <span className="mt-0.5 block text-[11px] text-background/65">
-                  Fotoğraflar, takvim ve WhatsApp topluluğu.
-                </span>
-              </span>
-              <ArrowUpRight size={17} className="shrink-0" />
+              <Icon size={18} strokeWidth={1.5} />
+              {label}
             </Link>
           </DropdownMenuItem>
-
-          <DropdownMenuItem asChild className="mt-1.5 rounded-[20px] p-0 focus:bg-primary/10">
-            <a
-              href="https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE"
-              target="_blank"
-              rel="noreferrer"
-              className="group flex items-center gap-3 rounded-[20px] bg-primary px-4 py-3 text-primary-foreground outline-none transition hover:bg-primary-deep"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary-foreground/15">
-                <MessageCircle size={19} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-black">WhatsApp’a katıl</span>
-                <span className="mt-0.5 block text-[11px] text-primary-foreground/70">
-                  Community duyurularını takip et.
-                </span>
-              </span>
-              <ArrowUpRight size={17} className="shrink-0" />
-            </a>
-          </DropdownMenuItem>
-
-          <div className="mt-2">
-            <DropdownMenuItem asChild className="rounded-[20px] p-0 focus:bg-transparent">
-              <a
-                href="/#katilimci-yorumlari"
-                className="group flex min-h-14 items-center gap-3 rounded-[20px] bg-[linear-gradient(110deg,var(--primary),#24494b)] px-4 py-3 text-white outline-none shadow-[0_12px_30px_rgba(7,17,18,0.22)] transition hover:-translate-y-0.5"
-              >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-white/12">
-                  <MessageCircle size={19} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-black">Fotoğraflı etkinlik yorumları</span>
-                  <span className="mt-0.5 block text-[10px] leading-snug text-white/65">
-                    Katılımcıların gerçek kareleri ve sözleri.
-                  </span>
-                </span>
-                <ArrowUpRight size={17} className="shrink-0" />
-              </a>
-            </DropdownMenuItem>
-          </div>
-
-          <div className="mt-2 grid grid-cols-2 gap-1.5">
-            {mobileSecondaryLinks.map((item) => {
-              const Icon = item.icon;
-              const className =
-                "flex min-h-11 items-center gap-2 rounded-2xl border border-border/70 bg-card px-3 py-2.5 text-xs font-bold text-foreground outline-none transition hover:border-primary hover:bg-primary/8";
-
-              return (
-                <DropdownMenuItem
-                  key={item.label}
-                  asChild
-                  className="rounded-2xl p-0 focus:bg-transparent"
-                >
-                  {"to" in item ? (
-                    <Link to={item.to} className={className}>
-                      <Icon size={16} className="text-primary-deep" />
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <a href={item.href} className={className}>
-                      <Icon size={16} className="text-primary-deep" />
-                      {item.label}
-                    </a>
-                  )}
-                </DropdownMenuItem>
-              );
-            })}
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild className="rounded-2xl p-0">
+          <a href="/#galeri" className="flex min-h-12 items-center gap-3 px-3 text-sm">
+            Galeri ↗
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="rounded-2xl p-0">
+          <a
+            href="https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE"
+            target="_blank"
+            rel="noreferrer"
+            className="flex min-h-12 items-center gap-3 px-3 text-sm"
+          >
+            <MessageCircle size={18} />
+            WhatsApp
+          </a>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -408,105 +251,51 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
 }
 
 export function SiteFooter() {
-  const meetingMailUrl =
-    "mailto:berk@carewithki.com?subject=notwork%20ekibi%20ile%20toplant%C4%B1%20almak%20istiyorum";
-  const openCookiePreferences = () => {
-    window.dispatchEvent(new Event(COOKIE_CONSENT_OPEN_EVENT));
-  };
-
   return (
-    <footer className="mt-14 border-t border-border/60 sm:mt-20">
-      <div className="mx-auto grid max-w-6xl gap-8 px-5 py-10 text-sm text-muted-foreground lg:grid-cols-[1.1fr_1fr]">
-        <div>
-          <div className="font-brand text-2xl text-foreground">notwork</div>
-          <p className="mt-3 max-w-md leading-relaxed">
-            İzmir · deneyip de yapamadıklarımızı, öğrendiklerimizi ve kurduğumuz bağlantıları
-            konuştuğumuz sahne.
-          </p>
-          <div className="mt-5 grid gap-2">
-            <div>
-              <span className="font-semibold text-foreground">Ofis adresi:</span> Çınarlı, 1572/1.
-              Sk. No:33, 35170 Konak/İzmir
-            </div>
-            <a
-              href={meetingMailUrl}
-              className="inline-flex w-fit rounded-full bg-primary px-4 py-2 font-semibold text-primary-foreground transition hover:opacity-90"
-            >
-              Toplantı için e-posta gönder
-            </a>
-            <Link
-              to="/sponsor"
-              className="inline-flex w-fit text-sm font-semibold text-primary-deep hover:underline"
-            >
-              Sponsor olmak isteyenler için →
-            </Link>
-            <Link
-              to="/legacy"
-              className="inline-flex w-fit text-sm font-semibold text-primary-deep hover:underline"
-            >
-              notwork Legacy →
-            </Link>
-          </div>
-          <div className="mt-5 flex items-center gap-2">
-            <a
-              href="https://www.instagram.com/notwork.ntw/"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="notwork Instagram"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground transition hover:border-primary hover:text-primary-deep"
-            >
-              <Instagram size={19} strokeWidth={1.8} />
-            </a>
-            <a
-              href="https://www.youtube.com/@notwork-izmir"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="notwork YouTube"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground transition hover:border-primary hover:text-primary-deep"
-            >
-              <Youtube size={20} strokeWidth={1.8} />
-            </a>
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-3 font-semibold text-foreground">
-            notwork’ü en kapsamlı anlatan video
-          </div>
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-            <iframe
-              src="https://www.youtube.com/embed/vtzncdq4Jlk"
-              title="notwork'ü en kapsamlı anlatan video"
-              className="aspect-video w-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
-          </div>
+    <footer className="simple-footer">
+      <div className="simple-footer-top">
+        <Link to="/" className="font-brand text-xl">
+          notwork
+        </Link>
+        <div className="flex items-center gap-5">
+          <a
+            href="https://www.instagram.com/notwork.ntw/"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="notwork Instagram"
+          >
+            <Instagram size={18} />
+          </a>
+          <a
+            href="https://www.youtube.com/@notwork-izmir"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="notwork YouTube"
+          >
+            <Youtube size={19} />
+          </a>
+          <a href="mailto:berk@notwork.me" className="text-xs">
+            İletişim ↗
+          </a>
         </div>
       </div>
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 border-t border-border/60 px-5 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+      <div className="simple-footer-bottom">
         <span>© {new Date().getFullYear()} notwork</span>
-        <div className="flex flex-wrap gap-3">
-          <Link to="/duyurular" className="font-bold text-primary-deep hover:underline">
-            Duyurulara katıl
-          </Link>
-          <Link to="/kvkk" className="hover:text-foreground hover:underline">
-            KVKK Aydınlatma
-          </Link>
-          <Link to="/acik-riza" className="hover:text-foreground hover:underline">
-            Açık Rıza
-          </Link>
-          <Link to="/cerez-politikasi" className="hover:text-foreground hover:underline">
-            Çerez Politikası
-          </Link>
-          <button
-            type="button"
-            onClick={openCookiePreferences}
-            className="text-left hover:text-foreground hover:underline"
-          >
-            Çerezleri yönet
-          </button>
-        </div>
+        <Link to="/duyurular">Duyurular</Link>
+        <details>
+          <summary>Gizlilik ve tercihler</summary>
+          <div className="footer-legal">
+            <Link to="/kvkk">KVKK</Link>
+            <Link to="/acik-riza">Açık rıza</Link>
+            <Link to="/cerez-politikasi">Çerez politikası</Link>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event(COOKIE_CONSENT_OPEN_EVENT))}
+            >
+              Çerez tercihleri
+            </button>
+          </div>
+        </details>
       </div>
     </footer>
   );

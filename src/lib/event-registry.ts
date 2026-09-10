@@ -54,6 +54,8 @@ export type NotworkEvent = {
   status: EventLifecycleStatus;
   location: NotworkEventLocation;
   entry: {
+    appsTitle?: string;
+    appsSubtitle?: string;
     isOpen: boolean;
     isPrimary: boolean;
     requireRegistration: boolean;

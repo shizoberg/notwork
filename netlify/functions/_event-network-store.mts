@@ -1,3 +1,10 @@
+import {
+  atomicState,
+  emptyRooms,
+  claimRoom,
+  releaseRoom,
+  type RoomIndex,
+} from "./_atomic-state.mjs";
 import { recordMarketingPreference } from "./_announcements.mjs";
 import { createHash } from "node:crypto";
 import { getStore } from "@netlify/blobs";
@@ -99,7 +106,11 @@ type StoredActiveMatch = {
 };
 
 export type NetworkInput = {
+  message?: string;
+  messageId?: string;
   action?: string;
+  groupId?: string;
+  skipReview?: boolean;
   event?: string;
   eventId?: string;
   eventSlug?: string;
@@ -507,7 +518,12 @@ async function saveMatchLabReview(
     createdAt: now,
   };
   const reviewStore = getEventReviewStore();
-  await reviewStore.setJSON(`reviews/${reviewEventId}/${Date.now()}-${review.id}.json`, review);
+  const reviewKey = createHash("sha256")
+    .update(`${input.groupId}:${registration.participant.id}`)
+    .digest("hex");
+  await reviewStore.setJSON(`reviews/${reviewEventId}/match-${reviewKey}.json`, review, {
+    onlyIfNew: true,
+  });
 }
 
 async function getPresenceMap(
@@ -581,10 +597,11 @@ async function getActiveMatch(
   store: ReturnType<typeof getEventNetworkStore>,
   participantId: string,
 ) {
-  return (await store.get(activeMatchKey(participantId), {
+  const state = (await store.get(`${getNetworkPrefix()}/room-index-v2.json`, {
     type: "json",
     consistency: "strong",
-  })) as StoredActiveMatch | null;
+  })) as RoomIndex<StoredActiveMatch> | null;
+  return state?.groups[state.members[participantId]] || null;
 }
 
 async function hasActiveMatch(
@@ -598,10 +615,11 @@ async function writeActiveMatch(
   store: ReturnType<typeof getEventNetworkStore>,
   match: StoredActiveMatch,
 ) {
-  await Promise.all(
-    match.participantIds.map((participantId) =>
-      store.setJSON(activeMatchKey(participantId), match),
-    ),
+  return atomicState(
+    store,
+    `${getNetworkPrefix()}/room-index-v2.json`,
+    emptyRooms<StoredActiveMatch>,
+    (state) => claimRoom(state, match),
   );
 }
 
@@ -652,19 +670,19 @@ export async function registerNetworkProfile(
   const firstName = clean(input.firstName, 50);
   const lastName = clean(input.lastName, 50);
   const offers = normalizeOffers(input.offers);
-  const intro = clean(input.intro, 600);
-  const offersDetail = clean(input.offersDetail, 600);
-  const needs = clean(input.needs, 600);
+  const intro = clean(input.intro, Number.MAX_SAFE_INTEGER);
+  const offersDetail = clean(input.offersDetail, Number.MAX_SAFE_INTEGER);
+  const needs = clean(input.needs, Number.MAX_SAFE_INTEGER);
   const needTag = clean(input.needTag, 40).toLocaleLowerCase("tr-TR");
   const attendedEvent = clean(input.attendedEvent, 80).toLocaleLowerCase("tr-TR");
 
   if (!firstName || !lastName) throw new Error("Ad ve soyad gerekli");
   if (!isValidEmail(emailNormalized)) throw new Error("Geçerli e-posta gerekli");
   if (offers.length === 0) throw new Error("En az bir yardımcı olabileceğin konu gerekli");
-  if (intro.length < 140) throw new Error("Kendini tanıt yanıtı en az 140 karakter olmalı");
-  if (offersDetail.length < 140)
-    throw new Error("Neler yapabilirsin yanıtı en az 140 karakter olmalı");
-  if (needs.length < 140) throw new Error("Ne istiyorsun yanıtı en az 140 karakter olmalı");
+  if (intro.length < 30) throw new Error("Kendini tanıt yanıtı en az 30 karakter olmalı");
+  if (offersDetail.length < 30)
+    throw new Error("Neler yapabilirsin yanıtı en az 30 karakter olmalı");
+  if (needs.length < 30) throw new Error("Ne istiyorsun yanıtı en az 30 karakter olmalı");
   if (
     !attendedEventValues.has(attendedEvent) &&
     attendedEvent !== getNetworkEventSlug() &&
@@ -821,6 +839,64 @@ export async function registerNetworkProfile(
   return registration;
 }
 
+export async function eventChat(
+  store: ReturnType<typeof getEventNetworkStore>,
+  accessToken: string,
+  input: NetworkInput,
+) {
+  const registration = await getRegistrationByToken(store, accessToken);
+  if (!registration || registration.participant.status !== "registered")
+    throw new Error("Etkinlik oturumu gerekli");
+  const key = `${getNetworkPrefix()}/event-chat.json`;
+  type Message = {
+    id: string;
+    participantId: string;
+    name: string;
+    code: string;
+    text: string;
+    createdAt: string;
+  };
+  if (input.action === "chatRead")
+    return (
+      (
+        (await store.get(key, { type: "json", consistency: "strong" })) as {
+          messages: Message[];
+        } | null
+      )?.messages || []
+    );
+  const message = clean(input.message, 500);
+  const id = clean(input.messageId, 80);
+  if (!message || !/^[a-zA-Z0-9-]{8,80}$/.test(id)) throw new Error("Mesaj geçersiz");
+  return atomicState(
+    store,
+    key,
+    () => ({ messages: [] as Message[] }),
+    (state) => {
+      if (
+        state.messages.some(
+          (row) => row.id === id && row.participantId === registration.participant.id,
+        )
+      )
+        return state.messages;
+      const last = [...state.messages]
+        .reverse()
+        .find((row) => row.participantId === registration.participant.id);
+      if (last && Date.now() - Date.parse(last.createdAt) < 1500)
+        throw new Error("Biraz bekleyip tekrar gönder.");
+      state.messages.push({
+        id,
+        participantId: registration.participant.id,
+        name: displayName(registration),
+        code: registration.participant.publicCode,
+        text: message,
+        createdAt: new Date().toISOString(),
+      });
+      state.messages = state.messages.slice(-200);
+      return state.messages;
+    },
+  );
+}
+
 export async function resumeNetworkProfile(
   store: ReturnType<typeof getEventNetworkStore>,
   email: string,
@@ -975,7 +1051,7 @@ export async function getNextMatchGroup(
     .filter((row) => row.profile.emailNormalized !== current.profile.emailNormalized)
     .filter((row) => row.participant.status === "registered")
     .filter((row) => (presenceMap.get(row.participant.id) || "open") !== "paused")
-    .filter((row) => (presenceMap.get(row.participant.id) || "open") !== "meeting")
+
     .map((row) => ({
       row,
       score: scorePair(current, row),
@@ -1043,21 +1119,13 @@ export async function getNextMatchGroup(
   const score = Math.round(
     finalSelected.reduce((total, candidate) => total + candidate.score, 0) / finalSelected.length,
   );
-  const groupId = `match-${current.participant.id}-${nextRound}`;
+  const groupId = `match-${crypto.randomUUID()}`;
   const prompts = pickIcebreakers(groupId);
   const participantIds = groupRegistrations.map((registration) => registration.participant.id);
   const photoOwnerParticipantId = pickPhotoOwnerParticipantId(groupId, participantIds);
   const generatedAt = new Date().toISOString();
   const reason = buildReason(current, groupRegistrations);
-  await Promise.all(
-    participantIds.map((participantId) =>
-      store.setJSON(presenceKey(participantId), {
-        presence: "meeting",
-        updatedAt: generatedAt,
-      }),
-    ),
-  );
-  await writeActiveMatch(store, {
+  const claimed = await writeActiveMatch(store, {
     id: groupId,
     round: nextRound,
     score,
@@ -1069,6 +1137,15 @@ export async function getNextMatchGroup(
     completedParticipantIds: [],
     completedAtByParticipantId: {},
   });
+  if (!claimed) {
+    const existing = await getActiveMatch(store, current.participant.id);
+    return {
+      status: existing ? "ready" : "empty",
+      registration: current,
+      presence: existing ? ("meeting" as const) : ("open" as const),
+      group: existing ? await buildActiveMatchGroup(store, existing, current, presenceMap) : null,
+    };
+  }
 
   const group: EventNetworkMatchGroup = {
     id: groupId,
@@ -1117,74 +1194,26 @@ export async function completeActiveMatchByToken(
     };
   }
 
-  const now = new Date().toISOString();
-  const existingCompletedParticipantIds = new Set(activeMatch.completedParticipantIds || []);
-  if (existingCompletedParticipantIds.has(registration.participant.id)) {
-    const isAlreadyCompleted = activeMatch.participantIds.every((participantId) =>
-      existingCompletedParticipantIds.has(participantId),
+  if (!input.groupId || input.groupId !== activeMatch.id)
+    throw new Error("Grubun değişti. Ekranı yenile.");
+  if (!input.skipReview)
+    await saveMatchLabReview(
+      registration,
+      input,
+      activeMatch.photoOwnerParticipantId === registration.participant.id,
     );
-    return {
-      ok: true,
-      status: isAlreadyCompleted ? ("completed" as const) : ("waiting" as const),
-      registration,
-      completedCount: existingCompletedParticipantIds.size,
-      totalCount: activeMatch.participantIds.length,
-    };
-  }
-  const requiresPhoto = activeMatch.photoOwnerParticipantId === registration.participant.id;
-  await saveMatchLabReview(registration, input, requiresPhoto);
-  const completedParticipantIds = new Set(existingCompletedParticipantIds);
-  completedParticipantIds.add(registration.participant.id);
-  const updatedMatch: StoredActiveMatch = {
-    ...activeMatch,
-    completedParticipantIds: [...completedParticipantIds],
-    completedAtByParticipantId: {
-      ...(activeMatch.completedAtByParticipantId || {}),
-      [registration.participant.id]: now,
-    },
-  };
-  const isGroupCompleted = updatedMatch.participantIds.every((participantId) =>
-    completedParticipantIds.has(participantId),
+  await atomicState(
+    store,
+    `${getNetworkPrefix()}/room-index-v2.json`,
+    emptyRooms<StoredActiveMatch>,
+    (state) => releaseRoom(state, registration.participant.id, input.groupId!),
   );
-
-  if (isGroupCompleted) {
-    await Promise.all([
-      ...updatedMatch.participantIds.map((participantId) =>
-        store.delete(activeMatchKey(participantId)),
-      ),
-      ...updatedMatch.participantIds.map((participantId) =>
-        store.setJSON(presenceKey(participantId), {
-          presence: "open",
-          updatedAt: now,
-        }),
-      ),
-      store.setJSON(`${getNetworkPrefix()}/completed-matches/${updatedMatch.id}.json`, {
-        ...updatedMatch,
-        completedAt: now,
-      }),
-    ]);
-    return {
-      ok: true,
-      status: "completed" as const,
-      registration,
-      completedCount: updatedMatch.participantIds.length,
-      totalCount: updatedMatch.participantIds.length,
-    };
-  }
-
-  await Promise.all([
-    writeActiveMatch(store, updatedMatch),
-    store.setJSON(presenceKey(registration.participant.id), {
-      presence: "meeting",
-      updatedAt: now,
-    }),
-  ]);
   return {
     ok: true,
-    status: "waiting" as const,
+    status: "completed" as const,
     registration,
-    completedCount: completedParticipantIds.size,
-    totalCount: updatedMatch.participantIds.length,
+    completedCount: 1,
+    totalCount: activeMatch.participantIds.length,
   };
 }
 

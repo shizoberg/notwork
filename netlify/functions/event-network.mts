@@ -2,6 +2,7 @@ import type { Config, Context } from "@netlify/functions";
 import { readFile } from "node:fs/promises";
 import {
   clean,
+  eventChat,
   completeActiveMatchByToken,
   getEventNetworkDatasetInfo,
   getEventNetworkStore,
@@ -136,6 +137,9 @@ export default async (request: Request, _context: Context) => {
         if (!result) return new Response("Kayıt bulunamadı", { status: 404 });
         return json(result);
       }
+
+      if (action === "chatRead" || action === "chatSend")
+        return json(await eventChat(store, clean(input.accessToken, 100), input));
 
       if (action === "completeMatch") {
         const result = await completeActiveMatchByToken(

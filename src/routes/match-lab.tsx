@@ -320,7 +320,7 @@ function MatchLabPage() {
             </p>
             <div className="mt-5 flex justify-center sm:mt-7">
               <Link
-                to="/community"
+                to="/networking"
                 className="inline-flex items-center justify-center rounded-full bg-[#071213] px-6 py-3.5 font-black text-white"
               >
                 community’yi keşfet

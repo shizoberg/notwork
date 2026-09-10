@@ -206,7 +206,7 @@ export const Route = createFileRoute("/9-ekim")({
         venueName: "Rene Lokal",
         addressLocality: "Bornova",
         images: ["/notwork-social.png", "/community/8.jpg", "/community/21.jpg"],
-        ticketUrl: eventConfig.ticketUrl,
+        ticketUrl: eventConfig.ticketUrl || "https://notwork.me/9-ekim",
         lowPrice: 600,
         highPrice: 1100,
         videos: [

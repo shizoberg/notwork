@@ -184,7 +184,7 @@ function getFiveContext() {
   return getEventProductRuntimeContext("five");
 }
 
-function getFivePrefix() {
+export function getFivePrefix() {
   return getFiveContext()?.keyPrefix || legacyPrefix;
 }
 
@@ -396,7 +396,7 @@ export async function createFiveProblem(
   const name = identity?.name || cleanFiveText(input.name, 80);
   const email = identity?.email || normalizeEmail(input.email);
   const title = cleanFiveText(input.title, 48);
-  const description = cleanFiveText(input.description, 180);
+  const description = cleanFiveText(input.description, Number.MAX_SAFE_INTEGER);
   const tried = cleanFiveText(input.tried, 100);
   const desiredOutcome = cleanFiveText(input.desiredOutcome, 80);
   const category = Object.hasOwn(categorySignals, input.category || "")
@@ -406,7 +406,7 @@ export async function createFiveProblem(
   if (name.length < 2) throw new Error("Adını yazmalısın");
   if (!email.includes("@")) throw new Error("Geçerli bir e-posta gerekli");
   if (title.length < 6) throw new Error("Problem başlığı en az 6 karakter olmalı");
-  if (description.length < 24) throw new Error("Problemini en az 24 karakterle anlatmalısın");
+  if (description.length < 30) throw new Error("Problemini en az 30 karakterle anlatmalısın");
   if (tried.length < 8) throw new Error("Şimdiye kadar ne denediğini kısaca anlatmalısın");
   if (desiredOutcome.length < 8) throw new Error("Görüşmeden beklediğin sonucu kısaca yazmalısın");
   if (!input.consent) throw new Error("Etkinlik içi paylaşım açık rızası gerekli");

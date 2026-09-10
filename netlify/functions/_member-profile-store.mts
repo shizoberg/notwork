@@ -782,7 +782,7 @@ export async function registerMemberProfile(
   await Promise.all([
     store.setJSON(profileKey(username), profile),
     store.setJSON(profileEmailKey(email), { username }),
-    store.set(photoKey(profileId), photo.image, { metadata: { contentType: photo.contentType } }),
+    store.set(photoKey(profileId), new Blob([new Uint8Array(photo.image)]), { metadata: { contentType: photo.contentType } }),
   ]);
 
   if (input.marketingPreferenceVersion === "2026-09-09" && input.marketingOptIn === true)
@@ -1248,7 +1248,7 @@ export async function saveMemberProfilePhoto(
   if (image.byteLength > 700_000) throw new Error("Profil fotoğrafı en fazla 700 KB olabilir");
 
   const updatedAt = new Date().toISOString();
-  await store.set(photoKey(session.profile.id), image, {
+  await store.set(photoKey(session.profile.id), new Blob([new Uint8Array(image)]), {
     metadata: { contentType: match[1] },
   });
   const profile: StoredMemberProfile = {

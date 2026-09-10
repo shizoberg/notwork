@@ -118,7 +118,7 @@ function PublicMemberProfilePage() {
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
               Üye kartı henüz paylaşılmamış veya bağlantı artık kullanılamıyor.
             </p>
-            <Link to="/community" className="profile-primary-button mx-auto mt-6 w-fit">
+            <Link to="/networking" className="profile-primary-button mx-auto mt-6 w-fit">
               Notwork community’yi gör
             </Link>
           </section>

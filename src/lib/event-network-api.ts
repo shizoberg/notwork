@@ -12,6 +12,49 @@ import {
 } from "@/lib/event-registry";
 
 const legacyApiUrl = "/api/events/21-agustos/network";
+export type EventChatMessage = {
+  id: string;
+  participantId: string;
+  name: string;
+  code: string;
+  text: string;
+  createdAt: string;
+};
+export async function eventChatRequest(
+  accessToken: string,
+  message?: string,
+  messageId?: string,
+): Promise<EventChatMessage[]> {
+  if (import.meta.env.DEV && accessToken === "local-match-preview") {
+    const key = "notwork-demo-event-chat";
+    const rows: EventChatMessage[] = JSON.parse(localStorage.getItem(key) || "[]");
+    if (message && !rows.some((row) => row.id === messageId))
+      rows.push({
+        id: messageId!,
+        participantId: "preview-person",
+        name: "Örnek Katılımcı",
+        code: "C03",
+        text: message,
+        createdAt: new Date().toISOString(),
+      });
+    localStorage.setItem(key, JSON.stringify(rows.slice(-200)));
+    return rows.slice(-200);
+  }
+  const selection = resolvedSelection();
+  const response = await fetch(apiUrl(selection), {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(
+      withEventSelectionInput(
+        { action: message ? "chatSend" : "chatRead", accessToken, message, messageId },
+        selection,
+      ),
+    ),
+  });
+  if (!response.ok) throw new Error(await response.text());
+  return response.json();
+}
 const legacyAdminUrl = "/api/admin/events/21-agustos/network";
 
 function resolvedSelection(selection?: EventSelection) {
@@ -65,6 +108,8 @@ export async function registerEventNetwork(
 }
 
 export async function getEventNetworkMe(accessToken: string, selection?: EventSelection) {
+  if (import.meta.env.DEV && accessToken === "local-match-preview")
+    return (await import("./match-preview")).registration;
   const activeSelection = resolvedSelection(selection);
   const response = await fetch(apiUrl(activeSelection), {
     method: "POST",
@@ -110,6 +155,8 @@ export async function updateEventNetworkPresence(
 }
 
 export async function getEventNetworkMatch(accessToken: string, selection?: EventSelection) {
+  if (import.meta.env.DEV && accessToken === "local-match-preview")
+    return (await import("./match-preview")).matchPreview();
   const activeSelection = resolvedSelection(selection);
   const response = await fetch(apiUrl(activeSelection), {
     method: "POST",
@@ -143,6 +190,8 @@ export async function completeEventNetworkMatch(accessToken: string, selection?:
 export async function completeEventNetworkMatchWithReview(
   accessToken: string,
   review: {
+    groupId?: string;
+    skipReview?: boolean;
     rating: number;
     comment: string;
     photoDataUrl?: string;
@@ -150,6 +199,8 @@ export async function completeEventNetworkMatchWithReview(
   },
   selection?: EventSelection,
 ) {
+  if (import.meta.env.DEV && accessToken === "local-match-preview")
+    return (await import("./match-preview")).completePreview(review);
   const activeSelection = resolvedSelection(selection);
   const response = await fetch(apiUrl(activeSelection), {
     method: "POST",

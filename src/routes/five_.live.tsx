@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { FiveTables } from "@/components/FiveTables";
 import {
   ArrowRight,
   Check,
@@ -49,8 +50,15 @@ export const Route = createFileRoute("/five_/live")({
       description: "Notwork etkinliğine özel canlı problem ve beş dakikalık çözüm görüşmesi alanı.",
       path: "/five/live",
     }),
-  component: FiveLivePage,
+  component: FiveScreen,
 });
+
+function FiveScreen() {
+  const legacy =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("legacy") === "1";
+  return legacy ? <FiveLivePage /> : <FiveTables />;
+}
 
 type ActiveTab = "pool" | "requests" | "meeting";
 
@@ -128,23 +136,23 @@ function FiveLivePage() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-[#f3fafa] text-[#071213]">
-      <SiteNav variant="eventDark" />
+    <div className="event-tool min-h-screen bg-[#f3fafa] text-[#071213]">
+      <SiteNav variant="event" />
       <main>
-        <section className="relative overflow-hidden bg-[#071213] text-white">
+        <section className="relative overflow-hidden bg-[#edf5fa] text-foreground">
           <div className="five-orb five-orb-one opacity-55" />
           <div className="five-grid" />
           <div className="relative mx-auto max-w-6xl px-5 py-8 sm:py-12">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-[#8ee4e8]">
-                  <Radio className="h-3.5 w-3.5 animate-pulse" /> live problem network
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-primary-deep">
+                  <Radio className="h-3.5 w-3.5 animate-pulse" /> bir fikir · beş dakika
                 </div>
                 <h1 className="mt-3 font-display text-5xl font-black tracking-[-0.065em] sm:text-7xl">
-                  ntw.<span className="text-[#78d9da]">five</span>
+                  ntw.<span className="text-primary-deep">five</span>
                 </h1>
-                <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/52 sm:text-base">
-                  Problemi seç, katkını anlat, kabul edilince buluş ve beş dakikada ilerlet.
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-foreground/52 sm:text-base">
+                  5 dakikada üretilen çözümler
                 </p>
               </div>
               <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/7 p-3 backdrop-blur-xl">
@@ -153,7 +161,7 @@ function FiveLivePage() {
                 </div>
                 <div className="min-w-0">
                   <div className="truncate text-sm font-black">{session.identity.name}</div>
-                  <div className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.13em] text-white/38">
+                  <div className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.13em] text-foreground/38">
                     {session.identity.type === "member" ? "notwork üyesi" : "event katılımcısı"}
                   </div>
                 </div>
@@ -242,13 +250,13 @@ function FiveLivePage() {
 
 function FiveLoading() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#071213] text-white">
+    <div className="flex min-h-screen items-center justify-center bg-[#edf5fa] text-foreground">
       <div className="text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[#78d9da] text-[#071213]">
           <RefreshCw className="h-7 w-7 animate-spin" />
         </div>
         <div className="mt-5 font-display text-4xl font-black tracking-[-0.055em]">ntw.five</div>
-        <p className="mt-2 text-sm text-white/45">canlı havuz hazırlanıyor</p>
+        <p className="mt-2 text-sm text-foreground/45">canlı havuz hazırlanıyor</p>
       </div>
     </div>
   );
@@ -264,21 +272,21 @@ function FiveEntryGate({ message }: { message: string }) {
   );
 
   return (
-    <div className="min-h-screen bg-[#071213] text-white">
-      <SiteNav variant="eventDark" />
+    <div className="event-tool min-h-screen bg-[#edf5fa] text-foreground">
+      <SiteNav variant="event" />
       <main className="relative isolate overflow-hidden">
         <div className="five-orb five-orb-one" />
         <div className="five-grid" />
         <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl items-center px-5 py-12">
           <div className="grid w-full gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
             <div>
-              <div className="text-xs font-black uppercase tracking-[0.22em] text-[#8ee4e8]">
+              <div className="text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
                 etkinlik girişi
               </div>
               <h1 className="mt-4 font-display text-6xl font-black leading-[0.82] tracking-[-0.07em] sm:text-8xl">
-                ntw.<span className="text-[#78d9da]">five</span>
+                ntw.<span className="text-primary-deep">five</span>
               </h1>
-              <p className="mt-5 max-w-lg text-base leading-relaxed text-white/55 sm:text-lg">
+              <p className="mt-5 max-w-lg text-base leading-relaxed text-foreground/55 sm:text-lg">
                 Problemleri ve çözüm taleplerini görebilmek için Notwork kimliğinle devam et.
               </p>
             </div>
@@ -289,12 +297,12 @@ function FiveEntryGate({ message }: { message: string }) {
               <h2 className="mt-5 text-2xl font-black tracking-[-0.04em] sm:text-3xl">
                 Nasıl katılacaksın?
               </h2>
-              <p className="mt-2 text-sm leading-relaxed text-white/48">
+              <p className="mt-2 text-sm leading-relaxed text-foreground/48">
                 Üyeysen profil oturumunu aç. Etkinlik alanındaysan QR giriş formunu doldur; bu özel
                 bağlantıdan oluşturulan profil admin onayı beklemeden etkinleşir.
               </p>
               {message ? (
-                <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-white/48">
+                <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs text-foreground/48">
                   {message}
                 </div>
               ) : null}
@@ -310,7 +318,7 @@ function FiveEntryGate({ message }: { message: string }) {
                 </a>
                 <a
                   href={registrationUrl}
-                  className="flex min-h-13 items-center justify-between rounded-2xl border border-white/14 bg-white/5 px-4 py-3.5 font-black text-white"
+                  className="flex min-h-13 items-center justify-between rounded-2xl border border-white/14 bg-white/5 px-4 py-3.5 font-black text-foreground"
                 >
                   <span className="flex items-center gap-2">
                     <UsersRound className="h-5 w-5" /> Etkinlik QR kaydı oluştur
@@ -320,7 +328,7 @@ function FiveEntryGate({ message }: { message: string }) {
               </div>
               <a
                 href={withEventSelection("/five", eventSelection)}
-                className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-white/48 hover:text-white"
+                className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-foreground/48 hover:text-foreground"
               >
                 giriş yapmadan problem bırak <ArrowRight className="h-4 w-4" />
               </a>
@@ -347,7 +355,7 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`relative min-h-10 rounded-xl px-2 text-[11px] font-black transition sm:text-xs ${active ? "bg-[#78d9da] text-[#071213]" : "text-white/52 hover:bg-white/7 hover:text-white"}`}
+      className={`relative min-h-10 rounded-xl px-2 text-[11px] font-black transition sm:text-xs ${active ? "bg-[#78d9da] text-[#071213]" : "text-foreground/52 hover:bg-white/7 hover:text-foreground"}`}
     >
       {label}
       {pulse ? (
@@ -394,7 +402,7 @@ function ProblemPool({
             className={`flex min-h-72 flex-col rounded-[1.7rem] border p-5 shadow-sm ${problem.isOwner ? "border-primary bg-primary/8" : "border-border bg-white"}`}
           >
             <div className="flex items-center justify-between gap-3">
-              <span className="rounded-full bg-[#071213] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.13em] text-[#8ee4e8]">
+              <span className="rounded-full bg-[#edf5fa] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.13em] text-primary-deep">
                 {problem.shortCode}
               </span>
               <span className="text-[10px] font-black uppercase tracking-[0.13em] text-muted-foreground">
@@ -497,97 +505,127 @@ function RequestCenter({
     <section>
       <div className="mb-5 grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-[0.08em] text-muted-foreground">
         <div className="rounded-xl bg-primary/12 px-2 py-3 text-primary-deep">1 · problemi aç</div>
-        <div className="rounded-xl bg-primary/12 px-2 py-3 text-primary-deep">2 · talepleri seç</div>
-        <div className="rounded-xl bg-primary/12 px-2 py-3 text-primary-deep">3 · görüşmeyi başlat</div>
+        <div className="rounded-xl bg-primary/12 px-2 py-3 text-primary-deep">
+          2 · talepleri seç
+        </div>
+        <div className="rounded-xl bg-primary/12 px-2 py-3 text-primary-deep">
+          3 · görüşmeyi başlat
+        </div>
       </div>
       <div className="grid gap-5 lg:grid-cols-2">
-      <RequestList title="problemlerine gelenler" empty="Henüz gelen katkı talebi yok.">
-        {incomingByProblem.map(([problemId, requests]) => {
-          const acceptedCount = requests.filter((request) => request.status === "accepted").length;
-          const isActiveProblem = activeEncounter?.problemId === problemId;
-          return (
-            <article key={problemId} className="rounded-[1.5rem] border border-border bg-white p-4">
+        <RequestList title="problemlerine gelenler" empty="Henüz gelen katkı talebi yok.">
+          {incomingByProblem.map(([problemId, requests]) => {
+            const acceptedCount = requests.filter(
+              (request) => request.status === "accepted",
+            ).length;
+            const isActiveProblem = activeEncounter?.problemId === problemId;
+            return (
+              <article
+                key={problemId}
+                className="rounded-[1.5rem] border border-border bg-white p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-black">
+                      {problemById.get(problemId)?.title || "problemin"}
+                    </div>
+                    <div className="mt-1 text-[10px] font-black uppercase tracking-[0.1em] text-primary-deep">
+                      {acceptedCount}/2 çözüm ortağı seçildi
+                    </div>
+                  </div>
+                  {isActiveProblem ? <StatusPill status="accepted" /> : null}
+                </div>
+                <div className="mt-3 grid gap-2">
+                  {requests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="rounded-2xl border border-border bg-background p-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <PersonSummary
+                          person={{
+                            id: request.requesterId,
+                            name: request.requesterName,
+                            username: request.requesterUsername,
+                            publicCode: request.requesterPublicCode,
+                            photoUrl: request.requesterPhotoUrl || "",
+                            profileUrl: request.requesterProfileUrl || "",
+                            businessCardEnabled: Boolean(request.requesterBusinessCardEnabled),
+                          }}
+                          subtitle={
+                            fiveHelpTypes.find((type) => type.value === request.helpType)?.label ||
+                            "katkı talebi"
+                          }
+                        />
+                        <StatusPill status={request.status} />
+                      </div>
+                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                        {request.pitch}
+                      </p>
+                      {request.status === "pending" ? (
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            disabled={isMutating || acceptedCount >= 2}
+                            onClick={() =>
+                              void onMutate({ action: "accept", requestId: request.id }, "requests")
+                            }
+                            className="profile-primary-button w-full"
+                          >
+                            seç <Handshake className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isMutating}
+                            onClick={() =>
+                              void onMutate(
+                                { action: "decline", requestId: request.id },
+                                "requests",
+                              )
+                            }
+                            className="rounded-xl border border-border bg-white px-3 text-xs font-black"
+                          >
+                            uygun değil
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+                {isActiveProblem ? (
+                  <button
+                    type="button"
+                    onClick={onOpenMeeting}
+                    className="profile-primary-button mt-3 w-full"
+                  >
+                    görüşme alanına geç <ArrowRight className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </article>
+            );
+          })}
+        </RequestList>
+        <RequestList
+          title="gönderdiğin talepler"
+          empty="Henüz bir probleme katkı talebi göndermedin."
+        >
+          {outgoing.map((request) => (
+            <article key={request.id} className="rounded-2xl border border-border bg-white p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-sm font-black">{problemById.get(problemId)?.title || "problemin"}</div>
-                  <div className="mt-1 text-[10px] font-black uppercase tracking-[0.1em] text-primary-deep">
-                    {acceptedCount}/2 çözüm ortağı seçildi
+                  <div className="text-sm font-black">
+                    {problemById.get(request.problemId)?.title || "problem"}
+                  </div>
+                  <div className="mt-1 text-xs font-bold text-primary-deep">
+                    problem sahibi: {problemById.get(request.problemId)?.ownerName || "katılımcı"}
                   </div>
                 </div>
-                {isActiveProblem ? <StatusPill status="accepted" /> : null}
+                <StatusPill status={request.status} />
               </div>
-              <div className="mt-3 grid gap-2">
-                {requests.map((request) => (
-                  <div key={request.id} className="rounded-2xl border border-border bg-background p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <PersonSummary
-                        person={{
-                          id: request.requesterId,
-                          name: request.requesterName,
-                          username: request.requesterUsername,
-                          publicCode: request.requesterPublicCode,
-                          photoUrl: request.requesterPhotoUrl || "",
-                          profileUrl: request.requesterProfileUrl || "",
-                          businessCardEnabled: Boolean(request.requesterBusinessCardEnabled),
-                        }}
-                        subtitle={fiveHelpTypes.find((type) => type.value === request.helpType)?.label || "katkı talebi"}
-                      />
-                      <StatusPill status={request.status} />
-                    </div>
-                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{request.pitch}</p>
-                    {request.status === "pending" ? (
-                      <div className="mt-3 grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          disabled={isMutating || acceptedCount >= 2}
-                          onClick={() => void onMutate({ action: "accept", requestId: request.id }, "requests")}
-                          className="profile-primary-button w-full"
-                        >
-                          seç <Handshake className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isMutating}
-                          onClick={() => void onMutate({ action: "decline", requestId: request.id }, "requests")}
-                          className="rounded-xl border border-border bg-white px-3 text-xs font-black"
-                        >
-                          uygun değil
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-              {isActiveProblem ? (
-                <button type="button" onClick={onOpenMeeting} className="profile-primary-button mt-3 w-full">
-                  görüşme alanına geç <ArrowRight className="h-4 w-4" />
-                </button>
-              ) : null}
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{request.pitch}</p>
             </article>
-          );
-        })}
-      </RequestList>
-      <RequestList
-        title="gönderdiğin talepler"
-        empty="Henüz bir probleme katkı talebi göndermedin."
-      >
-        {outgoing.map((request) => (
-          <article key={request.id} className="rounded-2xl border border-border bg-white p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="text-sm font-black">
-                  {problemById.get(request.problemId)?.title || "problem"}
-                </div>
-                <div className="mt-1 text-xs font-bold text-primary-deep">
-                  problem sahibi: {problemById.get(request.problemId)?.ownerName || "katılımcı"}
-                </div>
-              </div>
-              <StatusPill status={request.status} />
-            </div>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{request.pitch}</p>
-          </article>
-        ))}
-      </RequestList>
+          ))}
+        </RequestList>
       </div>
     </section>
   );
@@ -709,10 +747,10 @@ function ActiveEncounter({
     if (sent) setMessage("");
   };
   return (
-    <section className="mx-auto max-w-3xl overflow-hidden rounded-[2rem] border border-primary/20 bg-white shadow-[0_24px_70px_rgba(4,35,38,0.09)]">
-      <div className="bg-[#071213] p-5 text-white sm:p-8">
+    <section className="meeting-minimal mx-auto max-w-3xl overflow-hidden rounded-[2rem] border border-primary/20 bg-white shadow-[0_24px_70px_rgba(4,35,38,0.09)]">
+      <div className="bg-[#edf5fa] p-5 text-foreground sm:p-8">
         <div className="flex items-center justify-between gap-3">
-          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8ee4e8]">
+          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-deep">
             {encounter.status === "active" ? "görüşme başladı" : "grup hazırlanıyor"}
           </div>
           <span className="rounded-full bg-white/8 px-3 py-1.5 text-[10px] font-black">
@@ -725,9 +763,8 @@ function ActiveEncounter({
         {encounter.status === "active" ? (
           <FiveCountdown endsAt={encounter.endsAt} />
         ) : (
-          <div className="mt-6 rounded-2xl border border-white/10 bg-white/6 p-4 text-sm leading-relaxed text-white/52">
-            Herkes buluştuğunda “hazırım” desin. Tüm grup hazır olduğunda problem sahibi 5 dakikalık
-            sayacı başlatır.
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/6 p-4 text-sm leading-relaxed text-foreground/52">
+            Buluşunca hazır olduğunu belirt. Herkes hazırsa beş dakika başlasın.
           </div>
         )}
       </div>
@@ -819,7 +856,7 @@ function ActiveEncounter({
                 type="button"
                 disabled={isMutating || !everyoneReady}
                 onClick={() => void onMutate({ action: "start" }, "meeting")}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#071213] px-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-35"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#edf5fa] px-4 text-sm font-black text-foreground disabled:cursor-not-allowed disabled:opacity-35"
               >
                 5 dakikayı başlat <Clock3 className="h-4 w-4" />
               </button>
@@ -897,14 +934,14 @@ function FiveCountdown({ endsAt }: { endsAt: string }) {
   return (
     <div className="mt-6 flex items-end justify-between gap-4">
       <div>
-        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-white/38">
+        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-foreground/38">
           kalan süre
         </div>
-        <div className="mt-1 font-display text-7xl font-black leading-none tracking-[-0.07em] text-[#8ee4e8]">
+        <div className="mt-1 font-display text-7xl font-black leading-none tracking-[-0.07em] text-primary-deep">
           {minutes}:{String(rest).padStart(2, "0")}
         </div>
       </div>
-      <Clock3 className="mb-2 h-7 w-7 text-white/28" />
+      <Clock3 className="mb-2 h-7 w-7 text-foreground/28" />
     </div>
   );
 }
@@ -1164,14 +1201,14 @@ function BusinessQrButton({ person, inverse = false }: { person: FivePerson; inv
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${inverse ? "border-white/12 bg-white/8 text-white" : "border-border bg-white text-primary-deep"}`}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${inverse ? "border-white/12 bg-white/8 text-foreground" : "border-border bg-white text-primary-deep"}`}
         aria-label={`${person.name} business QR kodunu göster`}
       >
         <QrCode className="h-4 w-4" />
       </button>
       {open ? (
         <div
-          className="fixed inset-0 z-[110] flex items-center justify-center bg-[#031011]/78 p-5 backdrop-blur-md"
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-[#edf5fa]/78 p-5 backdrop-blur-md"
           onClick={(event) => event.stopPropagation()}
           role="dialog"
           aria-modal="true"
@@ -1227,7 +1264,7 @@ function BusinessQrButton({ person, inverse = false }: { person: FivePerson; inv
 function ModalShell({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-end justify-center bg-[#031011]/72 p-0 backdrop-blur-md sm:items-center sm:p-5"
+      className="fixed inset-0 z-[90] flex items-end justify-center bg-[#edf5fa]/72 p-0 backdrop-blur-md sm:items-center sm:p-5"
       role="dialog"
       aria-modal="true"
     >

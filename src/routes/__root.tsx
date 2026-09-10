@@ -11,6 +11,9 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import glassCss from "../glass.css?url";
+import { MobileDock } from "../components/MobileDock";
+import { EventExperienceShell, isEventAppPath } from "../components/EventExperienceShell";
 import { AnalyticsTracker } from "../components/AnalyticsTracker";
 import { CookieConsent } from "../components/CookieConsent";
 import { MetaPixelTracker } from "../components/MetaPixelTracker";
@@ -115,6 +118,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "stylesheet", href: glassCss },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
     ],
     scripts: [
@@ -148,14 +152,25 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const hideWhatsAppChannel = isEventExperiencePath(pathname);
+  const publicPage = !pathname.startsWith("/admin");
+  const eventApp = isEventAppPath(pathname);
 
   return (
     <QueryClientProvider client={queryClient}>
       <AnalyticsTracker />
       <MetaPixelTracker />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
-      {!hideWhatsAppChannel && <WhatsAppChannelCta />}
+      <div className={publicPage ? "glass-site" : undefined}>
+        {eventApp ? (
+          <EventExperienceShell>
+            <Outlet />
+          </EventExperienceShell>
+        ) : (
+          <Outlet />
+        )}
+        {publicPage && !eventApp && <MobileDock />}
+        {!hideWhatsAppChannel && <WhatsAppChannelCta />}
+      </div>
       <CookieConsent />
     </QueryClientProvider>
   );
@@ -163,6 +178,7 @@ function RootComponent() {
 
 function isEventExperiencePath(pathname: string) {
   return (
+    pathname === "/ntw" ||
     pathname === "/etkinlikler" ||
     pathname === "/17-eylul" ||
     pathname === "/9-ekim" ||

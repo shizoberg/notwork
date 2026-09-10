@@ -343,10 +343,10 @@ function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile
           <Plus className="h-5 w-5" /> Yeni profil oluştur
         </button>
         <Link
-          to="/community"
+          to="/networking"
           className="flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Community sayfasına dön
+          <ArrowLeft className="h-4 w-4" /> Networking’e dön
         </Link>
       </form>
     </section>

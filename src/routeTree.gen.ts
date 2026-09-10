@@ -13,6 +13,7 @@ import { Route as SunumYukleRouteImport } from './routes/sunum-yukle'
 import { Route as StartupRouteImport } from './routes/startup'
 import { Route as SponsorRouteImport } from './routes/sponsor'
 import { Route as ProfilRouteImport } from './routes/profil'
+import { Route as NtwRouteImport } from './routes/ntw'
 import { Route as NotworkNedirRouteImport } from './routes/notwork-nedir'
 import { Route as NetworkingRouteImport } from './routes/networking'
 import { Route as NetworkStartupRouteImport } from './routes/network-startup'
@@ -60,6 +61,11 @@ const SponsorRoute = SponsorRouteImport.update({
 const ProfilRoute = ProfilRouteImport.update({
   id: '/profil',
   path: '/profil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NtwRoute = NtwRouteImport.update({
+  id: '/ntw',
+  path: '/ntw',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotworkNedirRoute = NotworkNedirRouteImport.update({
@@ -226,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/notwork-nedir': typeof NotworkNedirRoute
+  '/ntw': typeof NtwRoute
   '/profil': typeof ProfilRoute
   '/sponsor': typeof SponsorRoute
   '/startup': typeof StartupRoute
@@ -260,6 +267,7 @@ export interface FileRoutesByTo {
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/notwork-nedir': typeof NotworkNedirRoute
+  '/ntw': typeof NtwRoute
   '/profil': typeof ProfilRoute
   '/sponsor': typeof SponsorRoute
   '/startup': typeof StartupRoute
@@ -295,6 +303,7 @@ export interface FileRoutesById {
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/notwork-nedir': typeof NotworkNedirRoute
+  '/ntw': typeof NtwRoute
   '/profil': typeof ProfilRoute
   '/sponsor': typeof SponsorRoute
   '/startup': typeof StartupRoute
@@ -331,6 +340,7 @@ export interface FileRouteTypes {
     | '/network-startup'
     | '/networking'
     | '/notwork-nedir'
+    | '/ntw'
     | '/profil'
     | '/sponsor'
     | '/startup'
@@ -365,6 +375,7 @@ export interface FileRouteTypes {
     | '/network-startup'
     | '/networking'
     | '/notwork-nedir'
+    | '/ntw'
     | '/profil'
     | '/sponsor'
     | '/startup'
@@ -399,6 +410,7 @@ export interface FileRouteTypes {
     | '/network-startup'
     | '/networking'
     | '/notwork-nedir'
+    | '/ntw'
     | '/profil'
     | '/sponsor'
     | '/startup'
@@ -434,6 +446,7 @@ export interface RootRouteChildren {
   NetworkStartupRoute: typeof NetworkStartupRoute
   NetworkingRoute: typeof NetworkingRoute
   NotworkNedirRoute: typeof NotworkNedirRoute
+  NtwRoute: typeof NtwRoute
   ProfilRoute: typeof ProfilRoute
   SponsorRoute: typeof SponsorRoute
   StartupRoute: typeof StartupRoute
@@ -474,6 +487,13 @@ declare module '@tanstack/react-router' {
       path: '/profil'
       fullPath: '/profil'
       preLoaderRoute: typeof ProfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ntw': {
+      id: '/ntw'
+      path: '/ntw'
+      fullPath: '/ntw'
+      preLoaderRoute: typeof NtwRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notwork-nedir': {
@@ -698,6 +718,7 @@ const rootRouteChildren: RootRouteChildren = {
   NetworkStartupRoute: NetworkStartupRoute,
   NetworkingRoute: NetworkingRoute,
   NotworkNedirRoute: NotworkNedirRoute,
+  NtwRoute: NtwRoute,
   ProfilRoute: ProfilRoute,
   SponsorRoute: SponsorRoute,
   StartupRoute: StartupRoute,
