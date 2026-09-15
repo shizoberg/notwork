@@ -42,7 +42,7 @@ const filters = [
   "Köşk Alsancak",
   "Mahal Bomonti",
   "İstinyeArt",
-  "MatchLab",
+  "notwork match",
   "WordCloud",
 ];
 
@@ -56,7 +56,7 @@ const catalogEvents: EventCatalogItem[] = [
     summary:
       "Dört ilham veren başarısızlık hikâyesi, canlı WordCloud ve iki networking arasında ntw.match.lab deneyimi.",
     participants: "Sınırlı kontenjan",
-    tags: ["Rene Lokal", "WordCloud", "MatchLab", "4 konuşmacı"],
+    tags: ["Rene Lokal", "WordCloud", "notwork match", "4 konuşmacı"],
     href: "/11-ekim",
     accent: "from-[#071416] via-[#6b304e] to-[#d8c6ff]",
     image: "/community/8.jpg",
@@ -71,7 +71,7 @@ const catalogEvents: EventCatalogItem[] = [
     summary:
       "ntw.match.lab, ntw.five ve DJ deneyimini aynı lineer akışta birleştiren yeni nesil notwork gecesi.",
     participants: "Sınırlı kontenjan",
-    tags: ["Köşk Alsancak", "MatchLab", "ntw.five", "DJ"],
+    tags: ["Köşk Alsancak", "notwork match", "ntw.five", "DJ"],
     href: "/17-eylul",
     accent: "from-[#071416] via-[#245f66] to-[#d8c6ff]",
     image: "/community/17.jpg",
@@ -84,9 +84,9 @@ const catalogEvents: EventCatalogItem[] = [
     venue: "House of Rene Lokal",
     title: "21 Ağustos notwork İzmir",
     summary:
-      "Rene Lokal’de MatchLab, WordCloud, röportajlar ve etkinlik sonrası networking akışıyla büyüyen notwork gecesi.",
+      "Rene Lokal’de notwork match, WordCloud, röportajlar ve etkinlik sonrası networking akışıyla büyüyen notwork gecesi.",
     participants: "100+ katılımcı",
-    tags: ["Rene Lokal", "MatchLab", "WordCloud", "Networking"],
+    tags: ["Rene Lokal", "notwork match", "WordCloud", "Networking"],
     href: "/21agustos",
     accent: "from-[#0f2f35] via-[#2f9aa5] to-[#8fcbd0]",
     image: "/community/25.jpg",

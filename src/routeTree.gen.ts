@@ -26,6 +26,7 @@ import { Route as FiveRouteImport } from './routes/five'
 import { Route as EtkinliklerRouteImport } from './routes/etkinlikler'
 import { Route as EtkinlikDegerlendirmeRouteImport } from './routes/etkinlik-degerlendirme'
 import { Route as DuyurularRouteImport } from './routes/duyurular'
+import { Route as CreativeRouteImport } from './routes/creative'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CerezPolitikasiRouteImport } from './routes/cerez-politikasi'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -129,6 +130,11 @@ const DuyurularRoute = DuyurularRouteImport.update({
   path: '/duyurular',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CreativeRoute = CreativeRouteImport.update({
+  id: '/creative',
+  path: '/creative',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CommunityRoute = CommunityRouteImport.update({
   id: '/community',
   path: '/community',
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
+  '/creative': typeof CreativeRoute
   '/duyurular': typeof DuyurularRoute
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
@@ -263,6 +270,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
+  '/creative': typeof CreativeRoute
   '/duyurular': typeof DuyurularRoute
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
@@ -300,6 +308,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
+  '/creative': typeof CreativeRoute
   '/duyurular': typeof DuyurularRoute
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
@@ -338,6 +347,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cerez-politikasi'
     | '/community'
+    | '/creative'
     | '/duyurular'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
@@ -374,6 +384,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cerez-politikasi'
     | '/community'
+    | '/creative'
     | '/duyurular'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
@@ -410,6 +421,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/cerez-politikasi'
     | '/community'
+    | '/creative'
     | '/duyurular'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
@@ -447,6 +459,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CerezPolitikasiRoute: typeof CerezPolitikasiRoute
   CommunityRoute: typeof CommunityRoute
+  CreativeRoute: typeof CreativeRoute
   DuyurularRoute: typeof DuyurularRoute
   EtkinlikDegerlendirmeRoute: typeof EtkinlikDegerlendirmeRoute
   EtkinliklerRoute: typeof EtkinliklerRoute
@@ -593,6 +606,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DuyurularRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/creative': {
+      id: '/creative'
+      path: '/creative'
+      fullPath: '/creative'
+      preLoaderRoute: typeof CreativeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/community': {
       id: '/community'
       path: '/community'
@@ -727,6 +747,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CerezPolitikasiRoute: CerezPolitikasiRoute,
   CommunityRoute: CommunityRoute,
+  CreativeRoute: CreativeRoute,
   DuyurularRoute: DuyurularRoute,
   EtkinlikDegerlendirmeRoute: EtkinlikDegerlendirmeRoute,
   EtkinliklerRoute: EtkinliklerRoute,

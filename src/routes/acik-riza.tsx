@@ -19,7 +19,7 @@ const choices = [
   {
     icon: Network,
     title: "Networking ve etkinlik ürünleri",
-    text: "Profil cevaplarımın, katkı/ihtiyaç alanlarımın ve etkinlik kodumun bağlantı önerileri, MatchLab grupları, ntw.five görüşmeleri ve etkinlik içi topluluk deneyimi için kullanılmasına rıza gösterebilirim.",
+    text: "Profil cevaplarımın, katkı/ihtiyaç alanlarımın ve etkinlik kodumun bağlantı önerileri, notwork match grupları, ntw.five görüşmeleri ve etkinlik içi topluluk deneyimi için kullanılmasına rıza gösterebilirim.",
   },
   {
     icon: Eye,

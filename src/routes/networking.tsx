@@ -511,6 +511,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
   const [checkInMessage, setCheckInMessage] = useState("");
   const [checkingIn, setCheckingIn] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [networkEntry, setNetworkEntry] = useState<"choose" | "new">("choose");
 
   useEffect(() => {
     listMembers()
@@ -542,6 +543,38 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
   }, []);
 
   const canViewContacts = Boolean(memberProfile?.verifiedMember);
+  const previewMembers = useMemo(
+    () => {
+      const previewSource: Member[] = members.length
+        ? members.slice(0, 18)
+        : Array.from({ length: 12 }, (_, index) => ({
+            id: `sample-${index}`,
+            username: `sample-${index}`,
+            name: "notwork üyesi",
+            title: ["tasarım", "yazılım", "topluluk", "pazarlama"][index % 4],
+            skills: [],
+            createdAt: 0,
+          }));
+      return previewSource.map((member, index) => {
+        const group = getRoleGroup(member);
+        return {
+          ...member,
+          id: `preview-${index}`,
+          username: `preview-${index}`,
+          name: "notwork üyesi",
+          title: group.keywords[0] || "networking",
+          skills: [],
+          email: undefined,
+          instagram: undefined,
+          linkedin: undefined,
+          motivation: undefined,
+          contact: undefined,
+          photoUrl: undefined,
+        } satisfies Member;
+      });
+    },
+    [members],
+  );
 
   const set =
     (key: keyof typeof form) =>
@@ -755,7 +788,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
   }, [activeGroupId, memberTabs]);
 
   return (
-    <div className={`min-h-screen flex flex-col ${config.shellClass}`} style={config.style}>
+    <div className={`network-glass min-h-screen flex flex-col ${config.shellClass}`} style={config.style}>
       <SiteNav />
       <main className="flex-1">
         <section className="mx-auto max-w-6xl px-5 pt-10 sm:pt-16 pb-6">
@@ -818,6 +851,41 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
         )}
 
         {!profileLoading && !memberProfile ? (
+          <section className="mx-auto max-w-6xl px-5 pb-6">
+            <div className="network-preview">
+              <div className="network-preview-copy">
+                <span className="tool-eyebrow">notwork üyeleri</span>
+                <h2>Topluluktan bir önizleme</h2>
+                <p>
+                  Circle yapısını anonim olarak incele. Kayıt olduğunda sen de ortak alanların
+                  içinde kendi profilinle görünürsün.
+                </p>
+              </div>
+              <NetworkGraph
+                members={previewMembers}
+                loading={loading}
+                hint="anonim üye önizlemesi"
+                emptyText="üyeler yükleniyor"
+              />
+            </div>
+          </section>
+        ) : null}
+
+        {!profileLoading && !memberProfile && networkEntry === "choose" ? (
+          <section className="mx-auto max-w-6xl px-5 pb-10">
+            <div className="network-entry">
+              <span className="tool-eyebrow">notwork network</span>
+              <h2>Sistemde kayıtlı mısın?</h2>
+              <p>Etkinliğe katıldıysan mevcut profilinle gir. İlk kez geliyorsan kısa kaydını oluştur.</p>
+              <div className="network-entry-actions">
+                <Link to="/profil">Evet · giriş yap</Link>
+                <Link to="/profil" search={{ mode: "register" }}>Hayır · kayıt ol</Link>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {!profileLoading && !memberProfile && networkEntry === "new" ? (
           <section className="mx-auto max-w-6xl px-5 pb-10">
             <form
               id="networking-form"
@@ -1007,6 +1075,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
           </section>
         ) : null}
 
+        {memberProfile ? <>
         <section className="mx-auto max-w-6xl px-5 pb-10">
           <div
             className={
@@ -1155,7 +1224,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                           key={badge.source}
                           className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-primary-deep"
                         >
-                          {badge.label}
+                          notwork onaylı · {badge.label}
                         </span>
                       ))}
                     </div>
@@ -1228,6 +1297,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
             )}
           </div>
         </section>
+        </> : null}
       </main>
       {selectedMember && (
         <MemberDetailModal
@@ -1862,7 +1932,7 @@ function MemberDetailModal({
                           key={badge.source}
                           className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-primary-deep"
                         >
-                          {badge.label}
+                          notwork onaylı · {badge.label}
                         </span>
                       ))}
                     </div>

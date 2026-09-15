@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { cleanWordcloudAnswer, type WordcloudQuestion } from "@/lib/event-wordcloud";
 import { getEventSelectionFromLocation, withEventSelection } from "@/lib/event-registry";
+import { useEventPreview } from "@/lib/event-preview";
 import {
   getWordcloudBootstrap,
   getWordcloudSessionStorageKey,
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/21-agustos/wordcloud")({
 });
 
 function WordcloudParticipantPage() {
+  const preview = useEventPreview();
   const eventSelection = getEventSelectionFromLocation();
   const sessionStorageKey = getWordcloudSessionStorageKey(eventSelection);
   const [questions, setQuestions] = useState<WordcloudQuestion[]>([]);
@@ -35,9 +37,20 @@ function WordcloudParticipantPage() {
   const isDone = questions.length > 0 && Object.keys(sentQuestions).length >= questions.length;
 
   useEffect(() => {
+    if (preview === null) return;
     let ignore = false;
     async function load() {
       try {
+        if (preview) {
+          const updatedAt = new Date().toISOString();
+          setSessionId("local-wordcloud-preview");
+          setQuestions([
+            { id: "demo-1", order: 1, title: "Bu geceyi tek kelimeyle nasıl anlatırsın?", helper: "Aklına ilk gelen yeterli", isActive: true, maxAnswersPerSession: 1, updatedAt },
+            { id: "demo-2", order: 2, title: "Yeni bir bağlantıda ne arıyorsun?", helper: "Kısa bir cevap bırak", isActive: true, maxAnswersPerSession: 1, updatedAt },
+            { id: "demo-3", order: 3, title: "Yanında hangi fikirle ayrılıyorsun?", helper: "Bir kelime ya da kısa ifade", isActive: true, maxAnswersPerSession: 1, updatedAt },
+          ]);
+          return;
+        }
         const existing =
           typeof window !== "undefined" ? localStorage.getItem(sessionStorageKey) || "" : "";
         const bootstrap = await getWordcloudBootstrap(existing);
@@ -54,7 +67,7 @@ function WordcloudParticipantPage() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [preview]);
 
   const nextUnsentIndex = useMemo(
     () => questions.findIndex((question) => !sentQuestions[question.id]),
@@ -88,6 +101,11 @@ function WordcloudParticipantPage() {
       }
 
       await new Promise((resolve) => window.setTimeout(resolve, Math.random() * 900));
+      if (preview) {
+        setSubmitted(true);
+        setMessage("Demo cevapların hazır ✨");
+        return;
+      }
       const saved = await submitWordcloudAnswers({
         sessionId,
         answers: questions.map((question) => ({

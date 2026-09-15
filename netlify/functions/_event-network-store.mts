@@ -512,8 +512,8 @@ async function saveMatchLabReview(
     comment,
     photoDataUrl,
     privateNote: requiresPhoto
-      ? `Match Lab fotoğraf sorumlusu · kod: ${registration.participant.publicCode}`
-      : `Match Lab grup yorumu · kod: ${registration.participant.publicCode}`,
+      ? `notwork match fotoğraf sorumlusu · kod: ${registration.participant.publicCode}`
+      : `notwork match grup yorumu · kod: ${registration.participant.publicCode}`,
     consentAt: now,
     createdAt: now,
   };
@@ -670,19 +670,18 @@ export async function registerNetworkProfile(
   const firstName = clean(input.firstName, 50);
   const lastName = clean(input.lastName, 50);
   const offers = normalizeOffers(input.offers);
-  const intro = clean(input.intro, Number.MAX_SAFE_INTEGER);
-  const offersDetail = clean(input.offersDetail, Number.MAX_SAFE_INTEGER);
-  const needs = clean(input.needs, Number.MAX_SAFE_INTEGER);
+  const intro = clean(input.intro, 40);
+  const offersDetail = clean(input.offersDetail, 40);
+  const needs = clean(input.needs, 40);
   const needTag = clean(input.needTag, 40).toLocaleLowerCase("tr-TR");
   const attendedEvent = clean(input.attendedEvent, 80).toLocaleLowerCase("tr-TR");
 
   if (!firstName || !lastName) throw new Error("Ad ve soyad gerekli");
   if (!isValidEmail(emailNormalized)) throw new Error("Geçerli e-posta gerekli");
   if (offers.length === 0) throw new Error("En az bir yardımcı olabileceğin konu gerekli");
-  if (intro.length < 30) throw new Error("Kendini tanıt yanıtı en az 30 karakter olmalı");
-  if (offersDetail.length < 30)
-    throw new Error("Neler yapabilirsin yanıtı en az 30 karakter olmalı");
-  if (needs.length < 30) throw new Error("Ne istiyorsun yanıtı en az 30 karakter olmalı");
+  if (intro.length < 2) throw new Error("Kendini tanıt yanıtı gerekli");
+  if (offersDetail.length < 2) throw new Error("Neler yapabilirsin yanıtı gerekli");
+  if (needs.length < 2) throw new Error("Ne istiyorsun yanıtı gerekli");
   if (
     !attendedEventValues.has(attendedEvent) &&
     attendedEvent !== getNetworkEventSlug() &&
@@ -1196,12 +1195,11 @@ export async function completeActiveMatchByToken(
 
   if (!input.groupId || input.groupId !== activeMatch.id)
     throw new Error("Grubun değişti. Ekranı yenile.");
-  if (!input.skipReview)
-    await saveMatchLabReview(
-      registration,
-      input,
-      activeMatch.photoOwnerParticipantId === registration.participant.id,
-    );
+  await saveMatchLabReview(
+    registration,
+    input,
+    activeMatch.photoOwnerParticipantId === registration.participant.id,
+  );
   await atomicState(
     store,
     `${getNetworkPrefix()}/room-index-v2.json`,

@@ -35,6 +35,8 @@ type ReviewRow = {
 const passwordHash = "bffc46786cfaa3b08499a75d77b037dff9a14f362ab183f72e2ea7bcce0454ee";
 
 const allowedEvents: Record<string, string> = {
+  "17-eylul-2026": "17 Eylül Chill & Chat · Köşk Alsancak",
+  "9-ekim-2026": "11 Ekim notwork Classic · Rene Lokal",
   "21-agustos-2026": "21 Ağustos notwork · House of Rene Lokal",
   "14-temmuz-2026": "14 Temmuz notwork İzmir",
   "22-mayis": "22 Mayıs notwork · İstinyeArt İzmir",

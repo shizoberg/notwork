@@ -1,4 +1,5 @@
 import { AnnouncementAdmin } from "@/components/AnnouncementAdmin";
+import { saveEventPreview, startEventPreview } from "@/lib/event-preview";
 import { MemberOperationsAdmin } from "@/components/MemberOperationsAdmin";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -354,7 +355,7 @@ function blankEventEditorDraft(): EventEditorDraft {
           visible: true,
           state: "disabled",
           dataMode: "demo",
-          label: product === "matchlab" ? "ntw.matchlab" : `ntw.${product}`,
+          label: product === "matchlab" ? "notwork match" : `ntw.${product}`,
           order: product === "five" ? 1 : product === "wordcloud" ? 2 : 3,
         },
       ]),
@@ -781,7 +782,7 @@ function AdminPage() {
       setEventRegistrations(data.registrations);
       setEventDatabase(data.database || null);
       setNetworkMessage(
-        `${selectedToolsEvent?.shortTitle || "Etkinlik"} MatchLab demo verisi sıfırlandı.`,
+        `${selectedToolsEvent?.shortTitle || "Etkinlik"} notwork match demo verisi sıfırlandı.`,
       );
     } catch (caught) {
       setNetworkMessage(caught instanceof Error ? caught.message : "Demo verisi sıfırlanamadı.");
@@ -1093,6 +1094,11 @@ function AdminPage() {
         ) : null}
 
         <div className={activeAdminTab === "events" ? "" : "hidden"}>
+          <section className="tool-surface mb-5">
+            <h2>Test verisiyle önizle</h2>
+            <p>Seçili etkinliğin kaydedilmiş akışıyla kayıt → uygulamalar ekranını incele. Örnek kişiler bu cihazda tutulur.</p>
+            <button className="tool-primary" disabled={!eventRegistry.some((event) => event.id === eventEditor.id)} onClick={() => { const event = eventRegistry.find((event) => event.id === eventEditor.id); if (event) startEventPreview(event); }}>Linkler önizlemesini aç</button>
+          </section>
           <EventRegistryAdmin
             events={eventRegistry}
             registry={eventRegistryInfo}
@@ -1126,7 +1132,7 @@ function AdminPage() {
                 {selectedToolsEvent?.title || "Etkinlik seç"}
               </h2>
               <p className="mt-1 text-sm text-foreground/60">
-                MatchLab, WordCloud ve ntw.five verilerini aynı panelden yönet.
+                notwork match, WordCloud ve ntw.five verilerini aynı panelden yönet.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {selectedToolsEvent
@@ -2757,7 +2763,7 @@ function EventNetworkAdmin({
     <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div>
-          <h2 className="text-xl font-black">{eventTitle} MatchLab kayıtları</h2>
+          <h2 className="text-xl font-black">{eventTitle} notwork match kayıtları</h2>
           <p className="mt-1 text-sm text-foreground/50">
             Etkinlik kodu, yetkinlikler, ihtiyaç ve izin tercihleri. Şimdilik demo database ile
             oynuyoruz.
@@ -2822,7 +2828,7 @@ function EventNetworkAdmin({
           </div>
           <div className="mt-2 text-primary-deep">
             Veri modu Etkinlikler sekmesinden demo veya canlı olarak değiştirilebilir. Her etkinlik
-            kendi izole MatchLab verisini kullanır.
+            kendi izole notwork match verisini kullanır.
           </div>
         </div>
         {message ? (
@@ -2884,7 +2890,7 @@ function EventNetworkAdmin({
             {registrations.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-sm text-foreground/45">
-                  Henüz {eventTitle} MatchLab kaydı yok.
+                  Henüz {eventTitle} notwork match kaydı yok.
                 </td>
               </tr>
             ) : null}
@@ -3587,9 +3593,10 @@ function EventRegistryAdmin({
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               <a
-                href={withEventSelection("/linkler", { event: draft.slug })}
+                href={`${withEventSelection("/linkler", { eventId: draft.id })}&preview=event`}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => { if (selectedEvent) saveEventPreview(selectedEvent); }}
                 className="rounded-xl border border-primary/30 bg-primary/10 px-3 py-3 text-sm font-black transition hover:border-primary/60"
               >
                 Etkinlik girişini aç
@@ -3605,12 +3612,13 @@ function EventRegistryAdmin({
                 return (
                   <a
                     key={product}
-                    href={withEventSelection(path, { event: draft.slug })}
+                    href={`${withEventSelection(path, { eventId: draft.id })}&preview=event`}
                     target="_blank"
                     rel="noreferrer"
                     aria-disabled={!config.enabled}
                     onClick={(event) => {
                       if (!config.enabled) event.preventDefault();
+                      else if (selectedEvent) saveEventPreview(selectedEvent);
                     }}
                     className={`rounded-xl border px-3 py-3 text-sm font-black transition ${
                       config.enabled

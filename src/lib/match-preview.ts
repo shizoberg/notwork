@@ -30,7 +30,10 @@ export const registration: EventNetworkRegistration = {
   needs: "Yeni bir fikri hayata geçirmek için farklı bakış açıları arıyorum.",
   needTag: "fikir",
 };
-let round = Number(localStorage.getItem("notwork-match-preview-round")) || 1;
+let round =
+  typeof window === "undefined"
+    ? 1
+    : Number(window.localStorage.getItem("notwork-match-preview-round")) || 1;
 export function matchPreview() {
   const codes = round % 2 ? ["C03", "A12", "B07"] : ["C03", "D18", "E24"];
   const prompts = [
@@ -70,10 +73,11 @@ export function completePreview(input: {
   photoDataUrl?: string;
 }) {
   if (input.groupId !== `preview-${round}`) throw new Error("Grubun değişti. Ekranı yenile.");
-  if (!input.skipReview && (!input.comment.trim() || !input.consent || !input.photoDataUrl))
+  if (!input.comment.trim() || !input.consent || !input.photoDataUrl)
     throw new Error("Yorum, fotoğraf ve yayın iznini tamamla veya doğrudan yeni gruba geç.");
   round++;
-  localStorage.setItem("notwork-match-preview-round", String(round));
+  if (typeof window !== "undefined")
+    window.localStorage.setItem("notwork-match-preview-round", String(round));
   return {
     ok: true as const,
     status: "completed" as const,

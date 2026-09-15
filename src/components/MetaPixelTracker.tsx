@@ -54,7 +54,9 @@ const eventPageContent: Record<
     value: 600,
   },
   "/11-ekim": {
+    contentId: "notwork-classic-2026-10-09",
     contentName: "notwork Classic · 11 Ekim 2026",
+    value: 600,
   },
 };
 

@@ -1,4 +1,5 @@
 import { promptForAnnouncements } from "@/lib/announcement-prompt";
+import { previewEvent, useEventPreview } from "@/lib/event-preview";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -37,9 +38,9 @@ import { createNoIndexSeo } from "@/lib/seo";
 export const Route = createFileRoute("/linkler")({
   head: () =>
     createNoIndexSeo({
-      title: "notwork Etkinlik Girişi | ntw.wordcloud, ntw.matchlab ve ntw.five",
+      title: "notwork Etkinlik Girişi | ntw.wordcloud, notwork match ve ntw.five",
       description:
-        "notwork etkinlik katılımcıları için kayıt, ntw.wordcloud, ntw.matchlab, ntw.five, WhatsApp topluluğu ve etkinlik yorumu bağlantıları.",
+        "notwork etkinlik katılımcıları için kayıt, ntw.wordcloud, notwork match, ntw.five, WhatsApp topluluğu ve etkinlik yorumu bağlantıları.",
       path: "/linkler",
     }),
   component: LinksPage,
@@ -83,7 +84,7 @@ const eventProductLinks: Array<{
   },
   {
     product: "matchlab",
-    title: "ntw.matchlab",
+    title: "notwork match",
     description: "Profil bilgilerine göre üçlü grubunu gör ve tanışmayı başlat.",
     href: "/21-agustos/eslesme",
     icon: Network,
@@ -119,13 +120,8 @@ type RegistrationPath = "choose" | "login" | "new";
 type RegistrationStep = "standard" | "event";
 
 function LinksPage() {
-  const preview =
-    import.meta.env.DEV &&
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("preview") === "event";
-  const [previewReady, setPreviewReady] = useState(
-    preview && new URLSearchParams(window.location.search).get("step") === "apps",
-  );
+  const preview = useEventPreview();
+  const [previewReady, setPreviewReady] = useState(false);
   const [activeEvent, setActiveEvent] = useState<NotworkEvent | null>(null);
   const [registration, setRegistration] = useState<EventNetworkRegistration | null>(null);
   const [memberProfile, setMemberProfile] = useState<NotworkMemberProfile | null>(null);
@@ -154,10 +150,10 @@ function LinksPage() {
           title: product?.label || link.title,
           href: withEventSelection(link.href, eventSelection),
           enabled: product
-            ? product.enabled && product.visible && product.state !== "disabled"
+            ? product.enabled && product.visible && (preview || (product.state === "live" && product.dataMode === "live"))
             : true,
           order:
-            product?.order || (link.product === "five" ? 1 : link.product === "wordcloud" ? 2 : 3),
+            product?.order ?? (link.product === "five" ? 1 : link.product === "wordcloud" ? 2 : 3),
         };
       })
       .sort((left, right) => left.order - right.order);
@@ -242,7 +238,10 @@ function LinksPage() {
   }
 
   useEffect(() => {
+    if (preview === null) return;
     if (preview) {
+      setActiveEvent(previewEvent());
+      setPreviewReady(new URLSearchParams(window.location.search).get("step") === "apps");
       setIsLoading(false);
       return;
     }
@@ -304,7 +303,7 @@ function LinksPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [preview]);
 
   const canSubmit = useMemo(
     () =>
@@ -313,9 +312,9 @@ function LinksPage() {
         form.lastName.trim() &&
         form.email.includes("@") &&
         form.attendedEvent &&
-        form.intro.trim().length >= 30 &&
-        form.offersDetail.trim().length >= 30 &&
-        form.needs.trim().length >= 30 &&
+        form.intro.trim().length >= 2 && form.intro.trim().length <= 40 &&
+        form.offersDetail.trim().length >= 2 && form.offersDetail.trim().length <= 40 &&
+        form.needs.trim().length >= 2 && form.needs.trim().length <= 40 &&
         form.offers.length > 0 &&
         form.eventConsent &&
         form.generalNetworkOptIn,
@@ -387,7 +386,7 @@ function LinksPage() {
       setMessage(
         data.membership?.verifiedMember
           ? "Kayıt tamamlandı. Etkinlik katılımcısı üyeliğin otomatik doğrulandı; kodun hazır."
-          : "Kayıt tamamlandı. Kodun hazır; şimdi ntw.wordcloud veya ntw.matchlab’e geçebilirsin.",
+          : "Kayıt tamamlandı. Kodun hazır; şimdi ntw.wordcloud veya notwork match’e geçebilirsin.",
       );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Kayıt tamamlanamadı.");
@@ -423,12 +422,16 @@ function LinksPage() {
 
   const hasRegistration = Boolean(registration) || (preview && previewReady);
   useEffect(() => {
+    document.documentElement.dataset.notworkEntryReady = String(hasRegistration);
     const timer = window.setTimeout(
       () =>
         window.dispatchEvent(new CustomEvent("notwork-entry-ready", { detail: hasRegistration })),
       0,
     );
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      delete document.documentElement.dataset.notworkEntryReady;
+    };
   }, [hasRegistration]);
 
   return (
@@ -504,6 +507,7 @@ function LinksPage() {
                   </span>
                 </div>
               )}
+              <div className="entry-flow-summary"><span>Bu akşamın akışı</span><p>{eventLinks.filter((link) => link.enabled).map((link, i) => `${i + 1}. ${link.title}`).join(" → ")}</p></div>
               <section className="mt-5 grid gap-3">
                 {eventLinks.map(({ title, description, href, icon: Icon, enabled }, index) => (
                   <a
@@ -857,7 +861,7 @@ function RegistrationGate({
       </h1>
       <p className="mt-3 text-sm leading-6 text-foreground/60">
         Bu sorular etkinliğe özeldir ve admin panelinden her etkinlik için ayrı düzenlenir. Aynı
-        cevaplar ntw.matchlab eşleşme algoritmasıyla ntw.five problem önerilerini birlikte besler.
+        cevaplar notwork match eşleşme algoritmasıyla ntw.five problem önerilerini birlikte besler.
       </p>
 
       <div className="mt-4 rounded-2xl border border-primary/25 bg-primary/10 p-3 text-xs font-semibold leading-5 text-foreground/65">
@@ -889,9 +893,10 @@ function RegistrationGate({
         {registrationPrompts.introLabel}
         <textarea
           value={form.intro}
-          onChange={(event) => setForm((current) => ({ ...current, intro: event.target.value }))}
-          rows={5}
-          minLength={30}
+          onChange={(event) => setForm((current) => ({ ...current, intro: event.target.value.slice(0, 40) }))}
+          rows={3}
+          minLength={2}
+          maxLength={40}
           placeholder={registrationPrompts.introPlaceholder}
           className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
         />
@@ -903,10 +908,11 @@ function RegistrationGate({
         <textarea
           value={form.offersDetail}
           onChange={(event) =>
-            setForm((current) => ({ ...current, offersDetail: event.target.value }))
+            setForm((current) => ({ ...current, offersDetail: event.target.value.slice(0, 40) }))
           }
-          rows={5}
-          minLength={30}
+          rows={3}
+          minLength={2}
+          maxLength={40}
           placeholder={registrationPrompts.offersPlaceholder}
           className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
         />
@@ -917,9 +923,10 @@ function RegistrationGate({
         {registrationPrompts.needsLabel}
         <textarea
           value={form.needs}
-          onChange={(event) => setForm((current) => ({ ...current, needs: event.target.value }))}
-          rows={5}
-          minLength={30}
+          onChange={(event) => setForm((current) => ({ ...current, needs: event.target.value.slice(0, 40) }))}
+          rows={3}
+          minLength={2}
+          maxLength={40}
           placeholder={registrationPrompts.needsPlaceholder}
           className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
         />
@@ -1022,14 +1029,9 @@ function QuickInput({
 }
 
 function CharacterHint({ length }: { length: number }) {
-  const remaining = Math.max(0, 30 - length);
   return (
-    <span
-      className={`mt-1 block text-right text-[11px] font-bold ${
-        remaining === 0 ? "text-primary-deep" : "text-foreground/40"
-      }`}
-    >
-      {remaining === 0 ? `${length} karakter · yeterli detay` : `en az ${remaining} karakter daha`}
+    <span className="mt-1 block text-right text-[11px] font-bold text-foreground/45">
+      {length}/40 · bir iki kelime yeterli
     </span>
   );
 }

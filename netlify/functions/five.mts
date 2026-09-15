@@ -36,6 +36,13 @@ const memberSessionCookieName = "notwork_profile_session";
 
 type FiveInput = {
   tableId?: string;
+  messageId?: string;
+  text?: string;
+  solved?: boolean;
+  solution?: string;
+  rating?: number;
+  comment?: string;
+  reviewConsent?: boolean;
   round?: number;
   photoDataUrl?: string;
   action?: string;

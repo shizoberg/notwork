@@ -4,6 +4,7 @@ import type {
   EventNetworkPresence,
   EventNetworkRegistration,
 } from "@/lib/event-network";
+import { isEventPreview } from "./event-preview";
 import {
   eventSelectionIdentifier,
   getEventSelectionFromLocation,
@@ -25,7 +26,7 @@ export async function eventChatRequest(
   message?: string,
   messageId?: string,
 ): Promise<EventChatMessage[]> {
-  if (import.meta.env.DEV && accessToken === "local-match-preview") {
+  if (isEventPreview() && accessToken === "local-match-preview") {
     const key = "notwork-demo-event-chat";
     const rows: EventChatMessage[] = JSON.parse(localStorage.getItem(key) || "[]");
     if (message && !rows.some((row) => row.id === messageId))
@@ -108,7 +109,7 @@ export async function registerEventNetwork(
 }
 
 export async function getEventNetworkMe(accessToken: string, selection?: EventSelection) {
-  if (import.meta.env.DEV && accessToken === "local-match-preview")
+  if (isEventPreview() && accessToken === "local-match-preview")
     return (await import("./match-preview")).registration;
   const activeSelection = resolvedSelection(selection);
   const response = await fetch(apiUrl(activeSelection), {
@@ -155,7 +156,7 @@ export async function updateEventNetworkPresence(
 }
 
 export async function getEventNetworkMatch(accessToken: string, selection?: EventSelection) {
-  if (import.meta.env.DEV && accessToken === "local-match-preview")
+  if (isEventPreview() && accessToken === "local-match-preview")
     return (await import("./match-preview")).matchPreview();
   const activeSelection = resolvedSelection(selection);
   const response = await fetch(apiUrl(activeSelection), {
@@ -199,7 +200,7 @@ export async function completeEventNetworkMatchWithReview(
   },
   selection?: EventSelection,
 ) {
-  if (import.meta.env.DEV && accessToken === "local-match-preview")
+  if (isEventPreview() && accessToken === "local-match-preview")
     return (await import("./match-preview")).completePreview(review);
   const activeSelection = resolvedSelection(selection);
   const response = await fetch(apiUrl(activeSelection), {

@@ -192,6 +192,16 @@ export function getFiveEventId() {
   return getFiveContext()?.eventId || legacyFiveEventId;
 }
 
+export function getFiveEventReviewMeta() {
+  const context = getFiveContext();
+  return {
+    eventId: context?.eventSlug || legacyFiveEventId,
+    eventTitle: context
+      ? `${context.event.shortTitle} · ${context.event.location.name || "notwork"}`
+      : "ntw.five · notwork",
+  };
+}
+
 export function getFiveDatasetInfo() {
   const context = getFiveContext();
   if (context) {

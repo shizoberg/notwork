@@ -169,7 +169,7 @@ export function MemberOperationsAdmin({
       <div className="space-y-3 border-t border-border pt-4">
         <h3 className="font-semibold">E-posta grupları</h3>
         <p className="text-sm text-foreground/60">
-          Networking, üyelik, Startup, canlı MatchLab ve Five kayıtları tekilleştirilir. Duyuru izni
+          Networking, üyelik, Startup, canlı notwork match ve Five kayıtları tekilleştirilir. Duyuru izni
           bilinmeyen kişiler ayrıca izin alınmadan gönderim listesi sayılmaz. Buradan e-posta
           gönderilmez.
         </p>

@@ -12,7 +12,7 @@ export function EventAppPreview({ kind }: { kind: string }) {
       <SiteNav variant="event" />
       <main className="app-preview">
         <span className="tool-eyebrow">Örnek içerik · canlı veri değil</span>
-        <h1>{match ? "ntw.matchlab" : kind === "five" ? "ntw.five" : "ntw.wordcloud"}</h1>
+        <h1>{match ? "notwork match" : kind === "five" ? "ntw.five" : "ntw.wordcloud"}</h1>
         {!match && <p>5 dakikada üretilen çözümler</p>}
         {match ? (
           <section className="tool-surface">

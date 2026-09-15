@@ -1,7 +1,7 @@
 import { EventChat } from "@/components/EventChat";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Camera, CheckCircle2, Loader2, Sparkles } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import type {
   EventNetworkMatchGroup,
@@ -16,6 +16,8 @@ import {
   getEventNetworkTokenStorageKey,
 } from "@/lib/event-network-api";
 import { getEventSelectionFromLocation, withEventSelection } from "@/lib/event-registry";
+import { useEventPreview } from "@/lib/event-preview";
+import { matchPreview, registration as matchPreviewRegistration } from "@/lib/match-preview";
 
 async function imageToDataUrl(file: File) {
   const bitmap = await createImageBitmap(file);
@@ -32,12 +34,13 @@ async function imageToDataUrl(file: File) {
 
 export const Route = createFileRoute("/21-agustos/eslesme")({
   head: () => ({
-    meta: [{ title: "ntw.matchlab v1.0" }, { name: "robots", content: "noindex, nofollow" }],
+    meta: [{ title: "notwork match" }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: AugustMatchPage,
 });
 
 function AugustMatchPage() {
+  const preview = useEventPreview();
   const eventSelection = getEventSelectionFromLocation();
   const tokenStorageKey = getEventNetworkTokenStorageKey(eventSelection);
   const [token, setToken] = useState("");
@@ -52,6 +55,7 @@ function AugustMatchPage() {
   const [photoDataUrl, setPhotoDataUrl] = useState("");
   const [reviewConsent, setReviewConsent] = useState(false);
   const [isPhotoProcessing, setIsPhotoProcessing] = useState(false);
+  const reviewPanelRef = useRef<HTMLDetailsElement>(null);
 
   const currentMember = useMemo(
     () => group?.members.find((member) => member.isCurrentUser) || null,
@@ -99,15 +103,23 @@ function AugustMatchPage() {
   );
 
   useEffect(() => {
+    if (preview === null) return;
     let cancelled = false;
     async function restore() {
-      const preview =
-        import.meta.env.DEV &&
-        new URLSearchParams(window.location.search).get("preview") === "event";
       let recoveredToken = preview
         ? "local-match-preview"
         : localStorage.getItem(tokenStorageKey) || "";
       try {
+        if (preview) {
+          if (cancelled) return;
+          const result = matchPreview();
+          setToken("local-match-preview");
+          setRegistration(matchPreviewRegistration);
+          setPresence(result.presence);
+          setGroup(result.group);
+          setStatus("ready");
+          return;
+        }
         let recovered;
         if (recoveredToken) {
           try {
@@ -138,7 +150,7 @@ function AugustMatchPage() {
     return () => {
       cancelled = true;
     };
-  }, [tokenStorageKey]);
+  }, [tokenStorageKey, preview]);
 
   useEffect(() => {
     if (!token || status !== "ready" || !group) return;
@@ -148,18 +160,18 @@ function AugustMatchPage() {
     return () => window.clearInterval(interval);
   }, [group, loadMatch, status, token]);
 
-  const completeMatch = async (skipReview = false) => {
+  const completeMatch = async () => {
     if (!token) return;
     const cleanComment = comment.trim().replace(/\s+/g, " ");
-    if (!skipReview && !cleanComment) {
+    if (!cleanComment) {
       setMessage("Grubu kapatmadan önce etkinlikle ilgili ilk yorumunu yazmalısın.");
       return;
     }
-    if (!skipReview && !reviewConsent) {
+    if (!reviewConsent) {
       setMessage("Yorum, puan ve varsa fotoğraf için yayınlama açık rızasını vermelisin.");
       return;
     }
-    if (!skipReview && isCurrentPhotoOwner && !photoDataUrl) {
+    if (isCurrentPhotoOwner && !photoDataUrl) {
       setMessage("Bu grupta fotoğraf görevi sende. Ortam veya selfie fotoğrafı eklemelisin.");
       return;
     }
@@ -168,7 +180,6 @@ function AugustMatchPage() {
     try {
       const result = await completeEventNetworkMatchWithReview(token, {
         groupId: group?.id,
-        skipReview,
         rating,
         comment: cleanComment,
         photoDataUrl: photoDataUrl || undefined,
@@ -227,7 +238,7 @@ function AugustMatchPage() {
           <div className="relative mx-auto max-w-3xl">
             <div className="mb-6 text-center">
               <h1 className="mt-4 text-5xl font-black leading-none tracking-[-0.08em] text-foreground sm:text-7xl">
-                ntw.matchlab
+                notwork match
               </h1>
             </div>
 
@@ -294,7 +305,7 @@ function AugustMatchPage() {
                   </div>
 
                   {!currentMemberDone ? (
-                    <details className="match-photo">
+                    <details ref={reviewPanelRef} className="match-photo">
                       <summary>
                         <Camera size={20} />
                         <span>
@@ -325,7 +336,7 @@ function AugustMatchPage() {
                           </div>
                         </div>
 
-                        {import.meta.env.DEV && token === "local-match-preview" && (
+                        {preview && token === "local-match-preview" && (
                           <button
                             className="tool-primary"
                             onClick={async () => {
@@ -458,9 +469,14 @@ function AugustMatchPage() {
                 <button
                   className="tool-primary match-next-button"
                   disabled={isCompleting}
-                  onClick={() => void completeMatch(true)}
+                  onClick={() => {
+                    if (!reviewPanelRef.current) return;
+                    reviewPanelRef.current.open = true;
+                    reviewPanelRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+                    setMessage("Yeni gruba geçmeden önce kısa yorumunu ve puanını bırak.");
+                  }}
                 >
-                  Yeni grup belirle →
+                  Puanla ve yeni grup belirle →
                 </button>
               )}
               {status === "idle" && token ? (

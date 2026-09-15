@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import {
   emptyTables,
   joinTable,
+  publishTableOutcome,
   tableAction,
+  tableChat,
+  tableOutcome,
   type TableState,
 } from "../src/lib/five-table-model.ts";
 import { atomicState } from "../netlify/functions/_atomic-state.mts";
@@ -21,6 +24,12 @@ test("four seats, persisted code, authoritative timer, one photo owner, four rou
   assert.equal(room.phase, "ready");
   assert.equal(joinTable(s, person(0), { id: "p", title: "Problem" }).code, room.code);
   assert.throws(() => joinTable(s, person(0), { id: "other", title: "Other" }));
+  tableChat(s, "0", room.id, "message-0001", "Nerede buluşuyoruz?", 1000);
+  assert.equal(room.messages?.[0].text, "Nerede buluşuyoruz?");
+  tableChat(s, "0", room.id, "message-0001", "Nerede buluşuyoruz?", 1001);
+  assert.equal(room.messages?.length, 1);
+  assert.throws(() => tableChat(s, "4", room.id, "message-0002", "Başka masa", 3000));
+  assert.throws(() => tableChat(s, "0", room.id, "message-0003", "Çok hızlı", 1200));
   const other = joinTable(s, person(4), { id: "p", title: "Problem" });
   assert.notEqual(other.id, room.id);
   tableAction(s, "0", room.id, "start", 1000, 0);
@@ -33,6 +42,35 @@ test("four seats, persisted code, authoritative timer, one photo owner, four rou
   assert.equal(room.photoSaved, true);
   for (let i = 0; i < 4; i++) tableAction(s, "0", room.id, "next", room.endsAt + 1, i);
   assert.equal(room.phase, "finished");
+  assert.throws(() => tableAction(s, "0", room.id, "leave", 900000, 3));
+  assert.throws(() =>
+    tableOutcome(
+      s,
+      "0",
+      room.id,
+      true,
+      "İlk hafta üç müşteri görüşmesi yapacağız.",
+      5,
+      "Yeni bir bakış kazandım.",
+      false,
+      900000,
+    ),
+  );
+  tableOutcome(
+    s,
+    "0",
+    room.id,
+    true,
+    "İlk hafta üç müşteri görüşmesi yapacağız.",
+    5,
+    "Yeni bir bakış kazandım.",
+    true,
+    900000,
+  );
+  assert.equal(room.outcomes?.["0"].solved, true);
+  assert.equal(room.outcomes?.["0"].rating, 5);
+  assert.throws(() => tableAction(s, "0", room.id, "leave", 900000, 3));
+  publishTableOutcome(s, "0", room.id, 900001);
   const restored = structuredClone(s);
   assert.equal(restored.tables[restored.members["0"]].code, room.code);
   tableAction(s, "0", room.id, "leave", 900000, 3);

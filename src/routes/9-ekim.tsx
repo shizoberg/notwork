@@ -109,7 +109,7 @@ export const eventConfig: EventProductConfig = {
   flowEyebrow: "notwork classic akışı",
   flowTitleLines: ["Sor. Dinle.", "Eşleş ve yeniden bağ kur."],
   flowDescription:
-    "Sahne ve networking birbirinden kopuk değil. WordCloud ortak merakı görünür kılar; MatchLab iki arada doğru kişileri bulur.",
+    "Sahne ve networking birbirinden kopuk değil. WordCloud ortak merakı görünür kılar; notwork match iki arada doğru kişileri bulur.",
   flow: [
     {
       time: "19.30",
@@ -161,8 +161,8 @@ export const eventConfig: EventProductConfig = {
       product: "networking free time",
       title: "Hikâyeleri bağlantıya dönüştür.",
       description:
-        "MatchLab eşleşmelerini sürdür, konuşmacılarla tanış ve gecenin kalanında serbest biçimde yeni bağlantılar kur.",
-      highlights: ["MatchLab devam", "serbest networking"],
+        "notwork match eşleşmelerini sürdür, konuşmacılarla tanış ve gecenin kalanında serbest biçimde yeni bağlantılar kur.",
+      highlights: ["notwork match devam", "serbest networking"],
       icon: Sparkles,
       accent: "bg-[#c9f1d7] text-[#174d2d]",
     },

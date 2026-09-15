@@ -1,5 +1,16 @@
 export type TablePerson = { id: string; name: string; code: string; problem: string };
+export type TableOutcome = {
+  solved: boolean;
+  solution: string;
+  rating: number;
+  comment: string;
+  consentAt: number;
+  publishedAt?: number;
+  at: number;
+};
 export type ProblemTable = {
+  messages?: { id: string; personId: string; name: string; text: string; at: number }[];
+  outcomes?: Record<string, TableOutcome>;
   id: string;
   code: string;
   problemId: string;
@@ -18,6 +29,18 @@ export type TableState = {
   members: Record<string, string>;
 };
 export const emptyTables = (): TableState => ({ sequence: 0, tables: {}, members: {} });
+
+export function hasCompleteTableOutcome(outcome?: TableOutcome) {
+  return Boolean(
+    outcome &&
+      Number.isInteger(outcome.rating) &&
+      outcome.rating >= 1 &&
+      outcome.rating <= 5 &&
+      outcome.comment?.trim().length >= 3 &&
+      outcome.consentAt &&
+      outcome.publishedAt,
+  );
+}
 export function joinTable(
   state: TableState,
   person: TablePerson,
@@ -57,10 +80,69 @@ export function joinTable(
   }
   return table;
 }
+
+export function publishTableOutcome(
+  state: TableState,
+  personId: string,
+  tableId: string,
+  now: number,
+) {
+  const table = memberTable(state, personId, tableId);
+  const outcome = table.outcomes?.[personId];
+  if (!outcome) throw new Error("Önce masa değerlendirmesini tamamla.");
+  outcome.publishedAt = now;
+  return table;
+}
 export function memberTable(state: TableState, personId: string, expectedId: string) {
   if (state.members[personId] !== expectedId || !state.tables[expectedId])
     throw new Error("Bu masa oturumun değişti. Ekranı yenile.");
   return state.tables[expectedId];
+}
+export function tableChat(state: TableState, personId: string, tableId: string, id: string, text: string, now: number) {
+  const table = memberTable(state, personId, tableId);
+  const person = table.people.find((p) => p.id === personId);
+  if (!person) throw new Error("Bu grubun üyesi değilsin.");
+  const body = text.trim();
+  if (!/^[a-zA-Z0-9-]{8,80}$/.test(id) || !body || body.length > 500)
+    throw new Error("Mesaj 1–500 karakter olmalı.");
+  const messages = table.messages || [];
+  if (messages.some((m) => m.id === id && m.personId === personId)) return table;
+  if (messages.some((m) => m.personId === personId && now - m.at < 1500))
+    throw new Error("Yeni mesaj için bir an bekle.");
+  table.messages = [...messages, { id, personId, name: person.name, text: body, at: now }].slice(-100);
+  return table;
+}
+export function tableOutcome(
+  state: TableState,
+  personId: string,
+  tableId: string,
+  solved: boolean,
+  solution: string,
+  rating: number,
+  comment: string,
+  reviewConsent: boolean,
+  now: number,
+) {
+  const table = memberTable(state, personId, tableId);
+  const answer = solution.trim().replace(/\s+/g, " ");
+  const review = comment.trim().replace(/\s+/g, " ");
+  if (table.phase !== "finished") throw new Error("Önce görüşme turlarını tamamla.");
+  if (answer.length < 3 || answer.length > 300) throw new Error("Çözümü 3–300 karakterle yaz.");
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5)
+    throw new Error("Puan 1–5 arasında olmalı.");
+  if (review.length < 3 || review.length > 240)
+    throw new Error("Masa yorumunu 3–240 karakterle yaz.");
+  if (!reviewConsent) throw new Error("Yorum ve fotoğraf yayınlama izni gerekli.");
+  table.outcomes ||= {};
+  table.outcomes[personId] = {
+    solved,
+    solution: answer,
+    rating,
+    comment: review,
+    consentAt: now,
+    at: now,
+  };
+  return table;
 }
 export function tableAction(
   state: TableState,
@@ -72,6 +154,8 @@ export function tableAction(
 ) {
   const table = memberTable(state, personId, id);
   if (action === "leave") {
+    if (table.phase === "finished" && !hasCompleteTableOutcome(table.outcomes?.[personId]))
+      throw new Error("Ayrılmadan önce çözüm sonucunu paylaş.");
     table.people = table.people.filter((p) => p.id !== personId);
     delete state.members[personId];
     if (!table.people.length) {

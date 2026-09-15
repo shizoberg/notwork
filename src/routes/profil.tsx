@@ -259,6 +259,9 @@ function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("mode") === "register") setMode("register");
+  }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault();

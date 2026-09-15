@@ -46,7 +46,7 @@ const septemberEventId = "evt_17_eylul_2026";
 const octoberEventId = "evt_9_ekim_2026";
 
 const productLabels: Record<EventProductKey, string> = {
-  matchlab: "ntw.matchlab",
+  matchlab: "notwork match",
   wordcloud: "ntw.wordcloud",
   five: "ntw.five",
 };
@@ -136,7 +136,9 @@ function normalizeProduct(
     visible: typeof input?.visible === "boolean" ? input.visible : base.visible,
     state,
     dataMode: requestedMode === "live" ? "live" : requestedMode === "demo" ? "demo" : base.dataMode,
-    label: clean(input?.label, 40) || base.label || productLabels[product],
+    label: product === "matchlab" && ["ntw.matchlab", "MatchLab"].includes(clean(input?.label, 40) || base.label)
+      ? "notwork match"
+      : clean(input?.label, 40) || base.label || productLabels[product],
     order: Math.max(1, Math.min(20, Number(input?.order) || base.order || productOrders[product])),
   };
 }
@@ -265,7 +267,7 @@ function legacyEvent(): NotworkEvent {
         visible: true,
         state: "archived",
         dataMode: "live",
-        label: "ntw.matchlab",
+        label: "notwork match",
         order: 3,
       },
       wordcloud: {
@@ -321,7 +323,7 @@ function septemberEvent(): NotworkEvent {
         visible: true,
         state: "ready",
         dataMode: "demo",
-        label: "ntw.matchlab",
+        label: "notwork match",
         order: 1,
       },
       five: {
@@ -377,7 +379,7 @@ function octoberEvent(): NotworkEvent {
         visible: true,
         state: "ready",
         dataMode: "demo",
-        label: "ntw.matchlab",
+        label: "notwork match",
         order: 1,
       },
       five: {

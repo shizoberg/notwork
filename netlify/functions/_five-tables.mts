@@ -1,9 +1,14 @@
+import { createHash } from "node:crypto";
 import { atomicState } from "./_atomic-state.mjs";
+import { getEventReviewStore } from "./_event-review-store.mjs";
 import {
   emptyTables,
   joinTable,
   memberTable,
+  publishTableOutcome,
   tableAction,
+  tableChat,
+  tableOutcome,
   type TableState,
 } from "../../src/lib/five-table-model.js";
 import {
@@ -11,8 +16,52 @@ import {
   getFivePrefix,
   getFiveLiveBoard,
   getFiveMyState,
+  getFiveEventReviewMeta,
   type FiveIdentity,
 } from "./_five-store.mjs";
+
+type FiveTablePhoto = {
+  photo: string;
+  personId: string;
+  consentAt: string;
+};
+
+async function saveFiveTableReview(
+  fiveStore: ReturnType<typeof getFiveStore>,
+  identity: FiveIdentity,
+  table: ReturnType<typeof tableOutcome>,
+) {
+  const outcome = table.outcomes?.[identity.id];
+  if (!outcome) throw new Error("Masa değerlendirmesi bulunamadı");
+  const event = getFiveEventReviewMeta();
+  const photo =
+    table.photoOwner === identity.id
+      ? ((await fiveStore.get(`${getFivePrefix()}/table-photos/${table.id}.json`, {
+          type: "json",
+          consistency: "strong",
+        })) as FiveTablePhoto | null)
+      : null;
+  const reviewKey = createHash("sha256")
+    .update(`${event.eventId}:${table.id}:${identity.id}`)
+    .digest("hex");
+  const createdAt = new Date(outcome.at).toISOString();
+  await getEventReviewStore().setJSON(
+    `reviews/${event.eventId}/five-${reviewKey}.json`,
+    {
+      id: `five-${reviewKey}`,
+      eventId: event.eventId,
+      eventTitle: event.eventTitle,
+      name: identity.name || "notwork katılımcısı",
+      rating: outcome.rating,
+      comment: outcome.comment,
+      photoDataUrl: photo?.photo || "",
+      privateNote: `ntw.five · grup ${table.code} · ${outcome.solved ? "çözüldü" : "devam ediyor"} · çözüm: ${outcome.solution}`,
+      consentAt: new Date(outcome.consentAt).toISOString(),
+      createdAt,
+    },
+    { onlyIfNew: true },
+  );
+}
 export async function hasFiveTable(identityId: string) {
   const state = (await getFiveStore().get(`${getFivePrefix()}/tables-v1.json`, {
     type: "json",
@@ -30,6 +79,13 @@ export async function fiveTables(
     round?: number;
     photoDataUrl?: string;
     consent?: boolean;
+    messageId?: string;
+    text?: string;
+    solved?: boolean;
+    solution?: string;
+    rating?: number;
+    comment?: string;
+    reviewConsent?: boolean;
   },
 ) {
   const store = getFiveStore();
@@ -53,6 +109,29 @@ export async function fiveTables(
         },
         problem,
       ),
+    );
+  } else if (action === "tableChat") {
+    await atomicState(store, key, emptyTables, (state) =>
+      tableChat(state, identity.id, input.tableId || "", input.messageId || "", input.text || "", Date.now()),
+    );
+  } else if (action === "tableOutcome") {
+    if (typeof input.solved !== "boolean") throw new Error("Çözüm durumu gerekli");
+    const table = await atomicState(store, key, emptyTables, (state) =>
+      tableOutcome(
+        state,
+        identity.id,
+        input.tableId || "",
+        input.solved!,
+        input.solution || "",
+        Number(input.rating),
+        input.comment || "",
+        input.reviewConsent === true,
+        Date.now(),
+      ),
+    );
+    await saveFiveTableReview(store, identity, table);
+    await atomicState(store, key, emptyTables, (state) =>
+      publishTableOutcome(state, identity.id, input.tableId || "", Date.now()),
     );
   } else if (action && action !== "tableState") {
     const operation = (

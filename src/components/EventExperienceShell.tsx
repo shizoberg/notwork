@@ -3,11 +3,12 @@ import { Link, Navigate, useLocation } from "@tanstack/react-router";
 import { Clock3, Network, MessageCircle, ArrowLeft } from "lucide-react";
 import { getPublicEventContext, type NotworkEvent } from "@/lib/event-registry";
 import { SiteNav } from "@/components/SiteNav";
+import { previewEvent, useEventPreview } from "@/lib/event-preview";
 
 const apps = [
   { key: "five", label: "Five", href: "/five/live", icon: Clock3 },
-  { key: "matchlab", label: "MatchLab", href: "/21-agustos/eslesme", icon: Network },
   { key: "wordcloud", label: "WordCloud", href: "/21-agustos/wordcloud", icon: MessageCircle },
+  { key: "matchlab", label: "Match", href: "/21-agustos/eslesme", icon: Network },
 ] as const;
 export function isEventAppPath(path: string) {
   return path === "/linkler" || apps.some((app) => app.href === path);
@@ -15,17 +16,13 @@ export function isEventAppPath(path: string) {
 
 export function EventExperienceShell({ children }: { children: ReactNode }) {
   const { pathname, searchStr } = useLocation();
-  const preview = import.meta.env.DEV && new URLSearchParams(searchStr).get("preview") === "event";
+  const preview = useEventPreview();
   const [event, setEvent] = useState<NotworkEvent | null>(null);
   const [loading, setLoading] = useState(true);
-  const [entryReady, setEntryReady] = useState(false);
   useEffect(() => {
-    const update = (event: Event) => setEntryReady(Boolean((event as CustomEvent).detail));
-    window.addEventListener("notwork-entry-ready", update);
-    return () => window.removeEventListener("notwork-entry-ready", update);
-  }, []);
-  useEffect(() => {
+    if (preview === null) return;
     if (preview) {
+      setEvent(previewEvent());
       setLoading(false);
       return;
     }
@@ -65,7 +62,7 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
       clearInterval(timer);
     };
   }, [searchStr, preview]);
-  const visibleApps = preview
+  const visibleApps = preview && !event
     ? [...apps]
     : event
       ? apps.filter((app) => {
@@ -73,14 +70,13 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
           return (
             product.enabled &&
             product.visible &&
-            product.state === "live" &&
-            product.dataMode === "live"
+            (preview || (product.state === "live" && product.dataMode === "live"))
           );
-        })
+        }).sort((a, b) => event.products[a.key].order - event.products[b.key].order)
       : [];
   const selectedApp = apps.find((app) => app.href === pathname);
   const available = preview || (event && (!selectedApp || visibleApps.includes(selectedApp)));
-  if (event && !new URLSearchParams(searchStr).has("eventId"))
+  if (!preview && event && !new URLSearchParams(searchStr).has("eventId"))
     return <Navigate to={pathname} search={{ eventId: event.id }} replace />;
   return (
     <div className="event-minimal">
@@ -106,19 +102,22 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
             <p>
               {event
                 ? "Açık uygulamaları aşağıdaki menüden seçebilirsin"
-                : "17 Eylül ve 9 Ekim tarihlerinde etkinlik anlarında aktif olacaktır"}
+                : "17 Eylül ve 11 Ekim tarihlerinde etkinlik anlarında aktif olacaktır"}
             </p>
             <Link to="/ntw">Etkinlik anına dön ↗</Link>
           </main>
         </>
       )}
-      {(pathname !== "/linkler" || entryReady) && (
         <nav
-          className="mobile-glass-dock event-app-dock"
+          className={`mobile-glass-dock event-app-dock ${pathname === "/linkler" ? "event-entry-dock" : ""}`}
           aria-label="Etkinlik uygulamaları"
           style={{ gridTemplateColumns: `repeat(${visibleApps.length + 1},1fr)` }}
         >
-          <Link to="/" aria-label="Ana menüye dön">
+          <Link
+            to="/linkler"
+            search={preview ? { preview: "event", ...(event ? { eventId: event.id } : {}) } : event ? { eventId: event.id } : {}}
+            aria-label="Linkler sayfasına dön"
+          >
             <ArrowLeft size={20} />
             <span>notwork</span>
           </Link>
@@ -126,7 +125,7 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
             <Link
               key={key}
               to={href}
-              search={preview ? { preview: "event" } : { eventId: event!.id }}
+              search={preview ? { preview: "event", ...(event ? { eventId: event.id } : {}) } : { eventId: event!.id }}
               aria-current={pathname === href ? "page" : undefined}
             >
               <Icon size={22} strokeWidth={1.65} />
@@ -134,7 +133,6 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
-      )}
     </div>
   );
 }

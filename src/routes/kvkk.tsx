@@ -29,7 +29,7 @@ const dataGroups = [
   {
     icon: Database,
     title: "Etkinlik ürünleri",
-    text: "QR kaydı, etkinliğe özel yanıtlar, WordCloud cevapları, MatchLab grup ve durum kayıtları, ntw.five problem/çözüm talepleri, görüşme mesajları, puan, yorum, fotoğraf ve ekibe özel notlar.",
+    text: "QR kaydı, etkinliğe özel yanıtlar, WordCloud cevapları, notwork match grup ve durum kayıtları, ntw.five problem/çözüm talepleri, görüşme mesajları, puan, yorum, fotoğraf ve ekibe özel notlar.",
   },
   {
     icon: Eye,
@@ -83,7 +83,7 @@ const sections = [
     title: "5. Görünürlük, eşleştirme ve referanslar",
     body: [
       "Ad, profil fotoğrafı, rol, yetenek ve kısa profil bilgileri tercih edilen görünürlük ayarına göre networking ağında veya business kartta gösterilebilir. E-posta ve telefon gibi doğrudan iletişim bilgileri yalnızca kullanıcının seçimi ve ürün erişim kuralları çerçevesinde görüntülenir.",
-      "MatchLab ve bağlantı önerileri, form cevapları ile profil etiketlerini karşılaştıran kurallı/otomatik sistemlerden yararlanabilir. Bu sistemler kişi hakkında hukuki sonuç doğuran veya benzer ölçüde önemli, yalnızca otomatik bir karar vermez; öneriler etkinlik deneyimini kolaylaştırmak içindir.",
+      "notwork match ve bağlantı önerileri, form cevapları ile profil etiketlerini karşılaştıran kurallı/otomatik sistemlerden yararlanabilir. Bu sistemler kişi hakkında hukuki sonuç doğuran veya benzer ölçüde önemli, yalnızca otomatik bir karar vermez; öneriler etkinlik deneyimini kolaylaştırmak içindir.",
       "Referanslar yalnızca doğrulanmış notwork üyelerince yazılabilir; profil sahibi ve notwork ekibi uygunsuz içerikleri bildirebilir, gizleyebilir veya kaldırılmasını isteyebilir.",
     ],
   },

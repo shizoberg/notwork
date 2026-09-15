@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
 import { SiteNav } from "./SiteNav";
+import { useEventPreview } from "@/lib/event-preview";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Camera, Clock3, ArrowUpRight, LogOut, Plus } from "lucide-react";
 import { fiveRequest, getFiveEventTokenStorageKey } from "@/lib/five";
 import { resumeEventNetwork } from "@/lib/event-network-api";
 import { withEventSelection, getEventSelectionFromLocation } from "@/lib/event-registry";
 import {
   emptyTables,
+  hasCompleteTableOutcome,
   joinTable,
+  publishTableOutcome,
   tableAction,
+  tableChat,
+  tableOutcome,
   type ProblemTable,
   type TableState,
 } from "@/lib/five-table-model";
@@ -46,6 +52,21 @@ function demoRequest(action: string, input: Record<string, unknown>): Payload {
   };
   const state = saved.state as TableState;
   const now = Date.now() + saved.offset;
+  if (action === "tableChat") tableChat(state, demoPerson.id, String(input.tableId), String(input.messageId), String(input.text), now);
+  if (action === "tableOutcome") {
+    tableOutcome(
+      state,
+      demoPerson.id,
+      String(input.tableId),
+      Boolean(input.solved),
+      String(input.solution),
+      Number(input.rating),
+      String(input.comment),
+      Boolean(input.reviewConsent),
+      now,
+    );
+    publishTableOutcome(state, demoPerson.id, String(input.tableId), now);
+  }
   if (action === "tableJoin")
     joinTable(
       state,
@@ -58,7 +79,7 @@ function demoRequest(action: string, input: Record<string, unknown>): Payload {
       joinTable(
         state,
         {
-          id: `demo-${i}`,
+          id: `${table.id}-demo-${i}`,
           name: ["Deniz", "Ece", "Can"][i - 1],
           code: `D${i}0`,
           problem: [
@@ -98,18 +119,22 @@ function demoRequest(action: string, input: Record<string, unknown>): Payload {
   };
 }
 export function FiveTables() {
-  const preview =
-    import.meta.env.DEV &&
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("preview") === "event";
+  const [codeOpen, setCodeOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [fiveMode, setFiveMode] = useState<"choose" | "problem" | "solve">("choose");
+  const [solved, setSolved] = useState<boolean | null>(null);
+  const [solution, setSolution] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewConsent, setReviewConsent] = useState(false);
+  const preview = useEventPreview();
   const [data, setData] = useState<Payload | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [clock, setClock] = useState(Date.now()),
     [offset, setOffset] = useState(0),
     [photo, setPhoto] = useState(""),
-    [consent, setConsent] = useState(false),
-    [compose, setCompose] = useState(false);
+    [consent, setConsent] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -130,6 +155,7 @@ export function FiveTables() {
     return result;
   }
   useEffect(() => {
+    if (preview === null) return;
     let active = true;
     async function start() {
       try {
@@ -158,7 +184,7 @@ export function FiveTables() {
       clearInterval(poll);
       clearInterval(tick);
     };
-  }, []);
+  }, [preview]);
   const table = data?.table;
   const remaining = table ? Math.max(0, Math.ceil((table.endsAt - clock - offset) / 1000)) : 0;
   async function act(action: string, input: Record<string, unknown> = {}) {
@@ -170,6 +196,13 @@ export function FiveTables() {
       if (action === "tableLeave" || action === "tableNext") {
         setPhoto("");
         setConsent(false);
+      }
+      if (action === "tableLeave") {
+        setSolved(null);
+        setSolution("");
+        setReviewRating(5);
+        setReviewComment("");
+        setReviewConsent(false);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "İşlem tamamlanamadı");
@@ -217,20 +250,29 @@ export function FiveTables() {
           </div>
         ) : !table ? (
           <>
+            {fiveMode === "choose" ? (
+              <section className="five-paths" aria-label="Five başlangıç seçenekleri">
+                <button onClick={() => setFiveMode("problem")}><strong>Problemini yaz</strong><span>Kendi problemine bir çözüm masası aç</span><ArrowUpRight size={18} /></button>
+                <button onClick={() => setFiveMode("solve")}><strong>Problemlere çözüm olan gruplara katıl</strong><span>Açık gruplardan birine katıl</span><ArrowUpRight size={18} /></button>
+              </section>
+            ) : (
+              <button className="five-demo-action" onClick={() => setFiveMode("choose")}>← seçeneklere dön</button>
+            )}
+            {fiveMode !== "choose" && <>
             <div className="five-pool-heading">
-              <span>Problem masaları</span>
-              <button aria-label="Problem ekle" onClick={() => setCompose(!compose)}>
+              <span>{fiveMode === "problem" ? "Problemini yaz" : "Problem masaları"}</span>
+              <button aria-label="Problem ekle" onClick={() => setFiveMode("problem")}>
                 <Plus size={20} />
               </button>
             </div>
-            {compose && (
+            {fiveMode === "problem" && (
               <form
                 className="tool-surface five-compose"
                 onSubmit={async (e) => {
                   e.preventDefault();
                   if (preview) {
                     await act("submitLive", form);
-                    setCompose(false);
+                    setFiveMode("solve");
                   } else {
                     setBusy(true);
                     try {
@@ -242,7 +284,7 @@ export function FiveTables() {
                         accessToken: localStorage.getItem(getFiveEventTokenStorageKey()) || "",
                       });
                       await request();
-                      setCompose(false);
+                      setFiveMode("solve");
                     } catch (e) {
                       setError(e instanceof Error ? e.message : "Problem eklenemedi");
                     } finally {
@@ -284,10 +326,10 @@ export function FiveTables() {
                 </button>
               </form>
             )}
-            {data.board.length === 0 && (
+            {fiveMode === "solve" && data.board.length === 0 && (
               <p className="tool-surface">İlk problem masasını sen aç.</p>
             )}
-            {data.board.map((problem) => (
+            {fiveMode === "solve" && data.board.map((problem) => (
               <section className="tool-surface" key={problem.id}>
                 <span className="tool-eyebrow">4 kişi · ortak çözüm</span>
                 <h2>{problem.title}</h2>
@@ -302,14 +344,27 @@ export function FiveTables() {
                 </button>
               </section>
             ))}
+            </>}
           </>
         ) : (
           <>
             <section className="tool-surface five-table-room">
               <div className="five-table-heading">
-                <span>Masa kodun</span>
+                <span>Grup kodun</span>
                 <strong>{table.code}</strong>
               </div>
+              <button className="five-demo-action" onClick={() => setCodeOpen(true)}>Grup kodunu büyüt</button>
+              <Dialog open={codeOpen} onOpenChange={setCodeOpen}>
+                <DialogContent
+                  className="five-code-fullscreen"
+                  style={{ left: 0, top: 0, width: "100vw", height: "100dvh", maxWidth: "none", transform: "none", translate: "none" }}
+                >
+                  <DialogTitle className="sr-only">Grup kodun {table.code}</DialogTitle>
+                  <DialogDescription className="sr-only">Bu kodu göstererek grubunu bulabilirsin</DialogDescription>
+                  <div className="five-code-brand" aria-label="notwork">notwork</div>
+                  <div className="five-code-number">{table.code}</div>
+                </DialogContent>
+              </Dialog>
               <h2>{table.topics[table.round] || table.title}</h2>
               <div className="five-seats">
                 {Array.from({ length: 4 }, (_, i) => (
@@ -319,6 +374,7 @@ export function FiveTables() {
                   </div>
                 ))}
               </div>
+              {table.photoOwner && <p className="five-photographer"><Camera size={16} /> Grup fotoğrafçısı · {table.people.find((person) => person.id === table.photoOwner)?.name}</p>}
               {(table.phase === "waiting" || table.phase === "ready") && (
                 <>
                   <p>{table.people.length}/4 kişi · bu kodla aynı masada buluşun.</p>
@@ -358,9 +414,9 @@ export function FiveTables() {
                     (table.photoOwner === data.identity.id ? (
                       <div className="five-photo-task">
                         <h3>
-                          <Camera size={18} /> Bir masa fotoğrafı
+                          <Camera size={18} /> Grup selfiesi
                         </h3>
-                        <p>Bu buluşmanın fotoğraf görevi sende.</p>
+                        <p>Bu grubun fotoğrafçısı sensin. Herkesi selfieye al.</p>
                         <input
                           aria-label="Masa fotoğrafı"
                           type="file"
@@ -392,7 +448,8 @@ export function FiveTables() {
                             checked={consent}
                             onChange={(e) => setConsent(e.target.checked)}
                           />{" "}
-                          Fotoğraftakilerin izni var, etkinlik kaydında saklanmasını kabul ediyorum.
+                          Fotoğraftakilerin izni var; fotoğrafın etkinlik kaydında saklanmasını ve
+                          notwork etkinlik alanlarında yayınlanmasını kabul ediyorum.
                         </label>
                         <button
                           className="tool-primary"
@@ -423,12 +480,104 @@ export function FiveTables() {
                 </>
               )}
               {table.phase === "finished" && (
-                <p>Dört tur, yeni çözüm fikirleri. Bir sonraki masada görüşürüz.</p>
+                hasCompleteTableOutcome(table.outcomes?.[data.identity.id]) ? (
+                  <p>Çözüm notun kaydedildi. Hazırsan gruptan ayrılabilirsin.</p>
+                ) : (
+                  <form
+                    className="five-outcome"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      if (solved === null) {
+                        setError("Problemin çözülüp çözülmediğini seç.");
+                        return;
+                      }
+                      void act("tableOutcome", {
+                        solved,
+                        solution,
+                        rating: reviewRating,
+                        comment: reviewComment,
+                        reviewConsent,
+                      });
+                    }}
+                  >
+                    <h3>Bu grup problemi çözdü mü?</h3>
+                    <div className="five-outcome-choice"><button type="button" className={solved === true ? "is-selected" : ""} onClick={() => setSolved(true)}>Evet</button><button type="button" className={solved === false ? "is-selected" : ""} onClick={() => setSolved(false)}>Henüz değil</button></div>
+                    <textarea required minLength={3} maxLength={300} value={solution} onChange={(event) => setSolution(event.target.value)} placeholder="Bulduğunuz çözümü veya sonraki adımı yazın" />
+                    <div className="five-outcome-review">
+                      <span>Bu masayı puanla</span>
+                      <div className="five-outcome-stars" aria-label="Masa puanın">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            aria-label={`${star} yıldız ver`}
+                            aria-pressed={reviewRating === star}
+                            onClick={() => setReviewRating(star)}
+                            className={star <= reviewRating ? "is-selected" : ""}
+                          >
+                            ★
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <label>
+                      Bu buluşmadan kısa yorumun
+                      <textarea
+                        required
+                        minLength={3}
+                        maxLength={240}
+                        value={reviewComment}
+                        onChange={(event) => setReviewComment(event.target.value.slice(0, 240))}
+                        placeholder="Bu masa sana ne kattı?"
+                      />
+                      <small>{reviewComment.length}/240</small>
+                    </label>
+                    <label className="five-outcome-consent">
+                      <input
+                        type="checkbox"
+                        checked={reviewConsent}
+                        onChange={(event) => setReviewConsent(event.target.checked)}
+                      />
+                      <span>
+                        Puanımın, yorumumun ve grup fotoğrafının etkinlik yorumlarında
+                        yayınlanmasını kabul ediyorum.
+                      </span>
+                    </label>
+                    <button
+                      className="tool-primary"
+                      disabled={
+                        busy ||
+                        solved === null ||
+                        solution.trim().length < 3 ||
+                        reviewComment.trim().length < 3 ||
+                        !reviewConsent
+                      }
+                    >
+                      Çözümü ve yorumu kaydet
+                    </button>
+                  </form>
+                )
               )}
+            </section>
+            <section className="tool-surface five-group-chat" aria-label="Grup sohbeti">
+              <h2>Grup sohbeti</h2>
+              <p>Burada buluşalım · yalnızca bu masadaki kişiler</p>
+              <div className="five-chat-messages" role="log" aria-live="polite">
+                {(table.messages || []).map((m) => <div key={`${m.personId}-${m.id}`} className={m.personId === data.identity.id ? "is-self" : ""}><small>{m.name}</small><p>{m.text}</p></div>)}
+                {!table.messages?.length && <p>İlk mesajı bırak · nerede buluşuyorsunuz?</p>}
+              </div>
+              <form onSubmit={async (e) => { e.preventDefault(); if (!message.trim() || busy) return; setBusy(true); setError(""); try { await request("tableChat", { tableId: table.id, messageId: crypto.randomUUID(), text: message }); setMessage(""); } catch (e) { setError(e instanceof Error ? e.message : "Mesaj gönderilemedi"); } finally { setBusy(false); } }}>
+                <input aria-label="Grubuna mesaj" placeholder="Grubuna bir mesaj yaz" maxLength={500} value={message} onChange={(e) => setMessage(e.target.value)} />
+                <button className="tool-primary" disabled={busy || !message.trim()}>Gönder</button>
+              </form>
             </section>
             <button
               className="tool-primary five-leave"
-              disabled={busy}
+              disabled={
+                busy ||
+                (table.phase === "finished" &&
+                  !hasCompleteTableOutcome(table.outcomes?.[data.identity.id]))
+              }
               onClick={() => void act("tableLeave")}
             >
               Masadan ayrıl

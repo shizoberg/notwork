@@ -196,7 +196,7 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
   const tabs = [
     { label: "Linkler", active: location.pathname === "/linkler" },
     { label: "ntw.wordcloud", active: location.pathname.includes("wordcloud") },
-    { label: "ntw.matchlab", active: location.pathname.includes("eslesme") },
+    { label: "notwork match", active: location.pathname.includes("eslesme") },
     { label: "ntw.five", active: location.pathname.includes("five") },
     { label: "Yorum", active: location.pathname.includes("etkinlik-degerlendirme") },
   ];

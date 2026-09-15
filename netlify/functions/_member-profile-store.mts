@@ -779,10 +779,27 @@ export async function registerMemberProfile(
     updatedAt: now,
   };
 
+  const directoryMember: NetworkMemberRow = {
+    id: memberId,
+    name,
+    title: introduction.slice(0, 80),
+    skills: canHelpWith.slice(0, 240),
+    email,
+    instagram,
+    linkedin,
+    motivation: introduction.slice(0, 180),
+    contact: "profile:pending",
+    createdAt: now,
+    username,
+    consentAt: now,
+  };
+  const directoryStore = getStore({ name: memberStoreName, consistency: "strong" });
+
   await Promise.all([
     store.setJSON(profileKey(username), profile),
     store.setJSON(profileEmailKey(email), { username }),
     store.set(photoKey(profileId), new Blob([new Uint8Array(photo.image)]), { metadata: { contentType: photo.contentType } }),
+    directoryStore.setJSON(`members/${username}.json`, directoryMember, { onlyIfNew: true }),
   ]);
 
   if (input.marketingPreferenceVersion === "2026-09-09" && input.marketingOptIn === true)

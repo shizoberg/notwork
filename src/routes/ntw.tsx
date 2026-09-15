@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SiteNav } from "@/components/SiteNav";
 import { getPublicEventContext, type NotworkEvent } from "@/lib/event-registry";
@@ -16,6 +16,8 @@ export const Route = createFileRoute("/ntw")({
 
 function NtwPage() {
   const [activeEvent, setActiveEvent] = useState<NotworkEvent | null>(null);
+  const [eventCode, setEventCode] = useState("");
+  const [codeError, setCodeError] = useState("");
   useEffect(() => {
     let cancelled = false;
     async function refresh() {
@@ -75,10 +77,23 @@ function NtwPage() {
             Gerçek zamanlı karşılaşmalar
           </p>
           <div className="ntw-availability">
-            <span aria-hidden="true">● </span>17 Eylül ve 9 Ekim tarihlerinde
-            <br />
-            etkinlik anlarında aktif olacaktır
+            <span aria-hidden="true">● </span>
+            <Link to="/linkler" search={{ event: "17-eylul-2026" }}>17 Eylül</Link>
+            {" · "}
+            <Link to="/linkler" search={{ event: "9-ekim-2026" }}>11 Ekim</Link>
+            <br />etkinlik anlarında aktif olacaktır
           </div>
+          <form className="ntw-code-entry" onSubmit={(event) => {
+            event.preventDefault();
+            const code = eventCode.toLocaleLowerCase("tr-TR").replace(/[^a-z0-9]/g, "");
+            if (code === "17eylul") window.location.assign("/linkler?event=17-eylul-2026");
+            else if (code === "11ekim") window.location.assign("/linkler?event=9-ekim-2026");
+            else setCodeError("Kod bulunamadı · 17eylul veya 11ekim yaz");
+          }}>
+            <label htmlFor="ntw-event-code">Etkinlik kodun</label>
+            <div><input id="ntw-event-code" value={eventCode} onChange={(event) => { setEventCode(event.target.value); setCodeError(""); }} placeholder="17eylul" maxLength={20} /><button type="submit">gir</button></div>
+            {codeError && <p role="alert">{codeError}</p>}
+          </form>
         </div>
       </main>
     </div>
