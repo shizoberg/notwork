@@ -290,13 +290,17 @@ function getContactDetails(value?: string) {
   return { about, email, instagram, linkedin };
 }
 
+function cleanMemberDescription(value?: string) {
+  return value?.replace(/^kendini\s+tan[ıi]t\s*:?\s*/i, "").trim();
+}
+
 function getMemberContact(member: Member) {
   const legacy = getContactDetails(member.contact);
   return {
     email: member.email || legacy.email,
     instagram: member.instagram || legacy.instagram,
     linkedin: member.linkedin || legacy.linkedin,
-    about: member.motivation || legacy.about,
+    about: cleanMemberDescription(member.motivation || legacy.about),
   };
 }
 
@@ -844,7 +848,13 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
             <h1 className="max-w-3xl text-4xl font-black tracking-[-0.04em] leading-[0.95] sm:text-6xl">
               {config.titlePrefix} <span className="text-primary">{config.titleAccent}</span>
             </h1>
-            {variant === "july14" && <NtwMascot />}
+            {variant === "july14" ? (
+              <NtwMascot />
+            ) : (
+              <Link to="/profil" search={{ mode: "register" }} className="network-join-button">
+                notworker ol <ArrowUpRight aria-hidden="true" />
+              </Link>
+            )}
           </div>
           <p className="mt-4 text-foreground/70 max-w-2xl text-base sm:text-lg">{config.intro}</p>
         </section>

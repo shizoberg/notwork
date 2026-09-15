@@ -2148,3 +2148,28 @@ html[data-notwork-entry-ready="true"] .event-entry-dock { display:grid; }
     height: 11px;
   }
 }
+
+.network-glass .network-join-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 17px;
+  border: 1px solid rgba(80, 143, 187, 0.28);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(235, 247, 255, 0.94), rgba(196, 224, 244, 0.78));
+  color: #315f82;
+  box-shadow: 0 12px 30px rgba(49, 95, 130, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 800;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.network-glass .network-join-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(49, 95, 130, 0.16), inset 0 1px 0 #fff;
+}
+.network-glass .network-join-button svg { width: 15px; height: 15px; }
+@media (max-width: 640px) {
+  .network-glass .network-join-button { align-self: flex-start; padding: 10px 14px; }
+}

@@ -1561,6 +1561,7 @@ export type AdminMemberInput = {
   headline?: string;
   bio?: string;
   website?: string;
+  verifiedMember?: boolean;
 };
 
 export async function createAdminMemberProfile(
@@ -1586,6 +1587,7 @@ export async function createAdminMemberProfile(
     throw new Error("Kullanıcı adı başka bir profile ait");
   const now = new Date().toISOString();
   const temporaryPassword = `NTW-${randomBytes(18).toString("base64url")}`;
+  const verifiedMember = input.verifiedMember === true;
   const website = clean(input.website, 240);
   if (website && !/^https?:\/\//i.test(website))
     throw new Error("Web sitesi https:// ile başlamalı");
@@ -1595,17 +1597,25 @@ export async function createAdminMemberProfile(
     username,
     email,
     name,
-    headline: clean(input.headline, 120),
-    bio: clean(input.bio, 320),
+    headline: clean(input.headline, 120) || clean(source?.title, 120),
+    bio: clean(input.bio, 320) || clean(source?.motivation, 320),
     photoUrl: "",
     skills: [],
     experiences: [],
     links: { linkedin: source?.linkedin || "", instagram: source?.instagram || "", website },
     attendedEvents: [],
     eventCodes: [],
-    verifiedMember: false,
+    verifiedMember,
     publicProfileEnabled: true,
-    status: "invited",
+    badge: verifiedMember
+      ? {
+          code: "verified-event-member",
+          label: "Doğrulanmış Notwork Üyesi",
+          description: "Üyelik notwork ekibi tarafından doğrulandı.",
+        }
+      : undefined,
+    membershipSource: verifiedMember ? "event-import" : undefined,
+    status: verifiedMember ? "active" : "invited",
     credential: await hashPassword(temporaryPassword),
     mustChangePassword: true,
     credentialIssuedAt: now,
