@@ -14,11 +14,12 @@ export type Member = {
   consentAt?: string;
   marketingOptIn?: boolean;
   marketingPreferenceVersion?: string;
+  verifiedMember?: boolean;
 };
 
 const API_URL = "/api/networking/members";
 
-type SheetRow = Record<string, string | number | undefined>;
+type SheetRow = Record<string, string | number | boolean | undefined>;
 
 export async function listMembers(): Promise<Member[]> {
   const response = await fetch(API_URL, { cache: "no-store", credentials: "same-origin" });
@@ -44,6 +45,7 @@ export async function listMembers(): Promise<Member[]> {
         .toLowerCase(),
       createdAt: Date.parse(String(row.createdAt || "")) || 0,
       consentAt: String(row.consentAt || "").trim() || undefined,
+      verifiedMember: row.verifiedMember === true || String(row.verifiedMember) === "true",
     }))
     .filter((member) => member.name && member.title)
     .sort(

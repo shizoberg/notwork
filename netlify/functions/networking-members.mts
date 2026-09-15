@@ -6,6 +6,7 @@ import seedMembers from "../data/networking-seed.json" with { type: "json" };
 import {
   getMemberProfileBySession,
   getNetworkingMemberPhotoVersions,
+  getNetworkingMemberVerification,
 } from "./_member-profile-store.mjs";
 
 type MemberRow = {
@@ -186,10 +187,11 @@ export default async (request: Request, _context: Context) => {
 
   if (request.method === "GET") {
     await ensureBackedUp(store);
-    const [rows, memberSession, photoVersions] = await Promise.all([
+    const [rows, memberSession, photoVersions, memberVerification] = await Promise.all([
       getRows(store),
       getMemberProfileBySession(readMemberSessionCookie(request)),
       getNetworkingMemberPhotoVersions(),
+      getNetworkingMemberVerification(),
     ]);
     const canViewContacts = Boolean(memberSession?.profile.verifiedMember);
     const responseRows = rows.map((row) => {
@@ -200,6 +202,7 @@ export default async (request: Request, _context: Context) => {
         instagram: canViewContacts ? row.instagram : "",
         linkedin: canViewContacts ? row.linkedin : "",
         contact: canViewContacts ? row.contact : "",
+        verifiedMember: memberVerification.get(row.username) || false,
         photoUrl: photoVersion
           ? `/api/member-profile?networkPhoto=${encodeURIComponent(row.username)}&v=${encodeURIComponent(photoVersion)}`
           : "",

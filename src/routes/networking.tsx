@@ -1,7 +1,15 @@
 import { AnnouncementConsent } from "@/components/AnnouncementConsent";
 import { promptForAnnouncements } from "@/lib/announcement-prompt";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { LockKeyhole } from "lucide-react";
+import {
+  ArrowUpRight,
+  BadgeCheck,
+  Instagram,
+  Linkedin,
+  LockKeyhole,
+  Mail,
+  Search,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { getMyMemberProfile, MemberProfileApiError } from "@/lib/member-profile-api";
@@ -344,6 +352,10 @@ function getMemberEventBadges(member: Member) {
   });
 }
 
+function isVerifiedNtwMember(member: Member) {
+  return Boolean(member.verifiedMember || getMemberEventBadges(member).length > 0);
+}
+
 const ignoredWords = new Set([
   "ve",
   "ile",
@@ -417,11 +429,11 @@ function getRecommendations(member: Member, members: Member[]) {
 
 const networkingVariants = {
   general: {
-    eyebrow: "canlı yetenek ağı",
-    titlePrefix: "kim, ne",
-    titleAccent: "yapabiliyor?",
+    eyebrow: "gerçek bağlantılar",
+    titlePrefix: "notwork",
+    titleAccent: "- networking",
     intro:
-      "notwork topluluğunun yetenek haritası. Kendini ekle, ortak yeteneklere sahip insanlarla bağlan. Aynı yeteneği paylaşanlar ağda birbirine bağlanır.",
+      "notwork topluluğundaki insanları keşfet. Profilleri incele, ortak alanları bul ve gerçek bağlantılar kur.",
     loadError: "Networking kayıtları şu anda yüklenemiyor.",
     formNote: "Bilgilerin ortak networking veritabanına eklenir ve ağda görünür.",
     countLabel: "ağ",
@@ -484,6 +496,7 @@ function withEventSource(member: Member, eventSource: string): Member {
 
 export function NetworkingExperience({ variant = "general" }: { variant?: NetworkingVariant }) {
   const config = networkingVariants[variant];
+  const [directoryPreview, setDirectoryPreview] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [memberProfile, setMemberProfile] = useState<NotworkMemberProfile | null>(null);
@@ -505,13 +518,23 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
   const [editingUsername, setEditingUsername] = useState("");
   const [notice, setNotice] = useState("");
   const [filter, setFilter] = useState("");
+  const [membershipFilter, setMembershipFilter] = useState<"all" | "verified" | "community">("all");
   const [activeGroupId, setActiveGroupId] = useState("all");
   const [error, setError] = useState("");
   const [checkInQuery, setCheckInQuery] = useState("");
   const [checkInMessage, setCheckInMessage] = useState("");
   const [checkingIn, setCheckingIn] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [networkEntry, setNetworkEntry] = useState<"choose" | "new">("choose");
+  const viewerUsername = memberProfile?.username || (directoryPreview ? "demo-admin" : "");
+
+  useEffect(() => {
+    if (
+      import.meta.env.DEV &&
+      new URLSearchParams(window.location.search).get("preview") === "members"
+    ) {
+      setDirectoryPreview(true);
+    }
+  }, []);
 
   useEffect(() => {
     listMembers()
@@ -521,6 +544,13 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
   }, [config.loadError]);
 
   useEffect(() => {
+    const isLocalDirectoryPreview =
+      import.meta.env.DEV &&
+      new URLSearchParams(window.location.search).get("preview") === "members";
+    if (isLocalDirectoryPreview) {
+      setProfileLoading(false);
+      return;
+    }
     let active = true;
     void getMyMemberProfile()
       .then((profile) => {
@@ -542,39 +572,36 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
     };
   }, []);
 
-  const canViewContacts = Boolean(memberProfile?.verifiedMember);
-  const previewMembers = useMemo(
-    () => {
-      const previewSource: Member[] = members.length
-        ? members.slice(0, 18)
-        : Array.from({ length: 12 }, (_, index) => ({
-            id: `sample-${index}`,
-            username: `sample-${index}`,
-            name: "notwork üyesi",
-            title: ["tasarım", "yazılım", "topluluk", "pazarlama"][index % 4],
-            skills: [],
-            createdAt: 0,
-          }));
-      return previewSource.map((member, index) => {
-        const group = getRoleGroup(member);
-        return {
-          ...member,
-          id: `preview-${index}`,
-          username: `preview-${index}`,
+  const canViewContacts = Boolean(memberProfile?.verifiedMember || directoryPreview);
+  const previewMembers = useMemo(() => {
+    const previewSource: Member[] = members.length
+      ? members.slice(0, 18)
+      : Array.from({ length: 12 }, (_, index) => ({
+          id: `sample-${index}`,
+          username: `sample-${index}`,
           name: "notwork üyesi",
-          title: group.keywords[0] || "networking",
+          title: ["tasarım", "yazılım", "topluluk", "pazarlama"][index % 4],
           skills: [],
-          email: undefined,
-          instagram: undefined,
-          linkedin: undefined,
-          motivation: undefined,
-          contact: undefined,
-          photoUrl: undefined,
-        } satisfies Member;
-      });
-    },
-    [members],
-  );
+          createdAt: 0,
+        }));
+    return previewSource.map((member, index) => {
+      const group = getRoleGroup(member);
+      return {
+        ...member,
+        id: `preview-${index}`,
+        username: `preview-${index}`,
+        name: "notwork üyesi",
+        title: group.keywords[0] || "networking",
+        skills: [],
+        email: undefined,
+        instagram: undefined,
+        linkedin: undefined,
+        motivation: undefined,
+        contact: undefined,
+        photoUrl: undefined,
+      } satisfies Member;
+    });
+  }, [members]);
 
   const set =
     (key: keyof typeof form) =>
@@ -744,20 +771,34 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
   );
 
   const filtered = useMemo(() => {
-    const query = filter.trim().toLowerCase();
-    if (!query) return scopedMembers;
-    return scopedMembers.filter(
-      (member) =>
-        member.name.toLowerCase().includes(query) ||
-        member.title.toLowerCase().includes(query) ||
-        member.skills.some((skill) => skill.includes(query)) ||
-        member.email?.toLowerCase().includes(query) ||
-        member.instagram?.toLowerCase().includes(query) ||
-        member.linkedin?.toLowerCase().includes(query) ||
-        member.motivation?.toLowerCase().includes(query) ||
-        member.contact?.toLowerCase().includes(query),
-    );
-  }, [scopedMembers, filter]);
+    const query = normalizeSearchText(filter.trim());
+    const searched = !query
+      ? scopedMembers
+      : scopedMembers.filter((member) =>
+          normalizeSearchText(
+            [
+              member.name,
+              member.title,
+              member.skills.join(" "),
+              member.email,
+              member.instagram,
+              member.linkedin,
+              member.motivation,
+            ]
+              .filter(Boolean)
+              .join(" "),
+          ).includes(query),
+        );
+    if (membershipFilter === "verified") return searched.filter(isVerifiedNtwMember);
+    if (membershipFilter === "community")
+      return searched.filter((member) => !isVerifiedNtwMember(member));
+    return searched;
+  }, [scopedMembers, filter, membershipFilter]);
+
+  const verifiedMemberCount = useMemo(
+    () => scopedMembers.filter(isVerifiedNtwMember).length,
+    [scopedMembers],
+  );
 
   const memberTabs = useMemo(
     () => [
@@ -788,7 +829,10 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
   }, [activeGroupId, memberTabs]);
 
   return (
-    <div className={`network-glass min-h-screen flex flex-col ${config.shellClass}`} style={config.style}>
+    <div
+      className={`network-glass min-h-screen flex flex-col ${config.shellClass}`}
+      style={config.style}
+    >
       <SiteNav />
       <main className="flex-1">
         <section className="mx-auto max-w-6xl px-5 pt-10 sm:pt-16 pb-6">
@@ -850,42 +894,55 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
           </section>
         )}
 
-        {!profileLoading && !memberProfile ? (
+        {!profileLoading && !memberProfile && !directoryPreview ? (
           <section className="mx-auto max-w-6xl px-5 pb-6">
             <div className="network-preview">
               <div className="network-preview-copy">
                 <span className="tool-eyebrow">notwork üyeleri</span>
                 <h2>Topluluktan bir önizleme</h2>
                 <p>
-                  Circle yapısını anonim olarak incele. Kayıt olduğunda sen de ortak alanların
-                  içinde kendi profilinle görünürsün.
+                  Profilleri güvenli bir önizlemeyle keşfet. Giriş yaptığında üyelerin alanlarını,
+                  deneyimlerini ve paylaşmayı seçtikleri iletişim yollarını görebilirsin.
                 </p>
               </div>
-              <NetworkGraph
-                members={previewMembers}
-                loading={loading}
-                hint="anonim üye önizlemesi"
-                emptyText="üyeler yükleniyor"
-              />
+              <div className="network-preview-profiles" aria-label="Anonim üye profilleri">
+                {previewMembers.slice(0, 6).map((member, index) => (
+                  <article key={member.id} className={index < 2 ? "is-featured" : ""}>
+                    <div className="network-preview-avatar" aria-hidden="true">
+                      {String(index + 1).padStart(2, "0")}
+                    </div>
+                    <div className="min-w-0">
+                      <strong>notwork üyesi</strong>
+                      <span>{member.title}</span>
+                    </div>
+                    {index < 2 && <BadgeCheck aria-label="Doğrulanmış NTW üyesi" />}
+                  </article>
+                ))}
+              </div>
             </div>
           </section>
         ) : null}
 
-        {!profileLoading && !memberProfile && networkEntry === "choose" ? (
+        {!profileLoading && !memberProfile && !directoryPreview && networkEntry === "choose" ? (
           <section className="mx-auto max-w-6xl px-5 pb-10">
             <div className="network-entry">
               <span className="tool-eyebrow">notwork network</span>
               <h2>Sistemde kayıtlı mısın?</h2>
-              <p>Etkinliğe katıldıysan mevcut profilinle gir. İlk kez geliyorsan kısa kaydını oluştur.</p>
+              <p>
+                Etkinliğe katıldıysan mevcut profilinle gir. İlk kez geliyorsan kısa kaydını
+                oluştur.
+              </p>
               <div className="network-entry-actions">
                 <Link to="/profil">Evet · giriş yap</Link>
-                <Link to="/profil" search={{ mode: "register" }}>Hayır · kayıt ol</Link>
+                <Link to="/profil" search={{ mode: "register" }}>
+                  Hayır · kayıt ol
+                </Link>
               </div>
             </div>
           </section>
         ) : null}
 
-        {!profileLoading && !memberProfile && networkEntry === "new" ? (
+        {!profileLoading && !memberProfile && !directoryPreview && networkEntry === "new" ? (
           <section className="mx-auto max-w-6xl px-5 pb-10">
             <form
               id="networking-form"
@@ -1075,240 +1132,115 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
           </section>
         ) : null}
 
-        {memberProfile ? <>
-        <section className="mx-auto max-w-6xl px-5 pb-10">
-          <div
-            className={
-              config.eventSource
-                ? "relative overflow-hidden rounded-[2rem] border border-primary/30 bg-[radial-gradient(circle_at_top_left,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_34%),var(--card)] p-4 shadow-[var(--shadow-soft)] before:absolute before:inset-x-6 before:top-0 before:h-px before:animate-pulse before:bg-primary/70 sm:p-6"
-                : ""
-            }
-          >
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <h2 className="text-sm sm:text-lg font-semibold text-foreground/80 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-primary blink" />
-                {config.countLabel} — {scopedMembers.length} kişi
-              </h2>
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                {config.eventSource && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      document.getElementById("notwork-community-map")?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                      })
-                    }
-                    className="rounded-full border border-primary/30 bg-primary/10 px-3 py-2 text-xs font-bold text-primary-deep transition hover:bg-primary hover:text-primary-foreground"
-                  >
-                    var olan topluluğu görmek için tıkla
-                  </button>
-                )}
-                <input
-                  value={filter}
-                  onChange={(event) => setFilter(event.target.value)}
-                  placeholder="ara: isim, sıfat, yetenek"
-                  className="px-3 py-2 rounded-full bg-card border border-border text-sm w-44 sm:w-64"
-                />
-              </div>
-            </div>
-            <NetworkGraph
-              members={filtered}
-              loading={loading}
-              hint={config.graphHint}
-              emptyText={config.graphEmpty}
-              onSelectMember={setSelectedMember}
-              viewerUsername={memberProfile?.username}
-            />
-            <RecommendationFinder
-              members={scopedMembers}
-              loading={loading}
-              onOpenMember={setSelectedMember}
-              viewerUsername={memberProfile?.username}
-            />
-          </div>
-        </section>
-
-        {config.eventSource && (
-          <section id="notwork-community-map" className="scroll-mt-24 mx-auto max-w-6xl px-5 pb-10">
-            <div className="rounded-[2rem] border border-primary/25 bg-card p-4 shadow-[var(--shadow-soft)] sm:p-6">
-              <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        {memberProfile || directoryPreview ? (
+          <section className="mx-auto max-w-6xl px-5 pb-20">
+            <div className="network-directory-shell">
+              <div className="network-directory-heading">
                 <div>
-                  <div className="text-xs font-black uppercase tracking-[0.24em] text-primary-deep">
-                    notwork community
-                  </div>
-                  <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] sm:text-3xl">
-                    Var olan topluluk haritası
-                  </h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-foreground/60">
-                    Bu çerçeve genel notwork community ağını gösterir. 14 Temmuz’da kayıt olanlar bu
-                    büyük topluluğun içinde de yer alır.
-                  </p>
+                  <span className="tool-eyebrow">notwork network</span>
+                  <h2>notworker’ları keşfet</h2>
+                  <p>İsim, uzmanlık veya ilgi alanına göre ara ve doğrudan profile git.</p>
                 </div>
-                <div className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground/60">
-                  {members.length} kişi
+                <div className="network-directory-stats" aria-label="Topluluk özeti">
+                  <span>
+                    <strong>{scopedMembers.length}</strong> profil
+                  </span>
+                  <span className="is-verified">
+                    <BadgeCheck /> <strong>{verifiedMemberCount}</strong> NTW üyesi
+                  </span>
                 </div>
               </div>
-              <NetworkGraph
-                members={members}
-                loading={loading}
-                hint="notwork community ağını gez"
-                emptyText="community ağı henüz yüklenmedi."
-                onSelectMember={setSelectedMember}
-                viewerUsername={memberProfile?.username}
-              />
+
+              <div className="network-directory-controls">
+                <label className="network-search-field">
+                  <Search aria-hidden="true" />
+                  <span className="sr-only">Üyelerde ara</span>
+                  <input
+                    type="search"
+                    value={filter}
+                    onChange={(event) => setFilter(event.target.value)}
+                    placeholder="İsim, rol veya yetenek ara"
+                    autoComplete="off"
+                  />
+                  {filter && (
+                    <button
+                      type="button"
+                      onClick={() => setFilter("")}
+                      aria-label="Aramayı temizle"
+                    >
+                      ×
+                    </button>
+                  )}
+                </label>
+
+                <div className="network-membership-filter" role="group" aria-label="Üyelik durumu">
+                  {(
+                    [
+                      ["all", "Tümü", scopedMembers.length],
+                      ["verified", "NTW üyeleri", verifiedMemberCount],
+                      ["community", "Topluluk", scopedMembers.length - verifiedMemberCount],
+                    ] as const
+                  ).map(([id, label, count]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      aria-pressed={membershipFilter === id}
+                      onClick={() => setMembershipFilter(id)}
+                      className={membershipFilter === id ? "is-active" : ""}
+                    >
+                      {id === "verified" && <BadgeCheck aria-hidden="true" />}
+                      {label} <span>{count}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div role="tablist" aria-label="Uzmanlık alanları" className="network-role-tabs">
+                {memberTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeGroupId === tab.id}
+                    onClick={() => setActiveGroupId(tab.id)}
+                    className={activeGroupId === tab.id ? "is-active" : ""}
+                  >
+                    {tab.label} <span>{tab.count}</span>
+                  </button>
+                ))}
+              </div>
+
+              {!canViewContacts && (
+                <div className="network-directory-note">
+                  <LockKeyhole aria-hidden="true" />
+                  Doğrulanmış NTW üyeleri profillerde paylaşılan iletişim yollarını da görebilir.
+                </div>
+              )}
+
+              {loading ? (
+                <div className="network-directory-loading">profiller yükleniyor…</div>
+              ) : visibleMembers.length > 0 ? (
+                <div className="network-profile-grid">
+                  {visibleMembers.map((member) => (
+                    <MemberDirectoryCard
+                      key={member.id}
+                      member={member}
+                      canViewContacts={canViewContacts}
+                      isOwnProfile={member.username === viewerUsername}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="network-directory-empty">
+                  <Search aria-hidden="true" />
+                  <strong>Bu aramayla eşleşen profil yok</strong>
+                  <span>Başka bir isim, rol veya yetenek deneyebilirsin.</span>
+                </div>
+              )}
             </div>
           </section>
-        )}
-
-        <section className="mx-auto max-w-6xl px-5 pb-20">
-          <h2 className="text-sm sm:text-lg font-semibold text-foreground/80 mb-4 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-primary" />
-            {config.membersTitle}
-          </h2>
-          <div
-            role="tablist"
-            aria-label="Üye kategorileri"
-            className="mb-5 flex gap-2 overflow-x-auto pb-2"
-          >
-            {memberTabs.map((tab) => {
-              const active = activeGroupId === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setActiveGroupId(tab.id)}
-                  className={`shrink-0 rounded-full border px-3.5 py-2 text-xs font-semibold transition ${
-                    active
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-foreground/65 hover:border-primary/50 hover:text-foreground"
-                  }`}
-                >
-                  {tab.label} · {tab.count}
-                </button>
-              );
-            })}
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleMembers.map((member) => {
-              const contact = getMemberContact(member);
-              const badges = getMemberEventBadges(member);
-              return (
-                <div key={member.id} className="rounded-xl border border-border bg-card p-4">
-                  <div className="flex items-start gap-3">
-                    <MemberAvatar member={member} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedMember(member)}
-                          className="truncate text-left text-lg font-bold transition hover:text-primary-deep"
-                        >
-                          {member.name}
-                        </button>
-                        <div className="text-right text-xs text-foreground/60">{member.title}</div>
-                      </div>
-                      {member.username && (
-                        <div className="mt-1 text-[11px] font-semibold text-foreground/45">
-                          kullanıcı adı: {member.username}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {badges.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {badges.map((badge) => (
-                        <span
-                          key={badge.source}
-                          className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-primary-deep"
-                        >
-                          notwork onaylı · {badge.label}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {member.skills.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {member.skills.map((skill) => (
-                        <span
-                          key={skill}
-                          className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {canViewContacts ? (
-                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70 pt-3 text-xs">
-                      {contact.email ? (
-                        <a
-                          href={`mailto:${contact.email}`}
-                          className="font-semibold text-primary-deep transition hover:text-primary"
-                        >
-                          {contact.email}
-                        </a>
-                      ) : (
-                        <span className="text-foreground/40">e-posta eklenmedi</span>
-                      )}
-                      {contact.instagram && (
-                        <a
-                          href={`https://instagram.com/${contact.instagram}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-semibold text-primary-deep transition hover:text-primary"
-                        >
-                          @{contact.instagram} →
-                        </a>
-                      )}
-                      {contact.linkedin && (
-                        <a
-                          href={contact.linkedin}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-semibold text-primary-deep transition hover:text-primary"
-                        >
-                          LinkedIn →
-                        </a>
-                      )}
-                    </div>
-                  ) : (
-                    <ContactGate compact />
-                  )}
-                  {contact.about && (
-                    <p className="mt-3 border-t border-border/70 pt-3 text-sm leading-relaxed text-foreground/65">
-                      {contact.about}
-                    </p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMember(member)}
-                    className="mt-3 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary-deep transition hover:bg-primary hover:text-primary-foreground"
-                  >
-                    profili incele
-                  </button>
-                </div>
-              );
-            })}
-            {visibleMembers.length === 0 && !loading && (
-              <div className="text-sm text-foreground/50">{config.membersEmpty}</div>
-            )}
-          </div>
-        </section>
-        </> : null}
+        ) : null}
       </main>
-      {selectedMember && (
-        <MemberDetailModal
-          member={selectedMember}
-          members={scopedMembers.length > 0 ? scopedMembers : members}
-          onClose={() => setSelectedMember(null)}
-          onOpenMember={setSelectedMember}
-          canViewContacts={canViewContacts}
-          viewerUsername={memberProfile?.username}
-        />
-      )}
       <SiteFooter />
     </div>
   );
@@ -1391,6 +1323,105 @@ function MemberAvatar({
         <span aria-hidden="true">{initials || "ntw"}</span>
       )}
     </div>
+  );
+}
+
+function MemberDirectoryCard({
+  member,
+  canViewContacts,
+  isOwnProfile,
+}: {
+  member: Member;
+  canViewContacts: boolean;
+  isOwnProfile: boolean;
+}) {
+  const verified = isVerifiedNtwMember(member);
+  const contact = getMemberContact(member);
+  const group = getRoleGroup(member);
+  const badges = getMemberEventBadges(member);
+
+  return (
+    <article className={`network-profile-card ${verified ? "is-verified" : ""}`}>
+      <div className="network-profile-card-glow" aria-hidden="true" />
+      <div className="network-profile-card-head">
+        <MemberAvatar member={member} size="large" />
+        <div className="network-profile-card-identity">
+          <div className={`network-verification-pill ${verified ? "is-verified" : ""}`}>
+            {verified ? <BadgeCheck aria-hidden="true" /> : <span aria-hidden="true" />}
+            {verified ? "Doğrulanmış NTW üyesi" : "Topluluk profili · doğrulanmadı"}
+          </div>
+          <h3>{member.name}</h3>
+          <p>{member.title}</p>
+          {member.username && <span className="network-profile-handle">@{member.username}</span>}
+        </div>
+      </div>
+
+      <div className="network-profile-card-body">
+        <div className="network-profile-meta">
+          <span>{group.label}</span>
+          {badges[0] && <span>{badges[0].label}</span>}
+        </div>
+        {contact.about ? (
+          <p className="network-profile-about">{contact.about}</p>
+        ) : (
+          <p className="network-profile-about is-empty">Profil açıklaması henüz eklenmedi.</p>
+        )}
+        {member.skills.length > 0 && (
+          <div className="network-profile-skills">
+            {member.skills.slice(0, 4).map((skill) => (
+              <span key={skill}>{skill}</span>
+            ))}
+            {member.skills.length > 4 && <span>+{member.skills.length - 4}</span>}
+          </div>
+        )}
+      </div>
+
+      <div className="network-profile-card-footer">
+        <div className="network-profile-socials">
+          {canViewContacts && contact.email && (
+            <a
+              href={`mailto:${contact.email}`}
+              aria-label={`${member.name} kişisine e-posta gönder`}
+            >
+              <Mail aria-hidden="true" />
+            </a>
+          )}
+          {canViewContacts && contact.instagram && (
+            <a
+              href={`https://instagram.com/${contact.instagram}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`${member.name} Instagram profilini aç`}
+            >
+              <Instagram aria-hidden="true" />
+            </a>
+          )}
+          {canViewContacts && contact.linkedin && (
+            <a
+              href={contact.linkedin}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`${member.name} LinkedIn profilini aç`}
+            >
+              <Linkedin aria-hidden="true" />
+            </a>
+          )}
+        </div>
+        {isOwnProfile ? (
+          <Link to="/profil" className="network-profile-open">
+            Profilimi düzenle <ArrowUpRight aria-hidden="true" />
+          </Link>
+        ) : (
+          <Link
+            to="/u/$username"
+            params={{ username: member.username }}
+            className="network-profile-open"
+          >
+            Profili aç <ArrowUpRight aria-hidden="true" />
+          </Link>
+        )}
+      </div>
+    </article>
   );
 }
 

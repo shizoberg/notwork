@@ -798,7 +798,9 @@ export async function registerMemberProfile(
   await Promise.all([
     store.setJSON(profileKey(username), profile),
     store.setJSON(profileEmailKey(email), { username }),
-    store.set(photoKey(profileId), new Blob([new Uint8Array(photo.image)]), { metadata: { contentType: photo.contentType } }),
+    store.set(photoKey(profileId), new Blob([new Uint8Array(photo.image)]), {
+      metadata: { contentType: photo.contentType },
+    }),
     directoryStore.setJSON(`members/${username}.json`, directoryMember, { onlyIfNew: true }),
   ]);
 
@@ -1309,6 +1311,18 @@ export async function getNetworkingMemberPhotoVersions(store = getMemberProfileS
           profile.status !== "suspended" && profile.verifiedMember && Boolean(profile.photoUrl),
       )
       .map((profile) => [profile.username, profile.updatedAt]),
+  );
+}
+
+export async function getNetworkingMemberVerification(store = getMemberProfileStore()) {
+  const profiles = await getRows<StoredMemberProfile>(store, "profiles/");
+  return new Map(
+    profiles
+      .filter(
+        (profile) =>
+          !["suspended", "rejected"].includes(profile.status) && !isTestMemberEmail(profile.email),
+      )
+      .map((profile) => [profile.username, Boolean(profile.verifiedMember)]),
   );
 }
 

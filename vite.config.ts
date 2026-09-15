@@ -18,6 +18,22 @@ export default defineConfig({
             if (req.method !== "GET") return req.url;
           },
         },
+        "/api/networking/members": {
+          target: "https://notwork.me",
+          changeOrigin: true,
+          bypass(req) {
+            // Local networking previews read production cards but never mutate them.
+            if (req.method !== "GET") return req.url;
+          },
+        },
+        "/api/member-profile": {
+          target: "https://notwork.me",
+          changeOrigin: true,
+          bypass(req) {
+            // Used by the read-only preview for public member photos.
+            if (req.method !== "GET") return req.url;
+          },
+        },
       },
     },
   },
