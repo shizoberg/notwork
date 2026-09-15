@@ -1,6 +1,6 @@
 import { EventChat } from "@/components/EventChat";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Camera, CheckCircle2, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Camera, CheckCircle2, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import type {
@@ -120,6 +120,7 @@ function AugustMatchPage() {
           setStatus("ready");
           return;
         }
+        setStatus("loading");
         let recovered;
         if (recoveredToken) {
           try {
@@ -248,8 +249,9 @@ function AugustMatchPage() {
             >
               {isCompleting && (
                 <div className="match-transition" role="status">
-                  <Loader2 className="animate-spin" size={28} />
+                  <MatchLoadingVisual />
                   <p>Yeni bağlantılar aranıyor</p>
+                  <small>ihtiyaçlar ve katkılar yeniden karşılaştırılıyor</small>
                 </div>
               )}
               {group && <p className="match-intro">notwork algoritması sizleri eşleştirdi.</p>}
@@ -517,12 +519,27 @@ function AugustMatchPage() {
 
 function LoadingCard() {
   return (
-    <div className="flex min-h-[320px] flex-col items-center justify-center gap-4 text-center">
-      <Loader2 className="h-10 w-10 animate-spin text-primary-deep" />
-      <p className="text-sm font-black uppercase tracking-[0.2em] text-foreground/50">
-        Boşta olan kişilerden üçlü grup kuruluyor
-      </p>
+    <div className="match-loading-card" role="status">
+      <MatchLoadingVisual />
+      <p>Eşleşmen hazırlanıyor</p>
+      <small>ihtiyaçların, katkıların ve yeni bağlantılar karşılaştırılıyor</small>
+      <span className="match-loading-progress" aria-hidden="true">
+        <i />
+      </span>
     </div>
+  );
+}
+
+function MatchLoadingVisual() {
+  return (
+    <span className="match-loading-visual" aria-hidden="true">
+      <i className="match-loading-ring ring-one" />
+      <i className="match-loading-ring ring-two" />
+      <i className="match-loading-person person-one" />
+      <i className="match-loading-person person-two" />
+      <i className="match-loading-person person-three" />
+      <strong>ntw</strong>
+    </span>
   );
 }
 

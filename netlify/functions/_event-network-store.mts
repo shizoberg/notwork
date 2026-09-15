@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import { getEventProductRuntimeContext } from "./_event-product-context.mjs";
 import { getEventReviewStore } from "./_event-review-store.mjs";
+import { scorePair, selectMatchCandidates, stableTieBreaker } from "./_matchmaking.mjs";
 
 type EventNetworkProfile = {
   id: string;
@@ -416,57 +417,67 @@ function displayName(registration: EventNetworkRegistration) {
     .trim();
 }
 
-function tokenize(value: string) {
-  return value
-    .toLocaleLowerCase("tr-TR")
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .split(/\s+/)
-    .filter((token) => token.length > 2);
-}
-
-function scorePair(current: EventNetworkRegistration, candidate: EventNetworkRegistration) {
-  const currentNeedTokens = new Set(tokenize(`${current.needs} ${current.needTag}`));
-  const candidateNeedTokens = new Set(tokenize(`${candidate.needs} ${candidate.needTag}`));
-  const currentOffers = current.offers.flatMap(tokenize);
-  const candidateOffers = candidate.offers.flatMap(tokenize);
-
-  const directHits = candidateOffers.filter((token) => currentNeedTokens.has(token)).length;
-  const reciprocalHits = currentOffers.filter((token) => candidateNeedTokens.has(token)).length;
-  const tagHit = candidate.offers.some((offer) => offer.includes(current.needTag)) ? 2 : 0;
-  const reverseTagHit = current.offers.some((offer) => offer.includes(candidate.needTag)) ? 1 : 0;
-
-  return directHits * 6 + reciprocalHits * 3 + tagHit + reverseTagHit + 1;
-}
-
-function stableTieBreaker(currentId: string, candidateId: string, round: number) {
-  const hash = hashToken(`${currentId}:${candidateId}:${round}`).slice(0, 8);
-  return Number.parseInt(hash, 16);
-}
-
 function pickGroupSize(_publicCode: string, _round: number, availableCount: number) {
   return availableCount >= 2 ? 3 : 0;
 }
 
-const icebreakerQuestions = [
-  "Bu etkinlikten tek bir bağlantıyla ayrılsan, o kişi sana hangi konuda iyi gelsin?",
-  "Şu an üzerinde çalıştığın veya değiştirmek istediğin en gerçek şey ne?",
-  "Son dönemde yaptığın en öğretici hata neydi?",
-  "Birine hemen destek olabileceğin konu ne?",
-  "Bu ay çözmeye çalıştığın en net problem ne?",
-  "Seni burada tanıyan biri seni hangi konuda hatırlasın?",
-  "Birlikte küçük bir şey deneyecek olsanız ilk adım ne olurdu?",
-  "Bugün tanışacağın kişilerden ne öğrenmek istiyorsun?",
+const icebreakerPools = [
+  [
+    "Bugün buraya gelirken aklında olan ilk şey neydi?",
+    "Bu odada hiç tanımadığın biri seni hangi üç kelimeyle tanısın?",
+    "Son zamanlarda seni heyecanlandıran küçük bir şey ne?",
+    "Şu an hayatında daha çok yer açmak istediğin şey ne?",
+    "Bugünkü enerjini bir şarkıyla anlatsan hangisi olurdu?",
+    "İnsanların senin hakkında ilk bakışta fark etmediği bir yönün ne?",
+    "Son bir ayda seni en çok güldüren şey neydi?",
+    "Bu akşam eve dönerken nasıl hissetmek istersin?",
+  ],
+  [
+    "Şu an üzerinde çalıştığın veya değiştirmek istediğin en gerçek şey ne?",
+    "Bu ay çözmeye çalıştığın en net problem ne?",
+    "Birine hemen destek olabileceğin konu ne?",
+    "Bugün tanışacağın kişilerden ne öğrenmek istiyorsun?",
+    "Üzerinde düşündüğün ama henüz başlamadığın fikir ne?",
+    "Birlikte üretmek istediğin insanın hangi özelliği olmalı?",
+    "Şu sıralar senden en çok zaman isteyen konu ne?",
+    "Önündeki bir engeli kaldırabilsen hangisini seçerdin?",
+  ],
+  [
+    "Son dönemde yaptığın en öğretici hata neydi?",
+    "Fikrini en son ne zaman ve neden değiştirdin?",
+    "Başarısız olma ihtimali olmasa neyi denerdin?",
+    "Bir işi bırakmanın doğru karar olduğunu ne zaman anladın?",
+    "Sana pahalıya mal olan ama iyi ki öğrendim dediğin ders ne?",
+    "Son zamanlarda aldığın en dürüst geri bildirim neydi?",
+    "Yeniden başlasan farklı yapacağın bir şey ne?",
+    "Kusursuz olmaya çalışmayı bıraktığın konu ne?",
+  ],
+  [
+    "Bu etkinlikten tek bir bağlantıyla ayrılsan, o kişi sana hangi konuda iyi gelsin?",
+    "Birlikte küçük bir şey deneyecek olsanız ilk adım ne olurdu?",
+    "Seni burada tanıyan biri seni hangi konuda hatırlasın?",
+    "Üçünüz yarın ortak bir proje başlatsanız konusu ne olurdu?",
+    "Masadaki kişilerden hangi konuda farklı bir bakış duymak istersin?",
+    "Birbirinize bu hafta verebileceğiniz en küçük destek ne?",
+    "Bu sohbetin bir ay sonra devam etmesi için ne olması gerekir?",
+    "Şu an ihtiyacın olan doğru tanışma nasıl biriyle olurdu?",
+  ],
 ];
 
 function pickIcebreakers(groupId: string) {
-  return [...icebreakerQuestions]
-    .map((question, index) => ({
-      question,
-      order: stableTieBreaker(groupId, question, index + 1),
-    }))
+  const poolOrder = icebreakerPools
+    .map((pool, index) => ({ pool, order: stableTieBreaker(groupId, `pool-${index}`, index + 1) }))
     .sort((first, second) => first.order - second.order)
-    .slice(0, 3)
-    .map((item) => item.question);
+    .slice(0, 3);
+  return poolOrder.map(
+    ({ pool }, index) =>
+      [...pool]
+        .map((question) => ({
+          question,
+          order: stableTieBreaker(groupId, question, index + 1),
+        }))
+        .sort((first, second) => first.order - second.order)[0].question,
+  );
 }
 
 function pickPhotoOwnerParticipantId(groupId: string, participantIds: string[]) {
@@ -588,9 +599,25 @@ async function writeCursor(
 ) {
   await store.setJSON(matchCursorKey(participantId), {
     round,
-    seen: [...seen].slice(-40),
+    seen: [...seen].slice(-120),
     updatedAt: new Date().toISOString(),
   });
+}
+
+async function rememberGroupForEveryParticipant(
+  store: ReturnType<typeof getEventNetworkStore>,
+  registrations: EventNetworkRegistration[],
+) {
+  await Promise.all(
+    registrations.map(async (registration) => {
+      const participantId = registration.participant.id;
+      const cursor = await readCursor(store, participantId);
+      registrations.forEach((member) => {
+        if (member.participant.id !== participantId) cursor.seen.add(member.participant.id);
+      });
+      await writeCursor(store, participantId, cursor.round + 1, cursor.seen);
+    }),
+  );
 }
 
 async function getActiveMatch(
@@ -653,7 +680,7 @@ async function buildActiveMatchGroup(
         match.photoOwnerParticipantId === registration.participant.id,
       ),
     ),
-    conversationPrompt: match.conversationPrompts[0] || icebreakerQuestions[0],
+    conversationPrompt: match.conversationPrompts[0] || icebreakerPools[0][0],
     conversationPrompts: match.conversationPrompts,
     photoOwnerParticipantId: match.photoOwnerParticipantId,
     generatedAt: match.generatedAt,
@@ -1044,134 +1071,106 @@ export async function getNextMatchGroup(
 
   const cursor = await readCursor(store, current.participant.id);
   const nextRound = cursor.round + 1;
-  const candidates = rows
+  const candidateRows = rows
     .filter((row) => row.participant.id !== current.participant.id)
     .filter((row) => row.participant.publicCode !== current.participant.publicCode)
     .filter((row) => row.profile.emailNormalized !== current.profile.emailNormalized)
     .filter((row) => row.participant.status === "registered")
-    .filter((row) => (presenceMap.get(row.participant.id) || "open") !== "paused")
+    .filter((row) => (presenceMap.get(row.participant.id) || "open") !== "paused");
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const roomIndex = (await store.get(`${getNetworkPrefix()}/room-index-v2.json`, {
+      type: "json",
+      consistency: "strong",
+    })) as RoomIndex<StoredActiveMatch> | null;
+    const currentGroupId = roomIndex?.members[current.participant.id];
+    const currentActiveMatch = currentGroupId ? roomIndex?.groups[currentGroupId] : null;
+    if (currentActiveMatch) {
+      return {
+        status: "ready",
+        registration: current,
+        presence: "meeting" as const,
+        group: await buildActiveMatchGroup(store, currentActiveMatch, current, presenceMap),
+      };
+    }
 
-    .map((row) => ({
-      row,
-      score: scorePair(current, row),
-      seen: cursor.seen.has(row.participant.id),
-      tie: stableTieBreaker(current.participant.id, row.participant.id, nextRound),
-    }))
-    .sort((first, second) => {
-      if (first.seen !== second.seen) return first.seen ? 1 : -1;
-      if (second.score !== first.score) return second.score - first.score;
-      return first.tie - second.tie;
+    const activeParticipantIds = new Set(Object.keys(roomIndex?.members || {}));
+    const availableCandidates = candidateRows.filter(
+      (candidate) => !activeParticipantIds.has(candidate.participant.id),
+    );
+    if (availableCandidates.length < 2) break;
+
+    const groupSize = pickGroupSize(
+      current.participant.publicCode,
+      nextRound,
+      availableCandidates.length,
+    );
+    const selected = selectMatchCandidates(current, availableCandidates, cursor.seen, nextRound);
+    if (selected.length < 2) break;
+
+    const finalSelected = selected.slice(0, groupSize - 1);
+    const groupRegistrations = [current, ...finalSelected.map((candidate) => candidate.row)];
+    const score = Math.round(
+      finalSelected.reduce((total, candidate) => total + candidate.score, 0) / finalSelected.length,
+    );
+    const groupId = `match-${crypto.randomUUID()}`;
+    const prompts = pickIcebreakers(groupId);
+    const participantIds = groupRegistrations.map((registration) => registration.participant.id);
+    const photoOwnerParticipantId = pickPhotoOwnerParticipantId(groupId, participantIds);
+    const generatedAt = new Date().toISOString();
+    const reason = buildReason(current, groupRegistrations);
+    const claimed = await writeActiveMatch(store, {
+      id: groupId,
+      round: nextRound,
+      score,
+      reason,
+      participantIds,
+      conversationPrompts: prompts,
+      photoOwnerParticipantId,
+      generatedAt,
+      completedParticipantIds: [],
+      completedAtByParticipantId: {},
     });
+    if (!claimed) continue;
 
-  const activeCandidateIds = await Promise.all(
-    candidates.map(async (candidate) => ({
-      participantId: candidate.row.participant.id,
-      isActive: await hasActiveMatch(store, candidate.row.participant.id),
-    })),
-  );
-  const activeCandidateIdSet = new Set(
-    activeCandidateIds
-      .filter((candidate) => candidate.isActive)
-      .map((candidate) => candidate.participantId),
-  );
-  const availableCandidates = candidates.filter(
-    (candidate) => !activeCandidateIdSet.has(candidate.row.participant.id),
-  );
-
-  if (availableCandidates.length < 2) {
-    return {
-      status: "empty",
-      registration: current,
-      presence: currentPresence,
-      group: null,
-    };
-  }
-
-  const groupSize = pickGroupSize(
-    current.participant.publicCode,
-    nextRound,
-    availableCandidates.length,
-  );
-  const selected = availableCandidates.slice(0, groupSize - 1);
-  const selectedAvailability = await Promise.all(
-    selected.map(async (candidate) => ({
-      candidate,
-      isActive: await hasActiveMatch(store, candidate.row.participant.id),
-    })),
-  );
-  const stillAvailableSelected = selectedAvailability
-    .filter((candidate) => !candidate.isActive)
-    .map((candidate) => candidate.candidate);
-  if (stillAvailableSelected.length < 2) {
-    return {
-      status: "empty",
-      registration: current,
-      presence: currentPresence,
-      group: null,
-    };
-  }
-  const finalSelected = stillAvailableSelected.slice(0, groupSize - 1);
-  const groupRegistrations = [current, ...finalSelected.map((candidate) => candidate.row)];
-  finalSelected.forEach((candidate) => cursor.seen.add(candidate.row.participant.id));
-  await writeCursor(store, current.participant.id, nextRound, cursor.seen);
-
-  const score = Math.round(
-    finalSelected.reduce((total, candidate) => total + candidate.score, 0) / finalSelected.length,
-  );
-  const groupId = `match-${crypto.randomUUID()}`;
-  const prompts = pickIcebreakers(groupId);
-  const participantIds = groupRegistrations.map((registration) => registration.participant.id);
-  const photoOwnerParticipantId = pickPhotoOwnerParticipantId(groupId, participantIds);
-  const generatedAt = new Date().toISOString();
-  const reason = buildReason(current, groupRegistrations);
-  const claimed = await writeActiveMatch(store, {
-    id: groupId,
-    round: nextRound,
-    score,
-    reason,
-    participantIds,
-    conversationPrompts: prompts,
-    photoOwnerParticipantId,
-    generatedAt,
-    completedParticipantIds: [],
-    completedAtByParticipantId: {},
-  });
-  if (!claimed) {
-    const existing = await getActiveMatch(store, current.participant.id);
-    return {
-      status: existing ? "ready" : "empty",
-      registration: current,
-      presence: existing ? ("meeting" as const) : ("open" as const),
-      group: existing ? await buildActiveMatchGroup(store, existing, current, presenceMap) : null,
-    };
-  }
-
-  const group: EventNetworkMatchGroup = {
-    id: groupId,
-    groupSize,
-    round: nextRound,
-    score,
-    reason,
-    members: groupRegistrations.map((registration) =>
-      toMatchMember(
-        registration,
-        "meeting",
-        registration.participant.id === current.participant.id,
-        false,
-        photoOwnerParticipantId === registration.participant.id,
+    try {
+      await rememberGroupForEveryParticipant(store, groupRegistrations);
+    } catch (error) {
+      console.error("Match geçmişi yazılamadı", error);
+    }
+    const group: EventNetworkMatchGroup = {
+      id: groupId,
+      groupSize,
+      round: nextRound,
+      score,
+      reason,
+      members: groupRegistrations.map((registration) =>
+        toMatchMember(
+          registration,
+          "meeting",
+          registration.participant.id === current.participant.id,
+          false,
+          photoOwnerParticipantId === registration.participant.id,
+        ),
       ),
-    ),
-    conversationPrompt: prompts[0],
-    conversationPrompts: prompts,
-    photoOwnerParticipantId,
-    generatedAt,
-  };
+      conversationPrompt: prompts[0],
+      conversationPrompts: prompts,
+      photoOwnerParticipantId,
+      generatedAt,
+    };
+    return {
+      status: "ready",
+      registration: current,
+      presence: "meeting" as const,
+      group,
+    };
+  }
 
+  const existing = await getActiveMatch(store, current.participant.id);
   return {
-    status: "ready",
+    status: existing ? "ready" : "empty",
     registration: current,
-    presence: "meeting" as const,
-    group,
+    presence: existing ? ("meeting" as const) : currentPresence,
+    group: existing ? await buildActiveMatchGroup(store, existing, current, presenceMap) : null,
   };
 }
 

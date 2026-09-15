@@ -50,9 +50,9 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
     setTransition({ ...next, leaving: false });
     const fadeTimer = window.setTimeout(
       () => setTransition((current) => (current ? { ...current, leaving: true } : null)),
-      reducedMotion ? 80 : 720,
+      reducedMotion ? 80 : 1_180,
     );
-    const removeTimer = window.setTimeout(() => setTransition(null), reducedMotion ? 140 : 940);
+    const removeTimer = window.setTimeout(() => setTransition(null), reducedMotion ? 140 : 1_480);
     return () => {
       window.clearTimeout(fadeTimer);
       window.clearTimeout(removeTimer);
@@ -134,10 +134,16 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
             <span className="event-route-transition-orbit orbit-two" />
             <span className="event-route-transition-dot dot-one" />
             <span className="event-route-transition-dot dot-two" />
+            <span className="event-route-transition-dot dot-three" />
+            <span className="event-route-transition-bridge bridge-one" />
+            <span className="event-route-transition-bridge bridge-two" />
             <strong>ntw</strong>
           </div>
           <p>{transition.title}</p>
           <small>{transition.detail}</small>
+          <span className="event-route-transition-progress" aria-hidden="true">
+            <i />
+          </span>
         </div>
       )}
       {preview && (
