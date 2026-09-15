@@ -104,9 +104,9 @@ function PublicMemberProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,color-mix(in_oklab,var(--primary)_24%,transparent),transparent_30%),var(--background)] text-foreground">
+    <div className="public-profile-page min-h-screen text-foreground">
       <SiteNav />
-      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-12">
+      <main className="public-profile-main mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-12">
         {loading ? (
           <div className="flex min-h-[55vh] items-center justify-center">
             <LoaderCircle className="h-8 w-8 animate-spin text-primary-deep" />
@@ -124,14 +124,14 @@ function PublicMemberProfilePage() {
           </section>
         ) : (
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-            <article className="overflow-hidden rounded-[2.2rem] border border-border bg-card shadow-[var(--shadow-card)]">
+            <article className="public-profile-card overflow-hidden rounded-[2.2rem] border border-border bg-card shadow-[var(--shadow-card)]">
               <div className="bg-foreground px-5 py-4 text-background sm:px-8">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-xs font-black uppercase tracking-[0.2em]">
                     ntw.business
                   </span>
                   <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-black text-primary-foreground">
-                    share profile
+                    paylaşılabilir profil
                   </span>
                 </div>
               </div>
@@ -219,7 +219,7 @@ function PublicMemberProfilePage() {
               </div>
             </article>
 
-            <aside className="h-fit rounded-[2rem] border border-border bg-card p-5 shadow-sm lg:sticky lg:top-24">
+            <aside className="public-profile-share h-fit rounded-[2rem] border border-border bg-card p-5 shadow-sm lg:sticky lg:top-24">
               <div className="rounded-[1.5rem] bg-white p-4">
                 <QRCode value={shareUrl} size={220} className="h-auto w-full" />
               </div>

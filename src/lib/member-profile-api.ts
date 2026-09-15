@@ -8,6 +8,13 @@ type ProfileResponse = {
   profile: NotworkMemberProfile;
 };
 
+export const MEMBER_SESSION_CHANGED_EVENT = "notwork-member-session-changed";
+
+function announceMemberSessionChange(loggedIn: boolean) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(MEMBER_SESSION_CHANGED_EVENT, { detail: { loggedIn } }));
+}
+
 export type EditableMemberProfile = Pick<
   NotworkMemberProfile,
   "headline" | "bio" | "skills" | "experiences" | "links" | "publicProfileEnabled"
@@ -88,7 +95,9 @@ export async function getPublicMemberProfile(username: string) {
 }
 
 export async function loginMember(identity: string, password: string) {
-  return (await requestProfile({ action: "login", identity, password })).profile;
+  const profile = (await requestProfile({ action: "login", identity, password })).profile;
+  announceMemberSessionChange(true);
+  return profile;
 }
 
 export async function registerMember(input: MemberRegistrationInput) {
@@ -143,4 +152,5 @@ export async function logoutMember() {
     body: JSON.stringify({ action: "logout" }),
   });
   if (!response.ok) throw new MemberProfileApiError("Çıkış yapılamadı", response.status);
+  announceMemberSessionChange(false);
 }

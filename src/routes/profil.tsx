@@ -231,10 +231,10 @@ function MemberProfilePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,color-mix(in_oklab,var(--primary)_24%,transparent),transparent_30%),var(--background)] text-foreground">
+    <div className="member-profile-page min-h-screen text-foreground">
       <SiteNav />
 
-      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
+      <main className="member-profile-main mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
         {loading ? (
           <div className="flex min-h-[50vh] items-center justify-center">
             <LoaderCircle className="h-8 w-8 animate-spin text-primary-deep" />
@@ -281,7 +281,7 @@ function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile
   }
 
   return (
-    <section className="mx-auto max-w-lg overflow-hidden rounded-[2rem] border border-border bg-card shadow-[var(--shadow-card)]">
+    <section className="profile-auth-shell mx-auto max-w-lg overflow-hidden rounded-[2rem] border border-border bg-card shadow-[var(--shadow-card)]">
       <div className="bg-primary/15 p-6 sm:p-8">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
           <UserRound className="h-6 w-6" />
@@ -435,7 +435,7 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
 
   if (submitted) {
     return (
-      <section className="mx-auto max-w-lg rounded-[2rem] border border-primary/30 bg-card p-6 text-center shadow-[var(--shadow-card)] sm:p-9">
+      <section className="profile-success-shell mx-auto max-w-lg rounded-[2rem] border border-primary/30 bg-card p-6 text-center shadow-[var(--shadow-card)] sm:p-9">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary-deep">
           <ShieldCheck className="h-8 w-8" />
         </div>
@@ -454,7 +454,7 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <section className="mx-auto max-w-2xl overflow-hidden rounded-[2rem] border border-border bg-card shadow-[var(--shadow-card)]">
+    <section className="profile-register-shell mx-auto max-w-2xl overflow-hidden rounded-[2rem] border border-border bg-card shadow-[var(--shadow-card)]">
       <div className="bg-primary/15 p-5 sm:p-8">
         <button
           type="button"
@@ -777,7 +777,7 @@ function PasswordPanel({
   }
 
   return (
-    <section className="mx-auto max-w-lg rounded-[2rem] border border-border bg-card p-6 shadow-[var(--shadow-card)] sm:p-8">
+    <section className="profile-password-shell mx-auto max-w-lg rounded-[2rem] border border-border bg-card p-6 shadow-[var(--shadow-card)] sm:p-8">
       <div className="flex items-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary-deep">
           <ShieldCheck className="h-6 w-6" />
@@ -926,8 +926,8 @@ function ProfileEditor({
   }
 
   return (
-    <div className="space-y-5">
-      <section className="rounded-[2rem] border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:p-7">
+    <div className="member-profile-editor space-y-5">
+      <section className="member-profile-hero rounded-[2rem] border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:p-7">
         <div className="flex items-start gap-4 sm:items-center">
           <button
             type="button"
@@ -973,7 +973,7 @@ function ProfileEditor({
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-[var(--shadow-card)]">
+      <section className="member-profile-panel member-profile-events overflow-hidden rounded-[2rem] border border-border bg-card shadow-[var(--shadow-card)]">
         <div className="flex items-start gap-3 px-5 pb-3 pt-5 sm:px-7 sm:pt-7">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary-deep">
             <CalendarDays className="h-5 w-5" strokeWidth={1.9} />
@@ -1016,7 +1016,7 @@ function ProfileEditor({
         )}
       </section>
 
-      <section className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-[var(--shadow-card)]">
+      <section className="member-profile-panel member-profile-connections overflow-hidden rounded-[2rem] border border-border bg-card shadow-[var(--shadow-card)]">
         <div className="flex items-start gap-3 px-5 pb-3 pt-5 sm:px-7 sm:pt-7">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
             <UsersRound className="h-5 w-5" strokeWidth={1.9} />
@@ -1133,7 +1133,7 @@ function ProfileEditor({
       </section>
 
       {profile.eventCodes.length ? (
-        <section className="overflow-hidden rounded-[2rem] border border-primary/30 bg-card shadow-[var(--shadow-card)]">
+        <section className="member-profile-panel member-profile-codes overflow-hidden rounded-[2rem] border border-primary/30 bg-card shadow-[var(--shadow-card)]">
           <div className="flex items-start gap-3 bg-primary/15 p-5 sm:p-6">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-foreground/10 bg-foreground text-background shadow-sm">
               <IdCard className="h-5 w-5" strokeWidth={1.8} />
@@ -1494,7 +1494,7 @@ function EditorSection({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-[1.7rem] border border-border bg-card p-5 shadow-sm sm:p-7">
+    <section className="member-profile-editor-section rounded-[1.7rem] border border-border bg-card p-5 shadow-sm sm:p-7">
       <div className="mb-5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-foreground text-background shadow-sm">

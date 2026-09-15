@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CalendarDays,
   CircleHelp,
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { COOKIE_CONSENT_OPEN_EVENT } from "@/lib/cookie-consent";
 import { withEventSelection } from "@/lib/event-registry";
+import { getMyMemberProfile, MEMBER_SESSION_CHANGED_EVENT } from "@/lib/member-profile-api";
 
 type SiteNavVariant = "default" | "event" | "eventDark";
 
@@ -43,6 +44,33 @@ const desktopMenuLinks = [
 
 export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
   const location = useLocation();
+  const [memberLoggedIn, setMemberLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (variant !== "default") return;
+    let active = true;
+    const refreshSession = () => {
+      void getMyMemberProfile()
+        .then(() => {
+          if (active) setMemberLoggedIn(true);
+        })
+        .catch(() => {
+          if (active) setMemberLoggedIn(false);
+        });
+    };
+    const handleSessionChange = (event: Event) => {
+      const detail = (event as CustomEvent<{ loggedIn?: boolean }>).detail;
+      if (typeof detail?.loggedIn === "boolean") setMemberLoggedIn(detail.loggedIn);
+      else refreshSession();
+    };
+    refreshSession();
+    window.addEventListener(MEMBER_SESSION_CHANGED_EVENT, handleSessionChange);
+    return () => {
+      active = false;
+      window.removeEventListener(MEMBER_SESSION_CHANGED_EVENT, handleSessionChange);
+    };
+  }, [variant]);
+
   if (variant !== "default") return <EventSiteNav variant={variant} />;
 
   return (
@@ -110,9 +138,11 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
         </nav>
 
         <div className="desktop-site-actions">
-          <Link to="/profil" search={{ mode: "register" }} className="desktop-site-join">
-            notworker ol
-          </Link>
+          {memberLoggedIn === false ? (
+            <Link to="/profil" search={{ mode: "register" }} className="desktop-site-join">
+              notwork ol
+            </Link>
+          ) : null}
           <ProfileLink className="desktop-profile-button" />
         </div>
       </div>
