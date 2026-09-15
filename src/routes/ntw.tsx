@@ -78,20 +78,45 @@ function NtwPage() {
           </p>
           <div className="ntw-availability">
             <span aria-hidden="true">● </span>
-            <Link to="/linkler" search={{ event: "17-eylul-2026" }}>17 Eylül</Link>
+            <Link to="/linkler" search={{ event: "17-eylul-2026" }}>
+              17 Eylül
+            </Link>
             {" · "}
-            <Link to="/linkler" search={{ event: "9-ekim-2026" }}>11 Ekim</Link>
-            <br />etkinlik anlarında aktif olacaktır
+            <Link to="/linkler" search={{ event: "9-ekim-2026" }}>
+              11 Ekim
+            </Link>
+            <br />
+            etkinlik anlarında aktif olacaktır
           </div>
-          <form className="ntw-code-entry" onSubmit={(event) => {
-            event.preventDefault();
-            const code = eventCode.toLocaleLowerCase("tr-TR").replace(/[^a-z0-9]/g, "");
-            if (code === "17eylul") window.location.assign("/linkler?event=17-eylul-2026");
-            else if (code === "11ekim") window.location.assign("/linkler?event=9-ekim-2026");
-            else setCodeError("Kod bulunamadı · 17eylul veya 11ekim yaz");
-          }}>
+          <form
+            className="ntw-code-entry"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const code = eventCode.toLocaleLowerCase("tr-TR").replace(/[^a-z0-9]/g, "");
+              if (code === "17eylul" || code === "11ekim") {
+                window.sessionStorage.setItem("ntw-entry-transition", "code");
+                window.location.assign(
+                  code === "17eylul"
+                    ? "/linkler?event=17-eylul-2026"
+                    : "/linkler?event=9-ekim-2026",
+                );
+              } else setCodeError("Kod bulunamadı · 17eylul veya 11ekim yaz");
+            }}
+          >
             <label htmlFor="ntw-event-code">Etkinlik kodun</label>
-            <div><input id="ntw-event-code" value={eventCode} onChange={(event) => { setEventCode(event.target.value); setCodeError(""); }} placeholder="17eylul" maxLength={20} /><button type="submit">gir</button></div>
+            <div>
+              <input
+                id="ntw-event-code"
+                value={eventCode}
+                onChange={(event) => {
+                  setEventCode(event.target.value);
+                  setCodeError("");
+                }}
+                placeholder="17eylul"
+                maxLength={20}
+              />
+              <button type="submit">gir</button>
+            </div>
             {codeError && <p role="alert">{codeError}</p>}
           </form>
         </div>

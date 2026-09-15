@@ -1,20 +1,18 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  ArrowUpRight,
   CalendarDays,
-  ChevronDown,
-  Handshake,
+  CircleHelp,
+  Images,
   Instagram,
   Menu,
   MessageCircle,
+  Network,
   Presentation,
-  Rocket,
+  Radio,
   ShoppingBag,
   Sparkles,
   UserRound,
-  UsersRound,
-  X,
   Youtube,
 } from "lucide-react";
 
@@ -31,44 +29,92 @@ import { withEventSelection } from "@/lib/event-registry";
 
 type SiteNavVariant = "default" | "event" | "eventDark";
 
+const desktopLinks = [
+  { to: "/notwork-nedir", label: "notwork nedir", icon: CircleHelp },
+  { to: "/etkinlikler", label: "Etkinlikler", icon: CalendarDays },
+  { to: "/networking", label: "Networking", icon: Network },
+] as const;
+
+const desktopMenuLinks = [
+  { to: "/ntw", label: "Etkinlik anı", icon: Radio },
+  { to: "/sponsor", label: "Sponsor", icon: Sparkles },
+  { to: "/merch", label: "Merch", icon: ShoppingBag },
+] as const;
+
 export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
+  const location = useLocation();
   if (variant !== "default") return <EventSiteNav variant={variant} />;
 
   return (
-    <header className="sticky top-0 z-40 backdrop-blur-md bg-background/70 border-b border-border/60">
-      <div className="mx-auto hidden h-16 max-w-6xl items-center justify-between px-5 sm:flex">
-        <BrandLink />
-        <nav className="hidden items-center gap-2 text-sm font-medium sm:flex">
-          <Link to="/notwork-nedir" className="rounded-lg px-3 py-2 hover:bg-muted">
-            Nedir?
-          </Link>
-          <a href="/#galeri" className="rounded-lg px-3 py-2 hover:bg-muted">
-            Galeri
-          </a>
-          <Link to="/etkinlikler" className="rounded-lg px-3 py-2 hover:bg-muted">
-            Etkinlikler
-          </Link>
-          <Link to="/networking" className="rounded-lg px-3 py-2 hover:bg-muted">
-            Networking
-          </Link>
-          <Link to="/ntw" className="rounded-full border border-white/80 bg-white/50 px-4 py-2">
-            ntw
-          </Link>
-          <Link to="/sponsor" className="rounded-lg px-3 py-2 hover:bg-muted">
-            Sponsor
-          </Link>
-          <Link to="/merch" className="rounded-lg px-3 py-2 hover:bg-muted">
-            Merch
-          </Link>
-          <Link
-            to="/profil"
-            aria-label="Üye profiline git"
-            title="Üye profili"
-            className="ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary-deep transition hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            <UserRound size={17} strokeWidth={2.2} />
-          </Link>
+    <header className="site-header-shell sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-md">
+      <div className="desktop-site-header mx-auto hidden max-w-6xl items-center sm:flex">
+        <Link to="/" className="desktop-site-brand" aria-label="notwork ana sayfa">
+          <span className="desktop-site-brand-mark" aria-hidden="true">
+            <span />
+          </span>
+          <span className="desktop-site-brand-copy">
+            <strong className="desktop-site-wordmark font-brand">notwork</strong>
+          </span>
+        </Link>
+
+        <nav className="desktop-site-links" aria-label="Ana menü">
+          {desktopLinks.map((item) => {
+            const Icon = item.icon;
+            const active =
+              item.to === "/etkinlikler"
+                ? location.pathname === "/" || location.pathname === item.to
+                : location.pathname === item.to;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                aria-current={active ? "page" : undefined}
+                className={`desktop-site-link${active ? " is-active" : ""}`}
+              >
+                <Icon size={15} strokeWidth={1.8} aria-hidden="true" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className="desktop-site-menu" aria-label="Diğer sayfaları aç">
+                <Menu size={15} strokeWidth={1.8} aria-hidden="true" />
+                <span>Menü</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              sideOffset={14}
+              className="glass-menu desktop-site-dropdown w-60 p-2"
+            >
+              <DropdownMenuLabel className="px-3 py-2 text-[0.65rem] uppercase tracking-[0.16em] text-foreground/40">
+                Diğer
+              </DropdownMenuLabel>
+              <DropdownMenuItem asChild className="rounded-xl p-0">
+                <a href="/#galeri" className="flex min-h-11 items-center gap-3 px-3 text-sm">
+                  <Images size={17} strokeWidth={1.7} />
+                  Galeri
+                </a>
+              </DropdownMenuItem>
+              {desktopMenuLinks.map(({ to, label, icon: Icon }) => (
+                <DropdownMenuItem key={to} asChild className="rounded-xl p-0">
+                  <Link to={to} className="flex min-h-11 items-center gap-3 px-3 text-sm">
+                    <Icon size={17} strokeWidth={1.7} />
+                    {label}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
+
+        <div className="desktop-site-actions">
+          <Link to="/profil" search={{ mode: "register" }} className="desktop-site-join">
+            notworker ol
+          </Link>
+          <ProfileLink className="desktop-profile-button" />
+        </div>
       </div>
       <div className="mx-auto grid h-16 grid-cols-[72px_1fr_72px] items-center px-3 sm:hidden">
         <MobileSiteMenu />
