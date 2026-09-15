@@ -150,7 +150,9 @@ function LinksPage() {
           title: product?.label || link.title,
           href: withEventSelection(link.href, eventSelection),
           enabled: product
-            ? product.enabled && product.visible && (preview || (product.state === "live" && product.dataMode === "live"))
+            ? product.enabled &&
+              product.visible &&
+              (preview || (product.state === "live" && product.dataMode === "live"))
             : true,
           order:
             product?.order ?? (link.product === "five" ? 1 : link.product === "wordcloud" ? 2 : 3),
@@ -170,7 +172,7 @@ function LinksPage() {
         enabled: true,
       },
     ];
-  }, [activeEvent, eventSelection]);
+  }, [activeEvent, eventSelection, preview]);
   const [form, setForm] = useState<LinkRegistrationForm>({
     firstName: "",
     lastName: "",
@@ -234,7 +236,14 @@ function LinksPage() {
       generalNetworkOptIn: true,
     }));
     setRegistrationPath("new");
-    setRegistrationStep("event");
+    setRegistrationStep(profile.skills.length > 0 ? "event" : "standard");
+  }
+
+  function redirectToPasswordSetup(profile: NotworkMemberProfile) {
+    if (!profile.mustChangePassword) return false;
+    const returnTo = `${window.location.pathname}${window.location.search}`;
+    window.location.assign(`/profil?next=${encodeURIComponent(returnTo)}`);
+    return true;
   }
 
   useEffect(() => {
@@ -280,6 +289,7 @@ function LinksPage() {
       let profile: NotworkMemberProfile | null = null;
       try {
         profile = await getMyMemberProfile();
+        if (profile && redirectToPasswordSetup(profile)) return;
         if (active) setMemberProfile(profile);
       } catch (error) {
         if (!(error instanceof MemberProfileApiError && error.status === 401)) console.error(error);
@@ -312,9 +322,12 @@ function LinksPage() {
         form.lastName.trim() &&
         form.email.includes("@") &&
         form.attendedEvent &&
-        form.intro.trim().length >= 2 && form.intro.trim().length <= 40 &&
-        form.offersDetail.trim().length >= 2 && form.offersDetail.trim().length <= 40 &&
-        form.needs.trim().length >= 2 && form.needs.trim().length <= 40 &&
+        form.intro.trim().length >= 2 &&
+        form.intro.trim().length <= 40 &&
+        form.offersDetail.trim().length >= 2 &&
+        form.offersDetail.trim().length <= 40 &&
+        form.needs.trim().length >= 2 &&
+        form.needs.trim().length <= 40 &&
         form.offers.length > 0 &&
         form.eventConsent &&
         form.generalNetworkOptIn,
@@ -397,7 +410,23 @@ function LinksPage() {
 
   async function submitMemberLogin() {
     if (preview) {
-      setPreviewReady(true);
+      setForm((current) => ({
+        ...current,
+        firstName: "Demo",
+        lastName: "Notworker",
+        email: "demo.member@notwork.local",
+        attendedEvent: activeEvent?.slug || current.attendedEvent || "21-agustos-2026",
+        intro: "",
+        offers: ["networking"],
+        offersDetail: "",
+        needs: "",
+        needTag: "networking",
+        generalNetworkOptIn: true,
+        eventConsent: false,
+      }));
+      setRegistrationPath("new");
+      setRegistrationStep("event");
+      setMessage("Demo üye girişi tamamlandı. Şimdi etkinliğe özel soruları yanıtla.");
       return;
     }
     if (!loginConsent) return;
@@ -405,6 +434,7 @@ function LinksPage() {
     setMessage("");
     try {
       const profile = await loginMember(loginIdentity.trim(), loginPassword);
+      if (redirectToPasswordSetup(profile)) return;
       applyMemberProfile(profile, activeEvent?.slug);
       try {
         const resumed = await resumeEventNetwork(eventSelection);
@@ -507,7 +537,15 @@ function LinksPage() {
                   </span>
                 </div>
               )}
-              <div className="entry-flow-summary"><span>Bu akşamın akışı</span><p>{eventLinks.filter((link) => link.enabled).map((link, i) => `${i + 1}. ${link.title}`).join(" → ")}</p></div>
+              <div className="entry-flow-summary">
+                <span>Bu akşamın akışı</span>
+                <p>
+                  {eventLinks
+                    .filter((link) => link.enabled)
+                    .map((link, i) => `${i + 1}. ${link.title}`)
+                    .join(" → ")}
+                </p>
+              </div>
               <section className="mt-5 grid gap-3">
                 {eventLinks.map(({ title, description, href, icon: Icon, enabled }, index) => (
                   <a
@@ -893,7 +931,9 @@ function RegistrationGate({
         {registrationPrompts.introLabel}
         <textarea
           value={form.intro}
-          onChange={(event) => setForm((current) => ({ ...current, intro: event.target.value.slice(0, 40) }))}
+          onChange={(event) =>
+            setForm((current) => ({ ...current, intro: event.target.value.slice(0, 40) }))
+          }
           rows={3}
           minLength={2}
           maxLength={40}
@@ -923,7 +963,9 @@ function RegistrationGate({
         {registrationPrompts.needsLabel}
         <textarea
           value={form.needs}
-          onChange={(event) => setForm((current) => ({ ...current, needs: event.target.value.slice(0, 40) }))}
+          onChange={(event) =>
+            setForm((current) => ({ ...current, needs: event.target.value.slice(0, 40) }))
+          }
           rows={3}
           minLength={2}
           maxLength={40}
