@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, Navigate, useLocation } from "@tanstack/react-router";
-import { Clock3, Network, MessageCircle, ArrowLeft } from "lucide-react";
+import { Clock3, Network, MessageCircle } from "lucide-react";
 import { getPublicEventContext, type NotworkEvent } from "@/lib/event-registry";
 import { SiteNav } from "@/components/SiteNav";
 import { previewEvent, useEventPreview } from "@/lib/event-preview";
@@ -139,7 +139,11 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
             <span className="event-route-transition-dot dot-three" />
             <span className="event-route-transition-bridge bridge-one" />
             <span className="event-route-transition-bridge bridge-two" />
-            <strong>ntw</strong>
+            <img
+              src="/brand/notwork-logo.png"
+              alt=""
+              className="event-transition-logo"
+            />
           </div>
           <p>{transition.title}</p>
           <small>{transition.detail}</small>
@@ -159,7 +163,9 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
         <>
           <SiteNav />
           <main className="event-closed">
-            <span className="ntw-glass-mark">ntw</span>
+            <span className="ntw-glass-mark">
+              <img src="/brand/notwork-logo.png" alt="notwork" />
+            </span>
             <h1>
               {loading
                 ? "Etkinlik kontrol ediliyor"
@@ -192,7 +198,12 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
           }
           aria-label="Linkler sayfasına dön"
         >
-          <ArrowLeft size={20} />
+          <img
+            src="/brand/notwork-logo.png"
+            alt=""
+            className="event-dock-logo"
+            aria-hidden="true"
+          />
           <span>notwork</span>
         </Link>
         {visibleApps.map(({ href, key, label, icon: Icon }) => (

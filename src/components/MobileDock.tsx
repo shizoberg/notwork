@@ -40,7 +40,12 @@ export function MobileDock() {
           {Icon ? (
             <Icon size={22} strokeWidth={1.65} aria-hidden="true" />
           ) : (
-            <span className="dock-ntw">ntw</span>
+            <img
+              src="/brand/notwork-logo.png"
+              alt=""
+              className="dock-notwork-logo"
+              aria-hidden="true"
+            />
           )}
           <span>{label}</span>
         </Link>

@@ -551,7 +551,7 @@ function MatchLoadingVisual() {
       <i className="match-loading-person person-one" />
       <i className="match-loading-person person-two" />
       <i className="match-loading-person person-three" />
-      <strong>ntw</strong>
+      <img src="/brand/notwork-logo.png" alt="" className="match-loading-logo" />
     </span>
   );
 }
