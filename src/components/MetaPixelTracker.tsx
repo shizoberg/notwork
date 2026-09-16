@@ -45,17 +45,17 @@ const eventPageContent: Record<
   },
   "/17-eylul": {
     contentId: "notwork-chill-chat-2026-09-17",
-    contentName: "notwork Chill & Chat · 17 Eylül 2026",
+    contentName: "notwork Fast · 17 Eylül 2026",
     value: 450,
   },
   "/9-ekim": {
     contentId: "notwork-classic-2026-10-09",
-    contentName: "notwork Classic · 9 Ekim 2026",
+    contentName: "notwork Sahne · 9 Ekim 2026",
     value: 600,
   },
   "/11-ekim": {
     contentId: "notwork-classic-2026-10-09",
-    contentName: "notwork Classic · 11 Ekim 2026",
+    contentName: "notwork Sahne · 11 Ekim 2026",
     value: 600,
   },
 };

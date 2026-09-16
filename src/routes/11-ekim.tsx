@@ -6,8 +6,8 @@ import { eventConfig } from "./9-ekim";
 export const Route = createFileRoute("/11-ekim")({
   head: () =>
     createSeo({
-      title: "11 Ekim notwork Classic | İzmir Networking Etkinliği",
-      description: "11 Ekim’de Rene Lokal’de notwork Classic etkinliği.",
+      title: "11 Ekim notwork Sahne | İzmir Networking Etkinliği",
+      description: "11 Ekim’de Rene Lokal’de notwork Sahne etkinliği.",
       path: "/11-ekim",
       type: "article",
     }),

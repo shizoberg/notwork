@@ -28,7 +28,7 @@ export const Route = createFileRoute("/")({
         "İzmir networking event",
         "networking club İzmir",
         "girişimcilik hikâyeleri",
-        "notwork Classic İzmir",
+        "notwork Sahne İzmir",
       ],
     }),
   component: Landing,
@@ -260,7 +260,7 @@ function Hero() {
           >
             <span className="hero-event-date">17 EYLÜL</span>
             <img src="/brand/notwork-logo.png" alt="" className="notwork-logo hero-event-logo" />
-            <span className="hero-event-name">Chill &amp; Chat</span>
+            <span className="hero-event-name">fast</span>
             <Ticket className="hero-event-ticket" size={18} strokeWidth={1.5} aria-hidden="true" />
           </Link>
           <Link
@@ -271,7 +271,7 @@ function Hero() {
           >
             <span className="hero-event-date">11 EKİM</span>
             <img src="/brand/notwork-logo.png" alt="" className="notwork-logo hero-event-logo" />
-            <span className="hero-event-name">classic</span>
+            <span className="hero-event-name">sahne</span>
             <Ticket className="hero-event-ticket" size={18} strokeWidth={1.5} aria-hidden="true" />
           </Link>
         </div>
@@ -284,7 +284,7 @@ function Nedir() {
   const [activeSlide, setActiveSlide] = useState(0);
   const slides = [
     {
-      name: "classic",
+      name: "sahne",
       href: "/11-ekim" as const,
       items: [
         {
@@ -306,7 +306,7 @@ function Nedir() {
       ],
     },
     {
-      name: "Chill & Chat",
+      name: "fast",
       href: "/17-eylul" as const,
       items: [
         {
@@ -331,6 +331,58 @@ function Nedir() {
         },
       ],
     },
+    {
+      name: "startup",
+      href: "/startup" as const,
+      items: [
+        {
+          n: "01",
+          t: "Kurucular aynı masada",
+          d: "Girişimciler ve startup ekipleri gerçek ihtiyaçları üzerinden tanışır.",
+        },
+        {
+          n: "02",
+          t: "Problemini açıkça anlat",
+          d: "Ürün, büyüme, ekip ve yatırım gündemini doğru insanlarla konuş.",
+        },
+        {
+          n: "03",
+          t: "Doğru yetenekle eşleş",
+          d: "Aradığın uzmanı, kurucu ortağı veya iş birliğini daha kolay bul.",
+        },
+        {
+          n: "04",
+          t: "Bir sonraki adımı çıkar",
+          d: "Sohbeti somut bir bağlantıya, fikre veya aksiyona dönüştür.",
+        },
+      ],
+    },
+    {
+      name: "creative",
+      href: "/creative" as const,
+      items: [
+        {
+          n: "01",
+          t: "Her event bir objektif",
+          d: "Her buluşma tek bir yaratıcı tema ve bakış açısı etrafında şekillenir.",
+        },
+        {
+          n: "02",
+          t: "Yaratıcılar bir arada",
+          d: "Sanatçılar, içerik üreticileri ve yaratıcı ekipler aynı ortamda buluşur.",
+        },
+        {
+          n: "03",
+          t: "Üretimini görünür kıl",
+          d: "İşini, fikrini ve yaratıcı sürecini seni anlayan insanlarla paylaş.",
+        },
+        {
+          n: "04",
+          t: "Yeni ekipler kur",
+          d: "Yeni projeler, ortak üretimler ve yaratıcı iş birlikleri için bağlan.",
+        },
+      ],
+    },
   ];
   const activeEvent = slides[activeSlide];
 
@@ -342,7 +394,7 @@ function Nedir() {
             Bir notwork eventinde
           </div>
           <h2 className="mt-2 font-display font-bold text-3xl sm:text-5xl text-foreground max-w-2xl">
-            {activeEvent.name}’te seni ne bekliyor?
+            {activeEvent.name} deneyiminde seni ne bekliyor?
           </h2>
         </div>
         <Link
@@ -354,13 +406,13 @@ function Nedir() {
       </div>
 
       <div className="mb-3 flex items-center justify-between gap-3 sm:mb-5">
-        <div className="flex rounded-full border border-border bg-card p-1">
+        <div className="flex max-w-full overflow-x-auto rounded-full border border-border bg-card p-1">
           {slides.map((slide, index) => (
             <button
               key={slide.name}
               type="button"
               onClick={() => setActiveSlide(index)}
-              className={`rounded-full px-3 py-2 text-[11px] font-black transition sm:px-4 sm:text-sm ${
+              className={`shrink-0 rounded-full px-3 py-2 text-[11px] font-black transition sm:px-4 sm:text-sm ${
                 activeSlide === index
                   ? "bg-foreground text-background shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -394,13 +446,17 @@ function Nedir() {
 
       <div className="overflow-hidden">
         <div
-          className="flex w-[200%] transition-transform duration-500 ease-out motion-reduce:transition-none"
-          style={{ transform: `translateX(-${activeSlide * 50}%)` }}
+          className="flex transition-transform duration-500 ease-out motion-reduce:transition-none"
+          style={{
+            width: `${slides.length * 100}%`,
+            transform: `translateX(-${activeSlide * (100 / slides.length)}%)`,
+          }}
         >
           {slides.map((slide) => (
             <div
               key={slide.name}
-              className="grid w-1/2 shrink-0 grid-cols-2 gap-2 pr-px sm:grid-cols-4 sm:gap-4"
+              className="grid shrink-0 grid-cols-2 gap-2 pr-px sm:grid-cols-4 sm:gap-4"
+              style={{ width: `${100 / slides.length}%` }}
             >
               {slide.items.map((item) => (
                 <article

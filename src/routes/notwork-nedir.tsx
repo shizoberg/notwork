@@ -60,13 +60,13 @@ const journey = [
 
 const formats = [
   {
-    name: "notwork classic",
+    name: "notwork sahne",
     label: "sahne + networking",
     text: "Başarısızlık hikâyelerinden çıkarılmış dersleri dinlediğin ve gecenin sonunda yeni insanlarla tanıştığın ana notwork formatı.",
     icon: CalendarDays,
   },
   {
-    name: "chill & chat",
+    name: "notwork fast",
     label: "sohbet + yeni insanlar",
     text: "Daha az sahne, daha fazla sohbet. Rahat bir gecede konuşmayı ve yeni bağlantılar kurmayı kolaylaştırır.",
     icon: MessageCircle,

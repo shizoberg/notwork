@@ -52,7 +52,7 @@ const catalogEvents: EventCatalogItem[] = [
     date: "11 Ekim 2026",
     year: "2026",
     venue: "Rene Lokal",
-    title: "notwork Classic",
+    title: "notwork Sahne",
     summary:
       "Dört ilham veren başarısızlık hikâyesi, canlı WordCloud ve iki networking arasında ntw.match.lab deneyimi.",
     participants: "Sınırlı kontenjan",
@@ -67,7 +67,7 @@ const catalogEvents: EventCatalogItem[] = [
     date: "17 Eylül 2026",
     year: "2026",
     venue: "Köşk Alsancak",
-    title: "notwork Chill & Chat",
+    title: "notwork Fast",
     summary:
       "ntw.match.lab, ntw.five ve DJ deneyimini aynı lineer akışta birleştiren yeni nesil notwork gecesi.",
     participants: "Sınırlı kontenjan",

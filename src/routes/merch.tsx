@@ -80,7 +80,7 @@ function MerchPage() {
               <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-[#f2c55b]/45 bg-[#fff3c9] px-4 py-3 text-[#523a06]">
                 <Gift size={20} className="shrink-0" />
                 <span className="text-sm font-bold leading-snug">
-                  9 Ekim notwork Classic biletlerinde sticker paketi + ntw anahtarlık hediye.
+                  11 Ekim notwork Sahne biletlerinde sticker paketi + ntw anahtarlık hediye.
                 </span>
               </div>
             </div>

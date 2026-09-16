@@ -7,11 +7,11 @@ import { createEventStructuredData } from "@/lib/structured-data";
 
 const eventConfig: EventProductConfig = {
   trackingId: "notwork-chill-chat-2026-09-17",
-  trackingName: "notwork Chill & Chat",
+  trackingName: "notwork Fast",
   eventLabel: "yeni etkinlik",
-  imageTitle: "chill & chat",
+  imageTitle: "notwork fast",
   imageSubtitle: "17 eylül · 20.00 · alsancak köşk",
-  titleLines: ["chill", "& chat"],
+  titleLines: ["notwork", "fast"],
   description:
     "ntw.match.lab ile sana uygun bağlantıları bul, ntw.five ile gerçek problemlere beş dakikalık çözümler üret; geceyi DJ ve özgür sohbetle tamamla.",
   date: "17 Eylül 2026",
@@ -51,17 +51,17 @@ const eventConfig: EventProductConfig = {
     {
       src: "/events/17-eylul/alsancak-kosk.mp4",
       poster: "/events/17-eylul/alsancak-kosk-poster.jpg",
-      alt: "17 Eylül notwork Chill & Chat etkinlik mekânı Alsancak Köşk",
+      alt: "17 Eylül notwork Fast etkinlik mekânı Alsancak Köşk",
       label: "mekân",
       mediaType: "video",
       title: "alsancak köşk",
-      subtitle: "17 eylül · 20.00 · chill & chat",
+      subtitle: "17 eylül · 20.00 · notwork fast",
       position: "center",
     },
     {
       src: "/events/17-eylul/chill-chat-roportaj.mp4",
       poster: "/events/17-eylul/chill-chat-roportaj-poster.jpg",
-      alt: "notwork Chill & Chat community etkinlik röportajı",
+      alt: "notwork Fast community etkinlik röportajı",
       label: "röportaj",
       mediaType: "video",
       title: "notwork röportajı",
@@ -120,7 +120,7 @@ const eventConfig: EventProductConfig = {
       time: "22.30",
       duration: "gecenin devamı",
       product: "notwork club",
-      title: "Chill, chat ve DJ ile akışa bırak.",
+      title: "Müzik ve DJ ile akışa bırak.",
       description:
         "Eşleşmeler biter, müzik yükselir. Tanıştığın insanlarla sohbeti sürdürür ve geceyi DJ set ile birlikte kapatırsın.",
       highlights: ["DJ set", "serbest sohbet"],
@@ -142,21 +142,21 @@ const eventConfig: EventProductConfig = {
 export const Route = createFileRoute("/17-eylul")({
   head: () =>
     createSeo({
-      title: "17 Eylül notwork Chill & Chat | İzmir Networking Etkinliği",
+      title: "17 Eylül notwork Fast | İzmir Networking Etkinliği",
       description:
-        "17 Eylül’de Köşk Alsancak’ta ntw.match.lab, ntw.five, DJ ve gerçek networking deneyimini bir araya getiren notwork Chill & Chat etkinliğine katıl.",
+        "17 Eylül’de Köşk Alsancak’ta ntw.match.lab, ntw.five, DJ ve gerçek networking deneyimini bir araya getiren notwork Fast etkinliğine katıl.",
       path: "/17-eylul",
       keywords: [
         "17 Eylül İzmir etkinlik",
-        "notwork Chill and Chat",
+        "notwork Fast",
         "Alsancak networking etkinliği",
         "İzmir network club",
       ],
       type: "article",
       structuredData: createEventStructuredData({
-        name: "notwork Chill & Chat",
+        name: "notwork Fast",
         description:
-          "ntw.match.lab, ntw.five, DJ ve gerçek networking deneyimini bir araya getiren notwork Chill & Chat etkinliği.",
+          "ntw.match.lab, ntw.five, DJ ve gerçek networking deneyimini bir araya getiren notwork Fast etkinliği.",
         path: "/17-eylul",
         startDate: "2026-09-17T20:00:00+03:00",
         endDate: "2026-09-17T23:59:00+03:00",
@@ -169,13 +169,13 @@ export const Route = createFileRoute("/17-eylul")({
         videos: [
           {
             name: "Alsancak Köşk etkinlik mekânı",
-            description: "17 Eylül notwork Chill & Chat etkinlik mekânının kısa videosu.",
+            description: "17 Eylül notwork Fast etkinlik mekânının kısa videosu.",
             contentUrl: "/events/17-eylul/alsancak-kosk.mp4",
             thumbnailUrl: "/events/17-eylul/alsancak-kosk-poster.jpg",
             uploadDate: "2026-08-27",
           },
           {
-            name: "notwork Chill & Chat community röportajı",
+            name: "notwork Fast community röportajı",
             description:
               "notwork community katılımcısının etkinlik deneyimini anlattığı kısa röportaj.",
             contentUrl: "/events/17-eylul/chill-chat-roportaj.mp4",

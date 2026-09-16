@@ -267,8 +267,8 @@ const adminUiVersion = "Admin v3 · etkinlik platformu";
 const eventToolsSlugs = ["21-agustos-2026", "17-eylul-2026", "9-ekim-2026"];
 
 const eventPageAnalyticsOptions = [
-  { path: "/17-eylul", label: "17 Eylül · Chill & Chat" },
-  { path: "/9-ekim", label: "9 Ekim · Classic" },
+  { path: "/17-eylul", label: "17 Eylül · Fast" },
+  { path: "/9-ekim", label: "11 Ekim · Sahne" },
   { path: "/21agustos", label: "21 Ağustos · Rene Lokal" },
 ];
 

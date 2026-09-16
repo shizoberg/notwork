@@ -7,11 +7,11 @@ import { createEventStructuredData } from "@/lib/structured-data";
 
 export const eventConfig: EventProductConfig = {
   trackingId: "notwork-classic-2026-10-09",
-  trackingName: "notwork Classic",
-  eventLabel: "classic edition",
-  imageTitle: "notwork classic",
+  trackingName: "notwork Sahne",
+  eventLabel: "sahne",
+  imageTitle: "notwork sahne",
   imageSubtitle: "11 ekim · 19.30 · rene lokal",
-  titleLines: ["notwork", "classic"],
+  titleLines: ["notwork", "sahne"],
   description:
     "Dört ilham veren başarısızlık hikâyesi, canlı ntw.wordcloud ve iki networking arasında ntw.match.lab ile tasarlanmış klasik notwork deneyimi.",
   date: "11 Ekim 2026",
@@ -26,8 +26,8 @@ export const eventConfig: EventProductConfig = {
   gallery: [
     {
       src: "/community/8.jpg",
-      alt: "notwork Classic etkinliğinde sahne ve konuşmacı",
-      label: "classic",
+      alt: "notwork Sahne etkinliğinde sahne ve konuşmacı",
+      label: "sahne",
       position: "center 38%",
     },
     {
@@ -44,25 +44,25 @@ export const eventConfig: EventProductConfig = {
     },
     {
       src: "/community/27.jpg",
-      alt: "notwork Classic gecesinin community atmosferi",
+      alt: "notwork Sahne gecesinin community atmosferi",
       label: "community",
       position: "center 46%",
     },
     {
       src: "/events/9-ekim/rene-lokal-1.mp4",
       poster: "/events/9-ekim/rene-lokal-1-poster.jpg",
-      alt: "9 Ekim notwork Classic etkinlik mekânı Rene Lokal bahçesi",
+      alt: "11 Ekim notwork Sahne etkinlik mekânı Rene Lokal bahçesi",
       label: "mekân",
       mediaType: "video",
       title: "rene lokal",
-      subtitle: "9 ekim · 19.30 · notwork classic",
+      subtitle: "11 ekim · 19.30 · notwork sahne",
       muted: true,
       position: "center",
     },
     {
       src: "/events/9-ekim/classic-son-video.mp4",
       poster: "/events/9-ekim/classic-son-video-poster.jpg",
-      alt: "notwork Classic sahnesinde başarısızlık hikâyesini anlatan konuşmacı",
+      alt: "notwork Sahne etkinliğinde başarısızlık hikâyesini anlatan konuşmacı",
       label: "sahne",
       mediaType: "video",
       title: "rene lokal",
@@ -106,7 +106,7 @@ export const eventConfig: EventProductConfig = {
   ticketGift: "Her bilete ntw sticker paketi + ntw anahtarlık hediye.",
   ticketUrl:
     "https://www.biletimgo.com/etkinlik/notwork-basarisizlik-hikayeleri-network-event-30395",
-  flowEyebrow: "notwork classic akışı",
+  flowEyebrow: "notwork sahne akışı",
   flowTitleLines: ["Sor. Dinle.", "Eşleş ve yeniden bağ kur."],
   flowDescription:
     "Sahne ve networking birbirinden kopuk değil. WordCloud ortak merakı görünür kılar; notwork match iki arada doğru kişileri bulur.",
@@ -168,7 +168,7 @@ export const eventConfig: EventProductConfig = {
     },
   ],
   flowLayoutClass: "lg:grid-cols-3 xl:grid-cols-5",
-  communityEyebrow: "classic geceden fazlası",
+  communityEyebrow: "sahne geceden fazlası",
   communityDescription:
     "Aynı hikâyeleri dinleyen insanlar etkinlikten sonra network ağı ve community buluşmaları içinde birbirini yeniden bulur.",
   communityGallery: [
@@ -187,22 +187,22 @@ export const Route = createFileRoute("/9-ekim")({
   },
   head: () =>
     createSeo({
-      title: "9 Ekim notwork Classic | İzmir Networking Etkinliği",
+      title: "11 Ekim notwork Sahne | İzmir Networking Etkinliği",
       description:
-        "9 Ekim’de Rene Lokal’de dört başarısızlık hikâyesi, canlı WordCloud, ntw.match.lab ve networking deneyimini bir araya getiren notwork Classic’e katıl.",
+        "11 Ekim’de Rene Lokal’de dört başarısızlık hikâyesi, canlı WordCloud, ntw.match.lab ve networking deneyimini bir araya getiren notwork Sahne’ye katıl.",
       path: "/9-ekim",
       keywords: [
         "9 Ekim İzmir etkinlik",
-        "notwork Classic",
+        "notwork Sahne",
         "Rene Lokal etkinlik",
         "İzmir networking etkinliği",
         "başarısızlık hikayeleri",
       ],
       type: "article",
       structuredData: createEventStructuredData({
-        name: "notwork Classic",
+        name: "notwork Sahne",
         description:
-          "Dört başarısızlık hikâyesi, canlı ntw.wordcloud, ntw.match.lab ve networking deneyimini bir araya getiren notwork Classic etkinliği.",
+          "Dört başarısızlık hikâyesi, canlı ntw.wordcloud, ntw.match.lab ve networking deneyimini bir araya getiren notwork Sahne etkinliği.",
         path: "/9-ekim",
         startDate: "2026-10-09T19:30:00+03:00",
         endDate: "2026-10-09T23:00:00+03:00",
@@ -215,14 +215,14 @@ export const Route = createFileRoute("/9-ekim")({
         videos: [
           {
             name: "Rene Lokal etkinlik mekânı",
-            description: "9 Ekim notwork Classic etkinlik mekânı Rene Lokal'in kısa videosu.",
+            description: "11 Ekim notwork Sahne etkinlik mekânı Rene Lokal'in kısa videosu.",
             contentUrl: "/events/9-ekim/rene-lokal-1.mp4",
             thumbnailUrl: "/events/9-ekim/rene-lokal-1-poster.jpg",
             uploadDate: "2026-08-27",
           },
           {
-            name: "notwork Classic etkinlik deneyimi",
-            description: "notwork Classic sahnesinden ve community deneyiminden gerçek bir an.",
+            name: "notwork Sahne etkinlik deneyimi",
+            description: "notwork Sahne etkinliğinden ve community deneyiminden gerçek bir an.",
             contentUrl: "/events/9-ekim/classic-son-video.mp4",
             thumbnailUrl: "/events/9-ekim/classic-son-video-poster.jpg",
             uploadDate: "2026-08-28",
