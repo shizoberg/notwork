@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { SiteNav } from "@/components/SiteNav";
+import { PasswordResetRequest } from "@/components/PasswordResetRequest";
 import { notworkEventOptions, type EventNetworkRegistration } from "@/lib/event-network";
 import {
   getEventNetworkMe,
@@ -116,7 +117,7 @@ type LinkRegistrationForm = {
   generalNetworkOptIn: boolean;
 };
 
-type RegistrationPath = "choose" | "login" | "new";
+type RegistrationPath = "choose" | "login" | "forgot" | "new";
 type RegistrationStep = "standard" | "event";
 
 function LinksPage() {
@@ -816,6 +817,13 @@ function RegistrationGate({
             value={loginPassword}
             onChange={setLoginPassword}
           />
+          <button
+            type="button"
+            onClick={() => setRegistrationPath("forgot")}
+            className="justify-self-end text-sm font-black text-primary-deep hover:underline"
+          >
+            Şifremi unuttum
+          </button>
           <ConsentBox
             checked={loginConsent}
             onChange={setLoginConsent}
@@ -849,6 +857,10 @@ function RegistrationGate({
         </button>
       </section>
     );
+  }
+
+  if (registrationPath === "forgot") {
+    return <PasswordResetRequest variant="event" onBack={() => setRegistrationPath("login")} />;
   }
 
   if (registrationStep === "standard") {

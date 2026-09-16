@@ -10,6 +10,7 @@ import {
   getNetworkingMemberPhoto,
   loginMemberProfile,
   logoutMemberProfile,
+  requestMemberPasswordReset,
   registerMemberProfile,
   safeMemberProfile,
   saveMemberProfilePhoto,
@@ -27,7 +28,8 @@ type ProfileInput = {
     | "update"
     | "photo"
     | "reference"
-    | "logout";
+    | "logout"
+    | "requestPasswordReset";
   identity?: string;
   password?: string;
   newPassword?: string;
@@ -219,6 +221,15 @@ export default async (request: Request, _context: Context) => {
         { profile: result.profile },
         { headers: { "set-cookie": sessionCookie(request, result.token, 7 * 24 * 60 * 60) } },
       );
+    }
+
+    if (action === "requestPasswordReset") {
+      const email = clean(input.email, 120).toLocaleLowerCase("tr-TR");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return new Response("Geçerli bir e-posta yaz", { status: 400 });
+      }
+      await requestMemberPasswordReset(email);
+      return json({ ok: true });
     }
 
     if (action === "logout") {

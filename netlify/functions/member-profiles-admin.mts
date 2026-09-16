@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { Config, Context } from "@netlify/functions";
 import {
+  completeMemberPasswordResetRequest,
   createAdminMemberProfile,
   type AdminMemberInput,
   getMemberProfileDatabaseInfo,
@@ -9,6 +10,7 @@ import {
   issueTemporaryCredentials,
   listMemberReferences,
   listMemberProfiles,
+  listMemberPasswordResetRequests,
   moderateMemberProfile,
   moderateMemberReference,
   resetMemberCredential,
@@ -24,12 +26,14 @@ type AdminInput = {
     | "syncMembers"
     | "issueCredentials"
     | "resetCredential"
+    | "resetRequestedCredential"
     | "importCredentials"
     | "moderateProfile"
     | "moderateReference";
   member?: AdminMemberInput;
   credentials?: ImportedMemberCredential[];
   targetUsername?: string;
+  requestId?: string;
   authorUsername?: string;
   referenceStatus?: "approved" | "rejected";
   profileStatus?: "approved" | "rejected";
@@ -52,6 +56,12 @@ export default async (request: Request, _context: Context) => {
     if (!validPassword(input.password)) return new Response("Yetkisiz erişim", { status: 401 });
     const store = getMemberProfileStore();
     const action = input.action || "list";
+    const basePayload = async () => ({
+      database: getMemberProfileDatabaseInfo(),
+      profiles: await listMemberProfiles(store),
+      references: await listMemberReferences(store),
+      passwordResetRequests: await listMemberPasswordResetRequests(store),
+    });
 
     if (action === "create") {
       const result = await createAdminMemberProfile(input.member || {}, store);
@@ -62,9 +72,7 @@ export default async (request: Request, _context: Context) => {
       const syncResult = await syncVerifiedEventMembers(store);
       return Response.json(
         {
-          database: getMemberProfileDatabaseInfo(),
-          profiles: await listMemberProfiles(store),
-          references: await listMemberReferences(store),
+          ...(await basePayload()),
           ...syncResult,
         },
         { headers: { "cache-control": "no-store, private" } },
@@ -75,9 +83,7 @@ export default async (request: Request, _context: Context) => {
       const credentials = await issueTemporaryCredentials(store);
       return Response.json(
         {
-          database: getMemberProfileDatabaseInfo(),
-          profiles: await listMemberProfiles(store),
-          references: await listMemberReferences(store),
+          ...(await basePayload()),
           credentials,
         },
         { headers: { "cache-control": "no-store, private" } },
@@ -88,11 +94,17 @@ export default async (request: Request, _context: Context) => {
       const credential = await resetMemberCredential(input.targetUsername || "", store);
       return Response.json(
         {
-          database: getMemberProfileDatabaseInfo(),
-          profiles: await listMemberProfiles(store),
-          references: await listMemberReferences(store),
+          ...(await basePayload()),
           credentials: [credential],
         },
+        { headers: { "cache-control": "no-store, private" } },
+      );
+    }
+
+    if (action === "resetRequestedCredential") {
+      const credential = await completeMemberPasswordResetRequest(input.requestId || "", store);
+      return Response.json(
+        { ...(await basePayload()), credentials: [credential] },
         { headers: { "cache-control": "no-store, private" } },
       );
     }
@@ -104,9 +116,7 @@ export default async (request: Request, _context: Context) => {
       const result = await importTemporaryCredentials(input.credentials, store);
       return Response.json(
         {
-          database: getMemberProfileDatabaseInfo(),
-          profiles: await listMemberProfiles(store),
-          references: await listMemberReferences(store),
+          ...(await basePayload()),
           ...result,
         },
         { headers: { "cache-control": "no-store, private" } },
@@ -123,14 +133,9 @@ export default async (request: Request, _context: Context) => {
         input.referenceStatus,
         store,
       );
-      return Response.json(
-        {
-          database: getMemberProfileDatabaseInfo(),
-          profiles: await listMemberProfiles(store),
-          references: await listMemberReferences(store),
-        },
-        { headers: { "cache-control": "no-store, private" } },
-      );
+      return Response.json(await basePayload(), {
+        headers: { "cache-control": "no-store, private" },
+      });
     }
 
     if (action === "moderateProfile") {
@@ -138,24 +143,14 @@ export default async (request: Request, _context: Context) => {
         return new Response("Geçersiz profil durumu", { status: 400 });
       }
       await moderateMemberProfile(input.targetUsername || "", input.profileStatus, store);
-      return Response.json(
-        {
-          database: getMemberProfileDatabaseInfo(),
-          profiles: await listMemberProfiles(store),
-          references: await listMemberReferences(store),
-        },
-        { headers: { "cache-control": "no-store, private" } },
-      );
+      return Response.json(await basePayload(), {
+        headers: { "cache-control": "no-store, private" },
+      });
     }
 
-    return Response.json(
-      {
-        database: getMemberProfileDatabaseInfo(),
-        profiles: await listMemberProfiles(store),
-        references: await listMemberReferences(store),
-      },
-      { headers: { "cache-control": "no-store, private" } },
-    );
+    return Response.json(await basePayload(), {
+      headers: { "cache-control": "no-store, private" },
+    });
   } catch (error) {
     return new Response(error instanceof Error ? error.message : "Profil kayıtları alınamadı", {
       status: 500,

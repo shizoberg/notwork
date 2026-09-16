@@ -39,6 +39,7 @@ import {
 } from "react";
 import QRCode from "react-qr-code";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { PasswordResetRequest } from "@/components/PasswordResetRequest";
 import {
   MemberProfileApiError,
   changeMemberPassword,
@@ -253,7 +254,7 @@ function MemberProfilePage() {
 }
 
 function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile) => void }) {
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
   const [identity, setIdentity] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -278,6 +279,10 @@ function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile
 
   if (mode === "register") {
     return <RegisterPanel onBack={() => setMode("login")} />;
+  }
+
+  if (mode === "forgot") {
+    return <PasswordResetRequest onBack={() => setMode("login")} />;
   }
 
   return (
@@ -326,6 +331,13 @@ function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile
             </button>
           </div>
         </Field>
+        <button
+          type="button"
+          onClick={() => setMode("forgot")}
+          className="ml-auto block text-sm font-black text-primary-deep hover:underline"
+        >
+          Şifremi unuttum
+        </button>
         {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
         <button disabled={submitting} className="profile-primary-button w-full" type="submit">
           {submitting ? (
