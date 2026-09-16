@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, Navigate, useLocation } from "@tanstack/react-router";
-import { Clock3, Network, MessageCircle } from "lucide-react";
+import { Clock3, Network, MessageCircle, ArrowLeft } from "lucide-react";
 import { getPublicEventContext, type NotworkEvent } from "@/lib/event-registry";
 import { SiteNav } from "@/components/SiteNav";
 import { previewEvent, useEventPreview } from "@/lib/event-preview";
@@ -198,12 +198,7 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
           }
           aria-label="Linkler sayfasına dön"
         >
-          <img
-            src="/brand/notwork-logo.png"
-            alt=""
-            className="event-dock-logo"
-            aria-hidden="true"
-          />
+          <ArrowLeft size={20} />
           <span>notwork</span>
         </Link>
         {visibleApps.map(({ href, key, label, icon: Icon }) => (

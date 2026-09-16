@@ -1701,16 +1701,6 @@
   border-radius: 24px;
   background: #c7e7ecb0;
 }
-.event-dock-logo {
-  width: 25px;
-  height: 22px;
-  object-fit: contain;
-  filter: grayscale(1) brightness(0.72) contrast(1.2);
-  opacity: 0.72;
-}
-.event-app-dock a[aria-current="page"] .event-dock-logo {
-  opacity: 0.92;
-}
 @media (min-width: 640px) {
   .event-app-dock {
     display: flex;
@@ -2023,15 +2013,12 @@
       0 2px 8px #416b4f18;
     transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
-  .dock-notwork-logo {
-    width: 26px;
+  .dock-ntw {
+    font-size: 19px;
+    letter-spacing: -1.4px;
+    font-weight: 700;
     height: 22px;
-    object-fit: contain;
-    filter: grayscale(1) brightness(0.72) contrast(1.2);
-    opacity: 0.72;
-  }
-  .mobile-glass-dock a[aria-current="page"] .dock-notwork-logo {
-    opacity: 0.92;
+    line-height: 22px;
   }
   .glass-site a[aria-label="notwork WhatsApp duyuru kanalına katıl"] {
     bottom: calc(110px + env(safe-area-inset-bottom));
