@@ -77,12 +77,11 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
     <header className="site-header-shell sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-md">
       <div className="desktop-site-header mx-auto hidden max-w-6xl items-center sm:flex">
         <Link to="/" className="desktop-site-brand" aria-label="notwork ana sayfa">
-          <span className="desktop-site-brand-mark" aria-hidden="true">
-            <span />
-          </span>
-          <span className="desktop-site-brand-copy">
-            <strong className="desktop-site-wordmark font-brand">notwork</strong>
-          </span>
+          <img
+            src="/brand/notwork-logo.png"
+            alt="notwork"
+            className="notwork-logo desktop-site-logo"
+          />
         </Link>
 
         <nav className="desktop-site-links" aria-label="Ana menü">
@@ -148,18 +147,17 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
       </div>
       <div className="mx-auto grid h-16 grid-cols-[72px_1fr_72px] items-center px-3 sm:hidden">
         <MobileSiteMenu />
-        <BrandLink className="justify-self-center" showDot={false} />
+        <BrandLink className="justify-self-center" />
         <ProfileLink className="justify-self-end" />
       </div>
     </header>
   );
 }
 
-function BrandLink({ className = "", showDot = true }: { className?: string; showDot?: boolean }) {
+function BrandLink({ className = "" }: { className?: string }) {
   return (
-    <Link to="/" className={`flex items-center gap-2 font-brand text-lg sm:text-xl ${className}`}>
-      {showDot ? <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary" /> : null}
-      <span>notwork</span>
+    <Link to="/" className={`notwork-logo-link ${className}`} aria-label="notwork ana sayfa">
+      <img src="/brand/notwork-logo.png" alt="notwork" className="notwork-logo mobile-site-logo" />
     </Link>
   );
 }
@@ -281,12 +279,12 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
     <header className={headerClass}>
       <div className="mx-auto hidden h-16 max-w-6xl items-center justify-between gap-3 px-5 sm:flex">
         <Link to={linksHref} className="flex min-w-0 items-center gap-2">
-          <span className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20">
-            <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-            <span className="absolute inset-0 rounded-full border border-primary/40" />
-          </span>
+          <img
+            src="/brand/notwork-logo.png"
+            alt="notwork"
+            className="notwork-logo event-site-logo"
+          />
           <span className="min-w-0">
-            <span className="block font-brand text-lg leading-none">notwork</span>
             <span
               className={
                 dark
@@ -317,8 +315,16 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
       </div>
       <div className="mx-auto grid h-16 grid-cols-[72px_1fr_72px] items-center px-3 sm:hidden">
         <MobileSiteMenu />
-        <Link to={linksHref} className="justify-self-center font-brand text-lg leading-none">
-          notwork
+        <Link
+          to={linksHref}
+          className="notwork-logo-link justify-self-center"
+          aria-label="Etkinlik linklerine dön"
+        >
+          <img
+            src="/brand/notwork-logo.png"
+            alt="notwork"
+            className="notwork-logo mobile-site-logo"
+          />
         </Link>
         <ProfileLink className="justify-self-end" dark={dark} />
       </div>
@@ -330,8 +336,12 @@ export function SiteFooter() {
   return (
     <footer className="simple-footer">
       <div className="simple-footer-top">
-        <Link to="/" className="font-brand text-xl">
-          notwork
+        <Link to="/" className="notwork-logo-link" aria-label="notwork ana sayfa">
+          <img
+            src="/brand/notwork-logo.png"
+            alt="notwork"
+            className="notwork-logo footer-site-logo"
+          />
         </Link>
         <div className="flex items-center gap-5">
           <a

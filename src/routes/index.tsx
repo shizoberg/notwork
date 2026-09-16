@@ -259,7 +259,7 @@ function Hero() {
             className="hero-event-link"
           >
             <span className="hero-event-date">17 EYLÜL</span>
-            <span className="hero-event-logo font-brand">notwork</span>
+            <img src="/brand/notwork-logo.png" alt="" className="notwork-logo hero-event-logo" />
             <span className="hero-event-name">Chill &amp; Chat</span>
             <Ticket className="hero-event-ticket" size={18} strokeWidth={1.5} aria-hidden="true" />
           </Link>
@@ -270,7 +270,7 @@ function Hero() {
             className="hero-event-link"
           >
             <span className="hero-event-date">11 EKİM</span>
-            <span className="hero-event-logo font-brand">notwork</span>
+            <img src="/brand/notwork-logo.png" alt="" className="notwork-logo hero-event-logo" />
             <span className="hero-event-name">classic</span>
             <Ticket className="hero-event-ticket" size={18} strokeWidth={1.5} aria-hidden="true" />
           </Link>
