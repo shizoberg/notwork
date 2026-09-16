@@ -255,13 +255,20 @@ function MemberProfilePage() {
 
 function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile) => void }) {
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
+  const [resetToken, setResetToken] = useState("");
   const [identity, setIdentity] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("mode") === "register") setMode("register");
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("mode") === "register") setMode("register");
+    const token = params.get("reset") || "";
+    if (token) {
+      setResetToken(token);
+      setMode("forgot");
+    }
   }, []);
 
   async function submit(event: FormEvent) {
@@ -282,7 +289,7 @@ function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile
   }
 
   if (mode === "forgot") {
-    return <PasswordResetRequest onBack={() => setMode("login")} />;
+    return <PasswordResetRequest resetToken={resetToken} onBack={() => setMode("login")} />;
   }
 
   return (

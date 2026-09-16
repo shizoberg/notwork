@@ -197,7 +197,11 @@ export function rawMessage(message: Mail) {
 }
 // Never retry a claimed operation: Gmail does not provide a send idempotency key.
 // A network timeout might mean the message was accepted. Keep it for manual review.
-export async function sendGmailOnce(id: string, message: Mail) {
+export async function sendGmailOnce(
+  id: string,
+  message: Mail,
+  options: { transactional?: boolean } = {},
+) {
   const raw = rawMessage(message),
     store = mailStore(),
     key = `outbox/${hash(id)}.json`;
@@ -230,9 +234,10 @@ export async function sendGmailOnce(id: string, message: Mail) {
   }
   const suppressionStore = getStore({ name: "notwork-announcements", consistency: "strong" });
   if (
-    await suppressionStore.get(`suppressions/${hash(message.to[0].trim().toLowerCase())}.json`, {
+    !options.transactional &&
+    (await suppressionStore.get(`suppressions/${hash(message.to[0].trim().toLowerCase())}.json`, {
       type: "json",
-    })
+    }))
   ) {
     await store.setJSON(key, { id, to: message.to[0], status: "skipped" });
     return { status: "skipped" };

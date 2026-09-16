@@ -1,16 +1,17 @@
 import { ArrowLeft, Check, LoaderCircle, Mail } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { resetForgottenMemberPassword } from "@/lib/member-profile-api";
+import { completeMemberPasswordReset, requestMemberPasswordReset } from "@/lib/member-profile-api";
 
 export function PasswordResetRequest({
   onBack,
   variant = "profile",
+  resetToken = "",
 }: {
   onBack: () => void;
   variant?: "profile" | "event";
+  resetToken?: string;
 }) {
   const [email, setEmail] = useState("");
-  const [recoveryCode, setRecoveryCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -23,14 +24,15 @@ export function PasswordResetRequest({
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (newPassword !== confirmation) {
+    if (resetToken && newPassword !== confirmation) {
       setError("Şifreler eşleşmiyor");
       return;
     }
     setSubmitting(true);
     setError("");
     try {
-      await resetForgottenMemberPassword(email.trim(), recoveryCode.trim(), newPassword);
+      if (resetToken) await completeMemberPasswordReset(resetToken, newPassword);
+      else await requestMemberPasswordReset(email.trim());
       setSubmitted(true);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Şifre yenilenemedi");
@@ -45,9 +47,13 @@ export function PasswordResetRequest({
         <Check className="h-7 w-7" />
       </span>
       <div>
-        <h1 className="text-3xl font-black tracking-[-0.04em]">Şifren yenilendi</h1>
+        <h1 className="text-3xl font-black tracking-[-0.04em]">
+          {resetToken ? "Şifren yenilendi" : "E-postanı kontrol et"}
+        </h1>
         <p className="mt-3 text-sm leading-6 text-foreground/60">
-          Yeni şifrenle hemen giriş yapabilirsin. Diğer cihazlardaki açık oturumların kapatıldı.
+          {resetToken
+            ? "Yeni şifrenle hemen giriş yapabilirsin. Diğer cihazlardaki açık oturumların kapatıldı."
+            : "Bu adrese bağlı bir profil varsa 30 dakika geçerli güvenli yenileme bağlantısını gönderdik."}
         </p>
       </div>
       <button type="button" onClick={onBack} className={primaryButtonClass}>
@@ -64,79 +70,60 @@ export function PasswordResetRequest({
       </div>
       <h1 className="mt-5 text-3xl font-black tracking-[-0.04em]">Şifreni yenile</h1>
       <p className="mt-2 text-sm leading-6 text-foreground/60">
-        Profil e-postanı ve etkinlikte sana verilen kodu yaz. Doğrulama tamamlanınca yeni şifren
-        hemen aktif olur.
+        {resetToken
+          ? "Yeni şifreni belirle. Bu bağlantı yalnızca bir kez kullanılabilir."
+          : "Profilinde kayıtlı e-posta adresini yaz. Güvenli yenileme bağlantısı doğrudan adresine gelsin."}
       </p>
       <form onSubmit={submit} className="mt-6 space-y-4">
-        <label className="block text-sm font-bold">
-          E-posta
-          <input
-            required
-            type="email"
-            autoComplete="email"
-            autoCapitalize="none"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className={
-              variant === "profile"
-                ? "profile-input mt-2"
-                : "mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-base outline-none focus:border-primary"
-            }
-            placeholder="ornek@eposta.com"
-          />
-        </label>
-        <label className="block text-sm font-bold">
-          Etkinlik kodun
-          <input
-            required
-            autoComplete="one-time-code"
-            autoCapitalize="characters"
-            maxLength={16}
-            value={recoveryCode}
-            onChange={(event) => setRecoveryCode(event.target.value.toUpperCase())}
-            className={
-              variant === "profile"
-                ? "profile-input mt-2 uppercase"
-                : "mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-base uppercase outline-none focus:border-primary"
-            }
-            placeholder="Örn. A17"
-          />
-        </label>
-        <label className="block text-sm font-bold">
-          Yeni şifre
-          <input
-            required
-            type="password"
-            autoComplete="new-password"
-            minLength={10}
-            maxLength={72}
-            value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)}
-            className={
-              variant === "profile"
-                ? "profile-input mt-2"
-                : "mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-base outline-none focus:border-primary"
-            }
-            placeholder="En az 10 karakter · harf ve rakam"
-          />
-        </label>
-        <label className="block text-sm font-bold">
-          Yeni şifre tekrar
-          <input
-            required
-            type="password"
-            autoComplete="new-password"
-            minLength={10}
-            maxLength={72}
-            value={confirmation}
-            onChange={(event) => setConfirmation(event.target.value)}
-            className={
-              variant === "profile"
-                ? "profile-input mt-2"
-                : "mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-base outline-none focus:border-primary"
-            }
-          />
-        </label>
+        {!resetToken ? (
+          <label className="block text-sm font-bold">
+            E-posta
+            <input
+              required
+              type="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className={
+                variant === "profile"
+                  ? "profile-input mt-2"
+                  : "mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-base outline-none focus:border-primary"
+              }
+              placeholder="ornek@eposta.com"
+            />
+          </label>
+        ) : (
+          <>
+            <label className="block text-sm font-bold">
+              Yeni şifre
+              <input
+                required
+                type="password"
+                autoComplete="new-password"
+                minLength={10}
+                maxLength={72}
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                className="profile-input mt-2"
+                placeholder="En az 10 karakter · harf ve rakam"
+              />
+            </label>
+            <label className="block text-sm font-bold">
+              Yeni şifre tekrar
+              <input
+                required
+                type="password"
+                autoComplete="new-password"
+                minLength={10}
+                maxLength={72}
+                value={confirmation}
+                onChange={(event) => setConfirmation(event.target.value)}
+                className="profile-input mt-2"
+              />
+            </label>
+          </>
+        )}
         {error ? (
           <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm font-bold text-destructive">
             {error}
@@ -145,10 +132,7 @@ export function PasswordResetRequest({
         <button
           disabled={
             submitting ||
-            !email.trim() ||
-            !recoveryCode.trim() ||
-            newPassword.length < 10 ||
-            confirmation.length < 10
+            (resetToken ? newPassword.length < 10 || confirmation.length < 10 : !email.trim())
           }
           className={`${primaryButtonClass} disabled:opacity-50`}
           type="submit"
@@ -158,7 +142,13 @@ export function PasswordResetRequest({
           ) : (
             <Mail className="h-5 w-5" />
           )}
-          {submitting ? "Şifre yenileniyor…" : "Şifremi şimdi yenile"}
+          {submitting
+            ? resetToken
+              ? "Şifre yenileniyor…"
+              : "Bağlantı gönderiliyor…"
+            : resetToken
+              ? "Şifremi şimdi yenile"
+              : "Yenileme bağlantısını gönder"}
         </button>
       </form>
     </>

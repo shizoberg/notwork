@@ -1023,33 +1023,91 @@ export async function resetMemberCredential(
   } satisfies TemporaryMemberCredential;
 }
 
-export async function resetForgottenMemberPassword(
+export async function requestForgottenMemberPassword(
   requestedEmail: string,
-  requestedEventCode: string,
-  newPassword: string,
   store = getMemberProfileStore(),
 ) {
   const email = clean(requestedEmail, 120).toLocaleLowerCase("tr-TR");
-  const eventCode = clean(requestedEventCode, 16).toUpperCase();
+  const { gmailStatus, sendGmailOnce } = await import("./_gmail.mjs");
+  if (!(await gmailStatus()).connected)
+    throw new Error("Şifre e-postası servisi şu an hazır değil");
+
   const profiles = await getRows<StoredMemberProfile>(store, "profiles/");
-  const storedProfile = profiles.find((candidate) => candidate.email === email);
-  if (!storedProfile || ["rejected", "suspended", "pending"].includes(storedProfile.status)) {
-    return null;
+  const profile = profiles.find((candidate) => candidate.email === email);
+  if (!profile || ["rejected", "suspended", "pending"].includes(profile.status)) return;
+
+  const hour = new Date().toISOString().slice(0, 13);
+  const requestKey = `password-reset-requests/${hour}/${hashToken(email)}.json`;
+  const claim = await store.setJSON(
+    requestKey,
+    { emailHash: hashToken(email), requestedAt: new Date().toISOString() },
+    { onlyIfNew: true },
+  );
+  if (!claim.modified) return;
+
+  const token = randomBytes(32).toString("base64url");
+  const tokenKey = `password-reset-tokens/${hashToken(token)}.json`;
+  await store.setJSON(tokenKey, {
+    username: profile.username,
+    expiresAt: Date.now() + 30 * 60 * 1000,
+    createdAt: new Date().toISOString(),
+  });
+  const url = `https://notwork.me/profil?reset=${token}`;
+  const delivery = await sendGmailOnce(
+    `password-reset:${hashToken(token)}`,
+    {
+      to: [email],
+      subject: "notwork şifreni yenile",
+      text: `notwork profil şifreni yenilemek için bu bağlantıyı 30 dakika içinde aç: ${url}\n\nBu isteği sen yapmadıysan mesajı yok say. Şifren değişmeyecek.`,
+      html: `<html lang="tr"><meta charset="utf-8"><body style="font-family:Arial,sans-serif;color:#102327"><h1>notwork şifreni yenile</h1><p>Şifreni yenilemek için aşağıdaki güvenli bağlantıyı 30 dakika içinde aç.</p><p><a href="${url}" style="display:inline-block;padding:14px 20px;border-radius:999px;background:#65b5bb;color:#102327;text-decoration:none;font-weight:bold">Şifremi yenile</a></p><p>Bu isteği sen yapmadıysan mesajı yok say. Şifren değişmeyecek.</p><p>berk@notwork.me</p></body></html>`,
+    },
+    { transactional: true },
+  );
+  if (!["accepted", "uncertain"].includes(delivery.status)) {
+    await Promise.all([store.delete(tokenKey), store.delete(requestKey)]);
   }
-  const profile = await hydrateMemberEventCodes(storedProfile, store);
-  if (!(profile.eventCodes || []).some((candidate) => candidate.code === eventCode)) return null;
+}
+
+export async function completeForgottenMemberPassword(
+  token: string,
+  newPassword: string,
+  store = getMemberProfileStore(),
+) {
+  if (!/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
+  const tokenHash = hashToken(token);
+  const tokenKey = `password-reset-tokens/${tokenHash}.json`;
+  const row = (await store.get(tokenKey, {
+    type: "json",
+    consistency: "strong",
+  })) as { username?: string; expiresAt?: number } | null;
+  if (!row?.username || !row.expiresAt || row.expiresAt <= Date.now()) return null;
+
+  const profile = (await store.get(profileKey(row.username), {
+    type: "json",
+    consistency: "strong",
+  })) as StoredMemberProfile | null;
+  if (!profile || ["rejected", "suspended", "pending"].includes(profile.status)) return null;
+
+  const credential = await hashPassword(newPassword);
+  const used = await store.setJSON(
+    `password-reset-used/${tokenHash}.json`,
+    { usedAt: new Date().toISOString() },
+    { onlyIfNew: true },
+  );
+  if (!used.modified) return null;
 
   const now = new Date().toISOString();
   await Promise.all([
     store.setJSON(profileKey(profile.username), {
       ...profile,
-      credential: await hashPassword(newPassword),
+      credential,
       mustChangePassword: false,
       status: "active",
       credentialIssuedAt: now,
       updatedAt: now,
     } satisfies StoredMemberProfile),
     revokeMemberSessions(profile.username, store),
+    store.delete(tokenKey),
   ]);
   return {
     ok: true as const,

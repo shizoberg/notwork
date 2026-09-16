@@ -11,7 +11,8 @@ import {
   loginMemberProfile,
   logoutMemberProfile,
   registerMemberProfile,
-  resetForgottenMemberPassword,
+  completeForgottenMemberPassword,
+  requestForgottenMemberPassword,
   safeMemberProfile,
   saveMemberProfilePhoto,
   submitMemberReference,
@@ -29,11 +30,12 @@ type ProfileInput = {
     | "photo"
     | "reference"
     | "logout"
-    | "resetForgottenPassword";
+    | "requestPasswordReset"
+    | "completePasswordReset";
   identity?: string;
   password?: string;
   newPassword?: string;
-  recoveryCode?: string;
+  resetToken?: string;
   headline?: string;
   bio?: string;
   skills?: string[];
@@ -224,29 +226,26 @@ export default async (request: Request, _context: Context) => {
       );
     }
 
-    if (action === "resetForgottenPassword") {
+    if (action === "requestPasswordReset") {
       const email = clean(input.email, 120).toLocaleLowerCase("tr-TR");
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return new Response("Geçerli bir e-posta yaz", { status: 400 });
       }
-      const recoveryCode = clean(input.recoveryCode, 16).toUpperCase();
+      await requestForgottenMemberPassword(email);
+      return json({ ok: true });
+    }
+
+    if (action === "completePasswordReset") {
+      const resetToken = clean(input.resetToken, 80);
       const newPassword = clean(input.newPassword, 120);
-      if (!recoveryCode) return new Response("Etkinlik kodunu yaz", { status: 400 });
       if (!validNewPassword(newPassword)) {
         return new Response("Şifre en az 10 karakter, bir harf ve bir rakam içermeli", {
           status: 400,
         });
       }
-      const limit = await checkLoginLimit(request, `reset:${email}`);
-      if (!limit.allowed) {
-        return new Response("Çok fazla deneme. 15 dakika sonra tekrar dene.", { status: 429 });
-      }
-      const result = await resetForgottenMemberPassword(email, recoveryCode, newPassword);
-      if (!result) {
-        await recordLoginFailure(limit.key);
-        return new Response("E-posta veya etkinlik kodu hatalı", { status: 401 });
-      }
-      await getMemberProfileStore().delete(limit.key);
+      const result = await completeForgottenMemberPassword(resetToken, newPassword);
+      if (!result)
+        return new Response("Bağlantı geçersiz, kullanılmış veya süresi dolmuş", { status: 400 });
       return json({ ok: true });
     }
 
