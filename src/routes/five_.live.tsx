@@ -1072,10 +1072,13 @@ function ProblemComposer({
               </option>
             ))}
           </select>
-          <ModalField label="problem başlığı" count={`${form.title.length}/48`}>
+          <ModalField
+            label="problem başlığı"
+            count={`${form.title.length} karakter · en az 20 karakter`}
+          >
             <input
               required
-              minLength={6}
+              minLength={20}
               maxLength={48}
               value={form.title}
               onChange={(event) =>
@@ -1085,10 +1088,13 @@ function ProblemComposer({
               placeholder="tek cümlede problem"
             />
           </ModalField>
-          <ModalField label="problemi anlat" count={`${form.description.length}/180 · min. 24`}>
+          <ModalField
+            label="problemi anlat"
+            count={`${form.description.length} karakter · en az 20 karakter`}
+          >
             <textarea
               required
-              minLength={24}
+              minLength={20}
               maxLength={180}
               rows={3}
               value={form.description}
@@ -1100,10 +1106,13 @@ function ProblemComposer({
             />
           </ModalField>
           <div className="grid gap-3 sm:grid-cols-2">
-            <ModalField label="ne denedin?" count={`${form.tried.length}/100 · min. 8`}>
+            <ModalField
+              label="ne denedin?"
+              count={`${form.tried.length} karakter · en az 20 karakter`}
+            >
               <textarea
                 required
-                minLength={8}
+                minLength={20}
                 maxLength={100}
                 rows={3}
                 value={form.tried}
@@ -1116,11 +1125,11 @@ function ProblemComposer({
             </ModalField>
             <ModalField
               label="5 dakika sonunda"
-              count={`${form.desiredOutcome.length}/80 · min. 8`}
+              count={`${form.desiredOutcome.length} karakter · en az 20 karakter`}
             >
               <textarea
                 required
-                minLength={8}
+                minLength={20}
                 maxLength={80}
                 rows={3}
                 value={form.desiredOutcome}

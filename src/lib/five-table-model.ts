@@ -33,12 +33,12 @@ export const emptyTables = (): TableState => ({ sequence: 0, tables: {}, members
 export function hasCompleteTableOutcome(outcome?: TableOutcome) {
   return Boolean(
     outcome &&
-      Number.isInteger(outcome.rating) &&
-      outcome.rating >= 1 &&
-      outcome.rating <= 5 &&
-      outcome.comment?.trim().length >= 3 &&
-      outcome.consentAt &&
-      outcome.publishedAt,
+    Number.isInteger(outcome.rating) &&
+    outcome.rating >= 1 &&
+    outcome.rating <= 5 &&
+    outcome.comment?.trim().length >= 3 &&
+    outcome.consentAt &&
+    outcome.publishedAt,
   );
 }
 export function joinTable(
@@ -98,7 +98,14 @@ export function memberTable(state: TableState, personId: string, expectedId: str
     throw new Error("Bu masa oturumun değişti. Ekranı yenile.");
   return state.tables[expectedId];
 }
-export function tableChat(state: TableState, personId: string, tableId: string, id: string, text: string, now: number) {
+export function tableChat(
+  state: TableState,
+  personId: string,
+  tableId: string,
+  id: string,
+  text: string,
+  now: number,
+) {
   const table = memberTable(state, personId, tableId);
   const person = table.people.find((p) => p.id === personId);
   if (!person) throw new Error("Bu grubun üyesi değilsin.");
@@ -109,7 +116,9 @@ export function tableChat(state: TableState, personId: string, tableId: string, 
   if (messages.some((m) => m.id === id && m.personId === personId)) return table;
   if (messages.some((m) => m.personId === personId && now - m.at < 1500))
     throw new Error("Yeni mesaj için bir an bekle.");
-  table.messages = [...messages, { id, personId, name: person.name, text: body, at: now }].slice(-100);
+  table.messages = [...messages, { id, personId, name: person.name, text: body, at: now }].slice(
+    -100,
+  );
   return table;
 }
 export function tableOutcome(
@@ -127,7 +136,7 @@ export function tableOutcome(
   const answer = solution.trim().replace(/\s+/g, " ");
   const review = comment.trim().replace(/\s+/g, " ");
   if (table.phase !== "finished") throw new Error("Önce görüşme turlarını tamamla.");
-  if (answer.length < 3 || answer.length > 300) throw new Error("Çözümü 3–300 karakterle yaz.");
+  if (answer.length < 20 || answer.length > 300) throw new Error("Çözümü en az 20 karakterle yaz.");
   if (!Number.isInteger(rating) || rating < 1 || rating > 5)
     throw new Error("Puan 1–5 arasında olmalı.");
   if (review.length < 3 || review.length > 240)

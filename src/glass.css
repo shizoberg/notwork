@@ -118,6 +118,25 @@
   margin-top: 7px;
   font-size: 14px;
 }
+.five-compose label > span {
+  display: block;
+  font-weight: 750;
+}
+.five-compose label > small,
+.five-solution-field > small {
+  display: block;
+  margin-top: 5px;
+  color: #79909e;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: right;
+}
+.five-solution-field {
+  display: block !important;
+}
+.five-solution-field textarea {
+  width: 100%;
+}
 .five-tables .five-leave {
   justify-content: center;
   gap: 10px;

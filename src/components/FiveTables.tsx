@@ -53,7 +53,15 @@ function demoRequest(action: string, input: Record<string, unknown>): Payload {
   };
   const state = saved.state as TableState;
   const now = Date.now() + saved.offset;
-  if (action === "tableChat") tableChat(state, demoPerson.id, String(input.tableId), String(input.messageId), String(input.text), now);
+  if (action === "tableChat")
+    tableChat(
+      state,
+      demoPerson.id,
+      String(input.tableId),
+      String(input.messageId),
+      String(input.text),
+      now,
+    );
   if (action === "tableOutcome") {
     tableOutcome(
       state,
@@ -93,9 +101,9 @@ function demoRequest(action: string, input: Record<string, unknown>): Payload {
       );
   }
   if (action === "demoTime") saved.offset += 300001;
-  if(action === "demoPhoto") {
-    const table=state.tables[state.members[demoPerson.id]];
-    tableAction(state,table.photoOwner,table.id,"photo",now,table.round);
+  if (action === "demoPhoto") {
+    const table = state.tables[state.members[demoPerson.id]];
+    tableAction(state, table.photoOwner, table.id, "photo", now, table.round);
   }
   const operation = (
     { tableStart: "start", tableNext: "next", tableLeave: "leave", tablePhoto: "photo" } as const
@@ -191,9 +199,7 @@ export function FiveTables() {
   const remaining = table ? Math.max(0, Math.ceil((table.endsAt - clock - offset) / 1000)) : 0;
   async function act(action: string, input: Record<string, unknown> = {}) {
     if (busy) return;
-    const animatedAction = ["tableJoin", "tableStart", "tableNext", "tableLeave"].includes(
-      action,
-    );
+    const animatedAction = ["tableJoin", "tableStart", "tableNext", "tableLeave"].includes(action);
     const transitionStartedAt = performance.now();
     if (animatedAction) setTransitionAction(action);
     setBusy(true);
@@ -213,8 +219,7 @@ export function FiveTables() {
       }
       if (animatedAction) {
         const remaining = 900 - (performance.now() - transitionStartedAt);
-        if (remaining > 0)
-          await new Promise((resolve) => window.setTimeout(resolve, remaining));
+        if (remaining > 0) await new Promise((resolve) => window.setTimeout(resolve, remaining));
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "İşlem tamamlanamadı");
@@ -259,11 +264,7 @@ export function FiveTables() {
                       "ortak havuza dönülüyor",
                       "yeni problemler getiriliyor",
                     ]
-                  : [
-                      "problemin okunuyor",
-                      "çözüm ortakların bulunuyor",
-                      "grup kodun hazırlanıyor",
-                    ]
+                  : ["problemin okunuyor", "çözüm ortakların bulunuyor", "grup kodun hazırlanıyor"]
               }
             />
           </div>
@@ -294,99 +295,113 @@ export function FiveTables() {
           <>
             {fiveMode === "choose" ? (
               <section className="five-paths" aria-label="Five başlangıç seçenekleri">
-                <button onClick={() => setFiveMode("problem")}><strong>Problemini yaz</strong><span>Kendi problemine bir çözüm masası aç</span><ArrowUpRight size={18} /></button>
-                <button onClick={() => setFiveMode("solve")}><strong>Problemlere çözüm olan gruplara katıl</strong><span>Açık gruplardan birine katıl</span><ArrowUpRight size={18} /></button>
-              </section>
-            ) : (
-              <button className="five-demo-action" onClick={() => setFiveMode("choose")}>← seçeneklere dön</button>
-            )}
-            {fiveMode !== "choose" && <>
-            <div className="five-pool-heading">
-              <span>{fiveMode === "problem" ? "Problemini yaz" : "Problem masaları"}</span>
-              <button aria-label="Problem ekle" onClick={() => setFiveMode("problem")}>
-                <Plus size={20} />
-              </button>
-            </div>
-            {fiveMode === "problem" && (
-              <form
-                className="tool-surface five-compose"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  if (preview) {
-                    await act("submitLive", form);
-                    setFiveMode("solve");
-                  } else {
-                    setBusy(true);
-                    try {
-                      await fiveRequest({
-                        action: "submitLive",
-                        ...form,
-                        category: "other",
-                        attending: true,
-                        accessToken: localStorage.getItem(getFiveEventTokenStorageKey()) || "",
-                      });
-                      await request();
-                      setFiveMode("solve");
-                    } catch (e) {
-                      setError(e instanceof Error ? e.message : "Problem eklenemedi");
-                    } finally {
-                      setBusy(false);
-                    }
-                  }
-                }}
-              >
-                {(
-                  [
-                    ["title", "Problemin", 6, 48],
-                    ["description", "Biraz anlat", 30, 10000],
-                    ["tried", "Şimdiye kadar ne denedin?", 8, 100],
-                    ["desiredOutcome", "Nasıl bir çözüm arıyorsun?", 8, 80],
-                  ] as const
-                ).map(([key, label, min, max]) => (
-                  <label key={key}>
-                    {label}
-                    <textarea
-                      required
-                      minLength={min}
-                      maxLength={key === "description" ? undefined : max}
-                      value={form[key]}
-                      onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                    />
-                  </label>
-                ))}
-                <label>
-                  <input
-                    type="checkbox"
-                    required
-                    checked={form.consent}
-                    onChange={(e) => setForm({ ...form, consent: e.target.checked })}
-                  />{" "}
-                  Problemimin etkinlik katılımcılarıyla paylaşılmasını kabul ediyorum.
-                </label>
-                <button className="tool-primary" disabled={busy}>
-                  Problemi ekle
+                <button onClick={() => setFiveMode("problem")}>
+                  <strong>Problemini yaz</strong>
+                  <span>Kendi problemine bir çözüm masası aç</span>
+                  <ArrowUpRight size={18} />
                 </button>
-              </form>
-            )}
-            {fiveMode === "solve" && data.board.length === 0 && (
-              <p className="tool-surface">İlk problem masasını sen aç.</p>
-            )}
-            {fiveMode === "solve" && data.board.map((problem) => (
-              <section className="tool-surface" key={problem.id}>
-                <span className="tool-eyebrow">4 kişi · ortak çözüm</span>
-                <h2>{problem.title}</h2>
-                <p>{problem.description}</p>
-                <button
-                  className="tool-primary"
-                  disabled={busy}
-                  onClick={() => void act("tableJoin", { problemId: problem.id })}
-                >
-                  Bu masaya katıl
+                <button onClick={() => setFiveMode("solve")}>
+                  <strong>Problemlere çözüm olan gruplara katıl</strong>
+                  <span>Açık gruplardan birine katıl</span>
                   <ArrowUpRight size={18} />
                 </button>
               </section>
-            ))}
-            </>}
+            ) : (
+              <button className="five-demo-action" onClick={() => setFiveMode("choose")}>
+                ← seçeneklere dön
+              </button>
+            )}
+            {fiveMode !== "choose" && (
+              <>
+                <div className="five-pool-heading">
+                  <span>{fiveMode === "problem" ? "Problemini yaz" : "Problem masaları"}</span>
+                  <button aria-label="Problem ekle" onClick={() => setFiveMode("problem")}>
+                    <Plus size={20} />
+                  </button>
+                </div>
+                {fiveMode === "problem" && (
+                  <form
+                    className="tool-surface five-compose"
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (preview) {
+                        await act("submitLive", form);
+                        setFiveMode("solve");
+                      } else {
+                        setBusy(true);
+                        try {
+                          await fiveRequest({
+                            action: "submitLive",
+                            ...form,
+                            category: "other",
+                            attending: true,
+                            accessToken: localStorage.getItem(getFiveEventTokenStorageKey()) || "",
+                          });
+                          await request();
+                          setFiveMode("solve");
+                        } catch (e) {
+                          setError(e instanceof Error ? e.message : "Problem eklenemedi");
+                        } finally {
+                          setBusy(false);
+                        }
+                      }
+                    }}
+                  >
+                    {(
+                      [
+                        ["title", "Problemin", 48],
+                        ["description", "Biraz anlat", undefined],
+                        ["tried", "Şimdiye kadar ne denedin?", 100],
+                        ["desiredOutcome", "Nasıl bir çözüm arıyorsun?", 80],
+                      ] as const
+                    ).map(([key, label, max]) => (
+                      <label key={key}>
+                        <span>{label}</span>
+                        <textarea
+                          required
+                          minLength={20}
+                          maxLength={max}
+                          value={form[key]}
+                          onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                        />
+                        <small>{form[key].length} karakter · en az 20 karakter</small>
+                      </label>
+                    ))}
+                    <label>
+                      <input
+                        type="checkbox"
+                        required
+                        checked={form.consent}
+                        onChange={(e) => setForm({ ...form, consent: e.target.checked })}
+                      />{" "}
+                      Problemimin etkinlik katılımcılarıyla paylaşılmasını kabul ediyorum.
+                    </label>
+                    <button className="tool-primary" disabled={busy}>
+                      Problemi ekle
+                    </button>
+                  </form>
+                )}
+                {fiveMode === "solve" && data.board.length === 0 && (
+                  <p className="tool-surface">İlk problem masasını sen aç.</p>
+                )}
+                {fiveMode === "solve" &&
+                  data.board.map((problem) => (
+                    <section className="tool-surface" key={problem.id}>
+                      <span className="tool-eyebrow">4 kişi · ortak çözüm</span>
+                      <h2>{problem.title}</h2>
+                      <p>{problem.description}</p>
+                      <button
+                        className="tool-primary"
+                        disabled={busy}
+                        onClick={() => void act("tableJoin", { problemId: problem.id })}
+                      >
+                        Bu masaya katıl
+                        <ArrowUpRight size={18} />
+                      </button>
+                    </section>
+                  ))}
+              </>
+            )}
           </>
         ) : (
           <>
@@ -395,15 +410,29 @@ export function FiveTables() {
                 <span>Grup kodun</span>
                 <strong>{table.code}</strong>
               </div>
-              <button className="five-demo-action" onClick={() => setCodeOpen(true)}>Grup kodunu büyüt</button>
+              <button className="five-demo-action" onClick={() => setCodeOpen(true)}>
+                Grup kodunu büyüt
+              </button>
               <Dialog open={codeOpen} onOpenChange={setCodeOpen}>
                 <DialogContent
                   className="five-code-fullscreen"
-                  style={{ left: 0, top: 0, width: "100vw", height: "100dvh", maxWidth: "none", transform: "none", translate: "none" }}
+                  style={{
+                    left: 0,
+                    top: 0,
+                    width: "100vw",
+                    height: "100dvh",
+                    maxWidth: "none",
+                    transform: "none",
+                    translate: "none",
+                  }}
                 >
                   <DialogTitle className="sr-only">Grup kodun {table.code}</DialogTitle>
-                  <DialogDescription className="sr-only">Bu kodu göstererek grubunu bulabilirsin</DialogDescription>
-                  <div className="five-code-brand" aria-label="notwork">notwork</div>
+                  <DialogDescription className="sr-only">
+                    Bu kodu göstererek grubunu bulabilirsin
+                  </DialogDescription>
+                  <div className="five-code-brand" aria-label="notwork">
+                    notwork
+                  </div>
                   <div className="five-code-number">{table.code}</div>
                 </DialogContent>
               </Dialog>
@@ -416,7 +445,12 @@ export function FiveTables() {
                   </div>
                 ))}
               </div>
-              {table.photoOwner && <p className="five-photographer"><Camera size={16} /> Grup fotoğrafçısı · {table.people.find((person) => person.id === table.photoOwner)?.name}</p>}
+              {table.photoOwner && (
+                <p className="five-photographer">
+                  <Camera size={16} /> Grup fotoğrafçısı ·{" "}
+                  {table.people.find((person) => person.id === table.photoOwner)?.name}
+                </p>
+              )}
               {(table.phase === "waiting" || table.phase === "ready") && (
                 <>
                   <p>{table.people.length}/4 kişi · bu kodla aynı masada buluşun.</p>
@@ -503,11 +537,18 @@ export function FiveTables() {
                       </div>
                     ) : (
                       <div>
-                      <p>
-                        Fotoğraf görevi {table.people.find((p) => p.id === table.photoOwner)?.name}{" "}
-                        kişisinde.
-                      </p>
-                      {preview && <button className="five-demo-action" onClick={()=>void act("demoPhoto")}>Demo: görevli fotoğrafı tamamlasın</button>}
+                        <p>
+                          Fotoğraf görevi{" "}
+                          {table.people.find((p) => p.id === table.photoOwner)?.name} kişisinde.
+                        </p>
+                        {preview && (
+                          <button
+                            className="five-demo-action"
+                            onClick={() => void act("demoPhoto")}
+                          >
+                            Demo: görevli fotoğrafı tamamlasın
+                          </button>
+                        )}
                       </div>
                     ))}
                   {remaining === 0 && table.photoSaved && (
@@ -521,8 +562,8 @@ export function FiveTables() {
                   )}
                 </>
               )}
-              {table.phase === "finished" && (
-                hasCompleteTableOutcome(table.outcomes?.[data.identity.id]) ? (
+              {table.phase === "finished" &&
+                (hasCompleteTableOutcome(table.outcomes?.[data.identity.id]) ? (
                   <p>Çözüm notun kaydedildi. Hazırsan gruptan ayrılabilirsin.</p>
                 ) : (
                   <form
@@ -543,8 +584,33 @@ export function FiveTables() {
                     }}
                   >
                     <h3>Bu grup problemi çözdü mü?</h3>
-                    <div className="five-outcome-choice"><button type="button" className={solved === true ? "is-selected" : ""} onClick={() => setSolved(true)}>Evet</button><button type="button" className={solved === false ? "is-selected" : ""} onClick={() => setSolved(false)}>Henüz değil</button></div>
-                    <textarea required minLength={3} maxLength={300} value={solution} onChange={(event) => setSolution(event.target.value)} placeholder="Bulduğunuz çözümü veya sonraki adımı yazın" />
+                    <div className="five-outcome-choice">
+                      <button
+                        type="button"
+                        className={solved === true ? "is-selected" : ""}
+                        onClick={() => setSolved(true)}
+                      >
+                        Evet
+                      </button>
+                      <button
+                        type="button"
+                        className={solved === false ? "is-selected" : ""}
+                        onClick={() => setSolved(false)}
+                      >
+                        Henüz değil
+                      </button>
+                    </div>
+                    <label className="five-solution-field">
+                      <textarea
+                        required
+                        minLength={20}
+                        maxLength={300}
+                        value={solution}
+                        onChange={(event) => setSolution(event.target.value)}
+                        placeholder="Bulduğunuz çözümü yazın"
+                      />
+                      <small>{solution.length} karakter · en az 20 karakter</small>
+                    </label>
                     <div className="five-outcome-review">
                       <span>Bu masayı puanla</span>
                       <div className="five-outcome-stars" aria-label="Masa puanın">
@@ -598,19 +664,53 @@ export function FiveTables() {
                       Çözümü ve yorumu kaydet
                     </button>
                   </form>
-                )
-              )}
+                ))}
             </section>
             <section className="tool-surface five-group-chat" aria-label="Grup sohbeti">
               <h2>Grup sohbeti</h2>
               <p>Burada buluşalım · yalnızca bu masadaki kişiler</p>
               <div className="five-chat-messages" role="log" aria-live="polite">
-                {(table.messages || []).map((m) => <div key={`${m.personId}-${m.id}`} className={m.personId === data.identity.id ? "is-self" : ""}><small>{m.name}</small><p>{m.text}</p></div>)}
+                {(table.messages || []).map((m) => (
+                  <div
+                    key={`${m.personId}-${m.id}`}
+                    className={m.personId === data.identity.id ? "is-self" : ""}
+                  >
+                    <small>{m.name}</small>
+                    <p>{m.text}</p>
+                  </div>
+                ))}
                 {!table.messages?.length && <p>İlk mesajı bırak · nerede buluşuyorsunuz?</p>}
               </div>
-              <form onSubmit={async (e) => { e.preventDefault(); if (!message.trim() || busy) return; setBusy(true); setError(""); try { await request("tableChat", { tableId: table.id, messageId: crypto.randomUUID(), text: message }); setMessage(""); } catch (e) { setError(e instanceof Error ? e.message : "Mesaj gönderilemedi"); } finally { setBusy(false); } }}>
-                <input aria-label="Grubuna mesaj" placeholder="Grubuna bir mesaj yaz" maxLength={500} value={message} onChange={(e) => setMessage(e.target.value)} />
-                <button className="tool-primary" disabled={busy || !message.trim()}>Gönder</button>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!message.trim() || busy) return;
+                  setBusy(true);
+                  setError("");
+                  try {
+                    await request("tableChat", {
+                      tableId: table.id,
+                      messageId: crypto.randomUUID(),
+                      text: message,
+                    });
+                    setMessage("");
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : "Mesaj gönderilemedi");
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                <input
+                  aria-label="Grubuna mesaj"
+                  placeholder="Grubuna bir mesaj yaz"
+                  maxLength={500}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+                <button className="tool-primary" disabled={busy || !message.trim()}>
+                  Gönder
+                </button>
               </form>
             </section>
             <button

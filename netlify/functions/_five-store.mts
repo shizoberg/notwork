@@ -403,6 +403,7 @@ export async function createFiveProblem(
   identity?: FiveIdentity,
   store = getFiveStore(),
 ) {
+  const liveEntry = input.source === "live";
   const name = identity?.name || cleanFiveText(input.name, 80);
   const email = identity?.email || normalizeEmail(input.email);
   const title = cleanFiveText(input.title, 48);
@@ -415,10 +416,30 @@ export async function createFiveProblem(
 
   if (name.length < 2) throw new Error("Adını yazmalısın");
   if (!email.includes("@")) throw new Error("Geçerli bir e-posta gerekli");
-  if (title.length < 6) throw new Error("Problem başlığı en az 6 karakter olmalı");
-  if (description.length < 30) throw new Error("Problemini en az 30 karakterle anlatmalısın");
-  if (tried.length < 8) throw new Error("Şimdiye kadar ne denediğini kısaca anlatmalısın");
-  if (desiredOutcome.length < 8) throw new Error("Görüşmeden beklediğin sonucu kısaca yazmalısın");
+  if (title.length < (liveEntry ? 20 : 6))
+    throw new Error(
+      liveEntry
+        ? "Problem başlığı en az 20 karakter olmalı"
+        : "Problem başlığı en az 6 karakter olmalı",
+    );
+  if (description.length < (liveEntry ? 20 : 30))
+    throw new Error(
+      liveEntry
+        ? "Problemini en az 20 karakterle anlatmalısın"
+        : "Problemini en az 30 karakterle anlatmalısın",
+    );
+  if (tried.length < (liveEntry ? 20 : 8))
+    throw new Error(
+      liveEntry
+        ? "Şimdiye kadar ne denediğini en az 20 karakterle anlatmalısın"
+        : "Şimdiye kadar ne denediğini kısaca anlatmalısın",
+    );
+  if (desiredOutcome.length < (liveEntry ? 20 : 8))
+    throw new Error(
+      liveEntry
+        ? "Beklediğin sonucu en az 20 karakterle anlatmalısın"
+        : "Görüşmeden beklediğin sonucu kısaca yazmalısın",
+    );
   if (!input.consent) throw new Error("Etkinlik içi paylaşım açık rızası gerekli");
   if (containsBlockedLanguage(title, description, tried, desiredOutcome)) {
     throw new Error("Bu metin topluluk kurallarına uygun değil");

@@ -44,12 +44,15 @@ test("four seats, persisted code, authoritative timer, one photo owner, four rou
   assert.equal(room.phase, "finished");
   assert.throws(() => tableAction(s, "0", room.id, "leave", 900000, 3));
   assert.throws(() =>
+    tableOutcome(s, "0", room.id, true, "Kısa çözüm", 5, "Yeni bir bakış kazandım.", true, 900000),
+  );
+  assert.throws(() =>
     tableOutcome(
       s,
       "0",
       room.id,
       true,
-      "İlk hafta üç müşteri görüşmesi yapacağız.",
+      "Üç müşteri görüşmesi yapalım",
       5,
       "Yeni bir bakış kazandım.",
       false,
@@ -61,7 +64,7 @@ test("four seats, persisted code, authoritative timer, one photo owner, four rou
     "0",
     room.id,
     true,
-    "İlk hafta üç müşteri görüşmesi yapacağız.",
+    "Üç müşteri görüşmesi yapalım",
     5,
     "Yeni bir bakış kazandım.",
     true,
