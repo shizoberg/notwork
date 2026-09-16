@@ -149,17 +149,6 @@ export type TemporaryMemberCredential = {
   temporaryPassword: string;
 };
 
-export type StoredPasswordResetRequest = {
-  id: string;
-  email: string;
-  username: string;
-  name: string;
-  status: "pending" | "completed";
-  createdAt: string;
-  updatedAt: string;
-  completedAt: string;
-};
-
 export type ImportedMemberCredential = {
   email: string;
   username: string;
@@ -197,10 +186,6 @@ function photoKey(profileId: string) {
 
 function referenceKey(targetUsername: string, authorUsername: string) {
   return `references/${targetUsername}/${authorUsername}.json`;
-}
-
-function passwordResetRequestKey(email: string) {
-  return `password-reset-requests/${hashToken(email)}.json`;
 }
 
 function activeEventNetworkDataset() {
@@ -386,45 +371,6 @@ export async function listMemberProfiles(store = getMemberProfileStore()) {
 export async function listMemberReferences(store = getMemberProfileStore()) {
   const references = await getRows<StoredMemberReference>(store, "references/");
   return references.sort((first, second) => second.createdAt.localeCompare(first.createdAt));
-}
-
-export async function listMemberPasswordResetRequests(store = getMemberProfileStore()) {
-  const requests = await getRows<StoredPasswordResetRequest>(store, "password-reset-requests/");
-  return requests.sort((first, second) => second.createdAt.localeCompare(first.createdAt));
-}
-
-export async function requestMemberPasswordReset(
-  requestedEmail: string,
-  store = getMemberProfileStore(),
-) {
-  const email = clean(requestedEmail, 120).toLocaleLowerCase("tr-TR");
-  const profiles = await getRows<StoredMemberProfile>(store, "profiles/");
-  const profile = profiles.find((candidate) => candidate.email === email);
-  if (!profile || profile.status === "rejected" || profile.status === "suspended") return;
-
-  const key = passwordResetRequestKey(email);
-  const existing = (await store.get(key, {
-    type: "json",
-    consistency: "strong",
-  })) as StoredPasswordResetRequest | null;
-  const now = new Date().toISOString();
-  if (
-    existing?.status === "pending" &&
-    Date.now() - Date.parse(existing.updatedAt || existing.createdAt) < 15 * 60 * 1000
-  ) {
-    return;
-  }
-
-  await store.setJSON(key, {
-    id: hashToken(email).slice(0, 24),
-    email,
-    username: profile.username,
-    name: profile.name,
-    status: "pending",
-    createdAt: existing?.status === "pending" ? existing.createdAt : now,
-    updatedAt: now,
-    completedAt: "",
-  } satisfies StoredPasswordResetRequest);
 }
 
 export async function getMemberConnections(
@@ -1077,25 +1023,39 @@ export async function resetMemberCredential(
   } satisfies TemporaryMemberCredential;
 }
 
-export async function completeMemberPasswordResetRequest(
-  requestId: string,
+export async function resetForgottenMemberPassword(
+  requestedEmail: string,
+  requestedEventCode: string,
+  newPassword: string,
   store = getMemberProfileStore(),
 ) {
-  const requests = await getRows<StoredPasswordResetRequest>(store, "password-reset-requests/");
-  const request = requests.find(
-    (candidate) => candidate.id === clean(requestId, 80) && candidate.status === "pending",
-  );
-  if (!request) throw new Error("Aktif şifre yenileme talebi bulunamadı");
+  const email = clean(requestedEmail, 120).toLocaleLowerCase("tr-TR");
+  const eventCode = clean(requestedEventCode, 16).toUpperCase();
+  const profiles = await getRows<StoredMemberProfile>(store, "profiles/");
+  const storedProfile = profiles.find((candidate) => candidate.email === email);
+  if (!storedProfile || ["rejected", "suspended", "pending"].includes(storedProfile.status)) {
+    return null;
+  }
+  const profile = await hydrateMemberEventCodes(storedProfile, store);
+  if (!(profile.eventCodes || []).some((candidate) => candidate.code === eventCode)) return null;
 
-  const credential = await resetMemberCredential(request.username, store);
   const now = new Date().toISOString();
-  await store.setJSON(passwordResetRequestKey(request.email), {
-    ...request,
-    status: "completed",
+  await Promise.all([
+    store.setJSON(profileKey(profile.username), {
+      ...profile,
+      credential: await hashPassword(newPassword),
+      mustChangePassword: false,
+      status: "active",
+      credentialIssuedAt: now,
+      updatedAt: now,
+    } satisfies StoredMemberProfile),
+    revokeMemberSessions(profile.username, store),
+  ]);
+  return {
+    ok: true as const,
+    username: profile.username,
     updatedAt: now,
-    completedAt: now,
-  } satisfies StoredPasswordResetRequest);
-  return credential;
+  };
 }
 
 export async function importTemporaryCredentials(

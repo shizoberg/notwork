@@ -100,15 +100,19 @@ export async function loginMember(identity: string, password: string) {
   return profile;
 }
 
-export async function requestMemberPasswordReset(email: string) {
+export async function resetForgottenMemberPassword(
+  email: string,
+  recoveryCode: string,
+  newPassword: string,
+) {
   const response = await fetch("/api/member-profile", {
     method: "POST",
     credentials: "same-origin",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ action: "requestPasswordReset", email }),
+    body: JSON.stringify({ action: "resetForgottenPassword", email, recoveryCode, newPassword }),
   });
   if (!response.ok) {
-    const message = (await response.text()).trim() || "Şifre yenileme talebi alınamadı";
+    const message = (await response.text()).trim() || "Şifre yenilenemedi";
     throw new MemberProfileApiError(message, response.status);
   }
   return (await response.json()) as { ok: true };

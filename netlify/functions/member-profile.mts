@@ -10,8 +10,8 @@ import {
   getNetworkingMemberPhoto,
   loginMemberProfile,
   logoutMemberProfile,
-  requestMemberPasswordReset,
   registerMemberProfile,
+  resetForgottenMemberPassword,
   safeMemberProfile,
   saveMemberProfilePhoto,
   submitMemberReference,
@@ -29,10 +29,11 @@ type ProfileInput = {
     | "photo"
     | "reference"
     | "logout"
-    | "requestPasswordReset";
+    | "resetForgottenPassword";
   identity?: string;
   password?: string;
   newPassword?: string;
+  recoveryCode?: string;
   headline?: string;
   bio?: string;
   skills?: string[];
@@ -223,12 +224,29 @@ export default async (request: Request, _context: Context) => {
       );
     }
 
-    if (action === "requestPasswordReset") {
+    if (action === "resetForgottenPassword") {
       const email = clean(input.email, 120).toLocaleLowerCase("tr-TR");
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return new Response("Geçerli bir e-posta yaz", { status: 400 });
       }
-      await requestMemberPasswordReset(email);
+      const recoveryCode = clean(input.recoveryCode, 16).toUpperCase();
+      const newPassword = clean(input.newPassword, 120);
+      if (!recoveryCode) return new Response("Etkinlik kodunu yaz", { status: 400 });
+      if (!validNewPassword(newPassword)) {
+        return new Response("Şifre en az 10 karakter, bir harf ve bir rakam içermeli", {
+          status: 400,
+        });
+      }
+      const limit = await checkLoginLimit(request, `reset:${email}`);
+      if (!limit.allowed) {
+        return new Response("Çok fazla deneme. 15 dakika sonra tekrar dene.", { status: 429 });
+      }
+      const result = await resetForgottenMemberPassword(email, recoveryCode, newPassword);
+      if (!result) {
+        await recordLoginFailure(limit.key);
+        return new Response("E-posta veya etkinlik kodu hatalı", { status: 401 });
+      }
+      await getMemberProfileStore().delete(limit.key);
       return json({ ok: true });
     }
 

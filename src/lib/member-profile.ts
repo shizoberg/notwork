@@ -112,17 +112,6 @@ export type TemporaryMemberCredential = {
   temporaryPassword: string;
 };
 
-export type MemberPasswordResetRequest = {
-  id: string;
-  email: string;
-  username: string;
-  name: string;
-  status: "pending" | "completed";
-  createdAt: string;
-  updatedAt: string;
-  completedAt: string;
-};
-
 export type MemberProfilesAdminPayload = {
   database: {
     storeName: string;
@@ -136,7 +125,6 @@ export type MemberProfilesAdminPayload = {
   };
   profiles: NotworkMemberProfile[];
   references: NotworkMemberReference[];
-  passwordResetRequests: MemberPasswordResetRequest[];
   credentials?: TemporaryMemberCredential[];
   sourceCount?: number;
   syncedCount?: number;

@@ -58,7 +58,6 @@ import {
 } from "@/lib/event-registry";
 import { getFiveAdmin, updateFiveAdmin, type FiveAdminPayload } from "@/lib/five";
 import type {
-  MemberPasswordResetRequest,
   MemberProfilesAdminPayload,
   NotworkMemberReference,
   NotworkMemberProfile,
@@ -433,9 +432,6 @@ function AdminPage() {
   const [startupApplications, setStartupApplications] = useState<StartupApplication[]>([]);
   const [memberProfiles, setMemberProfiles] = useState<NotworkMemberProfile[]>([]);
   const [memberReferences, setMemberReferences] = useState<NotworkMemberReference[]>([]);
-  const [passwordResetRequests, setPasswordResetRequests] = useState<MemberPasswordResetRequest[]>(
-    [],
-  );
   const [temporaryCredentials, setTemporaryCredentials] = useState<TemporaryMemberCredential[]>([]);
   const [profileMessage, setProfileMessage] = useState("");
   const [memberDraft, setMemberDraft] = useState<NetworkMember>(blankMember);
@@ -659,7 +655,6 @@ function AdminPage() {
     const data = (await response.json()) as MemberProfilesAdminPayload;
     setMemberProfiles(data.profiles);
     setMemberReferences(data.references || []);
-    setPasswordResetRequests(data.passwordResetRequests || []);
   };
 
   const memberProfileAction = async (action: "syncMembers" | "issueCredentials") => {
@@ -677,7 +672,6 @@ function AdminPage() {
     const data = (await response.json()) as MemberProfilesAdminPayload;
     setMemberProfiles(data.profiles);
     setMemberReferences(data.references || []);
-    setPasswordResetRequests(data.passwordResetRequests || []);
     setTemporaryCredentials(data.credentials || []);
     setProfileMessage(
       action === "syncMembers"
@@ -709,7 +703,6 @@ function AdminPage() {
     const data = (await response.json()) as MemberProfilesAdminPayload;
     setMemberProfiles(data.profiles);
     setMemberReferences(data.references || []);
-    setPasswordResetRequests(data.passwordResetRequests || []);
     setProfileMessage(
       referenceStatus === "approved" ? "Referans yayınlandı." : "Referans reddedildi.",
     );
@@ -737,7 +730,6 @@ function AdminPage() {
     const data = (await response.json()) as MemberProfilesAdminPayload;
     setMemberProfiles(data.profiles);
     setMemberReferences(data.references || []);
-    setPasswordResetRequests(data.passwordResetRequests || []);
     setProfileMessage(
       profileStatus === "approved"
         ? `${profile.name} üyeliğe onaylandı.`
@@ -764,35 +756,10 @@ function AdminPage() {
     const data = (await response.json()) as MemberProfilesAdminPayload;
     setMemberProfiles(data.profiles);
     setMemberReferences(data.references || []);
-    setPasswordResetRequests(data.passwordResetRequests || []);
     setTemporaryCredentials(data.credentials || []);
     setProfileMessage(
       `${profile.name} için yeni geçici şifre üretildi. CSV dosyasını şimdi indir.`,
     );
-  };
-
-  const completePasswordResetRequest = async (request: MemberPasswordResetRequest) => {
-    setProfileMessage("");
-    setTemporaryCredentials([]);
-    const response = await fetch("/api/admin/member-profiles", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        password,
-        action: "resetRequestedCredential",
-        requestId: request.id,
-      }),
-    });
-    if (!response.ok) {
-      setProfileMessage(await response.text());
-      return;
-    }
-    const data = (await response.json()) as MemberProfilesAdminPayload;
-    setMemberProfiles(data.profiles);
-    setMemberReferences(data.references || []);
-    setPasswordResetRequests(data.passwordResetRequests || []);
-    setTemporaryCredentials(data.credentials || []);
-    setProfileMessage(`${request.name} için geçici şifre üretildi. Şifreyi güvenli şekilde ilet.`);
   };
 
   const seedEventNetwork = async () => {
@@ -1683,7 +1650,6 @@ function AdminPage() {
           <MemberProfilesAdmin
             profiles={memberProfiles}
             references={memberReferences}
-            passwordResetRequests={passwordResetRequests}
             credentials={temporaryCredentials}
             message={profileMessage}
             refresh={() => loadMemberProfiles(password)}
@@ -1691,7 +1657,6 @@ function AdminPage() {
             issueCredentials={() => memberProfileAction("issueCredentials")}
             moderateProfile={moderateMemberProfile}
             resetPassword={resetMemberPassword}
-            completePasswordResetRequest={completePasswordResetRequest}
             moderateReference={moderateMemberReference}
           />
         </div>
@@ -1891,7 +1856,6 @@ function downloadTemporaryCredentials(credentials: TemporaryMemberCredential[]) 
 function MemberProfilesAdmin({
   profiles,
   references,
-  passwordResetRequests,
   credentials,
   message,
   refresh,
@@ -1899,12 +1863,10 @@ function MemberProfilesAdmin({
   issueCredentials,
   moderateProfile,
   resetPassword,
-  completePasswordResetRequest,
   moderateReference,
 }: {
   profiles: NotworkMemberProfile[];
   references: NotworkMemberReference[];
-  passwordResetRequests: MemberPasswordResetRequest[];
   credentials: TemporaryMemberCredential[];
   message: string;
   refresh: () => Promise<void>;
@@ -1915,7 +1877,6 @@ function MemberProfilesAdmin({
     status: "approved" | "rejected",
   ) => Promise<void>;
   resetPassword: (profile: NotworkMemberProfile) => Promise<void>;
-  completePasswordResetRequest: (request: MemberPasswordResetRequest) => Promise<void>;
   moderateReference: (
     reference: NotworkMemberReference,
     status: "approved" | "rejected",
@@ -1929,9 +1890,6 @@ function MemberProfilesAdmin({
   const pendingReferenceCount = references.filter(
     (reference) => reference.status === "pending",
   ).length;
-  const pendingPasswordResetRequests = passwordResetRequests.filter(
-    (request) => request.status === "pending",
-  );
   const profileNames = new Map(profiles.map((profile) => [profile.username, profile.name]));
 
   return (
@@ -1969,45 +1927,6 @@ function MemberProfilesAdmin({
           value={pendingReferenceCount}
         />
       </div>
-
-      {pendingPasswordResetRequests.length > 0 ? (
-        <div className="border-b border-border bg-primary/5 p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-xs font-black uppercase tracking-[0.16em] text-primary-deep">
-                Şifre yenileme
-              </div>
-              <h3 className="mt-1 text-lg font-black">Bekleyen kullanıcı talepleri</h3>
-            </div>
-            <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-black text-primary-deep">
-              {pendingPasswordResetRequests.length} talep
-            </span>
-          </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            {pendingPasswordResetRequests.map((request) => (
-              <article
-                key={request.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-card p-4"
-              >
-                <div>
-                  <div className="font-black">{request.name}</div>
-                  <div className="mt-1 text-xs text-foreground/55">{request.email}</div>
-                  <div className="mt-1 text-[11px] text-foreground/40">
-                    {new Date(request.createdAt).toLocaleString("tr-TR")}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void completePasswordResetRequest(request)}
-                  className="rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground"
-                >
-                  Geçici şifre üret
-                </button>
-              </article>
-            ))}
-          </div>
-        </div>
-      ) : null}
 
       <div className="border-b border-border p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
