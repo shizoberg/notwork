@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { SiteNav } from "./SiteNav";
+import { EventThinkingStatus } from "./EventThinkingStatus";
 import { useEventPreview } from "@/lib/event-preview";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Camera, Clock3, ArrowUpRight, LogOut, Plus } from "lucide-react";
@@ -120,6 +121,7 @@ function demoRequest(action: string, input: Record<string, unknown>): Payload {
 }
 export function FiveTables() {
   const [codeOpen, setCodeOpen] = useState(false);
+  const [transitionAction, setTransitionAction] = useState("");
   const [message, setMessage] = useState("");
   const [fiveMode, setFiveMode] = useState<"choose" | "problem" | "solve">("choose");
   const [solved, setSolved] = useState<boolean | null>(null);
@@ -189,6 +191,11 @@ export function FiveTables() {
   const remaining = table ? Math.max(0, Math.ceil((table.endsAt - clock - offset) / 1000)) : 0;
   async function act(action: string, input: Record<string, unknown> = {}) {
     if (busy) return;
+    const animatedAction = ["tableJoin", "tableStart", "tableNext", "tableLeave"].includes(
+      action,
+    );
+    const transitionStartedAt = performance.now();
+    if (animatedAction) setTransitionAction(action);
     setBusy(true);
     setError("");
     try {
@@ -204,9 +211,15 @@ export function FiveTables() {
         setReviewComment("");
         setReviewConsent(false);
       }
+      if (animatedAction) {
+        const remaining = 900 - (performance.now() - transitionStartedAt);
+        if (remaining > 0)
+          await new Promise((resolve) => window.setTimeout(resolve, remaining));
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "İşlem tamamlanamadı");
     } finally {
+      setTransitionAction("");
       setBusy(false);
     }
   }
@@ -226,6 +239,35 @@ export function FiveTables() {
     <div className="event-tool five-tables">
       <SiteNav variant="event" />
       <main className="app-preview" id="five-tables">
+        {transitionAction && (
+          <div className="five-thinking-overlay" role="status">
+            <span className="five-thinking-mark" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
+            <EventThinkingStatus
+              title={
+                transitionAction === "tableLeave"
+                  ? "Yeni ihtimaller açılıyor"
+                  : "Masan hazırlanıyor"
+              }
+              phrases={
+                transitionAction === "tableLeave"
+                  ? [
+                      "çözümün kaydediliyor",
+                      "ortak havuza dönülüyor",
+                      "yeni problemler getiriliyor",
+                    ]
+                  : [
+                      "problemin okunuyor",
+                      "çözüm ortakların bulunuyor",
+                      "grup kodun hazırlanıyor",
+                    ]
+              }
+            />
+          </div>
+        )}
         <h1>ntw.five</h1>
         <p>5 dakikada üretilen çözümler</p>
         {preview && <p className="five-demo-label">Demo · örnek kişiler · canlıya gönderilmez</p>}

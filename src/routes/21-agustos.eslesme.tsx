@@ -1,4 +1,5 @@
 import { EventChat } from "@/components/EventChat";
+import { EventThinkingStatus } from "@/components/EventThinkingStatus";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Camera, CheckCircle2, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -186,7 +187,7 @@ function AugustMatchPage() {
         photoDataUrl: photoDataUrl || undefined,
         consent: reviewConsent,
       });
-      await new Promise((resolve) => window.setTimeout(resolve, 650));
+      await new Promise((resolve) => window.setTimeout(resolve, 900));
       const nextMatch = await loadMatch(token);
       if (result.status === "completed") {
         setComment("");
@@ -250,8 +251,14 @@ function AugustMatchPage() {
               {isCompleting && (
                 <div className="match-transition" role="status">
                   <MatchLoadingVisual />
-                  <p>Yeni bağlantılar aranıyor</p>
-                  <small>ihtiyaçlar ve katkılar yeniden karşılaştırılıyor</small>
+                  <EventThinkingStatus
+                    title="Yeni bağlantılar aranıyor"
+                    phrases={[
+                      "ihtiyaçların okunuyor",
+                      "katkılar karşılaştırılıyor",
+                      "yeni grubun hazırlanıyor",
+                    ]}
+                  />
                 </div>
               )}
               {group && <p className="match-intro">notwork algoritması sizleri eşleştirdi.</p>}
@@ -521,8 +528,14 @@ function LoadingCard() {
   return (
     <div className="match-loading-card" role="status">
       <MatchLoadingVisual />
-      <p>Eşleşmen hazırlanıyor</p>
-      <small>ihtiyaçların, katkıların ve yeni bağlantılar karşılaştırılıyor</small>
+      <EventThinkingStatus
+        title="Eşleşmen hazırlanıyor"
+        phrases={[
+          "profilindeki ipuçları okunuyor",
+          "uyumlu bağlantılar karşılaştırılıyor",
+          "tanışma grubun kuruluyor",
+        ]}
+      />
       <span className="match-loading-progress" aria-hidden="true">
         <i />
       </span>

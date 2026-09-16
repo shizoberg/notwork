@@ -24,6 +24,7 @@ import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react
 import QRCode from "react-qr-code";
 
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { EventThinkingStatus } from "@/components/EventThinkingStatus";
 import {
   fiveCategories,
   fiveCategoryLabel,
@@ -250,13 +251,23 @@ function FiveLivePage() {
 
 function FiveLoading() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#edf5fa] text-foreground">
+    <div
+      className="flex min-h-screen items-center justify-center bg-[#edf5fa] text-foreground"
+      role="status"
+    >
       <div className="text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[#78d9da] text-[#071213]">
           <RefreshCw className="h-7 w-7 animate-spin" />
         </div>
-        <div className="mt-5 font-display text-4xl font-black tracking-[-0.055em]">ntw.five</div>
-        <p className="mt-2 text-sm text-foreground/45">canlı havuz hazırlanıyor</p>
+        <EventThinkingStatus
+          className="mt-5"
+          title="ntw.five"
+          phrases={[
+            "canlı havuz okunuyor",
+            "problemler eşleştiriliyor",
+            "çözüm masaları hazırlanıyor",
+          ]}
+        />
       </div>
     </div>
   );
