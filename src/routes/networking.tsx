@@ -911,8 +911,8 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                 <span className="tool-eyebrow">notwork üyeleri</span>
                 <h2>Topluluktan bir önizleme</h2>
                 <p>
-                  Profilleri güvenli bir önizlemeyle keşfet. Giriş yaptığında üyelerin alanlarını,
-                  deneyimlerini ve paylaşmayı seçtikleri iletişim yollarını görebilirsin.
+                  Aşağıdan tüm profilleri, alanları ve deneyimleri kayıt olmadan keşfedebilirsin.
+                  Paylaşılmış iletişim yolları yalnızca doğrulanmış NTW üyelerine açıktır.
                 </p>
               </div>
               <div className="network-preview-profiles" aria-label="Anonim üye profilleri">
@@ -1142,8 +1142,8 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
           </section>
         ) : null}
 
-        {memberProfile || directoryPreview ? (
-          <section className="mx-auto max-w-6xl px-5 pb-20">
+        {!profileLoading ? (
+          <section id="networking-directory" className="scroll-mt-24 mx-auto max-w-6xl px-5 pb-20">
             <div className="network-directory-shell">
               <div className="network-directory-heading">
                 <div>

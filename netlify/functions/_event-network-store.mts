@@ -386,19 +386,16 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-async function nextPublicCode(store: ReturnType<typeof getEventNetworkStore>) {
-  const { blobs } = await store.list({ prefix: `${getNetworkPrefix()}/codes/` });
-  const used = new Set(
-    blobs
-      .map((blob) => blob.key.split("/").pop()?.replace(".json", ""))
-      .filter(Boolean) as string[],
-  );
-
+async function reservePublicCode(
+  store: ReturnType<typeof getEventNetworkStore>,
+  participantId: string,
+) {
   for (let index = 1; index < 999; index += 1) {
     const letter = codeLetters[(index - 1) % codeLetters.length];
     const number = Math.ceil(index / codeLetters.length);
     const code = `${letter}${String(number).padStart(2, "0")}`;
-    if (!used.has(code)) return code;
+    const reserved = await store.setJSON(codeKey(code), participantId, { onlyIfNew: true });
+    if (reserved.modified) return code;
   }
   throw new Error("Etkinlik kodu üretilemedi");
 }
@@ -797,7 +794,8 @@ export async function registerNetworkProfile(
 
   const accessToken = crypto.randomUUID();
   const accessTokenHash = hashToken(accessToken);
-  const publicCode = await nextPublicCode(store);
+  const participantId = crypto.randomUUID();
+  const publicCode = await reservePublicCode(store, participantId);
   const username = await resolveGeneralUsername(
     emailNormalized,
     `${firstName} ${lastName}`,
@@ -824,7 +822,7 @@ export async function registerNetworkProfile(
     updatedAt: now,
   };
   const participant: EventParticipant = {
-    id: crypto.randomUUID(),
+    id: participantId,
     eventId: getNetworkEventId(),
     networkProfileId: profile.id,
     publicCode,
@@ -857,7 +855,6 @@ export async function registerNetworkProfile(
       attendedEvent,
       updatedAt: now,
     }),
-    store.setJSON(codeKey(publicCode), participant.id),
     store.set(tokenKey(accessTokenHash), participant.id),
   ]);
   await upsertGeneralNetworkingMember(registration);

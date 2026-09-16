@@ -31,6 +31,8 @@ try {
   );
   for (const file of [
     "_test-members",
+    "_atomic-state",
+    "_matchmaking",
     "_event-network-store",
     "_event-review-store",
     "_announcements",
@@ -302,6 +304,41 @@ try {
     "recorded wording matches the displayed checkbox",
   );
   const network = await load("_event-network-store");
+  const registrationLoadStore = getStore({ name: "registration-concurrency-test" });
+  const concurrentRegistrations = await Promise.all(
+    Array.from({ length: 100 }, (_, index) =>
+      network.registerNetworkProfile(registrationLoadStore, {
+        firstName: "Load",
+        lastName: `Tester ${index}`,
+        email: `load-${index}@example.invalid`,
+        offers: [index % 2 ? "tasarım" : "yazılım"],
+        intro: "Yeni bağlantılar kurmak istiyorum",
+        offersDetail: "Deneyimimi paylaşabilirim",
+        needs: "Doğru insanlarla tanışmak istiyorum",
+        needTag: "networking",
+        attendedEvent: "ilk-etkinligim",
+        eventConsent: true,
+        generalNetworkOptIn: true,
+      }),
+    ),
+  );
+  assert.equal(
+    new Set(concurrentRegistrations.map((registration) => registration.participant.publicCode))
+      .size,
+    100,
+    "100 simultaneous registrations receive unique public codes",
+  );
+  assert.equal((await network.listRegistrations(registrationLoadStore)).length, 100);
+  const resumedRegistration = await network.resumeNetworkProfile(
+    registrationLoadStore,
+    "load-0@example.invalid",
+  );
+  assert.equal(
+    resumedRegistration.participant.id,
+    concurrentRegistrations[0].participant.id,
+    "existing event registration resumes instead of creating a duplicate",
+  );
+  assert.ok(resumedRegistration.accessToken);
   const networkStore = getStore({ name: "consent-regression-test" });
   const networkInput = {
     firstName: "Consent",
