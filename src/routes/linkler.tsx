@@ -13,7 +13,7 @@ import {
   Vote,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { SiteNav } from "@/components/SiteNav";
 import { notworkEventOptions, type EventNetworkRegistration } from "@/lib/event-network";
 import {
   getEventNetworkMe,
@@ -124,9 +124,9 @@ function LinksPage() {
   const [previewReady, setPreviewReady] = useState(false);
   const [activeEvent, setActiveEvent] = useState<NotworkEvent | null>(null);
   const [registration, setRegistration] = useState<EventNetworkRegistration | null>(null);
-  const [memberProfile, setMemberProfile] = useState<NotworkMemberProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [showCompletion, setShowCompletion] = useState(false);
   const [message, setMessage] = useState("");
   const [registrationPath, setRegistrationPath] = useState<RegistrationPath>("choose");
   const [registrationStep, setRegistrationStep] = useState<RegistrationStep>("standard");
@@ -224,7 +224,6 @@ function LinksPage() {
 
   function applyMemberProfile(profile: NotworkMemberProfile, fallbackEvent?: string) {
     const [firstName = "", ...lastNameParts] = profile.name.trim().split(/\s+/);
-    setMemberProfile(profile);
     setForm((current) => ({
       ...current,
       firstName,
@@ -290,7 +289,6 @@ function LinksPage() {
       try {
         profile = await getMyMemberProfile();
         if (profile && redirectToPasswordSetup(profile)) return;
-        if (active) setMemberProfile(profile);
       } catch (error) {
         if (!(error instanceof MemberProfileApiError && error.status === 401)) console.error(error);
       }
@@ -347,6 +345,60 @@ function LinksPage() {
     [form],
   );
 
+  const hasRegistration = Boolean(registration) || (preview && previewReady);
+
+  useEffect(() => {
+    if (!showCompletion) return;
+    const timer = window.setTimeout(() => setShowCompletion(false), 1_750);
+    return () => window.clearTimeout(timer);
+  }, [showCompletion]);
+
+  const registrationProgress = useMemo(() => {
+    if (registration || (preview && previewReady)) return 100;
+
+    if (registrationPath === "choose") return 0;
+    if (registrationPath === "login") {
+      const completed = [loginIdentity.trim(), loginPassword, loginConsent].filter(Boolean).length;
+      return Math.round((completed / 3) * 45);
+    }
+
+    const completed = [
+      form.firstName.trim(),
+      form.lastName.trim(),
+      form.email.includes("@"),
+      form.attendedEvent,
+      form.offers.length > 0,
+      form.intro.trim().length >= 2 && form.intro.trim().length <= 40,
+      form.offersDetail.trim().length >= 2 && form.offersDetail.trim().length <= 40,
+      form.needs.trim().length >= 2 && form.needs.trim().length <= 40,
+      form.needTag,
+      form.eventConsent,
+      form.generalNetworkOptIn,
+    ].filter(Boolean).length;
+    return Math.round((completed / 11) * 100);
+  }, [
+    form,
+    loginConsent,
+    loginIdentity,
+    loginPassword,
+    preview,
+    previewReady,
+    registration,
+    registrationPath,
+  ]);
+
+  const progressCopy = useMemo(() => {
+    if (hasRegistration) return { label: "Hazırsın", hint: "Uygulama akışın hazır" };
+    if (registrationPath === "choose") return { label: "Başlangıç", hint: "Sana uygun yolu seç" };
+    if (registrationPath === "login")
+      return { label: "Profilin", hint: "Hesabınla güvenle devam et" };
+    if (registrationStep === "standard")
+      return { label: "Profilin", hint: "Temel bilgilerini tamamla" };
+    return { label: "Etkinlik", hint: "Seni doğru kişilerle buluşturalım" };
+  }, [hasRegistration, registrationPath, registrationStep]);
+
+  const activeEventLinks = useMemo(() => eventLinks.filter((link) => link.enabled), [eventLinks]);
+
   function toggleOffer(offer: string) {
     setForm((current) => {
       const exists = current.offers.includes(offer);
@@ -366,6 +418,7 @@ function LinksPage() {
   async function submitRegistration() {
     if (preview) {
       setPreviewReady(true);
+      setShowCompletion(true);
       return;
     }
     setIsSaving(true);
@@ -396,6 +449,7 @@ function LinksPage() {
         window.location.pathname + window.location.search,
       );
       setRegistration(data);
+      setShowCompletion(true);
       setMessage(
         data.membership?.verifiedMember
           ? "Kayıt tamamlandı. Etkinlik katılımcısı üyeliğin otomatik doğrulandı; kodun hazır."
@@ -450,9 +504,9 @@ function LinksPage() {
     }
   }
 
-  const hasRegistration = Boolean(registration) || (preview && previewReady);
   useEffect(() => {
     document.documentElement.dataset.notworkEntryReady = String(hasRegistration);
+    if (hasRegistration) window.requestAnimationFrame(() => window.scrollTo({ top: 0 }));
     const timer = window.setTimeout(
       () =>
         window.dispatchEvent(new CustomEvent("notwork-entry-ready", { detail: hasRegistration })),
@@ -465,21 +519,28 @@ function LinksPage() {
   }, [hasRegistration]);
 
   return (
-    <div className="event-entry min-h-screen bg-background text-foreground">
+    <div
+      className={`event-entry min-h-screen bg-background text-foreground${hasRegistration ? "" : " is-registering"}`}
+    >
+      {showCompletion && (
+        <div className="entry-completion" role="status" aria-live="polite">
+          <div className="entry-completion-mark" aria-hidden="true">
+            <span />
+            <Check />
+          </div>
+          <p>Artık hazırsın</p>
+          <small>notwork akışın açılıyor</small>
+        </div>
+      )}
       <SiteNav variant="event" />
       <main id="etkinlik-girisi" className="scroll-mt-24 px-4 py-5 sm:py-10">
         <div className="mx-auto max-w-3xl">
-          <header className="entry-heading">
-            <div
-              className="entry-progress"
-              aria-label={hasRegistration ? "Son adım: keşfet" : "Kayıt adımları"}
-            >
-              <span className="is-current">01 · Sen</span>
-              <span className={registrationStep === "event" || hasRegistration ? "is-current" : ""}>
-                02 · Tanışalım
-              </span>
-              <span className={hasRegistration ? "is-current" : ""}>03 · Keşfet</span>
-            </div>
+          <header className={`entry-heading${hasRegistration ? " is-ready" : ""}`}>
+            <EntryProgress
+              value={registrationProgress}
+              label={progressCopy.label}
+              hint={progressCopy.hint}
+            />
             {hasRegistration && (
               <>
                 <h1>{activeEvent?.entry.appsTitle || "Şimdi notwork zamanı"}</h1>
@@ -509,7 +570,6 @@ function LinksPage() {
               toggleOffer={toggleOffer}
               addCustomOffer={addCustomOffer}
               submitRegistration={submitRegistration}
-              memberProfile={memberProfile}
               activeEvent={activeEvent}
               registrationPath={registrationPath}
               registrationStep={registrationStep}
@@ -539,15 +599,10 @@ function LinksPage() {
               )}
               <div className="entry-flow-summary">
                 <span>Bu akşamın akışı</span>
-                <p>
-                  {eventLinks
-                    .filter((link) => link.enabled)
-                    .map((link, i) => `${i + 1}. ${link.title}`)
-                    .join(" → ")}
-                </p>
+                <p>Admin akışındaki sırayı takip et. Her adım seni bir sonrakine taşır.</p>
               </div>
-              <section className="mt-5 grid gap-3">
-                {eventLinks.map(({ title, description, href, icon: Icon, enabled }, index) => (
+              <section className="entry-app-flow">
+                {activeEventLinks.map(({ title, description, href, icon: Icon }, index) => (
                   <a
                     key={title}
                     href={
@@ -555,42 +610,18 @@ function LinksPage() {
                         ? `${href}${href.includes("?") ? "&" : "?"}preview=event`
                         : href
                     }
-                    onClick={(event) => {
-                      if (!enabled) {
-                        event.preventDefault();
-                        setMessage(`${title}, bu etkinlikte henüz aktif değil.`);
-                      } else if (!hasRegistration) {
-                        event.preventDefault();
-                        setMessage(
-                          "Önce kısa kayıt ve KVKK onayını tamamla; sonra bu alana geçebilirsin.",
-                        );
-                      }
-                    }}
-                    aria-disabled={!hasRegistration || !enabled}
-                    className={`group flex items-center gap-3 rounded-[1.35rem] border bg-card p-3 shadow-sm transition sm:p-4 ${
-                      hasRegistration && enabled
-                        ? "border-primary/25 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-lg hover:shadow-primary/10"
-                        : "border-border opacity-60"
-                    }`}
+                    className="entry-app-step group"
                   >
-                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/12 text-primary-deep transition group-hover:bg-primary group-hover:text-primary-foreground sm:h-14 sm:w-14">
-                      <span className="relative">
-                        <Icon size={25} strokeWidth={1.8} />
-                        <span className="absolute -right-3 -top-3 flex h-5 min-w-5 items-center justify-center rounded-full bg-card px-1 text-[9px] font-black text-primary-deep shadow-sm">
-                          {index + 1}
-                        </span>
-                      </span>
+                    <span className="entry-app-index">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="entry-app-icon">
+                      <Icon size={23} strokeWidth={1.7} />
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-lg font-black tracking-[-0.03em] sm:text-xl">
-                        {title}
-                      </span>
-                      <span className="mt-1 block text-xs leading-5 text-foreground/55 sm:text-sm">
-                        {description}
-                      </span>
+                    <span className="entry-app-copy">
+                      <strong>{title}</strong>
+                      <small>{description}</small>
                     </span>
-                    <span className="shrink-0 rounded-full bg-primary px-3 py-2 text-[0.65rem] font-black uppercase tracking-[0.12em] text-primary-foreground sm:px-4">
-                      {!enabled ? "Kapalı" : hasRegistration ? "Başla" : "Kayıt"}
+                    <span className="entry-app-action">
+                      Başla <ArrowRight size={15} />
                     </span>
                   </a>
                 ))}
@@ -630,6 +661,28 @@ function LinksPage() {
   );
 }
 
+function EntryProgress({ value, label, hint }: { value: number; label: string; hint: string }) {
+  return (
+    <div
+      className="entry-progress"
+      role="progressbar"
+      aria-label="Kayıt ilerlemesi"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={value}
+    >
+      <div className="entry-progress-copy">
+        <span>{label}</span>
+        <strong className="entry-progress-percent">%{value}</strong>
+      </div>
+      <span className="entry-progress-track" aria-hidden="true">
+        <i style={{ transform: `scaleX(${value / 100})` }} />
+      </span>
+      <p>{hint}</p>
+    </div>
+  );
+}
+
 function RegistrationGate({
   form,
   setForm,
@@ -639,7 +692,6 @@ function RegistrationGate({
   toggleOffer,
   addCustomOffer,
   submitRegistration,
-  memberProfile,
   activeEvent,
   registrationPath,
   registrationStep,
@@ -663,7 +715,6 @@ function RegistrationGate({
   toggleOffer: (offer: string) => void;
   addCustomOffer: () => void;
   submitRegistration: () => Promise<void>;
-  memberProfile: NotworkMemberProfile | null;
   activeEvent: NotworkEvent | null;
   registrationPath: RegistrationPath;
   registrationStep: RegistrationStep;
@@ -679,10 +730,18 @@ function RegistrationGate({
   submitMemberLogin: () => Promise<void>;
   registrationPrompts: EventRegistrationPrompts;
 }) {
+  const [eventQuestionIndex, setEventQuestionIndex] = useState(0);
+  const eventQuestionComplete = [
+    form.intro.trim().length >= 2 && form.intro.trim().length <= 40,
+    form.offersDetail.trim().length >= 2 && form.offersDetail.trim().length <= 40,
+    form.needs.trim().length >= 2 && form.needs.trim().length <= 40 && Boolean(form.needTag),
+    form.eventConsent && form.generalNetworkOptIn,
+  ];
+
   if (registrationPath === "choose") {
     return (
-      <section className="mt-5 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-xl shadow-primary/10 sm:p-6">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-primary-deep">
+      <section className="entry-registration-card entry-registration-choice">
+        <div className="entry-step-kicker">
           <UserRound className="h-4 w-4" />
           hoş geldin
         </div>
@@ -692,13 +751,15 @@ function RegistrationGate({
         <p className="mt-3 text-sm leading-6 text-foreground/60">
           Birbirimizi tanıyarak başlayalım. Profilin varsa giriş yap, yoksa birlikte oluşturalım.
         </p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="entry-choice-grid">
           <button
             type="button"
             onClick={() => setRegistrationPath("login")}
-            className="flex min-h-28 flex-col items-start justify-between rounded-[1.5rem] border border-primary/35 bg-primary/10 p-4 text-left transition hover:border-primary hover:bg-primary/15"
+            className="entry-choice is-primary"
           >
-            <KeyRound className="h-6 w-6 text-primary-deep" />
+            <span className="entry-choice-icon">
+              <KeyRound />
+            </span>
             <span>
               <span className="block text-lg font-black">Giriş yap</span>
               <span className="mt-1 block text-xs leading-5 text-foreground/55">
@@ -712,9 +773,11 @@ function RegistrationGate({
               setRegistrationPath("new");
               setRegistrationStep("standard");
             }}
-            className="flex min-h-28 flex-col items-start justify-between rounded-[1.5rem] border border-border bg-background p-4 text-left transition hover:border-primary"
+            className="entry-choice"
           >
-            <UserRound className="h-6 w-6 text-primary-deep" />
+            <span className="entry-choice-icon">
+              <UserRound />
+            </span>
             <span>
               <span className="block text-lg font-black">Profil oluştur</span>
               <span className="mt-1 block text-xs leading-5 text-foreground/55">
@@ -729,7 +792,7 @@ function RegistrationGate({
 
   if (registrationPath === "login") {
     return (
-      <section className="mt-5 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-xl shadow-primary/10 sm:p-6">
+      <section className="entry-registration-card">
         <button
           type="button"
           onClick={() => setRegistrationPath("choose")}
@@ -790,7 +853,7 @@ function RegistrationGate({
 
   if (registrationStep === "standard") {
     return (
-      <section className="mt-5 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-xl shadow-primary/10 sm:p-6">
+      <section className="entry-registration-card">
         <button
           type="button"
           onClick={() => setRegistrationPath("choose")}
@@ -798,9 +861,7 @@ function RegistrationGate({
         >
           ← seçeneklere dön
         </button>
-        <p className="mt-4 text-xs font-black uppercase tracking-[0.16em] text-primary-deep">
-          1 / 2 · temel bilgiler
-        </p>
+        <p className="entry-step-kicker mt-4">1 / 2 · temel bilgiler</p>
         <h1 className="mt-2 text-3xl font-black tracking-[-0.04em]">Etkinlik profilini oluştur</h1>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <QuickInput
@@ -890,136 +951,119 @@ function RegistrationGate({
   }
 
   return (
-    <section className="mt-5 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-xl shadow-primary/10 sm:p-6">
-      <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-primary-deep">
-        <UserRound className="h-4 w-4" />2 / 2 · etkinlik soruları
+    <section className="entry-registration-card">
+      <div className="entry-step-kicker">
+        <UserRound className="h-4 w-4" />
+        soru {eventQuestionIndex + 1} / 4
       </div>
       <h1 className="mt-4 text-3xl font-black leading-none tracking-[-0.04em] sm:text-4xl">
-        {activeEvent?.shortTitle || "Bu etkinlik"} için son adım.
+        Seni doğru kişilerle buluşturalım.
       </h1>
       <p className="mt-3 text-sm leading-6 text-foreground/60">
-        Bu sorular etkinliğe özeldir ve admin panelinden her etkinlik için ayrı düzenlenir. Aynı
-        cevaplar notwork match eşleşme algoritmasıyla ntw.five problem önerilerini birlikte besler.
+        Her ekranda tek soruyu yanıtla. Cevapların {activeEvent?.shortTitle || "etkinlik"} akışını
+        sana göre hazırlasın.
       </p>
 
-      <div className="mt-4 rounded-2xl border border-primary/25 bg-primary/10 p-3 text-xs font-semibold leading-5 text-foreground/65">
-        Etkinlik alanındaki QR üzerinden bu özel kayıt butonunu kullanan katılımcılar, admin onayı
-        beklemeden doğrulanmış Notwork etkinlik üyesi olarak eklenir.
-      </div>
+      <div key={eventQuestionIndex} className="entry-question-stage">
+        {eventQuestionIndex === 0 && (
+          <label className="entry-question-label">
+            {registrationPrompts.introLabel}
+            <textarea
+              autoFocus
+              value={form.intro}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, intro: event.target.value.slice(0, 40) }))
+              }
+              rows={4}
+              minLength={2}
+              maxLength={40}
+              placeholder={registrationPrompts.introPlaceholder}
+            />
+            <CharacterHint length={form.intro.length} />
+          </label>
+        )}
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/8 p-3">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-primary-deep">
-            {memberProfile ? "Profil oturumu açık" : "Temel bilgiler tamamlandı"}
-          </p>
-          <p className="mt-1 text-xs leading-5 text-foreground/55">
-            {memberProfile
-              ? `@${memberProfile.username} ile devam ediyorsun.`
-              : `${form.firstName} ${form.lastName} · ${form.email}`}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setRegistrationStep("standard")}
-          className="rounded-full border border-primary/30 bg-background px-4 py-2 text-xs font-black text-primary-deep"
-        >
-          bilgileri düzenle
-        </button>
-      </div>
+        {eventQuestionIndex === 1 && (
+          <label className="entry-question-label">
+            {registrationPrompts.offersLabel}
+            <textarea
+              autoFocus
+              value={form.offersDetail}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  offersDetail: event.target.value.slice(0, 40),
+                }))
+              }
+              rows={4}
+              minLength={2}
+              maxLength={40}
+              placeholder={registrationPrompts.offersPlaceholder}
+            />
+            <CharacterHint length={form.offersDetail.length} />
+          </label>
+        )}
 
-      <label className="mt-4 block text-sm font-bold">
-        {registrationPrompts.introLabel}
-        <textarea
-          value={form.intro}
-          onChange={(event) =>
-            setForm((current) => ({ ...current, intro: event.target.value.slice(0, 40) }))
-          }
-          rows={3}
-          minLength={2}
-          maxLength={40}
-          placeholder={registrationPrompts.introPlaceholder}
-          className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
-        />
-        <CharacterHint length={form.intro.length} />
-      </label>
+        {eventQuestionIndex === 2 && (
+          <div>
+            <label className="entry-question-label">
+              {registrationPrompts.needsLabel}
+              <textarea
+                autoFocus
+                value={form.needs}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, needs: event.target.value.slice(0, 40) }))
+                }
+                rows={4}
+                minLength={2}
+                maxLength={40}
+                placeholder={registrationPrompts.needsPlaceholder}
+              />
+              <CharacterHint length={form.needs.length} />
+            </label>
+            <p className="entry-question-helper">En yakın başlığı seç</p>
+            <div className="entry-answer-chips">
+              {needSuggestions.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setForm((current) => ({ ...current, needTag: tag }))}
+                  className={form.needTag === tag ? "is-selected" : ""}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
-      <label className="mt-4 block text-sm font-bold">
-        {registrationPrompts.offersLabel}
-        <textarea
-          value={form.offersDetail}
-          onChange={(event) =>
-            setForm((current) => ({ ...current, offersDetail: event.target.value.slice(0, 40) }))
-          }
-          rows={3}
-          minLength={2}
-          maxLength={40}
-          placeholder={registrationPrompts.offersPlaceholder}
-          className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
-        />
-        <CharacterHint length={form.offersDetail.length} />
-      </label>
-
-      <label className="mt-4 block text-sm font-bold">
-        {registrationPrompts.needsLabel}
-        <textarea
-          value={form.needs}
-          onChange={(event) =>
-            setForm((current) => ({ ...current, needs: event.target.value.slice(0, 40) }))
-          }
-          rows={3}
-          minLength={2}
-          maxLength={40}
-          placeholder={registrationPrompts.needsPlaceholder}
-          className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm outline-none focus:border-primary"
-        />
-        <CharacterHint length={form.needs.length} />
-      </label>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {needSuggestions.map((tag) => (
-          <button
-            key={tag}
-            type="button"
-            onClick={() => setForm((current) => ({ ...current, needTag: tag }))}
-            className={`rounded-full border px-3 py-2 text-sm font-bold ${
-              form.needTag === tag
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-primary/20 bg-primary/5"
-            }`}
-          >
-            {tag}
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-5 grid gap-3">
-        <ConsentBox
-          checked={form.eventConsent}
-          onChange={(eventConsent) => setForm((current) => ({ ...current, eventConsent }))}
-          title="Etkinlik cevaplarımın ntw.wordcloud, ntw.match.lab, ntw.five ve kod sistemi için kullanılmasına açık rıza veriyorum."
-        />
-        <ConsentBox
-          checked={form.generalNetworkOptIn}
-          onChange={(generalNetworkOptIn) =>
-            setForm((current) => ({ ...current, generalNetworkOptIn }))
-          }
-          title="Profilimin notwork networking ağında seçtiğim bilgilerle görünmesine ve bağlantı önerilerinde kullanılmasına açık rıza veriyorum."
-        />
-        <ConsentBox
-          checked={form.marketingOptIn}
-          onChange={(marketingOptIn) => setForm((current) => ({ ...current, marketingOptIn }))}
-          title="Adımın ve e-posta adresimin notwork etkinlik, bilet ve topluluk duyuruları için kullanılmasına ve bana e-posta ile ticari elektronik ileti gönderilmesine izin veriyorum. İzin isteğe bağlıdır; dilediğim zaman ücretsiz ayrılabilirim."
-        />
-        <p className="text-xs leading-5 text-foreground/45">
-          Ayrıntılar için{" "}
-          <Link to="/kvkk" className="font-black text-primary-deep underline">
-            KVKK Aydınlatma Metni
-          </Link>
-          ’ni ve rıza verilen işlemler için{" "}
-          <Link to="/acik-riza" className="font-black text-primary-deep underline">
-            Açık Rıza Metni
-          </Link>
-          ’ni inceleyebilirsin.
-        </p>
+        {eventQuestionIndex === 3 && (
+          <div className="entry-consent-stage">
+            <h2>Son bir onay</h2>
+            <p>Cevaplarını eşleşme ve etkinlik deneyiminde kullanabilmemiz için seçimlerini yap.</p>
+            <ConsentBox
+              checked={form.eventConsent}
+              onChange={(eventConsent) => setForm((current) => ({ ...current, eventConsent }))}
+              title="Etkinlik cevaplarımın ntw.wordcloud, notwork match, ntw.five ve kod sistemi için kullanılmasına açık rıza veriyorum."
+            />
+            <ConsentBox
+              checked={form.generalNetworkOptIn}
+              onChange={(generalNetworkOptIn) =>
+                setForm((current) => ({ ...current, generalNetworkOptIn }))
+              }
+              title="Profilimin notwork networking ağında görünmesine ve bağlantı önerilerinde kullanılmasına açık rıza veriyorum."
+            />
+            <ConsentBox
+              checked={form.marketingOptIn}
+              onChange={(marketingOptIn) => setForm((current) => ({ ...current, marketingOptIn }))}
+              title="Etkinlik ve topluluk duyurularını e-posta ile almak istiyorum. Bu izin isteğe bağlıdır."
+            />
+            <p className="entry-legal-copy">
+              Ayrıntılar için <Link to="/kvkk">KVKK Aydınlatma Metni</Link> ve{" "}
+              <Link to="/acik-riza">Açık Rıza Metni</Link>’ni inceleyebilirsin.
+            </p>
+          </div>
+        )}
       </div>
 
       {message ? (
@@ -1028,15 +1072,38 @@ function RegistrationGate({
         </p>
       ) : null}
 
-      <button
-        type="button"
-        disabled={!canSubmit || isSaving}
-        onClick={() => void submitRegistration()}
-        className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-4 text-sm font-black text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {isSaving ? "Kayıt oluşturuluyor…" : "Etkinlik kaydımı tamamla"}
-        <Check className="h-4 w-4" />
-      </button>
+      <div className="entry-question-actions">
+        <button
+          type="button"
+          className="entry-question-back"
+          onClick={() => {
+            if (eventQuestionIndex === 0) setRegistrationStep("standard");
+            else setEventQuestionIndex((current) => current - 1);
+          }}
+        >
+          Geri
+        </button>
+        {eventQuestionIndex < 3 ? (
+          <button
+            type="button"
+            disabled={!eventQuestionComplete[eventQuestionIndex]}
+            className="entry-question-next"
+            onClick={() => setEventQuestionIndex((current) => current + 1)}
+          >
+            Devam et <ArrowRight />
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={!canSubmit || isSaving}
+            onClick={() => void submitRegistration()}
+            className="entry-question-next"
+          >
+            {isSaving ? "Kayıt oluşturuluyor…" : "Kaydı tamamla"}
+            <Check />
+          </button>
+        )}
+      </div>
     </section>
   );
 }

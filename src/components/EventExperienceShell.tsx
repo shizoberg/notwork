@@ -32,6 +32,8 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
       next = { title: "eşleşmen bulunuyor", detail: "problem masan hazırlanıyor" };
     } else if (pathname === "/21-agustos/eslesme") {
       next = { title: "eşleşmen bulunuyor", detail: "yeni bağlantılar aranıyor" };
+    } else if (pathname === "/21-agustos/wordcloud") {
+      next = { title: "ortak fikirler açılıyor", detail: "kelimeler bir araya geliyor" };
     } else if (
       pathname === "/linkler" &&
       typeof window !== "undefined" &&
