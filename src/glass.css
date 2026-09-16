@@ -1352,10 +1352,11 @@
   background: white;
   border-radius: 12px;
 }
-.hero-event-logo {
-  width: 32px;
+.notwork-logo.hero-event-logo {
+  width: 24px;
   height: auto;
-  margin: 1px 0;
+  margin: 2px 0 1px;
+  opacity: 0.82;
 }
 .hero-date-pulse {
   animation: date-glow 3s ease-in-out infinite;
