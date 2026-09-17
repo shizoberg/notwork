@@ -25,16 +25,9 @@ function NtwPage() {
         ["17-eylul-2026", "9-ekim-2026"].map((eventSlug) => getPublicEventContext({ eventSlug })),
       );
       if (cancelled) return;
-      const now = Date.now();
       const live = results
         .flatMap((result) => (result.status === "fulfilled" ? [result.value.event] : []))
-        .find(
-          (event) =>
-            event.status === "live" &&
-            event.entry.isOpen &&
-            now >= Date.parse(event.startsAt) &&
-            now < Date.parse(event.endsAt),
-        );
+        .find((event) => event.status === "live" && event.entry.isOpen);
       setActiveEvent(live || null);
     }
     void refresh();
