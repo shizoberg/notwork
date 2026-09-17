@@ -87,7 +87,7 @@ async function structuredResponse<T>(
     return null;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 1800);
+  const timer = setTimeout(() => controller.abort(), 6000);
   try {
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
