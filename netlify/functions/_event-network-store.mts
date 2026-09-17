@@ -11,6 +11,8 @@ import { getStore } from "@netlify/blobs";
 import { getEventProductRuntimeContext } from "./_event-product-context.mjs";
 import { getEventReviewStore } from "./_event-review-store.mjs";
 import { scorePair, selectMatchCandidates, stableTieBreaker } from "./_matchmaking.mjs";
+import { syncMemberEventCode } from "./_member-profile-store.mjs";
+import { participantDisplayCode } from "./_participant-code.mjs";
 import { generateMatchAnalysis, rerankMatchCandidates } from "./_ntw-ai.mjs";
 
 type EventNetworkProfile = {
@@ -150,7 +152,7 @@ export type NetworkInput = {
 
 export type NetworkAdminInput = {
   password?: string;
-  action?: "list" | "resetDemo";
+  action?: "list" | "resetDemo" | "repairCodes";
   event?: string;
   eventId?: string;
   eventSlug?: string;
@@ -166,7 +168,6 @@ const legacyDatasetCode =
   process.env.NETLIFY_EVENT_NETWORK_DATASET?.trim() ||
   legacyLiveDatasetCode;
 const legacyDatasetPrefix = `events/${legacyDatasetCode}/network`;
-const codeLetters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const attendedEventValues = new Set([
   "21-agustos-2026",
   "14-temmuz-2026",
@@ -405,14 +406,14 @@ async function reservePublicCode(
   store: ReturnType<typeof getEventNetworkStore>,
   participantId: string,
 ) {
-  for (let index = 1; index < 999; index += 1) {
-    const letter = codeLetters[(index - 1) % codeLetters.length];
-    const number = Math.ceil(index / codeLetters.length);
-    const code = `${letter}${String(number).padStart(2, "0")}`;
-    const existing = await store.get(codeKey(code), { type: "json", consistency: "strong" });
-    if (existing) continue;
-    const reserved = await store.setJSON(codeKey(code), participantId, { onlyIfNew: true });
-    if (reserved.modified) return code;
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const code = participantDisplayCode(participantId, attempt);
+    const owner = await store.get(codeKey(code), { type: "json", consistency: "strong" });
+    if (owner === participantId) return code;
+    if (owner) continue;
+    await store.setJSON(codeKey(code), participantId);
+    const savedOwner = await store.get(codeKey(code), { type: "json", consistency: "strong" });
+    if (savedOwner === participantId) return code;
   }
   throw new Error("Etkinlik kodu üretilemedi");
 }
@@ -1337,4 +1338,32 @@ export async function seedSampleRegistrations(
     );
   }
   return registrations;
+}
+
+// Explicit admin repair: retain identities, tokens and room membership.
+export async function repairParticipantCodes(store: ReturnType<typeof getEventNetworkStore>) {
+  const rows = await listRegistrations(store);
+  const seen = new Set<string>();
+  const duplicates = rows.filter((row) => {
+    const code = row.participant.publicCode;
+    if (seen.has(code)) return true;
+    seen.add(code);
+    return false;
+  });
+  let repaired = 0;
+  for (const row of duplicates.slice(0, 5)) {
+    const key = participantKey(row.participant.id);
+    const current = await store.get(key, { type: "json", consistency: "strong" }) as EventNetworkRegistration;
+    if (!current || current.participant.publicCode !== row.participant.publicCode) continue;
+    const code = await reservePublicCode(store, current.participant.id);
+    await store.setJSON(`${getNetworkPrefix()}/code-repair-backups/${current.participant.id}.json`, current, { onlyIfNew: true });
+    for (const recordKey of [key, profileKey(current.profile.emailNormalized)]) {
+      await atomicState(store, recordKey, () => current, (record: EventNetworkRegistration) => {
+        record.participant.publicCode = code;
+      });
+    }
+    await syncMemberEventCode(current.profile.username, current.profile.emailNormalized, current.participant.eventId, code);
+    repaired++;
+  }
+  return { repaired, remaining: Math.max(0, duplicates.length - repaired) };
 }

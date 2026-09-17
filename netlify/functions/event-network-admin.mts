@@ -4,6 +4,7 @@ import {
   getEventNetworkDatasetInfo,
   getEventNetworkStore,
   listRegistrations,
+  repairParticipantCodes,
   resetDemoEventNetworkDataset,
   type NetworkAdminInput,
 } from "./_event-network-store.mjs";
@@ -33,6 +34,10 @@ export default async (request: Request, _context: Context) => {
       "matchlab",
       async () => {
         const store = getEventNetworkStore();
+        if (input.action === "repairCodes") {
+          if (!eventIdentifier) return new Response("Etkinlik gerekli", { status: 400 });
+          return Response.json(await repairParticipantCodes(store), { headers: { "cache-control": "no-store, private" } });
+        }
         if (input.action === "resetDemo") {
           await resetDemoEventNetworkDataset(store);
         }

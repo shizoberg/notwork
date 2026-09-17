@@ -1745,3 +1745,12 @@ export async function createAdminMemberProfile(
     credentials: [{ name, email, username, temporaryPassword }],
   };
 }
+
+export async function syncMemberEventCode(username: string, email: string, eventId: string, code: string) {
+  const store = getMemberProfileStore();
+  const key = profileKey(username);
+  const current = await store.get(key, { type: "json", consistency: "strong" }) as StoredMemberProfile | null;
+  if (!current || current.email !== email) return;
+  current.eventCodes = (current.eventCodes || []).map((row) => row.eventId === eventId ? { ...row, code } : row);
+  await store.setJSON(key, current);
+}
