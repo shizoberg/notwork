@@ -156,9 +156,16 @@ function AugustMatchPage() {
   }, [tokenStorageKey, preview]);
 
   useEffect(() => {
-    if (!token || status !== "ready" || !group) return;
-    const interval = window.setInterval(() => {
-      if (document.visibilityState === "visible") void loadMatch(token, true);
+    if (!token || !["ready", "empty"].includes(status)) return;
+    let pending = false;
+    const interval = window.setInterval(async () => {
+      if (document.visibilityState !== "visible" || pending) return;
+      pending = true;
+      try {
+        await loadMatch(token, true);
+      } finally {
+        pending = false;
+      }
     }, 5_000);
     return () => window.clearInterval(interval);
   }, [group, loadMatch, status, token]);
@@ -277,8 +284,8 @@ function AugustMatchPage() {
               ) : null}
               {status === "empty" ? (
                 <EmptyState
-                  title="Şimdilik uygun boş üçlü grup yok."
-                  text="Biraz sonra tekrar dene; sistem sadece grubunu bitiren ve boşta olan kişilerle yeni üçlü grup kurar."
+                  title="Grubun için katılımcılar bekleniyor"
+                  text="Bu ekranı açık tut. İki uygun katılımcı hazır olduğunda üçlü grubun otomatik görünecek."
                 />
               ) : null}
               {message ? (
