@@ -493,7 +493,7 @@ function AugustMatchPage() {
                 </div>
               ) : null}
 
-              {token && <EventChat token={token} />}
+              {token && group && <EventChat key={group.id} token={token} groupId={group.id} />}
               <p className="match-motto">Her an network kıymetlidir.</p>
               {group && (
                 <button

@@ -25,9 +25,10 @@ export async function eventChatRequest(
   accessToken: string,
   message?: string,
   messageId?: string,
+  groupId?: string,
 ): Promise<EventChatMessage[]> {
   if (isEventPreview() && accessToken === "local-match-preview") {
-    const key = "notwork-demo-event-chat";
+    const key = `notwork-demo-group-chat:${groupId || "preview"}`;
     const rows: EventChatMessage[] = JSON.parse(localStorage.getItem(key) || "[]");
     if (message && !rows.some((row) => row.id === messageId))
       rows.push({
@@ -48,7 +49,7 @@ export async function eventChatRequest(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(
       withEventSelectionInput(
-        { action: message ? "chatSend" : "chatRead", accessToken, message, messageId },
+        { action: message ? "chatSend" : "chatRead", accessToken, message, messageId, groupId },
         selection,
       ),
     ),

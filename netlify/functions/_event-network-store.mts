@@ -13,6 +13,7 @@ import { getEventReviewStore } from "./_event-review-store.mjs";
 import { scorePair, selectMatchCandidates, stableTieBreaker } from "./_matchmaking.mjs";
 import { syncMemberEventCode } from "./_member-profile-store.mjs";
 import { participantDisplayCode } from "./_participant-code.mjs";
+import { matchChatKey } from "./_match-chat.mjs";
 import { generateMatchAnalysis, rerankMatchCandidates } from "./_ntw-ai.mjs";
 
 type EventNetworkProfile = {
@@ -894,7 +895,8 @@ export async function eventChat(
   const registration = await getRegistrationByToken(store, accessToken);
   if (!registration || registration.participant.status !== "registered")
     throw new Error("Etkinlik oturumu gerekli");
-  const key = `${getNetworkPrefix()}/event-chat.json`;
+  const activeGroup = await getActiveMatch(store, registration.participant.id);
+  const key = matchChatKey(getNetworkPrefix(), registration.participant.id, activeGroup, input.groupId);
   type Message = {
     id: string;
     participantId: string;

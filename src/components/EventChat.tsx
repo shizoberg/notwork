@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { eventChatRequest, type EventChatMessage } from "@/lib/event-network-api";
 import { MessageCircle, Send } from "lucide-react";
 
-export function EventChat({ token }: { token: string }) {
+export function EventChat({ token, groupId }: { token: string; groupId: string }) {
   const [rows, setRows] = useState<EventChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
@@ -14,7 +14,7 @@ export function EventChat({ token }: { token: string }) {
     let cancelled = false;
     const refresh = async () => {
       try {
-        const next = await eventChatRequest(token);
+        const next = await eventChatRequest(token, undefined, undefined, groupId);
         if (!cancelled) setRows(next);
       } catch {
         if (!cancelled) setError("Sohbete bağlanılamadı. Yeniden deniyoruz.");
@@ -28,18 +28,18 @@ export function EventChat({ token }: { token: string }) {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [token, open]);
+  }, [token, open, groupId]);
   return (
     <details className="match-photo event-chat" onToggle={(e) => setOpen(e.currentTarget.open)}>
       <summary>
         <MessageCircle size={20} />
         <span>
-          Etkinlik sohbeti<small>Buradan haberleş, kolayca buluş</small>
+          Grup sohbeti<small>Buradan haberleş, kolayca buluş</small>
         </span>
         <span aria-hidden="true">＋</span>
       </summary>
-      <p className="chat-note">Bu etkinliğe kayıtlı herkes mesajları görebilir.</p>
-      <div className="chat-messages" role="log" aria-label="Etkinlik mesajları" aria-live="polite">
+      <p className="chat-note">Mesajları yalnızca eşleştiğin gruptaki kişiler görebilir.</p>
+      <div className="chat-messages" role="log" aria-label="Grup mesajları" aria-live="polite">
         {rows.length ? (
           rows.map((row) => (
             <article key={`${row.participantId}:${row.id}`}>
@@ -70,7 +70,9 @@ export function EventChat({ token }: { token: string }) {
           if (pending.current?.text !== draft)
             pending.current = { id: crypto.randomUUID(), text: draft };
           try {
-            setRows(await eventChatRequest(token, pending.current.text, pending.current.id));
+            setRows(
+              await eventChatRequest(token, pending.current.text, pending.current.id, groupId),
+            );
             setDraft("");
             pending.current = null;
           } catch (e) {
@@ -81,7 +83,7 @@ export function EventChat({ token }: { token: string }) {
         }}
       >
         <input
-          aria-label="Etkinlik sohbetine mesaj"
+          aria-label="Grup sohbetine mesaj"
           placeholder="Nerede buluşalım?"
           maxLength={500}
           value={draft}
