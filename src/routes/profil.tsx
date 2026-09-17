@@ -560,7 +560,7 @@ function RegisterPanel({
           </Field>
         </div>
 
-        <Field label="Hangi Notwork etkinliğine katıldın? *" hint="Doğrulama için">
+        <Field label="Hangi Notwork etkinliğine katıldın? *" hint="Profil bilgisi">
           <select
             required
             value={attendedEventClaim}
@@ -575,8 +575,8 @@ function RegisterPanel({
             ))}
           </select>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Etkinlik katılımı e-posta kayıtlarımızla kontrol edilir. Referans ile başvuruyorsan
-            aşağıdaki alana seni tanıyan üyeyi yaz.
+            Katıldığın etkinliği seç. Referans ile geliyorsan aşağıdaki alana seni tanıyan üyeyi
+            yaz.
           </p>
         </Field>
 
@@ -720,7 +720,7 @@ function RegisterPanel({
           ) : (
             <UserRound className="h-5 w-5" />
           )}
-          Başvurumu gönder
+          Profilimi oluştur
         </button>
       </form>
     </section>
