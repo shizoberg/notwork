@@ -296,31 +296,35 @@ function AugustNetworkPage() {
               <ConsentBox
                 checked={form.eventConsent}
                 onChange={(eventConsent) => setForm({ ...form, eventConsent })}
-                title="Etkinlik eşleştirmesi için cevaplarımın kullanılmasına açık rıza veriyorum."
+                title="KVKK Aydınlatma Metni’ni okudum. Profil ve etkinlik cevaplarımın kayıt ve etkinlik özellikleri için işlendiği konusunda bilgilendirildim."
                 required
               />
-              <ConsentBox
-                checked={form.aiAnalysisConsent}
-                onChange={(aiAnalysisConsent) => setForm({ ...form, aiAnalysisConsent })}
-                title="İhtiyaç, katkı ve problem cevaplarımın kimlik ve iletişim bilgilerim paylaşılmadan OpenAI üzerinden eşleştirme analizi için işlenmesine açık rıza veriyorum. Bu seçim isteğe bağlıdır."
-              />
-              <ConsentBox
-                checked={form.modelImprovementConsent}
-                onChange={(modelImprovementConsent) =>
-                  setForm({ ...form, modelImprovementConsent })
-                }
-                title="Anonimleştirilmiş etkinlik cevaplarımın notwork eşleştirme modelini geliştirmek için kullanılmasına izin veriyorum. Bu izin isteğe bağlıdır."
-              />
-              <ConsentBox
-                checked={form.generalNetworkOptIn}
-                onChange={(generalNetworkOptIn) => setForm({ ...form, generalNetworkOptIn })}
-                title="Profilimin genel notwork ağında da görünmesine açık rıza veriyorum."
-              />
-              <ConsentBox
-                checked={form.marketingOptIn}
-                onChange={(marketingOptIn) => setForm({ ...form, marketingOptIn })}
-                title="Adımın ve e-posta adresimin notwork etkinlik, bilet ve topluluk duyuruları için kullanılmasına ve bana e-posta ile ticari elektronik ileti gönderilmesine izin veriyorum. İzin isteğe bağlıdır; dilediğim zaman ücretsiz ayrılabilirim."
-              />
+              <details className="entry-optional-consents">
+                <summary>İsteğe bağlı tercihler</summary>
+                <p>Bunları seçmeden de kaydını tamamlayabilirsin.</p>
+                <ConsentBox
+                  checked={form.aiAnalysisConsent}
+                  onChange={(aiAnalysisConsent) => setForm({ ...form, aiAnalysisConsent })}
+                  title="Kimlik ve iletişim bilgilerim gönderilmeden AI destekli eşleştirme analizi istiyorum."
+                />
+                <ConsentBox
+                  checked={form.modelImprovementConsent}
+                  onChange={(modelImprovementConsent) =>
+                    setForm({ ...form, modelImprovementConsent })
+                  }
+                  title="Anonimleştirilmiş cevaplarımın Notwork eşleştirme modelini geliştirmek için kullanılmasına izin veriyorum."
+                />
+                <ConsentBox
+                  checked={form.generalNetworkOptIn}
+                  onChange={(generalNetworkOptIn) => setForm({ ...form, generalNetworkOptIn })}
+                  title="Profilimin genel Notwork ağında görünmesini istiyorum."
+                />
+                <ConsentBox
+                  checked={form.marketingOptIn}
+                  onChange={(marketingOptIn) => setForm({ ...form, marketingOptIn })}
+                  title="Etkinlik ve topluluk duyurularını e-posta ile almak istiyorum."
+                />
+              </details>
               <p className="text-xs leading-relaxed text-foreground/45">
                 Etkinlik eşleştirmesi için verdiğin bilgilerin işlenmesini, görünmesini seçtiğin
                 alanlarda kullanılmasını ve{" "}

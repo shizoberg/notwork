@@ -334,8 +334,7 @@ function LinksPage() {
         form.needs.trim().length >= 2 &&
         form.needs.trim().length <= 40 &&
         form.offers.length > 0 &&
-        form.eventConsent &&
-        form.generalNetworkOptIn,
+        form.eventConsent,
       ),
     [form],
   );
@@ -380,9 +379,8 @@ function LinksPage() {
       form.needs.trim().length >= 2 && form.needs.trim().length <= 40,
       form.needTag,
       form.eventConsent,
-      form.generalNetworkOptIn,
     ].filter(Boolean).length;
-    return Math.round((completed / 11) * 100);
+    return Math.round((completed / 10) * 100);
   }, [form, hasRegistration, loginConsent, loginIdentity, loginPassword, registrationPath]);
 
   const progressCopy = useMemo(() => {
@@ -737,7 +735,7 @@ function RegistrationGate({
     form.intro.trim().length >= 2 && form.intro.trim().length <= 40,
     form.offersDetail.trim().length >= 2 && form.offersDetail.trim().length <= 40,
     form.needs.trim().length >= 2 && form.needs.trim().length <= 40 && Boolean(form.needTag),
-    form.eventConsent && form.generalNetworkOptIn,
+    form.eventConsent,
   ];
 
   if (registrationPath === "choose") {
@@ -1053,42 +1051,52 @@ function RegistrationGate({
         {eventQuestionIndex === 3 && (
           <div className="entry-consent-stage">
             <h2>Son bir onay</h2>
-            <p>Cevaplarını eşleşme ve etkinlik deneyiminde kullanabilmemiz için seçimlerini yap.</p>
+            <p>Metni açıkça okuyup tek onayla kaydını tamamlayabilirsin.</p>
             <ConsentBox
               checked={form.eventConsent}
               onChange={(eventConsent) => setForm((current) => ({ ...current, eventConsent }))}
-              title="Etkinlik cevaplarımın ntw.wordcloud, notwork match, ntw.five ve kod sistemi için kullanılmasına açık rıza veriyorum."
-            />
-            <ConsentBox
-              checked={form.aiAnalysisConsent}
-              onChange={(aiAnalysisConsent) =>
-                setForm((current) => ({ ...current, aiAnalysisConsent }))
-              }
-              title="Katkı, ihtiyaç ve problem cevaplarımın kimlik ve iletişim bilgilerim gönderilmeden OpenAI altyapısıyla analiz edilmesine ve AI destekli Match/Five önerileri üretilmesine açık rıza veriyorum. Bu seçim isteğe bağlıdır."
-            />
-            <ConsentBox
-              checked={form.modelImprovementConsent}
-              onChange={(modelImprovementConsent) =>
-                setForm((current) => ({ ...current, modelImprovementConsent }))
-              }
-              title="Anonimleştirilmiş etkinlik cevaplarımın Notwork eşleştirme modelini geliştirmek ve değerlendirmek için kullanılmasına izin veriyorum. Bu seçim isteğe bağlıdır."
-            />
-            <ConsentBox
-              checked={form.generalNetworkOptIn}
-              onChange={(generalNetworkOptIn) =>
-                setForm((current) => ({ ...current, generalNetworkOptIn }))
-              }
-              title="Profilimin notwork networking ağında görünmesine ve bağlantı önerilerinde kullanılmasına açık rıza veriyorum."
-            />
-            <ConsentBox
-              checked={form.marketingOptIn}
-              onChange={(marketingOptIn) => setForm((current) => ({ ...current, marketingOptIn }))}
-              title="Etkinlik ve topluluk duyurularını e-posta ile almak istiyorum. Bu izin isteğe bağlıdır."
+              title="KVKK Aydınlatma Metni’ni okudum. Profil ve etkinlik cevaplarımın kaydımı oluşturmak, ntw.wordcloud, notwork match, ntw.five ve etkinlik kodu özelliklerini çalıştırmak için işlendiği konusunda bilgilendirildim."
             />
             <p className="entry-legal-copy">
-              Ayrıntılar için <Link to="/kvkk">KVKK Aydınlatma Metni</Link> ve{" "}
-              <Link to="/acik-riza">Açık Rıza Metni</Link>’ni inceleyebilirsin.
+              Onaylamadan önce <Link to="/kvkk">KVKK Aydınlatma Metni</Link>’nin tamamını
+              okuyabilirsin.
             </p>
+            <details className="entry-optional-consents">
+              <summary>İsteğe bağlı tercihler</summary>
+              <p>Bunları seçmeden de kaydını tamamlayabilirsin.</p>
+              <ConsentBox
+                checked={form.aiAnalysisConsent}
+                onChange={(aiAnalysisConsent) =>
+                  setForm((current) => ({ ...current, aiAnalysisConsent }))
+                }
+                title="Kimlik ve iletişim bilgilerim gönderilmeden AI destekli Match/Five analizi istiyorum."
+              />
+              <ConsentBox
+                checked={form.modelImprovementConsent}
+                onChange={(modelImprovementConsent) =>
+                  setForm((current) => ({ ...current, modelImprovementConsent }))
+                }
+                title="Anonimleştirilmiş cevaplarımın Notwork eşleştirme modelini geliştirmek için kullanılmasına izin veriyorum."
+              />
+              <ConsentBox
+                checked={form.generalNetworkOptIn}
+                onChange={(generalNetworkOptIn) =>
+                  setForm((current) => ({ ...current, generalNetworkOptIn }))
+                }
+                title="Profilimin Notwork networking ağında görünmesini istiyorum."
+              />
+              <ConsentBox
+                checked={form.marketingOptIn}
+                onChange={(marketingOptIn) =>
+                  setForm((current) => ({ ...current, marketingOptIn }))
+                }
+                title="Etkinlik ve topluluk duyurularını e-posta ile almak istiyorum."
+              />
+              <p className="entry-legal-copy">
+                Bu tercihler hakkında <Link to="/acik-riza">Açık Rıza Metni</Link>’ni
+                inceleyebilirsin.
+              </p>
+            </details>
           </div>
         )}
       </div>
