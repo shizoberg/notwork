@@ -1171,6 +1171,7 @@
   font-size: 11px;
 }
 .entry-experience-choice button {
+  position: relative;
   display: grid;
   gap: 3px;
   width: 100%;
@@ -1186,6 +1187,46 @@
     background 160ms ease,
     box-shadow 160ms ease;
 }
+.entry-experience-choice button:first-of-type {
+  overflow: hidden;
+  padding: 15px 15px 16px;
+  border-color: rgba(42, 164, 202, 0.45);
+  background:
+    radial-gradient(circle at 90% 5%, rgba(118, 220, 244, 0.38), transparent 35%),
+    linear-gradient(135deg, #168eb5 0%, #0b6687 60%, #084f6b 100%);
+  color: #fff;
+  box-shadow:
+    0 14px 30px rgba(8, 91, 122, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+.entry-experience-choice button:first-of-type::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.16) 46%, transparent 70%);
+  content: "";
+  pointer-events: none;
+  transform: translateX(-100%);
+  transition: transform 480ms ease;
+}
+.entry-experience-choice button:first-of-type:hover::after,
+.entry-experience-choice button:first-of-type.is-selected::after {
+  transform: translateX(100%);
+}
+.entry-experience-choice button > b {
+  width: fit-content;
+  margin-bottom: 3px;
+  padding: 4px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
 .entry-experience-choice button:active {
   transform: scale(0.985);
 }
@@ -1197,6 +1238,9 @@
   color: #78909b;
   font-size: 10px;
   line-height: 1.45;
+}
+.entry-experience-choice button:first-of-type small {
+  color: rgba(255, 255, 255, 0.76);
 }
 .entry-experience-choice button.is-selected {
   border-color: rgba(11, 113, 148, 0.5);

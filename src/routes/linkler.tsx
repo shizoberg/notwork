@@ -1080,7 +1080,8 @@ function RegistrationGate({
                   }));
                 }}
               >
-                <span>Önerilen deneyimi aç</span>
+                <b>önerilen</b>
+                <span>Gelişmiş network deneyimini aç</span>
                 <small>AI destekli Match/Five analizi ve networking ağında görünürlük</small>
               </button>
               <button
@@ -1101,15 +1102,8 @@ function RegistrationGate({
               </button>
             </div>
             <details className="entry-optional-consents">
-              <summary>Diğer isteğe bağlı tercihler</summary>
-              <p>Bunları seçmeden de kaydını tamamlayabilirsin.</p>
-              <ConsentBox
-                checked={form.modelImprovementConsent}
-                onChange={(modelImprovementConsent) =>
-                  setForm((current) => ({ ...current, modelImprovementConsent }))
-                }
-                title="Anonimleştirilmiş cevaplarımın Notwork eşleştirme modelini geliştirmek için kullanılmasına izin veriyorum."
-              />
+              <summary>E-posta tercihi</summary>
+              <p>Bu seçimi yapmadan da kaydını tamamlayabilirsin.</p>
               <ConsentBox
                 checked={form.marketingOptIn}
                 onChange={(marketingOptIn) =>
