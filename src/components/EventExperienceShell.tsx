@@ -83,17 +83,10 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
         : [{ eventSlug: "17-eylul-2026" }, { eventSlug: "9-ekim-2026" }];
       const results = await Promise.allSettled(choices.map(getPublicEventContext));
       if (cancelled) return;
-      const now = Date.now();
       setEvent(
         results
           .flatMap((r) => (r.status === "fulfilled" ? [r.value.event] : []))
-          .find(
-            (e) =>
-              e.status === "live" &&
-              e.entry.isOpen &&
-              now >= Date.parse(e.startsAt) &&
-              now < Date.parse(e.endsAt),
-          ) || null,
+          .find((e) => e.status === "live" && e.entry.isOpen) || null,
       );
       setLoading(false);
     }
@@ -139,11 +132,7 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
             <span className="event-route-transition-dot dot-three" />
             <span className="event-route-transition-bridge bridge-one" />
             <span className="event-route-transition-bridge bridge-two" />
-            <img
-              src="/brand/notwork-logo.png"
-              alt=""
-              className="event-transition-logo"
-            />
+            <img src="/brand/notwork-logo.png" alt="" className="event-transition-logo" />
           </div>
           <p>{transition.title}</p>
           <small>{transition.detail}</small>
