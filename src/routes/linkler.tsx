@@ -731,11 +731,12 @@ function RegistrationGate({
   registrationPrompts: EventRegistrationPrompts;
 }) {
   const [eventQuestionIndex, setEventQuestionIndex] = useState(0);
+  const [experienceChoice, setExperienceChoice] = useState<"enhanced" | "basic" | null>(null);
   const eventQuestionComplete = [
     form.intro.trim().length >= 2 && form.intro.trim().length <= 40,
     form.offersDetail.trim().length >= 2 && form.offersDetail.trim().length <= 40,
     form.needs.trim().length >= 2 && form.needs.trim().length <= 40 && Boolean(form.needTag),
-    form.eventConsent,
+    form.eventConsent && experienceChoice !== null,
   ];
 
   if (registrationPath === "choose") {
@@ -1061,29 +1062,53 @@ function RegistrationGate({
               Onaylamadan önce <Link to="/kvkk">KVKK Aydınlatma Metni</Link>’nin tamamını
               okuyabilirsin.
             </p>
+            <div className="entry-experience-choice" role="group" aria-label="Etkinlik deneyimi">
+              <div>
+                <strong>Etkinlik deneyimini seç</strong>
+                <span>Bir seçim yapmadan kayıt tamamlanmaz.</span>
+              </div>
+              <button
+                type="button"
+                className={experienceChoice === "enhanced" ? "is-selected" : ""}
+                aria-pressed={experienceChoice === "enhanced"}
+                onClick={() => {
+                  setExperienceChoice("enhanced");
+                  setForm((current) => ({
+                    ...current,
+                    aiAnalysisConsent: true,
+                    generalNetworkOptIn: true,
+                  }));
+                }}
+              >
+                <span>Önerilen deneyimi aç</span>
+                <small>AI destekli Match/Five analizi ve networking ağında görünürlük</small>
+              </button>
+              <button
+                type="button"
+                className={experienceChoice === "basic" ? "is-selected is-basic" : ""}
+                aria-pressed={experienceChoice === "basic"}
+                onClick={() => {
+                  setExperienceChoice("basic");
+                  setForm((current) => ({
+                    ...current,
+                    aiAnalysisConsent: false,
+                    generalNetworkOptIn: false,
+                  }));
+                }}
+              >
+                <span>Temel deneyimle devam et</span>
+                <small>Kurallı eşleştirme çalışır, profil networking ağında yayınlanmaz</small>
+              </button>
+            </div>
             <details className="entry-optional-consents">
-              <summary>İsteğe bağlı tercihler</summary>
+              <summary>Diğer isteğe bağlı tercihler</summary>
               <p>Bunları seçmeden de kaydını tamamlayabilirsin.</p>
-              <ConsentBox
-                checked={form.aiAnalysisConsent}
-                onChange={(aiAnalysisConsent) =>
-                  setForm((current) => ({ ...current, aiAnalysisConsent }))
-                }
-                title="Kimlik ve iletişim bilgilerim gönderilmeden AI destekli Match/Five analizi istiyorum."
-              />
               <ConsentBox
                 checked={form.modelImprovementConsent}
                 onChange={(modelImprovementConsent) =>
                   setForm((current) => ({ ...current, modelImprovementConsent }))
                 }
                 title="Anonimleştirilmiş cevaplarımın Notwork eşleştirme modelini geliştirmek için kullanılmasına izin veriyorum."
-              />
-              <ConsentBox
-                checked={form.generalNetworkOptIn}
-                onChange={(generalNetworkOptIn) =>
-                  setForm((current) => ({ ...current, generalNetworkOptIn }))
-                }
-                title="Profilimin Notwork networking ağında görünmesini istiyorum."
               />
               <ConsentBox
                 checked={form.marketingOptIn}
@@ -1130,7 +1155,7 @@ function RegistrationGate({
         ) : (
           <button
             type="button"
-            disabled={!canSubmit || isSaving}
+            disabled={!canSubmit || !eventQuestionComplete[3] || isSaving}
             onClick={() => void submitRegistration()}
             className="entry-question-next"
           >

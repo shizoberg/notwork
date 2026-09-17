@@ -1149,6 +1149,73 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+.entry-experience-choice {
+  display: grid;
+  gap: 8px;
+  padding: 13px;
+  border: 1px solid rgba(20, 125, 161, 0.18);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(232, 248, 252, 0.88), rgba(206, 235, 244, 0.66));
+}
+.entry-experience-choice > div {
+  display: grid;
+  gap: 2px;
+  padding: 0 3px 4px;
+}
+.entry-experience-choice > div strong {
+  color: #183f50;
+  font-size: 14px;
+}
+.entry-experience-choice > div span {
+  color: #718a96;
+  font-size: 11px;
+}
+.entry-experience-choice button {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid rgba(20, 125, 161, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #31586a;
+  text-align: left;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+.entry-experience-choice button:active {
+  transform: scale(0.985);
+}
+.entry-experience-choice button span {
+  font-size: 13px;
+  font-weight: 820;
+}
+.entry-experience-choice button small {
+  color: #78909b;
+  font-size: 10px;
+  line-height: 1.45;
+}
+.entry-experience-choice button.is-selected {
+  border-color: rgba(11, 113, 148, 0.5);
+  background: linear-gradient(135deg, #147da1, #0b6687);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(11, 113, 148, 0.2);
+}
+.entry-experience-choice button.is-selected small {
+  color: rgba(255, 255, 255, 0.76);
+}
+.entry-experience-choice button.is-selected.is-basic {
+  border-color: rgba(77, 112, 128, 0.28);
+  background: rgba(255, 255, 255, 0.92);
+  color: #31586a;
+  box-shadow: 0 8px 20px rgba(41, 78, 93, 0.1);
+}
+.entry-experience-choice button.is-selected.is-basic small {
+  color: #78909b;
+}
 .entry-optional-consents {
   margin-top: 3px;
   padding: 4px;
