@@ -5505,3 +5505,5 @@ html[data-notwork-entry-ready="true"] .event-entry-dock {
     animation: none;
   }
 }
+
+.match-code.is-long { font-size: 12px; letter-spacing: -0.04em; padding: 4px; }

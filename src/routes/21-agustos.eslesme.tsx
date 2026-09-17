@@ -300,7 +300,11 @@ function AugustMatchPage() {
                   <div className="match-people">
                     {otherMembers.map((member) => (
                       <article key={member.participantId}>
-                        <div className="match-code">{member.publicCode}</div>
+                        <div
+                          className={`match-code${member.publicCode.length > 4 ? " is-long" : ""}`}
+                        >
+                          {member.publicCode}
+                        </div>
                         <h2>{member.name}</h2>
                         <p>{member.offers.join(" · ")}</p>
                         {member.isPhotoOwner && <Camera size={14} aria-label="Fotoğraf görevi" />}
