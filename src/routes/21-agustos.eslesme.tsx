@@ -1,5 +1,6 @@
 import { EventChat } from "@/components/EventChat";
 import { EventThinkingStatus } from "@/components/EventThinkingStatus";
+import { EventFlowBanner } from "@/components/EventFlowBanner";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Camera, CheckCircle2, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -235,6 +236,7 @@ function AugustMatchPage() {
   return (
     <div className="match-glass event-tool min-h-screen bg-[#edf5fa] text-foreground">
       <SiteNav variant="event" />
+      <EventFlowBanner product="matchlab" />
       <main id="matchlab" className="scroll-mt-24 overflow-hidden">
         <section className="relative px-4 pb-12 pt-8 sm:px-8 sm:pt-12">
           <div className="relative mx-auto max-w-3xl">

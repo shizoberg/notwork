@@ -1,4 +1,5 @@
 import { AnnouncementAdmin } from "@/components/AnnouncementAdmin";
+import { EventFlowAdmin } from "@/components/EventFlowAdmin";
 import { saveEventPreview, startEventPreview } from "@/lib/event-preview";
 import { MemberOperationsAdmin } from "@/components/MemberOperationsAdmin";
 import { createFileRoute } from "@tanstack/react-router";
@@ -1220,6 +1221,10 @@ function AdminPage() {
             })}
           </div>
         </section>
+
+        {activeAdminTab === "eventTools" && selectedToolsEvent ? (
+          <EventFlowAdmin password={password} event={selectedToolsEvent} />
+        ) : null}
 
         <section
           className={`mt-7 overflow-hidden rounded-[2rem] border border-primary/25 bg-[radial-gradient(circle_at_top_left,rgba(143,203,208,0.22),transparent_34%),linear-gradient(135deg,hsl(var(--card)),hsl(var(--background)))] p-5 shadow-[var(--shadow-card)] ${

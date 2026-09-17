@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Check, ChevronRight, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { EventFlowBanner } from "@/components/EventFlowBanner";
 import { cleanWordcloudAnswer, type WordcloudQuestion } from "@/lib/event-wordcloud";
 import { getEventSelectionFromLocation, withEventSelection } from "@/lib/event-registry";
 import { useEventPreview } from "@/lib/event-preview";
@@ -45,9 +46,33 @@ function WordcloudParticipantPage() {
           const updatedAt = new Date().toISOString();
           setSessionId("local-wordcloud-preview");
           setQuestions([
-            { id: "demo-1", order: 1, title: "Bu geceyi tek kelimeyle nasıl anlatırsın?", helper: "Aklına ilk gelen yeterli", isActive: true, maxAnswersPerSession: 1, updatedAt },
-            { id: "demo-2", order: 2, title: "Yeni bir bağlantıda ne arıyorsun?", helper: "Kısa bir cevap bırak", isActive: true, maxAnswersPerSession: 1, updatedAt },
-            { id: "demo-3", order: 3, title: "Yanında hangi fikirle ayrılıyorsun?", helper: "Bir kelime ya da kısa ifade", isActive: true, maxAnswersPerSession: 1, updatedAt },
+            {
+              id: "demo-1",
+              order: 1,
+              title: "Bu geceyi tek kelimeyle nasıl anlatırsın?",
+              helper: "Aklına ilk gelen yeterli",
+              isActive: true,
+              maxAnswersPerSession: 1,
+              updatedAt,
+            },
+            {
+              id: "demo-2",
+              order: 2,
+              title: "Yeni bir bağlantıda ne arıyorsun?",
+              helper: "Kısa bir cevap bırak",
+              isActive: true,
+              maxAnswersPerSession: 1,
+              updatedAt,
+            },
+            {
+              id: "demo-3",
+              order: 3,
+              title: "Yanında hangi fikirle ayrılıyorsun?",
+              helper: "Bir kelime ya da kısa ifade",
+              isActive: true,
+              maxAnswersPerSession: 1,
+              updatedAt,
+            },
           ]);
           return;
         }
@@ -127,6 +152,7 @@ function WordcloudParticipantPage() {
   return (
     <div className="min-h-screen bg-[#f4fbfb] text-foreground">
       <SiteNav variant="event" />
+      <EventFlowBanner product="wordcloud" />
       <main className="mx-auto flex min-h-[calc(100vh-88px)] max-w-xl flex-col px-5 py-8">
         <a
           href={withEventSelection("/linkler", eventSelection)}

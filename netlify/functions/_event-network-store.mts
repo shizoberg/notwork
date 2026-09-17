@@ -1208,6 +1208,14 @@ export async function getNextMatchGroup(
     }
 
     try {
+      await store.setJSON(`${getNetworkPrefix()}/match-history/${groupId}.json`, storedMatch, {
+        onlyIfNew: true,
+      });
+    } catch (error) {
+      console.error("Match eşleşme arşivi kaydedilemedi", error);
+    }
+
+    try {
       await rememberGroupForEveryParticipant(store, groupRegistrations);
     } catch (error) {
       console.error("Match geçmişi yazılamadı", error);
@@ -1270,6 +1278,15 @@ export async function completeActiveMatchByToken(
 
   if (!input.groupId || input.groupId !== activeMatch.id)
     throw new Error("Grubun değişti. Ekranı yenile.");
+  try {
+    await store.setJSON(`${getNetworkPrefix()}/match-history/${activeMatch.id}.json`, {
+      ...activeMatch,
+      completedAt: new Date().toISOString(),
+      completedByParticipantId: registration.participant.id,
+    });
+  } catch (error) {
+    console.error("Tamamlanan Match eşleşmesi arşivlenemedi", error);
+  }
   await saveMatchLabReview(
     registration,
     input,

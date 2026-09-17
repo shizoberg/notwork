@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { SiteNav } from "@/components/SiteNav";
+import { EventFlowBanner } from "@/components/EventFlowBanner";
+import { currentEventFlowStep, type EventFlowState } from "@/lib/event-flow";
 import { PasswordResetRequest } from "@/components/PasswordResetRequest";
 import { notworkEventOptions, type EventNetworkRegistration } from "@/lib/event-network";
 import {
@@ -144,6 +146,7 @@ function LinksPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
+  const [liveFlow, setLiveFlow] = useState<EventFlowState | null>(null);
   const [message, setMessage] = useState("");
   const [registrationPath, setRegistrationPath] = useState<RegistrationPath>("choose");
   const [registrationStep, setRegistrationStep] = useState<RegistrationStep>("standard");
@@ -475,6 +478,10 @@ function LinksPage() {
   }, [hasRegistration, registrationPath, registrationStep]);
 
   const activeEventLinks = useMemo(() => eventLinks.filter((link) => link.enabled), [eventLinks]);
+  const currentFlowProduct = currentEventFlowStep(liveFlow)?.product || null;
+  const isFlowControlled = Boolean(
+    currentFlowProduct && liveFlow && ["running", "awaiting_advance"].includes(liveFlow.status),
+  );
 
   function toggleOffer(offer: string) {
     setForm((current) => {
@@ -614,6 +621,7 @@ function LinksPage() {
         </div>
       )}
       <SiteNav variant="event" />
+      <EventFlowBanner onFlowChange={setLiveFlow} />
       <main id="etkinlik-girisi" className="scroll-mt-24 px-4 py-5 sm:py-10">
         <div className="mx-auto max-w-3xl">
           <header className={`entry-heading${hasRegistration ? " is-ready" : ""}`}>
@@ -675,41 +683,63 @@ function LinksPage() {
           {hasRegistration && (
             <>
               {registration && (
-                <div className="entry-code">
-                  Merhaba {registration.profile.firstName}
-                  <span>
-                    Kodun <strong>{registration.participant.publicCode}</strong>
-                  </span>
-                </div>
+                <section className="entry-profile-card" aria-label="Profilim">
+                  <div className="entry-profile-avatar" aria-hidden="true">
+                    {registration.profile.firstName.slice(0, 1)}
+                    {registration.profile.lastName.slice(0, 1)}
+                  </div>
+                  <div className="entry-profile-copy">
+                    <span>Profilim</span>
+                    <h2>
+                      {registration.profile.firstName} {registration.profile.lastName}
+                    </h2>
+                    <p>{registration.offers.join(" · ") || registration.needTag}</p>
+                    {registration.needs ? (
+                      <small>Aradığı bağlantı · {registration.needs}</small>
+                    ) : null}
+                  </div>
+                  <div className="entry-profile-code">
+                    <span>Etkinlik kodu</span>
+                    <strong>{registration.participant.publicCode}</strong>
+                  </div>
+                </section>
               )}
               <div className="entry-flow-summary">
                 <span>Bu akşamın akışı</span>
                 <p>Admin akışındaki sırayı takip et. Her adım seni bir sonrakine taşır.</p>
               </div>
               <section className="entry-app-flow">
-                {activeEventLinks.map(({ title, description, href, icon: Icon }, index) => (
-                  <a
-                    key={title}
-                    href={
-                      preview && href.startsWith("/")
-                        ? `${href}${href.includes("?") ? "&" : "?"}preview=event`
-                        : href
-                    }
-                    className="entry-app-step group"
-                  >
-                    <span className="entry-app-index">{String(index + 1).padStart(2, "0")}</span>
-                    <span className="entry-app-icon">
-                      <Icon size={23} strokeWidth={1.7} />
-                    </span>
-                    <span className="entry-app-copy">
-                      <strong>{title}</strong>
-                      <small>{description}</small>
-                    </span>
-                    <span className="entry-app-action">
-                      Başla <ArrowRight size={15} />
-                    </span>
-                  </a>
-                ))}
+                {activeEventLinks.map(
+                  ({ product, title, description, href, icon: Icon }, index) => (
+                    <a
+                      key={title}
+                      href={
+                        isFlowControlled && product !== currentFlowProduct
+                          ? undefined
+                          : preview && href.startsWith("/")
+                            ? `${href}${href.includes("?") ? "&" : "?"}preview=event`
+                            : href
+                      }
+                      aria-disabled={isFlowControlled && product !== currentFlowProduct}
+                      className={`entry-app-step group${
+                        isFlowControlled && product !== currentFlowProduct ? " is-locked" : ""
+                      }`}
+                    >
+                      <span className="entry-app-index">{String(index + 1).padStart(2, "0")}</span>
+                      <span className="entry-app-icon">
+                        <Icon size={23} strokeWidth={1.7} />
+                      </span>
+                      <span className="entry-app-copy">
+                        <strong>{title}</strong>
+                        <small>{description}</small>
+                      </span>
+                      <span className="entry-app-action">
+                        {isFlowControlled && product !== currentFlowProduct ? "Sırada" : "Başla"}{" "}
+                        <ArrowRight size={15} />
+                      </span>
+                    </a>
+                  ),
+                )}
               </section>
 
               <section className="mx-auto mt-7 grid max-w-xl gap-3">

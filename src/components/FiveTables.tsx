@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { SiteNav } from "./SiteNav";
 import { EventThinkingStatus } from "./EventThinkingStatus";
+import { EventFlowBanner } from "./EventFlowBanner";
 import { useEventPreview } from "@/lib/event-preview";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Camera, Clock3, ArrowUpRight, LogOut, Plus, Sparkles } from "lucide-react";
@@ -245,6 +246,7 @@ export function FiveTables() {
   return (
     <div className="event-tool five-tables">
       <SiteNav variant="event" />
+      <EventFlowBanner product="five" />
       <main className="app-preview" id="five-tables">
         {transitionAction && (
           <div className="five-thinking-overlay" role="status">

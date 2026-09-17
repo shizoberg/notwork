@@ -135,7 +135,14 @@ export async function fiveTables(
     }
   } else if (action === "tableChat") {
     await atomicState(store, key, emptyTables, (state) =>
-      tableChat(state, identity.id, input.tableId || "", input.messageId || "", input.text || "", Date.now()),
+      tableChat(
+        state,
+        identity.id,
+        input.tableId || "",
+        input.messageId || "",
+        input.text || "",
+        Date.now(),
+      ),
     );
   } else if (action === "tableOutcome") {
     if (typeof input.solved !== "boolean") throw new Error("Çözüm durumu gerekli");
@@ -203,6 +210,19 @@ export async function fiveTables(
   const state =
     ((await store.get(key, { type: "json", consistency: "strong" })) as TableState | null) ||
     emptyTables();
+  if (action && action !== "tableState") {
+    const archivedTable = state.tables[input.tableId || state.members[identity.id]];
+    if (archivedTable) {
+      try {
+        await store.setJSON(`${getFivePrefix()}/table-history/${archivedTable.id}.json`, {
+          ...archivedTable,
+          archivedAt: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error("Five masa arşivi kaydedilemedi", error);
+      }
+    }
+  }
   const board = (await getFiveLiveBoard(identity))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .map((p) => ({

@@ -25,6 +25,7 @@ import QRCode from "react-qr-code";
 
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { EventThinkingStatus } from "@/components/EventThinkingStatus";
+import { EventFlowBanner } from "@/components/EventFlowBanner";
 import {
   fiveCategories,
   fiveCategoryLabel,
@@ -139,6 +140,7 @@ function FiveLivePage() {
   return (
     <div className="event-tool min-h-screen bg-[#f3fafa] text-[#071213]">
       <SiteNav variant="event" />
+      <EventFlowBanner product="five" />
       <main>
         <section className="relative overflow-hidden bg-[#edf5fa] text-foreground">
           <div className="five-orb five-orb-one opacity-55" />

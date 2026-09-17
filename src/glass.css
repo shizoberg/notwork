@@ -1260,6 +1260,170 @@
 .entry-experience-choice button.is-selected.is-basic small {
   color: #78909b;
 }
+
+.event-live-banner {
+  position: sticky;
+  z-index: 45;
+  top: 70px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: min(720px, calc(100% - 24px));
+  min-height: 52px;
+  margin: 10px auto 0;
+  padding: 9px 11px;
+  border: 1px solid rgba(26, 137, 172, 0.24);
+  border-radius: 18px;
+  background: rgba(241, 251, 253, 0.86);
+  color: #174a5f;
+  box-shadow: 0 12px 32px rgba(18, 94, 119, 0.12);
+  backdrop-filter: blur(18px) saturate(135%);
+}
+.event-live-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #19a6cf;
+  box-shadow: 0 0 0 5px rgba(25, 166, 207, 0.12);
+  animation: event-live-pulse 1.8s ease-in-out infinite;
+}
+.event-live-copy {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+.event-live-copy strong {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.event-live-copy small {
+  overflow: hidden;
+  color: #6e8792;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.event-live-time,
+.event-live-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  min-width: 66px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: #0d7598;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+}
+.event-live-banner.is-redirecting {
+  border-color: rgba(15, 115, 151, 0.42);
+  background: rgba(224, 247, 252, 0.94);
+}
+@keyframes event-live-pulse {
+  50% { opacity: 0.48; transform: scale(0.82); }
+}
+
+.entry-profile-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  margin: 8px 0 16px;
+  padding: 15px;
+  border: 1px solid rgba(29, 139, 174, 0.18);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(116, 220, 240, 0.22), transparent 38%),
+    rgba(255, 255, 255, 0.76);
+  box-shadow: 0 16px 42px rgba(34, 101, 124, 0.1);
+  backdrop-filter: blur(20px);
+}
+.entry-profile-avatar {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 17px;
+  background: linear-gradient(145deg, #1b9cc3, #0c688b);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  box-shadow: 0 9px 22px rgba(13, 112, 147, 0.2);
+}
+.entry-profile-copy { min-width: 0; }
+.entry-profile-copy > span,
+.entry-profile-code span {
+  display: block;
+  color: #6f8995;
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.entry-profile-copy h2 {
+  margin: 2px 0 1px;
+  overflow: hidden;
+  color: #133f51;
+  font-size: 16px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.entry-profile-copy p,
+.entry-profile-copy small {
+  display: block;
+  overflow: hidden;
+  color: #66818d;
+  font-size: 10px;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.entry-profile-copy small { color: #81949d; }
+.entry-profile-code {
+  min-width: 76px;
+  padding: 10px;
+  border: 1px solid rgba(23, 128, 163, 0.15);
+  border-radius: 15px;
+  background: rgba(228, 247, 251, 0.72);
+  text-align: center;
+}
+.entry-profile-code strong {
+  display: block;
+  margin-top: 3px;
+  color: #0c7093;
+  font-size: 17px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+}
+.entry-app-step.is-locked {
+  cursor: default;
+  opacity: 0.48;
+  filter: saturate(0.35);
+  pointer-events: none;
+}
+.entry-app-step.is-locked .entry-app-action {
+  color: #7e929b;
+}
+
+@media (max-width: 520px) {
+  .event-live-banner { top: 64px; }
+  .entry-profile-card { grid-template-columns: auto minmax(0, 1fr); }
+  .entry-profile-code { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-live-dot { animation: none; }
+}
 .entry-optional-consents {
   margin-top: 3px;
   padding: 4px;

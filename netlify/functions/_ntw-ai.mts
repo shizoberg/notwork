@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import { atomicState } from "./_atomic-state.mjs";
 
@@ -23,7 +24,11 @@ const maxRequestBytes = 30_000;
 
 function clean(value: unknown, max = 400) {
   return typeof value === "string"
-    ? value.replace(/[\r\n\t]+/g, " ").replace(/\s+/g, " ").trim().slice(0, max)
+    ? value
+        .replace(/[\r\n\t]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, max)
     : "";
 }
 
@@ -102,7 +107,25 @@ async function structuredResponse<T>(
       console.error("ntw ai yanıt hatası", response.status, (await response.text()).slice(0, 300));
       return null;
     }
-    return JSON.parse(outputText(await response)) as T;
+    const result = JSON.parse(outputText(await response)) as T;
+    try {
+      await getStore({ name: "ntw-ai", consistency: "strong" }).setJSON(
+        `events/${safeScope(scope)}/prompts/${Date.now()}-${randomUUID()}.json`,
+        {
+          version: 1,
+          scope,
+          schemaName,
+          model,
+          instructions,
+          input,
+          output: result,
+          createdAt: new Date().toISOString(),
+        },
+      );
+    } catch (error) {
+      console.error("ntw ai prompt arşivi kaydedilemedi", error);
+    }
+    return result;
   } catch (error) {
     console.error("ntw ai çağrısı tamamlanamadı", error);
     return null;
