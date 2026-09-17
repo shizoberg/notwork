@@ -245,6 +245,10 @@ export function clean(value: unknown, maxLength: number) {
     : "";
 }
 
+function cleanFreeform(value: unknown) {
+  return typeof value === "string" ? value.replace(/\r\n?/g, "\n").trim() : "";
+}
+
 export function normalizeEmail(value: string) {
   return value.trim().toLocaleLowerCase("tr-TR");
 }
@@ -706,18 +710,15 @@ export async function registerNetworkProfile(
   const firstName = clean(input.firstName, 50);
   const lastName = clean(input.lastName, 50);
   const offers = normalizeOffers(input.offers);
-  const intro = clean(input.intro, 40);
-  const offersDetail = clean(input.offersDetail, 40);
-  const needs = clean(input.needs, 40);
+  const intro = cleanFreeform(input.intro);
+  const offersDetail = cleanFreeform(input.offersDetail);
+  const needs = cleanFreeform(input.needs);
   const needTag = clean(input.needTag, 40).toLocaleLowerCase("tr-TR");
   const attendedEvent = clean(input.attendedEvent, 80).toLocaleLowerCase("tr-TR");
 
   if (!firstName || !lastName) throw new Error("Ad ve soyad gerekli");
   if (!isValidEmail(emailNormalized)) throw new Error("Geçerli e-posta gerekli");
   if (offers.length === 0) throw new Error("En az bir yardımcı olabileceğin konu gerekli");
-  if (intro.length < 2) throw new Error("Kendini tanıt yanıtı gerekli");
-  if (offersDetail.length < 2) throw new Error("Neler yapabilirsin yanıtı gerekli");
-  if (needs.length < 2) throw new Error("Ne istiyorsun yanıtı gerekli");
   if (
     !attendedEventValues.has(attendedEvent) &&
     attendedEvent !== getNetworkEventSlug() &&

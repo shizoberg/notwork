@@ -1,4 +1,3 @@
-import { promptForAnnouncements } from "@/lib/announcement-prompt";
 import { previewEvent, useEventPreview } from "@/lib/event-preview";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
@@ -224,10 +223,6 @@ function LinksPage() {
   );
 
   function applyRegistration(data: EventNetworkRegistration, fallbackEvent = "21-agustos-2026") {
-    promptForAnnouncements(
-      { name: `${data.profile.firstName} ${data.profile.lastName}`, email: data.profile.email },
-      window.location.pathname + window.location.search,
-    );
     setRegistration(data);
     setForm((current) => ({
       ...current,
@@ -380,12 +375,6 @@ function LinksPage() {
         form.lastName.trim() &&
         form.email.includes("@") &&
         form.attendedEvent &&
-        form.intro.trim().length >= 2 &&
-        form.intro.trim().length <= 40 &&
-        form.offersDetail.trim().length >= 2 &&
-        form.offersDetail.trim().length <= 40 &&
-        form.needs.trim().length >= 2 &&
-        form.needs.trim().length <= 40 &&
         form.offers.length > 0 &&
         form.eventConsent,
       ),
@@ -477,9 +466,9 @@ function LinksPage() {
       form.email.includes("@"),
       form.attendedEvent,
       form.offers.length > 0,
-      form.intro.trim().length >= 2 && form.intro.trim().length <= 40,
-      form.offersDetail.trim().length >= 2 && form.offersDetail.trim().length <= 40,
-      form.needs.trim().length >= 2 && form.needs.trim().length <= 40,
+      true,
+      true,
+      true,
       form.needTag,
       form.eventConsent,
     ].filter(Boolean).length;
@@ -549,10 +538,6 @@ function LinksPage() {
       );
 
       if (data.accessToken) localStorage.setItem(tokenStorageKey, data.accessToken);
-      promptForAnnouncements(
-        { name: `${data.profile.firstName} ${data.profile.lastName}`, email: data.profile.email },
-        window.location.pathname + window.location.search,
-      );
       setRegistration(data);
       setShowCompletion(true);
       setMessage(
@@ -872,12 +857,7 @@ function RegistrationGate({
   experienceChoice: ExperienceChoice;
   setExperienceChoice: React.Dispatch<React.SetStateAction<ExperienceChoice>>;
 }) {
-  const eventQuestionComplete = [
-    form.intro.trim().length >= 2 && form.intro.trim().length <= 40,
-    form.offersDetail.trim().length >= 2 && form.offersDetail.trim().length <= 40,
-    form.needs.trim().length >= 2 && form.needs.trim().length <= 40 && Boolean(form.needTag),
-    form.eventConsent && experienceChoice !== null,
-  ];
+  const eventQuestionComplete = [true, true, true, form.eventConsent && experienceChoice !== null];
 
   if (registrationPath === "choose") {
     return (
@@ -1124,14 +1104,12 @@ function RegistrationGate({
               autoFocus
               value={form.intro}
               onChange={(event) =>
-                setForm((current) => ({ ...current, intro: event.target.value.slice(0, 40) }))
+                setForm((current) => ({ ...current, intro: event.target.value }))
               }
               rows={4}
-              minLength={2}
-              maxLength={40}
               placeholder={registrationPrompts.introPlaceholder}
             />
-            <CharacterHint length={form.intro.length} />
+            <CharacterHint />
           </label>
         )}
 
@@ -1144,15 +1122,13 @@ function RegistrationGate({
               onChange={(event) =>
                 setForm((current) => ({
                   ...current,
-                  offersDetail: event.target.value.slice(0, 40),
+                  offersDetail: event.target.value,
                 }))
               }
               rows={4}
-              minLength={2}
-              maxLength={40}
               placeholder={registrationPrompts.offersPlaceholder}
             />
-            <CharacterHint length={form.offersDetail.length} />
+            <CharacterHint />
           </label>
         )}
 
@@ -1164,14 +1140,12 @@ function RegistrationGate({
                 autoFocus
                 value={form.needs}
                 onChange={(event) =>
-                  setForm((current) => ({ ...current, needs: event.target.value.slice(0, 40) }))
+                  setForm((current) => ({ ...current, needs: event.target.value }))
                 }
                 rows={4}
-                minLength={2}
-                maxLength={40}
                 placeholder={registrationPrompts.needsPlaceholder}
               />
-              <CharacterHint length={form.needs.length} />
+              <CharacterHint />
             </label>
             <p className="entry-question-helper">En yakın başlığı seç</p>
             <div className="entry-answer-chips">
@@ -1331,10 +1305,10 @@ function QuickInput({
   );
 }
 
-function CharacterHint({ length }: { length: number }) {
+function CharacterHint() {
   return (
     <span className="mt-1 block text-right text-[11px] font-bold text-foreground/45">
-      {length}/40 · bir iki kelime yeterli
+      İstediğin kadar yazabilir veya boş bırakabilirsin
     </span>
   );
 }
