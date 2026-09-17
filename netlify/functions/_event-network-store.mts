@@ -409,6 +409,8 @@ async function reservePublicCode(
     const letter = codeLetters[(index - 1) % codeLetters.length];
     const number = Math.ceil(index / codeLetters.length);
     const code = `${letter}${String(number).padStart(2, "0")}`;
+    const existing = await store.get(codeKey(code), { type: "json", consistency: "strong" });
+    if (existing) continue;
     const reserved = await store.setJSON(codeKey(code), participantId, { onlyIfNew: true });
     if (reserved.modified) return code;
   }
@@ -1025,16 +1027,14 @@ export async function listRegistrations(store: ReturnType<typeof getEventNetwork
     `${getNetworkPrefix()}/participants/`,
   );
   const uniqueRows = new Map<string, EventNetworkRegistration>();
-  const usedCodes = new Set<string>();
   rows
     .sort((first, second) =>
       second.participant.updatedAt.localeCompare(first.participant.updatedAt),
     )
     .forEach((row) => {
-      const key = row.profile.emailNormalized || row.participant.publicCode;
-      if (uniqueRows.has(key) || usedCodes.has(row.participant.publicCode)) return;
+      const key = row.profile.emailNormalized || row.participant.id;
+      if (uniqueRows.has(key)) return;
       uniqueRows.set(key, row);
-      usedCodes.add(row.participant.publicCode);
     });
   return [...uniqueRows.values()].sort((first, second) =>
     second.participant.registeredAt.localeCompare(first.participant.registeredAt),
@@ -1091,7 +1091,6 @@ export async function getNextMatchGroup(
   const nextRound = cursor.round + 1;
   const candidateRows = rows
     .filter((row) => row.participant.id !== current.participant.id)
-    .filter((row) => row.participant.publicCode !== current.participant.publicCode)
     .filter((row) => row.profile.emailNormalized !== current.profile.emailNormalized)
     .filter((row) => row.participant.status === "registered")
     .filter((row) => (presenceMap.get(row.participant.id) || "open") !== "paused");
