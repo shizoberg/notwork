@@ -11,7 +11,7 @@ import {
   withEventSelection,
   type EventProductKey,
 } from "@/lib/event-registry";
-import { useEventPreview } from "@/lib/event-preview";
+import { previewEvent, useEventPreview } from "@/lib/event-preview";
 
 export function EventFlowBanner({
   product,
@@ -26,6 +26,42 @@ export function EventFlowBanner({
   const selection = useMemo(() => getEventSelectionFromLocation(), []);
 
   useEffect(() => {
+    if (preview === true) {
+      const event = previewEvent();
+      if (!event) return;
+      const steps = Object.entries(event.products)
+        .filter(([, config]) => config.enabled && config.visible)
+        .sort(([, left], [, right]) => left.order - right.order)
+        .map(([productKey, config]) => ({
+          product: productKey as EventProductKey,
+          label: config.label,
+          durationMinutes: productKey === "five" ? 90 : 60,
+        }));
+      const now = new Date();
+      const demoFlow: EventFlowState = {
+        version: 1,
+        eventId: event.id,
+        eventSlug: event.slug,
+        status: "running",
+        steps,
+        currentStepIndex: 0,
+        startedAt: now.toISOString(),
+        endsAt: new Date(now.getTime() + (steps[0]?.durationMinutes || 60) * 60_000).toISOString(),
+        notices: [
+          {
+            id: "preview-notice",
+            text: "Admin önizlemesi · canlı bildirimler burada görünecek",
+            createdAt: now.toISOString(),
+          },
+        ],
+        updatedAt: now.toISOString(),
+        serverNow: now.toISOString(),
+      };
+      setFlow(demoFlow);
+      onFlowChange?.(demoFlow);
+      const tick = window.setInterval(() => setClock(Date.now()), 1_000);
+      return () => window.clearInterval(tick);
+    }
     if (preview !== false) return;
     let active = true;
     const refresh = async () => {

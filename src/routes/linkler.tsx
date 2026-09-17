@@ -405,6 +405,25 @@ function LinksPage() {
   );
 
   const hasRegistration = Boolean(registration) || Boolean(preview && previewReady);
+  const profileCard = registration
+    ? {
+        firstName: registration.profile.firstName,
+        lastName: registration.profile.lastName,
+        code: registration.participant.publicCode,
+        offers: registration.offers,
+        needTag: registration.needTag,
+        needs: registration.needs,
+      }
+    : preview && previewReady
+      ? {
+          firstName: "Demo",
+          lastName: "Notworker",
+          code: "NTW17",
+          offers: ["topluluk", "içerik", "girişim"],
+          needTag: "networking",
+          needs: "Yeni fikirler üretebileceği insanlarla tanışmak",
+        }
+      : null;
 
   useEffect(() => {
     if (preview || !draftHydrated || hasRegistration) return;
@@ -682,25 +701,25 @@ function LinksPage() {
 
           {hasRegistration && (
             <>
-              {registration && (
+              {profileCard && (
                 <section className="entry-profile-card" aria-label="Profilim">
                   <div className="entry-profile-avatar" aria-hidden="true">
-                    {registration.profile.firstName.slice(0, 1)}
-                    {registration.profile.lastName.slice(0, 1)}
+                    {profileCard.firstName.slice(0, 1)}
+                    {profileCard.lastName.slice(0, 1)}
                   </div>
                   <div className="entry-profile-copy">
                     <span>Profilim</span>
                     <h2>
-                      {registration.profile.firstName} {registration.profile.lastName}
+                      {profileCard.firstName} {profileCard.lastName}
                     </h2>
-                    <p>{registration.offers.join(" · ") || registration.needTag}</p>
-                    {registration.needs ? (
-                      <small>Aradığı bağlantı · {registration.needs}</small>
+                    <p>{profileCard.offers.join(" · ") || profileCard.needTag}</p>
+                    {profileCard.needs ? (
+                      <small>Aradığı bağlantı · {profileCard.needs}</small>
                     ) : null}
                   </div>
                   <div className="entry-profile-code">
                     <span>Etkinlik kodu</span>
-                    <strong>{registration.participant.publicCode}</strong>
+                    <strong>{profileCard.code}</strong>
                   </div>
                 </section>
               )}
