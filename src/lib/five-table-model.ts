@@ -1,4 +1,13 @@
-export type TablePerson = { id: string; name: string; code: string; problem: string };
+export type TablePerson = {
+  id: string;
+  name: string;
+  code: string;
+  problem: string;
+  offers?: string[];
+  offersDetail?: string;
+  needs?: string;
+  aiAnalysisConsent?: boolean;
+};
 export type TableOutcome = {
   solved: boolean;
   solution: string;
@@ -15,6 +24,7 @@ export type ProblemTable = {
   code: string;
   problemId: string;
   title: string;
+  aiAnalysis?: string;
   people: TablePerson[];
   phase: "waiting" | "ready" | "active" | "finished";
   round: number;

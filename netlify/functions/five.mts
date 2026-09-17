@@ -123,46 +123,49 @@ function memberIdentity(profile: Awaited<ReturnType<typeof getMemberProfileBySes
       profile.profile.status === "active" &&
       !profile.profile.mustChangePassword &&
       profile.profile.publicProfileEnabled,
+    aiAnalysisConsent: false,
     matchingProfile,
   } satisfies FiveIdentity;
 }
 
 async function resolveIdentity(request: Request, input: FiveInput) {
-  const member = memberIdentity(await getMemberProfileBySession(readMemberSessionCookie(request)));
-  if (member) return member;
-
   const accessToken = cleanFiveText(input.accessToken, 120);
-  if (!accessToken) return null;
-  const registration = await getRegistrationByToken(getEventNetworkStore(), accessToken);
-  if (!registration) return null;
-  const memberSummary = await getMemberFiveSummary(
-    registration.profile.username ||
-      registration.profile.emailNormalized ||
-      registration.profile.email,
-  );
-  return {
-    id: `event:${registration.participant.id}`,
-    type: "event",
-    name: `${registration.profile.firstName} ${registration.profile.lastName}`.trim(),
-    firstName: registration.profile.firstName,
-    username: memberSummary?.username || registration.profile.username,
-    email: registration.profile.emailNormalized || registration.profile.email,
-    publicCode: registration.participant.publicCode,
-    photoUrl: memberSummary?.photoUrl || "",
-    profileUrl:
-      memberSummary?.profileUrl ||
-      (registration.profile.username
-        ? `/u/${encodeURIComponent(registration.profile.username)}`
-        : ""),
-    businessCardEnabled: Boolean(memberSummary?.businessCardEnabled),
-    matchingProfile: {
-      intro: registration.intro || "",
-      offers: registration.offers || [],
-      offersDetail: registration.offersDetail || "",
-      needs: registration.needs || "",
-      needTag: registration.needTag || "networking",
-    },
-  } satisfies FiveIdentity;
+  if (accessToken) {
+    const registration = await getRegistrationByToken(getEventNetworkStore(), accessToken);
+    if (registration) {
+      const memberSummary = await getMemberFiveSummary(
+        registration.profile.username ||
+          registration.profile.emailNormalized ||
+          registration.profile.email,
+      );
+      return {
+        id: `event:${registration.participant.id}`,
+        type: "event",
+        name: `${registration.profile.firstName} ${registration.profile.lastName}`.trim(),
+        firstName: registration.profile.firstName,
+        username: memberSummary?.username || registration.profile.username,
+        email: registration.profile.emailNormalized || registration.profile.email,
+        publicCode: registration.participant.publicCode,
+        photoUrl: memberSummary?.photoUrl || "",
+        profileUrl:
+          memberSummary?.profileUrl ||
+          (registration.profile.username
+            ? `/u/${encodeURIComponent(registration.profile.username)}`
+            : ""),
+        businessCardEnabled: Boolean(memberSummary?.businessCardEnabled),
+        aiAnalysisConsent: registration.aiConsent?.analysis === true,
+        matchingProfile: {
+          intro: registration.intro || "",
+          offers: registration.offers || [],
+          offersDetail: registration.offersDetail || "",
+          needs: registration.needs || "",
+          needTag: registration.needTag || "networking",
+        },
+      } satisfies FiveIdentity;
+    }
+  }
+
+  return memberIdentity(await getMemberProfileBySession(readMemberSessionCookie(request)));
 }
 
 async function fiveSession(identity: FiveIdentity) {

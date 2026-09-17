@@ -33,6 +33,12 @@ export type EventNetworkRegistration = {
   offersDetail: string;
   needs: string;
   needTag: string;
+  aiConsent?: {
+    version: "2026-09-17";
+    analysis: boolean;
+    modelImprovement: boolean;
+    recordedAt: string;
+  };
   accessToken?: string;
   membership?: {
     username: string;
@@ -77,6 +83,7 @@ export type EventNetworkMatchGroup = {
   round: number;
   score: number;
   reason: string;
+  aiAnalysis?: string;
   members: EventNetworkMatchMember[];
   conversationPrompt: string;
   conversationPrompts?: string[];

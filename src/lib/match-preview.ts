@@ -46,6 +46,8 @@ export function matchPreview() {
     round,
     score: 90,
     reason: "Farklı deneyimler, ortak merak.",
+    aiAnalysis:
+      "Farklı üretim deneyimleri ortak fikir arayışında birleşerek test edilebilir yeni bir iş birliği yönü doğurabilir.",
     generatedAt: now,
     photoOwnerParticipantId: "preview-person",
     conversationPrompt: prompts[0],

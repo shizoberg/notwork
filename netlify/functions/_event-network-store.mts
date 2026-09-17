@@ -11,6 +11,7 @@ import { getStore } from "@netlify/blobs";
 import { getEventProductRuntimeContext } from "./_event-product-context.mjs";
 import { getEventReviewStore } from "./_event-review-store.mjs";
 import { scorePair, selectMatchCandidates, stableTieBreaker } from "./_matchmaking.mjs";
+import { generateMatchAnalysis, rerankMatchCandidates } from "./_ntw-ai.mjs";
 
 type EventNetworkProfile = {
   id: string;
@@ -47,6 +48,12 @@ type EventNetworkRegistration = {
   offersDetail: string;
   needs: string;
   needTag: string;
+  aiConsent?: {
+    version: "2026-09-17";
+    analysis: boolean;
+    modelImprovement: boolean;
+    recordedAt: string;
+  };
   accessToken?: string;
 };
 
@@ -86,6 +93,7 @@ type EventNetworkMatchGroup = {
   round: number;
   score: number;
   reason: string;
+  aiAnalysis?: string;
   members: EventNetworkMatchMember[];
   conversationPrompt: string;
   conversationPrompts?: string[];
@@ -98,6 +106,7 @@ type StoredActiveMatch = {
   round: number;
   score: number;
   reason: string;
+  aiAnalysis?: string;
   participantIds: string[];
   conversationPrompts: string[];
   photoOwnerParticipantId?: string;
@@ -132,6 +141,8 @@ export type NetworkInput = {
   photoDataUrl?: string;
   consent?: boolean;
   eventConsent?: boolean;
+  aiAnalysisConsent?: boolean;
+  modelImprovementConsent?: boolean;
   generalNetworkOptIn?: boolean;
   marketingOptIn?: boolean;
   marketingPreferenceVersion?: string;
@@ -668,6 +679,7 @@ async function buildActiveMatchGroup(
     round: match.round,
     score: match.score,
     reason: match.reason,
+    aiAnalysis: match.aiAnalysis,
     members: rows.map((registration) =>
       toMatchMember(
         registration,
@@ -713,6 +725,12 @@ export async function registerNetworkProfile(
   )
     throw new Error("Katıldığın Notwork etkinliğini seçmelisin");
   if (!input.eventConsent) throw new Error("Etkinlik eşleştirmesi için onay gerekli");
+  const aiConsent = {
+    version: "2026-09-17" as const,
+    analysis: input.aiAnalysisConsent === true,
+    modelImprovement: input.modelImprovementConsent === true,
+    recordedAt: now,
+  };
 
   const existing = (await store.get(profileKey(emailNormalized), {
     type: "json",
@@ -769,6 +787,7 @@ export async function registerNetworkProfile(
       offersDetail,
       needs,
       needTag,
+      aiConsent,
       accessToken,
     };
     const storedRegistration = { ...registration, accessToken: undefined };
@@ -839,6 +858,7 @@ export async function registerNetworkProfile(
     offersDetail,
     needs,
     needTag,
+    aiConsent,
     accessToken,
   };
   const storedRegistration = { ...registration, accessToken: undefined };
@@ -1101,7 +1121,43 @@ export async function getNextMatchGroup(
       nextRound,
       availableCandidates.length,
     );
-    const selected = selectMatchCandidates(current, availableCandidates, cursor.seen, nextRound);
+    const deterministicSelected = selectMatchCandidates(
+      current,
+      availableCandidates,
+      cursor.seen,
+      nextRound,
+    );
+    let selected = deterministicSelected;
+    if (current.aiConsent?.analysis) {
+      const aiShortlist = availableCandidates
+        .filter((candidate) => candidate.aiConsent?.analysis)
+        .map((row) => ({
+          row,
+          score: scorePair(current, row),
+          seen: cursor.seen.has(row.participant.id),
+          tie: stableTieBreaker(current.participant.id, row.participant.id, nextRound),
+        }))
+        .sort((first, second) => {
+          if (first.seen !== second.seen) return first.seen ? 1 : -1;
+          if (second.score !== first.score) return second.score - first.score;
+          return first.tie - second.tie;
+        })
+        .slice(0, 8);
+      if (aiShortlist.length >= 2) {
+        const aiIds = await rerankMatchCandidates(
+          getNetworkPrefix(),
+          current,
+          aiShortlist.map((candidate) => candidate.row),
+          2,
+        );
+        if (aiIds) {
+          const aiSelected = aiIds
+            .map((id) => aiShortlist.find((candidate) => candidate.row.participant.id === id))
+            .filter(Boolean) as typeof aiShortlist;
+          if (aiSelected.length === 2) selected = aiSelected;
+        }
+      }
+    }
     if (selected.length < 2) break;
 
     const finalSelected = selected.slice(0, groupSize - 1);
@@ -1115,7 +1171,7 @@ export async function getNextMatchGroup(
     const photoOwnerParticipantId = pickPhotoOwnerParticipantId(groupId, participantIds);
     const generatedAt = new Date().toISOString();
     const reason = buildReason(current, groupRegistrations);
-    const claimed = await writeActiveMatch(store, {
+    const storedMatch: StoredActiveMatch = {
       id: groupId,
       round: nextRound,
       score,
@@ -1126,8 +1182,30 @@ export async function getNextMatchGroup(
       generatedAt,
       completedParticipantIds: [],
       completedAtByParticipantId: {},
-    });
+    };
+    const claimed = await writeActiveMatch(store, storedMatch);
     if (!claimed) continue;
+
+    let aiAnalysis: string | undefined;
+    if (groupRegistrations.every((registration) => registration.aiConsent?.analysis)) {
+      aiAnalysis =
+        (await generateMatchAnalysis(getNetworkPrefix(), groupRegistrations)) || undefined;
+      if (aiAnalysis) {
+        storedMatch.aiAnalysis = aiAnalysis;
+        try {
+          await atomicState(
+            store,
+            `${getNetworkPrefix()}/room-index-v2.json`,
+            emptyRooms<StoredActiveMatch>,
+            (state) => {
+              if (state.groups[groupId]) state.groups[groupId].aiAnalysis = aiAnalysis;
+            },
+          );
+        } catch (error) {
+          console.error("Match AI analizi kaydedilemedi", error);
+        }
+      }
+    }
 
     try {
       await rememberGroupForEveryParticipant(store, groupRegistrations);
@@ -1140,6 +1218,7 @@ export async function getNextMatchGroup(
       round: nextRound,
       score,
       reason,
+      aiAnalysis,
       members: groupRegistrations.map((registration) =>
         toMatchMember(
           registration,
@@ -1233,6 +1312,8 @@ export async function seedSampleRegistrations(
         attendedEvent: getNetworkEventSlug(),
         action: "register",
         eventConsent: true,
+        aiAnalysisConsent: true,
+        modelImprovementConsent: false,
         generalNetworkOptIn: true,
         marketingOptIn: false,
       }),

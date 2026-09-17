@@ -32,6 +32,7 @@ export type FiveIdentity = {
   photoUrl: string;
   profileUrl: string;
   businessCardEnabled: boolean;
+  aiAnalysisConsent: boolean;
   matchingProfile: FiveMatchingProfile;
 };
 
@@ -60,6 +61,7 @@ export type FiveProblem = {
   requestCount: number;
   conversationCount: number;
   consentAt: string;
+  aiAnalysisConsent?: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -489,6 +491,7 @@ export async function createFiveProblem(
     requestCount: 0,
     conversationCount: 0,
     consentAt: now,
+    aiAnalysisConsent: identity?.aiAnalysisConsent === true,
     createdAt: now,
     updatedAt: now,
   };

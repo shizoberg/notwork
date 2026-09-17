@@ -66,6 +66,7 @@ const sections = [
     body: [
       "Üyelik ve giriş işlemlerini yürütmek; etkinlik katılımını doğrulamak; profilleri, business kartları ve QR kodlarını oluşturmak; kişilerin kendi verilerini güncellemesini sağlamak; networking ağını göstermek ve topluluk güvenliğini korumak.",
       "ntw.match.lab ile kişilerin katkı, ihtiyaç ve niyetlerine göre bağlantı önerileri oluşturmak; ntw.five içinde problem, çözüm talebi, görüşme ve zaman akışını yürütmek; ntw.wordcloud sonuçlarını etkinlik sırasında toplu veya anonim biçimde göstermek.",
+      "Ayrı açık rıza verilmesi halinde katkı, ihtiyaç ve problem cevaplarından AI destekli aday sıralaması ve gruba özel kısa analizler üretmek; ayrıca bundan bağımsız ve isteğe bağlı model geliştirme izni verilmişse anonimleştirilmiş etkinlik cevaplarıyla Notwork eşleştirme kurallarını değerlendirmek ve geliştirmek.",
       "Tercihiniz varsa etkinlik, bilet ve topluluk duyurularını e-posta ile göndermek; izin ve ret tercihlerinizi yönetmek ve duyuru almak istemeyen adresleri sonraki gönderimlerden çıkarmak.",
       "Başvuru, sunum, startup ve sponsorluk taleplerini değerlendirmek; etkinlik geri bildirimlerini analiz etmek; açık rıza verilen yorum ve görselleri notwork sayfalarında yayınlamak; site güvenliği, hata tespiti, performans ve istatistik çalışmalarını yürütmek.",
     ],
@@ -84,6 +85,7 @@ const sections = [
     body: [
       "Ad, profil fotoğrafı, rol, yetenek ve kısa profil bilgileri tercih edilen görünürlük ayarına göre networking ağında veya business kartta gösterilebilir. E-posta ve telefon gibi doğrudan iletişim bilgileri yalnızca kullanıcının seçimi ve ürün erişim kuralları çerçevesinde görüntülenir.",
       "notwork match ve bağlantı önerileri, form cevapları ile profil etiketlerini karşılaştıran kurallı/otomatik sistemlerden yararlanabilir. Bu sistemler kişi hakkında hukuki sonuç doğuran veya benzer ölçüde önemli, yalnızca otomatik bir karar vermez; öneriler etkinlik deneyimini kolaylaştırmak içindir.",
+      "AI destekli Match/Five analizinde ad, e-posta, telefon, kullanıcı adı ve fotoğraf OpenAI API’ye gönderilmez. Yalnızca açık rıza veren katılımcıların katkı, ihtiyaç, kategori ve problem cevaplarının sınırlandırılmış bir kopyası aday sıralaması veya tek cümlelik grup analizi üretmek için işlenir. API yanıt vermediğinde kurallı eşleştirme sistemi çalışmaya devam eder.",
       "Referanslar yalnızca doğrulanmış notwork üyelerince yazılabilir; profil sahibi ve notwork ekibi uygunsuz içerikleri bildirebilir, gizleyebilir veya kaldırılmasını isteyebilir.",
     ],
   },
@@ -92,6 +94,7 @@ const sections = [
     title: "6. Aktarım ve hizmet sağlayıcılar",
     body: [
       "Veriler; barındırma ve veri saklama için Netlify/Netlify Blobs, kod ve dağıtım altyapısı için GitHub, e-posta iletişimi için Google/Gmail ve kullanıldığı ölçüde Resend ve güvenlik/yedekleme hizmeti veren teknik sağlayıcılarla amaçla sınırlı olarak paylaşılabilir.",
+      "AI destekli eşleştirme ve grup analizi açık olduğunda sınırlandırılmış katkı, ihtiyaç, kategori ve problem cevapları OpenAI API ile paylaşılabilir. İsteklerde doğrudan kimlik ve iletişim bilgileri yer almaz ve yanıt saklama seçeneği kapalı kullanılır. OpenAI’nin yurt dışındaki altyapısının kullanılması yurt dışına veri aktarımı doğurabilir; bu işlem kayıt ekranındaki ayrı açık rıza seçimine dayanır.",
       "Analitik veya pazarlama çerezlerine izin verilirse Meta Pixel gibi ölçüm araçları çalışabilir. YouTube, Instagram, LinkedIn, WhatsApp ve harici bilet bağlantıları açıldığında ilgili platformların kendi gizlilik koşulları uygulanır.",
       "Bu hizmetlerin yurt dışındaki altyapılarının kullanılması, verilerin yurt dışına aktarılmasına yol açabilir. KVKK madde 9 kapsamında uygulanabilir bir aktarım şartı ve gerekli güvenceler sağlanmalıdır. Duyuru izni, tek başına yurt dışına veri aktarımı izni değildir. Kanuni zorunluluk halinde yetkili kurumlarla amaçla sınırlı paylaşım yapılabilir.",
     ],

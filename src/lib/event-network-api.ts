@@ -92,6 +92,8 @@ export async function registerEventNetwork(
     marketingOptIn: boolean;
     marketingPreferenceVersion?: string;
     eventConsent: boolean;
+    aiAnalysisConsent: boolean;
+    modelImprovementConsent: boolean;
   },
   selection?: EventSelection,
 ) {

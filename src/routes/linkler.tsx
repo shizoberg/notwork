@@ -114,6 +114,8 @@ type LinkRegistrationForm = {
   needTag: string;
   marketingOptIn: boolean;
   eventConsent: boolean;
+  aiAnalysisConsent: boolean;
+  modelImprovementConsent: boolean;
   generalNetworkOptIn: boolean;
 };
 
@@ -187,6 +189,8 @@ function LinksPage() {
     needTag: "",
     marketingOptIn: false,
     eventConsent: false,
+    aiAnalysisConsent: false,
+    modelImprovementConsent: false,
     generalNetworkOptIn: false,
   });
 
@@ -220,6 +224,8 @@ function LinksPage() {
       ),
       generalNetworkOptIn: data.profile.generalNetworkOptIn,
       eventConsent: true,
+      aiAnalysisConsent: data.aiConsent?.analysis === true,
+      modelImprovementConsent: data.aiConsent?.modelImprovement === true,
     }));
   }
 
@@ -346,7 +352,7 @@ function LinksPage() {
     [form],
   );
 
-  const hasRegistration = Boolean(registration) || (preview && previewReady);
+  const hasRegistration = Boolean(registration) || Boolean(preview && previewReady);
 
   useEffect(() => {
     if (!showCompletion) return;
@@ -355,7 +361,7 @@ function LinksPage() {
   }, [showCompletion]);
 
   const registrationProgress = useMemo(() => {
-    if (registration || (preview && previewReady)) return 100;
+    if (hasRegistration) return 100;
 
     if (registrationPath === "choose") return 0;
     if (registrationPath === "login") {
@@ -377,16 +383,7 @@ function LinksPage() {
       form.generalNetworkOptIn,
     ].filter(Boolean).length;
     return Math.round((completed / 11) * 100);
-  }, [
-    form,
-    loginConsent,
-    loginIdentity,
-    loginPassword,
-    preview,
-    previewReady,
-    registration,
-    registrationPath,
-  ]);
+  }, [form, hasRegistration, loginConsent, loginIdentity, loginPassword, registrationPath]);
 
   const progressCopy = useMemo(() => {
     if (hasRegistration) return { label: "Hazırsın", hint: "Uygulama akışın hazır" };
@@ -440,6 +437,8 @@ function LinksPage() {
           marketingOptIn: form.marketingOptIn,
           marketingPreferenceVersion: "2026-09-09",
           eventConsent: form.eventConsent,
+          aiAnalysisConsent: form.aiAnalysisConsent,
+          modelImprovementConsent: form.modelImprovementConsent,
         },
         eventSelection,
       );
@@ -478,6 +477,8 @@ function LinksPage() {
         needTag: "networking",
         generalNetworkOptIn: true,
         eventConsent: false,
+        aiAnalysisConsent: false,
+        modelImprovementConsent: false,
       }));
       setRegistrationPath("new");
       setRegistrationStep("event");
@@ -1057,6 +1058,20 @@ function RegistrationGate({
               checked={form.eventConsent}
               onChange={(eventConsent) => setForm((current) => ({ ...current, eventConsent }))}
               title="Etkinlik cevaplarımın ntw.wordcloud, notwork match, ntw.five ve kod sistemi için kullanılmasına açık rıza veriyorum."
+            />
+            <ConsentBox
+              checked={form.aiAnalysisConsent}
+              onChange={(aiAnalysisConsent) =>
+                setForm((current) => ({ ...current, aiAnalysisConsent }))
+              }
+              title="Katkı, ihtiyaç ve problem cevaplarımın kimlik ve iletişim bilgilerim gönderilmeden OpenAI altyapısıyla analiz edilmesine ve AI destekli Match/Five önerileri üretilmesine açık rıza veriyorum. Bu seçim isteğe bağlıdır."
+            />
+            <ConsentBox
+              checked={form.modelImprovementConsent}
+              onChange={(modelImprovementConsent) =>
+                setForm((current) => ({ ...current, modelImprovementConsent }))
+              }
+              title="Anonimleştirilmiş etkinlik cevaplarımın Notwork eşleştirme modelini geliştirmek ve değerlendirmek için kullanılmasına izin veriyorum. Bu seçim isteğe bağlıdır."
             />
             <ConsentBox
               checked={form.generalNetworkOptIn}

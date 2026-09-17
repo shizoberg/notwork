@@ -3,7 +3,7 @@ import { SiteNav } from "./SiteNav";
 import { EventThinkingStatus } from "./EventThinkingStatus";
 import { useEventPreview } from "@/lib/event-preview";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
-import { Camera, Clock3, ArrowUpRight, LogOut, Plus } from "lucide-react";
+import { Camera, Clock3, ArrowUpRight, LogOut, Plus, Sparkles } from "lucide-react";
 import { fiveRequest, getFiveEventTokenStorageKey } from "@/lib/five";
 import { resumeEventNetwork } from "@/lib/event-network-api";
 import { withEventSelection, getEventSelectionFromLocation } from "@/lib/event-registry";
@@ -99,6 +99,8 @@ function demoRequest(action: string, input: Record<string, unknown>): Payload {
         },
         { id: table.problemId, title: table.title },
       );
+    table.aiAnalysis =
+      "Müşteriye ulaşma problemi; ürün, topluluk ve içerik deneyimleri birleştiğinde küçük bir hedef kitle testi ve uygulanabilir ilk temas planına dönüşebilir.";
   }
   if (action === "demoTime") saved.offset += 300001;
   if (action === "demoPhoto") {
@@ -437,6 +439,14 @@ export function FiveTables() {
                 </DialogContent>
               </Dialog>
               <h2>{table.topics[table.round] || table.title}</h2>
+              {table.aiAnalysis && (
+                <div className="ntw-ai-analysis" role="note">
+                  <span>
+                    <Sparkles size={14} /> ntw ai analiz
+                  </span>
+                  <p>{table.aiAnalysis}</p>
+                </div>
+              )}
               <div className="five-seats">
                 {Array.from({ length: 4 }, (_, i) => (
                   <div key={i}>

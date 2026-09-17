@@ -53,6 +53,8 @@ function AugustNetworkPage() {
     generalNetworkOptIn: false,
     marketingOptIn: false,
     eventConsent: false,
+    aiAnalysisConsent: false,
+    modelImprovementConsent: false,
   });
 
   useEffect(() => {
@@ -102,6 +104,8 @@ function AugustNetworkPage() {
         marketingOptIn: form.marketingOptIn,
         marketingPreferenceVersion: "2026-09-09",
         eventConsent: form.eventConsent,
+        aiAnalysisConsent: form.aiAnalysisConsent,
+        modelImprovementConsent: form.modelImprovementConsent,
       });
       if (data.accessToken) localStorage.setItem(tokenStorageKey, data.accessToken);
       await navigate({ to: "/linkler", replace: true });
@@ -294,6 +298,18 @@ function AugustNetworkPage() {
                 onChange={(eventConsent) => setForm({ ...form, eventConsent })}
                 title="Etkinlik eşleştirmesi için cevaplarımın kullanılmasına açık rıza veriyorum."
                 required
+              />
+              <ConsentBox
+                checked={form.aiAnalysisConsent}
+                onChange={(aiAnalysisConsent) => setForm({ ...form, aiAnalysisConsent })}
+                title="İhtiyaç, katkı ve problem cevaplarımın kimlik ve iletişim bilgilerim paylaşılmadan OpenAI üzerinden eşleştirme analizi için işlenmesine açık rıza veriyorum. Bu seçim isteğe bağlıdır."
+              />
+              <ConsentBox
+                checked={form.modelImprovementConsent}
+                onChange={(modelImprovementConsent) =>
+                  setForm({ ...form, modelImprovementConsent })
+                }
+                title="Anonimleştirilmiş etkinlik cevaplarımın notwork eşleştirme modelini geliştirmek için kullanılmasına izin veriyorum. Bu izin isteğe bağlıdır."
               />
               <ConsentBox
                 checked={form.generalNetworkOptIn}

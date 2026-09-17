@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, Eye, Mail, Network, ShieldCheck } from "lucide-react";
+import { BrainCircuit, CheckCircle2, Eye, Mail, Network, ShieldCheck } from "lucide-react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { createSeo } from "@/lib/seo";
 
@@ -25,6 +25,16 @@ const choices = [
     icon: Eye,
     title: "Profil ve içerik görünürlüğü",
     text: "Seçtiğim profil bilgilerinin, business kartımın, referanslarımın, yorumumun, puanımın ve yüklediğim görselin ilgili notwork alanlarında yayınlanmasına ayrı olarak rıza gösterebilirim.",
+  },
+  {
+    icon: BrainCircuit,
+    title: "AI destekli eşleştirme analizi",
+    text: "Katkı, ihtiyaç ve problem cevaplarımın; ad, e-posta, telefon, kullanıcı adı ve fotoğrafım aktarılmadan OpenAI altyapısında analiz edilerek notwork match aday sıralaması ve Match/Five grup açıklamaları üretilmesine ayrı olarak rıza gösterebilirim. Bu öneriler hukuki veya benzer ölçüde önemli bir karar oluşturmaz; teknik hizmet yurt dışı altyapı kullanabilir.",
+  },
+  {
+    icon: BrainCircuit,
+    title: "Notwork modelini geliştirme",
+    text: "Anonimleştirilmiş etkinlik cevaplarımın ve eşleşme sonuçlarının Notwork eşleştirme kurallarını değerlendirmek ve geliştirmek için kullanılmasına ayrıca izin verebilirim. Bu tercih isteğe bağlıdır; reddetmem etkinlik kaydını, Match veya Five kullanımını engellemez.",
   },
   {
     icon: Mail,
@@ -54,8 +64,8 @@ function ExplicitConsentPage() {
             ise verilerin nasıl işlendiğine dair bilgilendirmedir; iki metin birbirinden ayrıdır.
           </p>
           <div className="mt-6 rounded-3xl border border-primary/20 bg-primary/10 p-5 text-sm leading-6 text-foreground/70">
-            <strong className="text-foreground">Son güncelleme:</strong> 9 Eylül 2026. Rıza; belirli
-            bir işlem için, bilgilendirmeye dayalı ve özgür iradeyle verilir.
+            <strong className="text-foreground">Son güncelleme:</strong> 17 Eylül 2026. Rıza;
+            belirli bir işlem için, bilgilendirmeye dayalı ve özgür iradeyle verilir.
           </div>
         </section>
 

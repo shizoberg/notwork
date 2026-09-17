@@ -35,6 +35,7 @@ export type FiveIdentity = {
   photoUrl: string;
   profileUrl: string;
   businessCardEnabled: boolean;
+  aiAnalysisConsent: boolean;
   matchingProfile: FiveMatchingProfile;
 };
 

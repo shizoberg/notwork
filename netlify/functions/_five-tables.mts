@@ -19,6 +19,7 @@ import {
   getFiveEventReviewMeta,
   type FiveIdentity,
 } from "./_five-store.mjs";
+import { generateFiveAnalysis } from "./_ntw-ai.mjs";
 
 type FiveTablePhoto = {
   photo: string;
@@ -98,7 +99,7 @@ export async function fiveTables(
     const board = await getFiveLiveBoard(identity);
     const problem = board.find((p) => p.id === input.problemId);
     if (!problem) throw new Error("Bu problem artık açık değil.");
-    await atomicState(store, key, emptyTables, (state) =>
+    const joinedTable = await atomicState(store, key, emptyTables, (state) =>
       joinTable(
         state,
         {
@@ -106,10 +107,32 @@ export async function fiveTables(
           name: identity.name,
           code: identity.publicCode,
           problem: identity.matchingProfile.needs || problem.title,
+          offers: identity.matchingProfile.offers,
+          offersDetail: identity.matchingProfile.offersDetail,
+          needs: identity.matchingProfile.needs,
+          aiAnalysisConsent: identity.aiAnalysisConsent,
         },
         problem,
       ),
     );
+    if (
+      joinedTable.phase === "ready" &&
+      !joinedTable.aiAnalysis &&
+      problem.aiAnalysisConsent === true &&
+      joinedTable.people.every((person) => person.aiAnalysisConsent === true)
+    ) {
+      const analysis = await generateFiveAnalysis(getFivePrefix(), problem, joinedTable.people);
+      if (analysis) {
+        try {
+          await atomicState(store, key, emptyTables, (state) => {
+            if (state.tables[joinedTable.id] && !state.tables[joinedTable.id].aiAnalysis)
+              state.tables[joinedTable.id].aiAnalysis = analysis;
+          });
+        } catch (error) {
+          console.error("Five AI analizi kaydedilemedi", error);
+        }
+      }
+    }
   } else if (action === "tableChat") {
     await atomicState(store, key, emptyTables, (state) =>
       tableChat(state, identity.id, input.tableId || "", input.messageId || "", input.text || "", Date.now()),

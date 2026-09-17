@@ -298,6 +298,14 @@ function AugustMatchPage() {
                       </article>
                     ))}
                   </div>
+                  {group.aiAnalysis && (
+                    <div className="ntw-ai-analysis" role="note">
+                      <span>
+                        <Sparkles size={14} /> ntw ai analiz
+                      </span>
+                      <p>{group.aiAnalysis}</p>
+                    </div>
+                  )}
                   <div className="match-icebreaker">
                     <p className="text-xs font-black uppercase tracking-[0.2em] text-primary-deep">
                       İlk sözü aç
