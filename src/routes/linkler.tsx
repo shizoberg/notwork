@@ -121,6 +121,20 @@ type LinkRegistrationForm = {
 
 type RegistrationPath = "choose" | "login" | "forgot" | "new";
 type RegistrationStep = "standard" | "event";
+type ExperienceChoice = "enhanced" | "basic" | null;
+
+type RegistrationDraft = {
+  version: 1;
+  savedAt: number;
+  form: LinkRegistrationForm;
+  registrationPath: RegistrationPath;
+  registrationStep: RegistrationStep;
+  eventQuestionIndex: number;
+  experienceChoice: ExperienceChoice;
+  loginIdentity: string;
+};
+
+const registrationDraftMaxAge = 7 * 24 * 60 * 60 * 1_000;
 
 function LinksPage() {
   const preview = useEventPreview();
@@ -133,6 +147,9 @@ function LinksPage() {
   const [message, setMessage] = useState("");
   const [registrationPath, setRegistrationPath] = useState<RegistrationPath>("choose");
   const [registrationStep, setRegistrationStep] = useState<RegistrationStep>("standard");
+  const [eventQuestionIndex, setEventQuestionIndex] = useState(0);
+  const [experienceChoice, setExperienceChoice] = useState<ExperienceChoice>(null);
+  const [draftHydrated, setDraftHydrated] = useState(false);
   const [loginIdentity, setLoginIdentity] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginConsent, setLoginConsent] = useState(false);
@@ -144,6 +161,7 @@ function LinksPage() {
     () => getEventNetworkTokenStorageKey(eventSelection),
     [eventSelection],
   );
+  const draftStorageKey = `${tokenStorageKey}:registration-draft:v1`;
   const eventLinks = useMemo(() => {
     const productLinks = eventProductLinks
       .map((link) => {
@@ -280,6 +298,34 @@ function LinksPage() {
 
       const selection: EventSelection = selectedEvent ? { event: selectedEvent.slug } : {};
       const activeTokenStorageKey = getEventNetworkTokenStorageKey(selection);
+      const activeDraftStorageKey = `${activeTokenStorageKey}:registration-draft:v1`;
+      try {
+        const storedDraft = JSON.parse(
+          localStorage.getItem(activeDraftStorageKey) || "null",
+        ) as RegistrationDraft | null;
+        if (
+          storedDraft?.version === 1 &&
+          Date.now() - storedDraft.savedAt <= registrationDraftMaxAge
+        ) {
+          if (active) {
+            setForm((current) => ({
+              ...current,
+              ...storedDraft.form,
+              attendedEvent:
+                storedDraft.form.attendedEvent || selectedEvent?.slug || current.attendedEvent,
+            }));
+            setRegistrationPath(storedDraft.registrationPath);
+            setRegistrationStep(storedDraft.registrationStep);
+            setEventQuestionIndex(Math.min(3, Math.max(0, storedDraft.eventQuestionIndex || 0)));
+            setExperienceChoice(storedDraft.experienceChoice || null);
+            setLoginIdentity(storedDraft.loginIdentity || "");
+          }
+        } else {
+          localStorage.removeItem(activeDraftStorageKey);
+        }
+      } catch {
+        localStorage.removeItem(activeDraftStorageKey);
+      }
       let loadedRegistration = false;
       const token = localStorage.getItem(activeTokenStorageKey);
       if (token) {
@@ -311,7 +357,11 @@ function LinksPage() {
         }
       }
 
-      if (active) setIsLoading(false);
+      if (loadedRegistration) localStorage.removeItem(activeDraftStorageKey);
+      if (active) {
+        setDraftHydrated(true);
+        setIsLoading(false);
+      }
     }
 
     void loadRegistration();
@@ -352,6 +402,37 @@ function LinksPage() {
   );
 
   const hasRegistration = Boolean(registration) || Boolean(preview && previewReady);
+
+  useEffect(() => {
+    if (preview || !draftHydrated || hasRegistration) return;
+    const draft: RegistrationDraft = {
+      version: 1,
+      savedAt: Date.now(),
+      form,
+      registrationPath,
+      registrationStep,
+      eventQuestionIndex,
+      experienceChoice,
+      loginIdentity,
+    };
+    localStorage.setItem(draftStorageKey, JSON.stringify(draft));
+  }, [
+    draftHydrated,
+    draftStorageKey,
+    eventQuestionIndex,
+    experienceChoice,
+    form,
+    hasRegistration,
+    loginIdentity,
+    preview,
+    registrationPath,
+    registrationStep,
+  ]);
+
+  useEffect(() => {
+    if (!hasRegistration) return;
+    localStorage.removeItem(draftStorageKey);
+  }, [draftStorageKey, hasRegistration]);
 
   useEffect(() => {
     if (!showCompletion) return;
@@ -584,6 +665,10 @@ function LinksPage() {
               setLoginConsent={setLoginConsent}
               submitMemberLogin={submitMemberLogin}
               registrationPrompts={registrationPrompts}
+              eventQuestionIndex={eventQuestionIndex}
+              setEventQuestionIndex={setEventQuestionIndex}
+              experienceChoice={experienceChoice}
+              setExperienceChoice={setExperienceChoice}
             />
           ) : null}
 
@@ -706,6 +791,10 @@ function RegistrationGate({
   setLoginConsent,
   submitMemberLogin,
   registrationPrompts,
+  eventQuestionIndex,
+  setEventQuestionIndex,
+  experienceChoice,
+  setExperienceChoice,
 }: {
   form: LinkRegistrationForm;
   setForm: React.Dispatch<React.SetStateAction<LinkRegistrationForm>>;
@@ -729,9 +818,11 @@ function RegistrationGate({
   setLoginConsent: React.Dispatch<React.SetStateAction<boolean>>;
   submitMemberLogin: () => Promise<void>;
   registrationPrompts: EventRegistrationPrompts;
+  eventQuestionIndex: number;
+  setEventQuestionIndex: React.Dispatch<React.SetStateAction<number>>;
+  experienceChoice: ExperienceChoice;
+  setExperienceChoice: React.Dispatch<React.SetStateAction<ExperienceChoice>>;
 }) {
-  const [eventQuestionIndex, setEventQuestionIndex] = useState(0);
-  const [experienceChoice, setExperienceChoice] = useState<"enhanced" | "basic" | null>(null);
   const eventQuestionComplete = [
     form.intro.trim().length >= 2 && form.intro.trim().length <= 40,
     form.offersDetail.trim().length >= 2 && form.offersDetail.trim().length <= 40,
