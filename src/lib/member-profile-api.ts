@@ -39,8 +39,9 @@ export type MemberRegistrationInput = {
 };
 
 export type MemberRegistrationResult = {
-  status: "pending";
+  status: "active";
   username: string;
+  profile: NotworkMemberProfile;
 };
 
 export class MemberProfileApiError extends Error {
@@ -139,7 +140,9 @@ export async function registerMember(input: MemberRegistrationInput) {
     const message = (await response.text()).trim() || "Profil başvurusu tamamlanamadı";
     throw new MemberProfileApiError(message, response.status);
   }
-  return (await response.json()) as MemberRegistrationResult;
+  const result = (await response.json()) as MemberRegistrationResult;
+  announceMemberSessionChange(true);
+  return result;
 }
 
 export async function changeMemberPassword(newPassword: string) {

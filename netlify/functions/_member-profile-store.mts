@@ -759,10 +759,15 @@ export async function registerMemberProfile(
     links: { linkedin, instagram, website: "" },
     attendedEvents: [],
     eventCodes: [],
-    verifiedMember: false,
+    verifiedMember: true,
     publicProfileEnabled: false,
     membershipSource: "profile-application",
-    status: "pending",
+    badge: {
+      code: "verified-event-member",
+      label: "Doğrulanmış Notwork Üyesi",
+      description: "Profil kaydı tamamlandığında üyelik otomatik olarak etkinleştirildi.",
+    },
+    status: "active",
     credential,
     mustChangePassword: false,
     credentialIssuedAt: now,
@@ -773,7 +778,7 @@ export async function registerMemberProfile(
       canHelpWith,
       referrer,
       submittedAt: now,
-      reviewedAt: "",
+      reviewedAt: now,
     },
     createdAt: now,
     updatedAt: now,
@@ -788,7 +793,7 @@ export async function registerMemberProfile(
     instagram,
     linkedin,
     motivation: introduction.slice(0, 180),
-    contact: "profile:pending",
+    contact: phone || "",
     createdAt: now,
     username,
     consentAt: now,
@@ -806,7 +811,8 @@ export async function registerMemberProfile(
 
   if (input.marketingPreferenceVersion === "2026-09-09" && input.marketingOptIn === true)
     await recordMarketingPreference(email, true, undefined, "profile-registration");
-  return { status: "pending" as const, username };
+  const session = await createMemberSession(profile, store);
+  return { status: "active" as const, username, ...session };
 }
 
 export async function activateEventAttendeeMember(

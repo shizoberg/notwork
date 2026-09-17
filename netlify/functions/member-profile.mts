@@ -205,7 +205,13 @@ export default async (request: Request, _context: Context) => {
         });
       }
       const result = await registerMemberProfile({ ...input, password });
-      return json(result, { status: 201 });
+      return json(
+        { status: result.status, username: result.username, profile: result.profile },
+        {
+          status: 201,
+          headers: { "set-cookie": sessionCookie(request, result.token, 7 * 24 * 60 * 60) },
+        },
+      );
     }
 
     if (action === "login") {

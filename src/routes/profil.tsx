@@ -241,7 +241,7 @@ function MemberProfilePage() {
             <LoaderCircle className="h-8 w-8 animate-spin text-primary-deep" />
           </div>
         ) : !profile ? (
-          <LoginPanel onLoggedIn={applyLoggedInProfile} />
+          <LoginPanel onLoggedIn={applyLoggedInProfile} onRegistered={setProfile} />
         ) : profile.mustChangePassword ? (
           <PasswordPanel profile={profile} onChanged={setProfile} />
         ) : (
@@ -253,7 +253,13 @@ function MemberProfilePage() {
   );
 }
 
-function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile) => void }) {
+function LoginPanel({
+  onLoggedIn,
+  onRegistered,
+}: {
+  onLoggedIn: (profile: NotworkMemberProfile) => void;
+  onRegistered: (profile: NotworkMemberProfile) => void;
+}) {
   const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
   const [resetToken, setResetToken] = useState("");
   const [identity, setIdentity] = useState("");
@@ -285,7 +291,7 @@ function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile
   }
 
   if (mode === "register") {
-    return <RegisterPanel onBack={() => setMode("login")} />;
+    return <RegisterPanel onBack={() => setMode("login")} onRegistered={onRegistered} />;
   }
 
   if (mode === "forgot") {
@@ -375,7 +381,13 @@ function LoginPanel({ onLoggedIn }: { onLoggedIn: (profile: NotworkMemberProfile
   );
 }
 
-function RegisterPanel({ onBack }: { onBack: () => void }) {
+function RegisterPanel({
+  onBack,
+  onRegistered,
+}: {
+  onBack: () => void;
+  onRegistered: (profile: NotworkMemberProfile) => void;
+}) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -395,7 +407,6 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
   const [compressingPhoto, setCompressingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const photoInput = useRef<HTMLInputElement>(null);
 
   async function selectPhoto(event: ChangeEvent<HTMLInputElement>) {
@@ -426,7 +437,7 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
     setSubmitting(true);
     setError("");
     try {
-      await registerMember({
+      const result = await registerMember({
         name,
         email,
         password,
@@ -443,33 +454,12 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
         marketingOptIn,
         marketingPreferenceVersion: "2026-09-09",
       });
-      setSubmitted(true);
-      promptForAnnouncements({ name, email }, "/profil");
+      onRegistered(result.profile);
     } catch (caught) {
       setError(errorMessage(caught));
     } finally {
       setSubmitting(false);
     }
-  }
-
-  if (submitted) {
-    return (
-      <section className="profile-success-shell mx-auto max-w-lg rounded-[2rem] border border-primary/30 bg-card p-6 text-center shadow-[var(--shadow-card)] sm:p-9">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 text-primary-deep">
-          <ShieldCheck className="h-8 w-8" />
-        </div>
-        <h1 className="mt-5 font-display text-4xl font-black tracking-[-0.04em]">
-          başvurun alındı
-        </h1>
-        <p className="mt-4 text-sm leading-6 text-muted-foreground">
-          Profilin Notwork adminleri tarafından incelenecek. Etkinlik katılımın veya üye referansın
-          doğrulandıktan ve başvurun onaylandıktan sonra giriş yapabilirsin.
-        </p>
-        <button type="button" onClick={onBack} className="profile-primary-button mt-6 w-full">
-          Giriş ekranına dön
-        </button>
-      </section>
-    );
   }
 
   return (
@@ -486,8 +476,7 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
           notwork profilini oluştur
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Profil fotoğrafın zorunlu. Başvurun yalnızca Notwork adminleri tarafından onaylandıktan
-          sonra aktif olur.
+          Bilgilerini tamamladığında profilin anında aktif olur ve doğrudan hesabına geçersin.
         </p>
       </div>
 
@@ -497,9 +486,8 @@ function RegisterPanel({ onBack }: { onBack: () => void }) {
             <ShieldCheck className="h-5 w-5" /> Notwork üyelik koşulu
           </div>
           <p className="mt-2 text-muted-foreground">
-            Notwork üyesi olmak için etkinliklerimizden birine katılmış olman gerekir. Bir Notwork
-            üyesinin referansıyla da başvurabilirsin. Her iki durumda da profilin admin onayından
-            sonra sisteme alınır.
+            Notwork etkinliklerinden birine katıldıysan veya bir Notwork üyesinin referansıyla
+            geliyorsan profilini oluşturup doğrudan kullanmaya başlayabilirsin.
           </p>
         </div>
 
