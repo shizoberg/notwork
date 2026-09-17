@@ -4,6 +4,7 @@ import { Clock3, Network, MessageCircle, ArrowLeft } from "lucide-react";
 import { getPublicEventContext, type NotworkEvent } from "@/lib/event-registry";
 import { SiteNav } from "@/components/SiteNav";
 import { previewEvent, useEventPreview } from "@/lib/event-preview";
+import { syncEventSessionAliases } from "@/lib/event-session";
 
 type EventTransition = {
   title: string;
@@ -83,11 +84,13 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
         : [{ eventSlug: "17-eylul-2026" }, { eventSlug: "9-ekim-2026" }];
       const results = await Promise.allSettled(choices.map(getPublicEventContext));
       if (cancelled) return;
-      setEvent(
+      const activeEvent =
         results
           .flatMap((r) => (r.status === "fulfilled" ? [r.value.event] : []))
-          .find((e) => e.status === "live" && e.entry.isOpen) || null,
-      );
+          .find((e) => e.status === "live" && e.entry.isOpen) || null;
+      // Restore both identifiers before mounting apps that read their session once.
+      if (activeEvent) syncEventSessionAliases(localStorage, activeEvent);
+      setEvent(activeEvent);
       setLoading(false);
     }
     void load();
