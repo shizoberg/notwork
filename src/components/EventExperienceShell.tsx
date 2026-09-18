@@ -86,11 +86,8 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
       if (cancelled) return;
       const candidates = results.flatMap((r) => (r.status === "fulfilled" ? [r.value.event] : []));
       const activeEvent =
-        candidates.find(
-          (candidate) =>
-            candidate.entry.isOpen &&
-            (candidate.status === "live" || (pathname === "/linkler" && Boolean(selected))),
-        ) || null;
+        candidates.find((candidate) => candidate.entry.isOpen && candidate.status === "live") ||
+        null;
       // Restore both identifiers before mounting apps that read their session once.
       if (activeEvent) syncEventSessionAliases(localStorage, activeEvent);
       setEvent(activeEvent);

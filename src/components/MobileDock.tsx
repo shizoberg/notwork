@@ -19,8 +19,7 @@ export function MobileDock() {
     { to: "/creative", label: "Creative", icon: Palette, active: pathname === "/creative" },
     { to: "/networking", label: "Networking", icon: Network, active: pathname === "/networking" },
     {
-      to: "/linkler",
-      search: { event: "9-ekim-2026" },
+      to: "/ntw",
       label: "Etkinlik anı",
       icon: null,
       active: pathname === "/ntw" || pathname === "/linkler",
@@ -39,12 +38,7 @@ export function MobileDock() {
       {items.map((item) => {
         const Icon = item.icon;
         return (
-          <Link
-            key={item.to}
-            to={item.to}
-            search={"search" in item ? item.search : undefined}
-            aria-current={item.active ? "page" : undefined}
-          >
+          <Link key={item.to} to={item.to} aria-current={item.active ? "page" : undefined}>
             {Icon ? (
               <Icon size={22} strokeWidth={1.65} aria-hidden="true" />
             ) : (

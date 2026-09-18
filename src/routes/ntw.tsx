@@ -1,4 +1,7 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { SiteNav } from "@/components/SiteNav";
+import { getPublicEventContext, type NotworkEvent } from "@/lib/event-registry";
 import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/ntw")({
@@ -12,5 +15,71 @@ export const Route = createFileRoute("/ntw")({
 });
 
 function NtwPage() {
-  return <Navigate to="/linkler" search={{ event: "9-ekim-2026" }} replace />;
+  const [activeEvent, setActiveEvent] = useState<NotworkEvent | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function refresh() {
+      try {
+        const { event } = await getPublicEventContext();
+        if (!cancelled) {
+          setActiveEvent(event.status === "live" && event.entry.isOpen ? event : null);
+        }
+      } catch {
+        if (!cancelled) setActiveEvent(null);
+      }
+    }
+    void refresh();
+    const timer = window.setInterval(refresh, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  if (activeEvent) {
+    return <Navigate to="/linkler" search={{ eventId: activeEvent.id }} replace />;
+  }
+
+  return (
+    <div className="ntw-shell">
+      <SiteNav />
+      <main className="ntw-waiting">
+        <div className="ntw-scene" aria-hidden="true">
+          <svg viewBox="0 0 430 700" preserveAspectRatio="none">
+            <path d="M50 80 Q320 90 340 190 T85 510 Q220 700 350 610 M50 80 Q0 370 85 510 M340 190 Q440 400 350 610" />
+          </svg>
+          <div className="ntw-bubble bubble-one">
+            <img src="/community/23.jpg" alt="" />
+          </div>
+          <div className="ntw-bubble bubble-two">↗</div>
+          <div className="ntw-bubble bubble-three">merhaba</div>
+          <div className="ntw-bubble bubble-four">
+            <img src="/community/17.jpg" alt="" />
+          </div>
+          <div className="ntw-bubble bubble-five">✳</div>
+        </div>
+        <div className="ntw-waiting-copy">
+          <div className="ntw-glass-mark">ntw</div>
+          <p className="ntw-eyebrow">o an orada ol</p>
+          <h1>
+            bağlantılar
+            <br />
+            birazdan canlanır.
+          </h1>
+          <p>
+            Aynı mekân · yeni insanlar
+            <br />
+            Gerçek zamanlı karşılaşmalar
+          </p>
+          <div className="ntw-availability">
+            <span aria-hidden="true">● </span>
+            11 Ekim
+            <br />
+            etkinlik günü aktif olacaktır
+          </div>
+        </div>
+      </main>
+    </div>
+  );
 }
