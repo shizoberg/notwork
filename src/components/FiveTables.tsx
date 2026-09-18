@@ -4,7 +4,7 @@ import { EventThinkingStatus } from "./EventThinkingStatus";
 import { EventFlowBanner } from "./EventFlowBanner";
 import { useEventPreview } from "@/lib/event-preview";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
-import { Camera, Clock3, ArrowUpRight, LogOut, Plus, Sparkles } from "lucide-react";
+import { Camera, Clock3, ArrowUpRight, LogOut, Maximize2, Plus, Sparkles } from "lucide-react";
 import { fiveRequest, getFiveEventTokenStorageKey } from "@/lib/five";
 import { resumeEventNetwork } from "@/lib/event-network-api";
 import { withEventSelection, getEventSelectionFromLocation } from "@/lib/event-registry";
@@ -414,8 +414,9 @@ export function FiveTables() {
                 <span>Grup kodun</span>
                 <strong>{table.code}</strong>
               </div>
-              <button className="five-demo-action" onClick={() => setCodeOpen(true)}>
-                Grup kodunu büyüt
+              <button className="code-expand-action" onClick={() => setCodeOpen(true)}>
+                <Maximize2 size={18} aria-hidden="true" />
+                Kodu büyüt
               </button>
               <Dialog open={codeOpen} onOpenChange={setCodeOpen}>
                 <DialogContent

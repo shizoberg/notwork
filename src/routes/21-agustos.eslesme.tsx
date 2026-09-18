@@ -2,9 +2,10 @@ import { EventChat } from "@/components/EventChat";
 import { EventThinkingStatus } from "@/components/EventThinkingStatus";
 import { EventFlowBanner } from "@/components/EventFlowBanner";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Camera, CheckCircle2, Sparkles } from "lucide-react";
+import { ArrowLeft, Camera, CheckCircle2, Maximize2, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import type {
   EventNetworkMatchGroup,
   EventNetworkPresence,
@@ -57,6 +58,7 @@ function AugustMatchPage() {
   const [photoDataUrl, setPhotoDataUrl] = useState("");
   const [reviewConsent, setReviewConsent] = useState(false);
   const [isPhotoProcessing, setIsPhotoProcessing] = useState(false);
+  const [codeOpen, setCodeOpen] = useState(false);
   const reviewPanelRef = useRef<HTMLDetailsElement>(null);
 
   const currentMember = useMemo(
@@ -275,10 +277,30 @@ function AugustMatchPage() {
               )}
               {group && <p className="match-intro">notwork algoritması sizleri eşleştirdi.</p>}
               {registration && (
-                <div className="match-self">
-                  <span>Senin kodun</span>
-                  <strong>{registration.participant.publicCode}</strong>
-                </div>
+                <>
+                  <div className="match-self">
+                    <span>Senin kodun</span>
+                    <strong>{registration.participant.publicCode}</strong>
+                  </div>
+                  <button className="code-expand-action" onClick={() => setCodeOpen(true)}>
+                    <Maximize2 size={18} aria-hidden="true" />
+                    Kodu büyüt
+                  </button>
+                  <Dialog open={codeOpen} onOpenChange={setCodeOpen}>
+                    <DialogContent className="five-code-fullscreen">
+                      <DialogTitle className="sr-only">
+                        Senin kodun {registration.participant.publicCode}
+                      </DialogTitle>
+                      <DialogDescription className="sr-only">
+                        Bu kodu göstererek eşleştiğin kişileri bulabilirsin
+                      </DialogDescription>
+                      <div className="five-code-brand" aria-label="notwork">
+                        notwork
+                      </div>
+                      <div className="five-code-number">{registration.participant.publicCode}</div>
+                    </DialogContent>
+                  </Dialog>
+                </>
               )}
 
               {status === "loading" ? <LoadingCard /> : null}

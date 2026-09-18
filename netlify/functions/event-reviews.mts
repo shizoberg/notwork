@@ -3,9 +3,10 @@ import type { Config, Context } from "@netlify/functions";
 import { getEventReviewStore } from "./_event-review-store.mjs";
 
 type AdminInput = {
-  action?: "delete" | "removePhoto" | "hide" | "unhide";
+  action?: "delete" | "removePhoto" | "hide" | "unhide" | "findByNames";
   password?: string;
   reviewId?: string;
+  names?: string[];
 };
 
 type ReviewInput = {
@@ -62,6 +63,14 @@ function clean(value: unknown, maxLength: number) {
         .trim()
         .slice(0, maxLength)
     : "";
+}
+
+function normalizeName(value: string) {
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i");
 }
 
 function publicReview(review: ReviewRow) {
@@ -125,6 +134,24 @@ async function listReviews(store: ReturnType<typeof getEventReviewStore>, eventI
     .map(publicReview);
 }
 
+async function findReviewsByNames(store: ReturnType<typeof getEventReviewStore>, names: string[]) {
+  const targets = names.map((name) => normalizeName(clean(name, 70))).filter(Boolean);
+  if (targets.length === 0) return [];
+  const { blobs } = await store.list({ prefix: "reviews/" });
+  const rows = await Promise.all(
+    blobs.map((blob) => store.get(blob.key, { type: "json", consistency: "strong" })),
+  );
+  return (rows.filter(Boolean) as ReviewRow[])
+    .filter((review) => targets.some((target) => normalizeName(review.name).includes(target)))
+    .map(({ id, name, eventId, createdAt, hiddenAt }) => ({
+      id,
+      name,
+      eventId,
+      createdAt,
+      hidden: Boolean(hiddenAt),
+    }));
+}
+
 export default async (request: Request, _context: Context) => {
   const store = getEventReviewStore();
 
@@ -144,6 +171,14 @@ export default async (request: Request, _context: Context) => {
 
   try {
     const input = (await request.json()) as ReviewInput & AdminInput;
+
+    if (input.action === "findByNames") {
+      if (!validPassword(input.password)) return new Response("Yetkisiz erişim", { status: 401 });
+      return Response.json(
+        { matches: await findReviewsByNames(store, Array.isArray(input.names) ? input.names : []) },
+        { headers: { "cache-control": "no-store" } },
+      );
+    }
 
     if (
       input.action === "delete" ||
