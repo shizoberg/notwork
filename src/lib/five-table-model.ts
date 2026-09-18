@@ -23,8 +23,10 @@ export type ProblemTable = {
   id: string;
   code: string;
   problemId: string;
+  ownerId: string;
   title: string;
   aiAnalysis?: string;
+  analysisSource?: "ai" | "rules";
   people: TablePerson[];
   phase: "waiting" | "ready" | "active" | "finished";
   round: number;
@@ -54,7 +56,7 @@ export function hasCompleteTableOutcome(outcome?: TableOutcome) {
 export function joinTable(
   state: TableState,
   person: TablePerson,
-  problem: { id: string; title: string },
+  problem: { id: string; title: string; ownerId?: string },
 ) {
   const existing = state.members[person.id];
   if (existing) {
@@ -70,6 +72,7 @@ export function joinTable(
       id: `table-${n}`,
       code: `F${String(n).padStart(3, "0")}`,
       problemId: problem.id,
+      ownerId: problem.ownerId || person.id,
       title: problem.title,
       people: [],
       phase: "waiting",
@@ -87,6 +90,13 @@ export function joinTable(
     table.phase = "ready";
     table.topics = [table.title, ...table.people.slice(1).map((p) => p.problem || table.title)];
     table.photoOwner = table.people[(state.sequence - 1) % 4].id;
+    const contributionAreas = [
+      ...new Set(table.people.flatMap((member) => member.offers || []).filter(Boolean)),
+    ].slice(0, 3);
+    table.aiAnalysis = contributionAreas.length
+      ? `${table.title} problemi için ${contributionAreas.join(", ")} alanlarındaki farklı bakışlar birlikte somut bir sonraki adım üretebilir.`
+      : `${table.title} problemi için dört farklı bakış açısı birlikte uygulanabilir bir sonraki adım üretebilir.`;
+    table.analysisSource = "rules";
   }
   return table;
 }
@@ -173,6 +183,8 @@ export function tableAction(
 ) {
   const table = memberTable(state, personId, id);
   if (action === "leave") {
+    if (table.ownerId === personId && table.phase !== "finished")
+      throw new Error("Problem sahibi masa tamamlanmadan ayrılamaz.");
     if (table.phase === "finished" && !hasCompleteTableOutcome(table.outcomes?.[personId]))
       throw new Error("Ayrılmadan önce çözüm sonucunu paylaş.");
     table.people = table.people.filter((p) => p.id !== personId);
@@ -197,6 +209,7 @@ export function tableAction(
   }
   if (action === "start") {
     if (table.phase === "active") return table;
+    if (table.ownerId !== personId) throw new Error("Masayı problem sahibi başlatabilir.");
     if (table.phase !== "ready" || table.people.length !== 4)
       throw new Error("Başlamak için masada dört kişi olmalı.");
     table.phase = "active";

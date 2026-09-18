@@ -19,7 +19,8 @@ export function MobileDock() {
     { to: "/creative", label: "Creative", icon: Palette, active: pathname === "/creative" },
     { to: "/networking", label: "Networking", icon: Network, active: pathname === "/networking" },
     {
-      to: "/ntw",
+      to: "/linkler",
+      search: { event: "9-ekim-2026" },
       label: "Etkinlik anı",
       icon: null,
       active: pathname === "/ntw" || pathname === "/linkler",
@@ -35,16 +36,24 @@ export function MobileDock() {
           style={{ transform: `translateX(${selected * 100}%)` }}
         />
       )}
-      {items.map(({ to, label, icon: Icon, active }) => (
-        <Link key={to} to={to} aria-current={active ? "page" : undefined}>
-          {Icon ? (
-            <Icon size={22} strokeWidth={1.65} aria-hidden="true" />
-          ) : (
-            <span className="dock-ntw">ntw</span>
-          )}
-          <span>{label}</span>
-        </Link>
-      ))}
+      {items.map((item) => {
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            search={"search" in item ? item.search : undefined}
+            aria-current={item.active ? "page" : undefined}
+          >
+            {Icon ? (
+              <Icon size={22} strokeWidth={1.65} aria-hidden="true" />
+            ) : (
+              <span className="dock-ntw">ntw</span>
+            )}
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
     </nav>
   );
 }

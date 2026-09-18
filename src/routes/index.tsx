@@ -102,6 +102,16 @@ function Landing() {
 
 const pastEvents = [
   {
+    id: "17-eylul-2026",
+    date: "17 Eylül 2026",
+    location: "Köşk Alsancak",
+    title: "notwork Fast",
+    text: "ntw.match, ntw.five, DJ ve serbest networking akışını aynı gecede bir araya getiren notwork buluşması.",
+    tags: ["notwork match", "ntw.five", "DJ", "Networking"],
+    href: "/17-eylul",
+    accent: "from-[#071416] via-[#245f66] to-[#d8c6ff]",
+  },
+  {
     id: "21-agustos-2026",
     date: "21 Ağustos 2026",
     location: "House of Rene Lokal",
@@ -232,8 +242,6 @@ function Hero() {
     <section className="relative">
       <div className="mx-auto max-w-5xl px-4 pb-8 pt-5 text-center sm:px-5 sm:pb-10 sm:pt-10">
         <p className="hero-dates">
-          <span className="hero-date-pulse">17 Eylül</span>
-          <span aria-hidden="true"> – </span>
           <span className="hero-date-pulse">11 Ekim</span>
         </p>
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
@@ -252,18 +260,6 @@ function Hero() {
           Network etkinlikleri ve çözümleri üreten networking platformu.
         </p>
         <div className="hero-event-links">
-          <Link
-            to="/17-eylul"
-            data-analytics="ticket_click"
-            data-analytics-label="17 Eylül ana sayfa etkinlik CTA"
-            className="hero-event-link"
-          >
-            <span className="hero-event-date">17 EYLÜL</span>
-            <span className="hero-event-name">Fast</span>
-            <span className="hero-event-subtitle">hızlı networking</span>
-            <img src="/brand/notwork-logo.png" alt="" className="notwork-logo hero-event-logo" />
-            <Ticket className="hero-event-ticket" size={18} strokeWidth={1.5} aria-hidden="true" />
-          </Link>
           <Link
             to="/11-ekim"
             data-analytics="ticket_click"

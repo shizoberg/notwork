@@ -97,6 +97,7 @@ type EventNetworkMatchGroup = {
   score: number;
   reason: string;
   aiAnalysis?: string;
+  analysisSource?: "ai" | "rules";
   members: EventNetworkMatchMember[];
   conversationPrompt: string;
   conversationPrompts?: string[];
@@ -110,6 +111,7 @@ type StoredActiveMatch = {
   score: number;
   reason: string;
   aiAnalysis?: string;
+  analysisSource?: "ai" | "rules";
   participantIds: string[];
   conversationPrompts: string[];
   photoOwnerParticipantId?: string;
@@ -407,14 +409,23 @@ async function reservePublicCode(
   store: ReturnType<typeof getEventNetworkStore>,
   participantId: string,
 ) {
-  for (let attempt = 0; attempt < 20; attempt += 1) {
+  const indexKey = `${getNetworkPrefix()}/code-index-v3.json`;
+  for (let attempt = 0; attempt < 64; attempt += 1) {
     const code = participantDisplayCode(participantId, attempt);
-    const owner = await store.get(codeKey(code), { type: "json", consistency: "strong" });
-    if (owner === participantId) return code;
-    if (owner) continue;
+    const reserved = await atomicState(
+      store,
+      indexKey,
+      () => ({ owners: {} as Record<string, string> }),
+      (state) => {
+        const owner = state.owners[code];
+        if (owner && owner !== participantId) return false;
+        state.owners[code] = participantId;
+        return true;
+      },
+    );
+    if (!reserved) continue;
     await store.setJSON(codeKey(code), participantId);
-    const savedOwner = await store.get(codeKey(code), { type: "json", consistency: "strong" });
-    if (savedOwner === participantId) return code;
+    return code;
   }
   throw new Error("Etkinlik kodu üretilemedi");
 }
@@ -688,6 +699,7 @@ async function buildActiveMatchGroup(
     score: match.score,
     reason: match.reason,
     aiAnalysis: match.aiAnalysis,
+    analysisSource: match.analysisSource,
     members: rows.map((registration) =>
       toMatchMember(
         registration,
@@ -1179,6 +1191,8 @@ export async function getNextMatchGroup(
       round: nextRound,
       score,
       reason,
+      aiAnalysis: reason,
+      analysisSource: "rules",
       participantIds,
       conversationPrompts: prompts,
       photoOwnerParticipantId,
@@ -1195,13 +1209,17 @@ export async function getNextMatchGroup(
         (await generateMatchAnalysis(getNetworkPrefix(), groupRegistrations)) || undefined;
       if (aiAnalysis) {
         storedMatch.aiAnalysis = aiAnalysis;
+        storedMatch.analysisSource = "ai";
         try {
           await atomicState(
             store,
             `${getNetworkPrefix()}/room-index-v2.json`,
             emptyRooms<StoredActiveMatch>,
             (state) => {
-              if (state.groups[groupId]) state.groups[groupId].aiAnalysis = aiAnalysis;
+              if (state.groups[groupId]) {
+                state.groups[groupId].aiAnalysis = aiAnalysis;
+                state.groups[groupId].analysisSource = "ai";
+              }
             },
           );
         } catch (error) {
@@ -1346,14 +1364,14 @@ export async function seedSampleRegistrations(
 export async function repairParticipantCodes(store: ReturnType<typeof getEventNetworkStore>) {
   const rows = await listRegistrations(store);
   const seen = new Set<string>();
-  const duplicates = rows.filter((row) => {
+  const invalidCodes = rows.filter((row) => {
     const code = row.participant.publicCode;
-    if (seen.has(code)) return true;
+    if (seen.has(code) || !/^[A-HJ-NP-Z2-9]{4}$/.test(code)) return true;
     seen.add(code);
     return false;
   });
   let repaired = 0;
-  for (const row of duplicates.slice(0, 5)) {
+  for (const row of invalidCodes.slice(0, 5)) {
     const key = participantKey(row.participant.id);
     const current = await store.get(key, { type: "json", consistency: "strong" }) as EventNetworkRegistration;
     if (!current || current.participant.publicCode !== row.participant.publicCode) continue;
@@ -1367,5 +1385,5 @@ export async function repairParticipantCodes(store: ReturnType<typeof getEventNe
     await syncMemberEventCode(current.profile.username, current.profile.emailNormalized, current.participant.eventId, code);
     repaired++;
   }
-  return { repaired, remaining: Math.max(0, duplicates.length - repaired) };
+  return { repaired, remaining: Math.max(0, invalidCodes.length - repaired) };
 }

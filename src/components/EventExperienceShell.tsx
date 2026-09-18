@@ -84,10 +84,13 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
         : [{ eventSlug: "17-eylul-2026" }, { eventSlug: "9-ekim-2026" }];
       const results = await Promise.allSettled(choices.map(getPublicEventContext));
       if (cancelled) return;
+      const candidates = results.flatMap((r) => (r.status === "fulfilled" ? [r.value.event] : []));
       const activeEvent =
-        results
-          .flatMap((r) => (r.status === "fulfilled" ? [r.value.event] : []))
-          .find((e) => e.status === "live" && e.entry.isOpen) || null;
+        candidates.find(
+          (candidate) =>
+            candidate.entry.isOpen &&
+            (candidate.status === "live" || (pathname === "/linkler" && Boolean(selected))),
+        ) || null;
       // Restore both identifiers before mounting apps that read their session once.
       if (activeEvent) syncEventSessionAliases(localStorage, activeEvent);
       setEvent(activeEvent);
@@ -99,7 +102,7 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [searchStr, preview]);
+  }, [pathname, searchStr, preview]);
   const visibleApps =
     preview && !event
       ? [...apps]
@@ -168,7 +171,7 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
             <p>
               {event
                 ? "Açık uygulamaları aşağıdaki menüden seçebilirsin"
-                : "17 Eylül ve 11 Ekim tarihlerinde etkinlik anlarında aktif olacaktır"}
+                : "11 Ekim tarihinde etkinlik anında aktif olacaktır"}
             </p>
             <Link to="/ntw">Etkinlik anına dön ↗</Link>
           </main>

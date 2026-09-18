@@ -190,7 +190,7 @@ export function FiveTables() {
     const poll = window.setInterval(() => {
       if (document.visibilityState === "visible")
         void request().catch(() => setError("Bağlantı bekleniyor. Masan korunuyor."));
-    }, 5000);
+    }, 10_000);
     const tick = window.setInterval(() => setClock(Date.now()), 1000);
     return () => {
       active = false;
@@ -444,7 +444,8 @@ export function FiveTables() {
               {table.aiAnalysis && (
                 <div className="ntw-ai-analysis" role="note">
                   <span>
-                    <Sparkles size={14} /> ntw ai analiz
+                    <Sparkles size={14} />
+                    {table.analysisSource === "ai" ? "ntw ai analiz" : "ntw masa analizi"}
                   </span>
                   <p>{table.aiAnalysis}</p>
                 </div>
@@ -465,8 +466,11 @@ export function FiveTables() {
               )}
               {(table.phase === "waiting" || table.phase === "ready") && (
                 <>
-                  <p>{table.people.length}/4 kişi · bu kodla aynı masada buluşun.</p>
-                  {table.phase === "ready" && (
+                  <p>
+                    {table.people.length}/4 kişi · problem sahibi masada, çözüm havuzundan yeni
+                    katılımcılar bekleniyor.
+                  </p>
+                  {table.phase === "ready" && table.ownerId === data.identity.id && (
                     <button
                       disabled={busy}
                       className="tool-primary"
@@ -475,6 +479,9 @@ export function FiveTables() {
                       Buluştuk, 5 dakikayı başlat
                       <Clock3 size={18} />
                     </button>
+                  )}
+                  {table.phase === "ready" && table.ownerId !== data.identity.id && (
+                    <p>Problem sahibi masayı başlatacak.</p>
                   )}
                   {preview && table.phase === "waiting" && (
                     <button className="five-demo-action" onClick={() => void act("demoFill")}>
@@ -729,12 +736,15 @@ export function FiveTables() {
               className="tool-primary five-leave"
               disabled={
                 busy ||
+                (table.ownerId === data.identity.id && table.phase !== "finished") ||
                 (table.phase === "finished" &&
                   !hasCompleteTableOutcome(table.outcomes?.[data.identity.id]))
               }
               onClick={() => void act("tableLeave")}
             >
-              Masadan ayrıl
+              {table.ownerId === data.identity.id && table.phase !== "finished"
+                ? "Problem masan açık"
+                : "Masadan ayrıl"}
               <LogOut size={17} />
             </button>
           </>

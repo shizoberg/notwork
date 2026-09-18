@@ -193,7 +193,7 @@ const catalogEvents: EventCatalogItem[] = [
   },
 ];
 
-const upcomingEventIds = new Set(["17-eylul-2026", "9-ekim-2026"]);
+const upcomingEventIds = new Set(["9-ekim-2026"]);
 
 function EventsCatalogPage() {
   const [activeFilter, setActiveFilter] = useState("Tümü");

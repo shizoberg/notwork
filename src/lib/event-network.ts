@@ -84,6 +84,7 @@ export type EventNetworkMatchGroup = {
   score: number;
   reason: string;
   aiAnalysis?: string;
+  analysisSource?: "ai" | "rules";
   members: EventNetworkMatchMember[];
   conversationPrompt: string;
   conversationPrompts?: string[];

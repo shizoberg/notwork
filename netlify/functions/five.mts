@@ -221,7 +221,8 @@ export default async (request: Request, _context: Context) => {
       if (action === "session" || action === "state") return json(await fiveSession(identity));
 
       if (action === "submitLive") {
-        await createFiveProblem({ ...input, source: "live" }, identity);
+        const problem = await createFiveProblem({ ...input, source: "live" }, identity);
+        await fiveTables(identity, { action: "tableJoin", problemId: problem.id });
         return json(await fiveSession(identity), { status: 201 });
       }
 

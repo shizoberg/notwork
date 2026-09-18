@@ -158,15 +158,18 @@ function AugustMatchPage() {
   useEffect(() => {
     if (!token || !["ready", "empty"].includes(status)) return;
     let pending = false;
-    const interval = window.setInterval(async () => {
-      if (document.visibilityState !== "visible" || pending) return;
-      pending = true;
-      try {
-        await loadMatch(token, true);
-      } finally {
-        pending = false;
-      }
-    }, 5_000);
+    const interval = window.setInterval(
+      async () => {
+        if (document.visibilityState !== "visible" || pending) return;
+        pending = true;
+        try {
+          await loadMatch(token, true);
+        } finally {
+          pending = false;
+        }
+      },
+      status === "empty" ? 8_000 : 12_000,
+    );
     return () => window.clearInterval(interval);
   }, [group, loadMatch, status, token]);
 
@@ -314,7 +317,8 @@ function AugustMatchPage() {
                   {group.aiAnalysis && (
                     <div className="ntw-ai-analysis" role="note">
                       <span>
-                        <Sparkles size={14} /> ntw ai analiz
+                        <Sparkles size={14} />
+                        {group.analysisSource === "ai" ? "ntw ai analiz" : "ntw eşleşme analizi"}
                       </span>
                       <p>{group.aiAnalysis}</p>
                     </div>

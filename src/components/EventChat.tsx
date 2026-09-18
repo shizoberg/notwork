@@ -23,7 +23,7 @@ export function EventChat({ token, groupId }: { token: string; groupId: string }
     void refresh();
     const timer = window.setInterval(() => {
       if (document.visibilityState === "visible") void refresh();
-    }, 4000);
+    }, 10_000);
     return () => {
       cancelled = true;
       clearInterval(timer);

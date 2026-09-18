@@ -112,12 +112,12 @@ export async function fiveTables(
           needs: identity.matchingProfile.needs,
           aiAnalysisConsent: identity.aiAnalysisConsent,
         },
-        problem,
+        { id: problem.id, title: problem.title, ownerId: problem.ownerId },
       ),
     );
     if (
       joinedTable.phase === "ready" &&
-      !joinedTable.aiAnalysis &&
+      joinedTable.analysisSource !== "ai" &&
       problem.aiAnalysisConsent === true &&
       joinedTable.people.every((person) => person.aiAnalysisConsent === true)
     ) {
@@ -125,8 +125,10 @@ export async function fiveTables(
       if (analysis) {
         try {
           await atomicState(store, key, emptyTables, (state) => {
-            if (state.tables[joinedTable.id] && !state.tables[joinedTable.id].aiAnalysis)
+            if (state.tables[joinedTable.id]) {
               state.tables[joinedTable.id].aiAnalysis = analysis;
+              state.tables[joinedTable.id].analysisSource = "ai";
+            }
           });
         } catch (error) {
           console.error("Five AI analizi kaydedilemedi", error);
