@@ -3,7 +3,7 @@ import type { Config, Context } from "@netlify/functions";
 import { getEventReviewStore } from "./_event-review-store.mjs";
 
 type AdminInput = {
-  action?: "delete" | "removePhoto";
+  action?: "delete" | "removePhoto" | "hide" | "unhide";
   password?: string;
   reviewId?: string;
 };
@@ -30,6 +30,7 @@ type ReviewRow = {
   privateNote: string;
   consentAt: string;
   createdAt: string;
+  hiddenAt?: string;
 };
 
 const passwordHash = "bffc46786cfaa3b08499a75d77b037dff9a14f362ab183f72e2ea7bcce0454ee";
@@ -97,13 +98,29 @@ async function removeReviewPhoto(store: ReturnType<typeof getEventReviewStore>, 
   return publicReview(updated);
 }
 
+async function setReviewHidden(
+  store: ReturnType<typeof getEventReviewStore>,
+  reviewId: string,
+  hidden: boolean,
+) {
+  const match = await findReviewBlob(store, reviewId);
+  if (!match) return null;
+  const updated = {
+    ...match.review,
+    hiddenAt: hidden ? new Date().toISOString() : undefined,
+  };
+  await store.setJSON(match.key, updated);
+  return publicReview(updated);
+}
+
 async function listReviews(store: ReturnType<typeof getEventReviewStore>, eventId: string) {
   const prefix = eventId ? `reviews/${eventId}/` : "reviews/";
   const { blobs } = await store.list({ prefix });
   const rows = await Promise.all(
     blobs.map((blob) => store.get(blob.key, { type: "json", consistency: "strong" })),
   );
-  return (rows.filter(Boolean) as ReviewRow[])
+  return rows
+    .filter((review): review is ReviewRow => Boolean(review) && !(review as ReviewRow).hiddenAt)
     .sort((first, second) => second.createdAt.localeCompare(first.createdAt))
     .map(publicReview);
 }
@@ -128,14 +145,21 @@ export default async (request: Request, _context: Context) => {
   try {
     const input = (await request.json()) as ReviewInput & AdminInput;
 
-    if (input.action === "delete" || input.action === "removePhoto") {
+    if (
+      input.action === "delete" ||
+      input.action === "removePhoto" ||
+      input.action === "hide" ||
+      input.action === "unhide"
+    ) {
       if (!validPassword(input.password)) return new Response("Yetkisiz erişim", { status: 401 });
       const reviewId = clean(input.reviewId, 80);
       if (!reviewId) return new Response("Yorum id gerekli", { status: 400 });
       const result =
         input.action === "delete"
           ? await deleteReview(store, reviewId)
-          : await removeReviewPhoto(store, reviewId);
+          : input.action === "removePhoto"
+            ? await removeReviewPhoto(store, reviewId)
+            : await setReviewHidden(store, reviewId, input.action === "hide");
       if (!result) return new Response("Yorum bulunamadı", { status: 404 });
       return Response.json(
         { ok: true, review: result },
