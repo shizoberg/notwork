@@ -31,10 +31,10 @@ export const eventConfig: EventProductConfig = {
       position: "center 38%",
     },
     {
-      src: "/community/21.jpg",
-      alt: "notwork etkinliğinde konuşmacıyı dinleyen katılımcılar",
-      label: "stories",
-      position: "center 44%",
+      src: "/events/9-ekim/notwork-sahne-etkinlik-akisi.jpg",
+      alt: "notwork Sahne WordCloud, başarısızlık hikâyeleri, eşleşme ve networking akışı",
+      label: "akış",
+      position: "center",
     },
     {
       src: "/community/14.jpg",
@@ -112,10 +112,10 @@ export const eventConfig: EventProductConfig = {
     "Önce mikrofon size uzanır. Ardından dört gerçek hikâye dinler, notwork match ile doğru kişilerle eşleşir ve geceyi serbest networking ile tamamlarsınız.",
   flow: [
     {
-      time: "19.30",
-      duration: "mikrofon sizde",
+      time: "19.39",
+      duration: "interaktif kısım",
       product: "ntw.wordcloud",
-      title: "Soruları birlikte cevaplayın.",
+      title: "Mikrofonu size uzatıyoruz.",
       description:
         "Ekranda sorular görünür. Telefonunuzdan verdiğiniz cevaplar anında birleşir; odanın ortak düşüncesi canlı olarak büyür.",
       highlights: ["interaktif sorular", "ortak cevaplar ekranda"],
