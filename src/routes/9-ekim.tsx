@@ -112,7 +112,6 @@ export const eventConfig: EventProductConfig = {
     "Önce mikrofon size uzanır. Ardından dört gerçek hikâye dinler, notwork match ile doğru kişilerle eşleşir ve geceyi serbest networking ile tamamlarsınız.",
   flow: [
     {
-      time: "19.39",
       duration: "interaktif kısım",
       product: "ntw.wordcloud",
       title: "Mikrofonu size uzatıyoruz.",
@@ -123,7 +122,6 @@ export const eventConfig: EventProductConfig = {
       accent: "bg-[#b8eff0] text-[#07353a]",
     },
     {
-      time: "20.00",
       duration: "ilk iki sunum",
       product: "2 ilham veren hikâye",
       title: "İlk iki başarısızlık hikâyesi.",
@@ -134,7 +132,6 @@ export const eventConfig: EventProductConfig = {
       accent: "bg-[#ffd1e5] text-[#63233f]",
     },
     {
-      time: "20.45",
       duration: "30 dakika",
       product: "notwork match",
       title: "Eşleştirme sistemi devreye girer.",
@@ -145,7 +142,6 @@ export const eventConfig: EventProductConfig = {
       accent: "bg-[#d8c6ff] text-[#392263]",
     },
     {
-      time: "21.15",
       duration: "iki yeni sunum",
       product: "2 ilham veren hikâye",
       title: "İki yeni başarısızlık hikâyesi.",
@@ -156,7 +152,6 @@ export const eventConfig: EventProductConfig = {
       accent: "bg-[#ffe5a8] text-[#61450a]",
     },
     {
-      time: "22.00",
       duration: "60 dakika",
       product: "gerçek networking",
       title: "Gece gerçek bağlantılarla devam eder.",

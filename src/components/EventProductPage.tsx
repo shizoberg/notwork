@@ -39,7 +39,7 @@ export type EventTicketOption = {
 };
 
 export type EventFlowStep = {
-  time: string;
+  time?: string;
   duration: string;
   product: string;
   title: string;
@@ -563,7 +563,7 @@ function EventFlow({ config }: { config: EventProductConfig }) {
             const Icon = item.icon;
             return (
               <article
-                key={`${item.time}-${item.product}`}
+                key={`${index}-${item.product}`}
                 className="relative w-[78vw] min-w-[78vw] snap-start overflow-hidden rounded-[1.5rem] border border-white/12 bg-white/[0.055] p-4 backdrop-blur sm:w-[48vw] sm:min-w-[48vw] lg:w-auto lg:min-w-0 lg:rounded-[2rem] lg:p-6"
               >
                 <div className="flex items-start justify-between gap-4">
@@ -577,8 +577,12 @@ function EventFlow({ config }: { config: EventProductConfig }) {
                   </span>
                 </div>
                 <div className="mt-5 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.15em] lg:mt-8 lg:text-xs lg:tracking-[0.17em]">
-                  <span className="text-[#8fcbd0]">{item.time}</span>
-                  <span className="text-white/20">/</span>
+                  {item.time ? (
+                    <>
+                      <span className="text-[#8fcbd0]">{item.time}</span>
+                      <span className="text-white/20">/</span>
+                    </>
+                  ) : null}
                   <span className="text-white/45">{item.duration}</span>
                 </div>
                 <div className="mt-3 inline-flex rounded-full border border-white/12 bg-white/[0.06] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/55">
