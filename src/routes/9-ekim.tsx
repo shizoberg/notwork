@@ -6,7 +6,7 @@ import { createSeo } from "@/lib/seo";
 import { createEventStructuredData } from "@/lib/structured-data";
 
 export const eventConfig: EventProductConfig = {
-  trackingId: "notwork-classic-2026-10-09",
+  trackingId: "notwork-sahne-2026-10-11",
   trackingName: "notwork Sahne",
   eventLabel: "sahne",
   imageTitle: "notwork sahne",
@@ -15,7 +15,7 @@ export const eventConfig: EventProductConfig = {
   description:
     "Dört ilham veren başarısızlık hikâyesi, canlı ntw.wordcloud ve iki networking arasında ntw.match.lab ile tasarlanmış klasik notwork deneyimi.",
   date: "11 Ekim 2026",
-  day: "Cuma",
+  day: "Pazar",
   time: "19.30",
   timeDetail: "Etkinlik başlangıcı",
   venue: "Rene Lokal",
@@ -107,18 +107,18 @@ export const eventConfig: EventProductConfig = {
   ticketUrl:
     "https://www.biletimgo.com/etkinlik/notwork-basarisizlik-hikayeleri-network-event-30395",
   flowEyebrow: "notwork sahne akışı",
-  flowTitleLines: ["Sor. Dinle.", "Eşleş ve yeniden bağ kur."],
+  flowTitleLines: ["Başarısızlık hikâyeleri", "ve gerçek networking."],
   flowDescription:
-    "Sahne ve networking birbirinden kopuk değil. WordCloud ortak merakı görünür kılar; notwork match iki arada doğru kişileri bulur.",
+    "Önce mikrofon size uzanır. Ardından dört gerçek hikâye dinler, notwork match ile doğru kişilerle eşleşir ve geceyi serbest networking ile tamamlarsınız.",
   flow: [
     {
       time: "19.30",
-      duration: "interaktif açılış",
+      duration: "mikrofon sizde",
       product: "ntw.wordcloud",
-      title: "Odadaki ortak düşünceyi canlı gör.",
+      title: "Soruları birlikte cevaplayın.",
       description:
-        "Telefonundan kısa yanıtını gönder. Benzer cevaplar büyür ve odanın merakı sahnedeki canlı kelime bulutuna dönüşür.",
-      highlights: ["canlı cevaplar", "ortak kelimeler büyür"],
+        "Ekranda sorular görünür. Telefonunuzdan verdiğiniz cevaplar anında birleşir; odanın ortak düşüncesi canlı olarak büyür.",
+      highlights: ["interaktif sorular", "ortak cevaplar ekranda"],
       icon: Cloud,
       accent: "bg-[#b8eff0] text-[#07353a]",
     },
@@ -126,21 +126,21 @@ export const eventConfig: EventProductConfig = {
       time: "20.00",
       duration: "ilk iki sunum",
       product: "2 ilham veren hikâye",
-      title: "Başarısızlığın içinden çıkan gerçek dersler.",
+      title: "İlk iki başarısızlık hikâyesi.",
       description:
-        "İki konuşmacı; denediği, olduramadığı ve sonrasında yolunu nasıl yeniden kurduğunu filtresiz biçimde anlatır.",
-      highlights: ["2 konuşmacı", "gerçek deneyim"],
+        "İlk iki konuşmacı sahneye çıkar. Denediklerini, olduramadıklarını ve bu süreçten çıkardıkları gerçek dersleri anlatır.",
+      highlights: ["ilk 2 konuşmacı", "gerçek hikâyeler"],
       icon: Mic2,
       accent: "bg-[#ffd1e5] text-[#63233f]",
     },
     {
       time: "20.45",
       duration: "30 dakika",
-      product: "ntw.match.lab",
-      title: "İlk networking arasında doğru grubu bul.",
+      product: "notwork match",
+      title: "Eşleştirme sistemi devreye girer.",
       description:
-        "Niyet, ihtiyaç ve katkı alanlarına göre üç kişilik gruplara ayrılır; neden tanıştığını bilerek sohbete başlarsın.",
-      highlights: ["3 kişilik grup", "amaç odaklı eşleşme"],
+        "Uygulamamız sizi ihtiyaçlarınıza ve sunabileceklerinize göre üç kişilik bir grupla eşleştirir. Kiminle ve neden tanıştığınızı görürsünüz.",
+      highlights: ["3 kişilik eşleşme", "neden eşleştiğiniz görünür"],
       icon: UsersRound,
       accent: "bg-[#d8c6ff] text-[#392263]",
     },
@@ -148,21 +148,21 @@ export const eventConfig: EventProductConfig = {
       time: "21.15",
       duration: "iki yeni sunum",
       product: "2 ilham veren hikâye",
-      title: "İki farklı yol, iki yeni kırılma noktası.",
+      title: "İki yeni başarısızlık hikâyesi.",
       description:
-        "Gecenin ikinci sahne bölümünde iki konuşmacı daha başarısızlıktan öğrendiği en önemli dersleri paylaşır.",
-      highlights: ["2 konuşmacı", "yeni bakış açısı"],
+        "İkinci bölümde iki yeni konuşmacı sahneye çıkar ve kendi kırılma noktalarını, hatalarını ve öğrendiklerini paylaşır.",
+      highlights: ["2 yeni konuşmacı", "yeni deneyimler"],
       icon: MessageCircleQuestion,
       accent: "bg-[#ffe5a8] text-[#61450a]",
     },
     {
       time: "22.00",
       duration: "60 dakika",
-      product: "networking free time",
-      title: "Hikâyeleri bağlantıya dönüştür.",
+      product: "gerçek networking",
+      title: "Gece gerçek bağlantılarla devam eder.",
       description:
-        "notwork match eşleşmelerini sürdür, konuşmacılarla tanış ve gecenin kalanında serbest biçimde yeni bağlantılar kur.",
-      highlights: ["notwork match devam", "serbest networking"],
+        "Eşleştiğiniz kişilerle sohbeti sürdürür, konuşmacılarla tanışır ve gecenin kalanında yeni bağlantılar kurarsınız.",
+      highlights: ["yüz yüze sohbet", "serbest networking"],
       icon: Sparkles,
       accent: "bg-[#c9f1d7] text-[#174d2d]",
     },

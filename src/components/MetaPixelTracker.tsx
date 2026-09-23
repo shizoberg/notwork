@@ -49,12 +49,12 @@ const eventPageContent: Record<
     value: 450,
   },
   "/9-ekim": {
-    contentId: "notwork-classic-2026-10-09",
-    contentName: "notwork Sahne · 9 Ekim 2026",
+    contentId: "notwork-sahne-2026-10-11",
+    contentName: "notwork Sahne · 11 Ekim 2026",
     value: 600,
   },
   "/11-ekim": {
-    contentId: "notwork-classic-2026-10-09",
+    contentId: "notwork-sahne-2026-10-11",
     contentName: "notwork Sahne · 11 Ekim 2026",
     value: 600,
   },
@@ -167,18 +167,30 @@ export function MetaPixelTracker() {
       if (!eventName) return;
       const eventMethod = element.dataset.metaEventType === "custom" ? "trackCustom" : "track";
       const ticketPrice = Number(element.dataset.metaTicketPrice);
+      const ticketOption = element.dataset.metaTicketOption || undefined;
+      const contentId = element.dataset.metaContentId || "notwork-ticket";
+      const contentName = element.dataset.metaContent || "notwork etkinlik bileti";
       sendMetaEvent(eventMethod, eventName, {
-        content_name: element.dataset.metaContent || "notwork etkinlik bileti",
+        content_name: contentName,
         content_category: "Etkinlik Bileti",
         content_type: "product",
-        content_ids: [element.dataset.metaContentId || "notwork-ticket"],
+        content_ids: [contentId],
         event_id: element.dataset.metaEventId || undefined,
         event_title: element.dataset.metaEventTitle || undefined,
         event_date: element.dataset.metaEventDate || undefined,
         button_location: element.dataset.metaButtonLocation || undefined,
-        ticket_option: element.dataset.metaTicketOption || undefined,
+        ticket_option: ticketOption,
         ticket_price: Number.isFinite(ticketPrice) ? ticketPrice : undefined,
         currency: "TRY",
+      });
+      sendMetaEvent("track", "InitiateCheckout", {
+        content_name: contentName,
+        content_category: "Etkinlik Bileti",
+        content_type: "product",
+        content_ids: [contentId],
+        currency: "TRY",
+        value: Number.isFinite(ticketPrice) ? ticketPrice : undefined,
+        num_items: ticketOption === "duo" ? 2 : 1,
       });
     };
 
