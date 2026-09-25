@@ -7,11 +7,21 @@ import {
 } from "@/lib/cookie-consent";
 
 type EventPayload = {
-  type: "session_start" | "page_view" | "click" | "ticket_click" | "scroll_depth" | "page_time" | "form_submit";
+  type:
+    | "session_start"
+    | "page_view"
+    | "click"
+    | "ticket_click"
+    | "heatmap_click"
+    | "scroll_depth"
+    | "page_time"
+    | "form_submit";
   path?: string;
   label?: string;
   target?: string;
   value?: number;
+  heatX?: number;
+  heatY?: number;
 };
 
 const endpoint = "/api/analytics/event";
@@ -63,6 +73,7 @@ export function AnalyticsTracker() {
   useEffect(() => {
     if (!hasConsent) return;
     if (location.pathname.startsWith("/admin")) return;
+    if (new URLSearchParams(window.location.search).get("analyticsPreview") === "1") return;
     if (!sessionStarted.current) {
       sendEvent({ type: "session_start" });
       sessionStarted.current = true;
@@ -73,14 +84,29 @@ export function AnalyticsTracker() {
   useEffect(() => {
     if (!hasConsent) return;
     if (location.pathname.startsWith("/admin")) return;
+    if (new URLSearchParams(window.location.search).get("analyticsPreview") === "1") return;
     const startedAt = Date.now();
     const scrollMarks = new Set<number>();
 
     const onClick = (event: MouseEvent) => {
+      const targetElement = event.target as HTMLElement | null;
+      if (targetElement?.closest("[data-analytics-ignore]")) return;
+      const documentWidth = Math.max(document.documentElement.scrollWidth, window.innerWidth, 1);
+      const documentHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight, 1);
+      const heatX = Math.max(0, Math.min(1_000, Math.round((event.pageX / documentWidth) * 1_000)));
+      const heatY = Math.max(0, Math.min(1_000, Math.round((event.pageY / documentHeight) * 1_000)));
       const element = (event.target as HTMLElement | null)?.closest<HTMLElement>(
         "a, button, [data-analytics]",
       );
-      if (!element || element.closest("[data-analytics-ignore]")) return;
+      if (!element) {
+        sendEvent({
+          type: "heatmap_click",
+          label: targetElement?.tagName.toLowerCase() || "sayfa",
+          heatX,
+          heatY,
+        });
+        return;
+      }
       const explicit = element.dataset.analytics;
       const label =
         element.dataset.analyticsLabel ||
@@ -93,6 +119,8 @@ export function AnalyticsTracker() {
         type: explicit === "ticket_click" ? "ticket_click" : "click",
         label: label.replace(/\s+/g, " ").trim().slice(0, 120),
         target,
+        heatX,
+        heatY,
       });
     };
 

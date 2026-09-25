@@ -108,6 +108,7 @@ export function MetaPixelTracker() {
   }, []);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("analyticsPreview") === "1") return;
     if (!hasConsent) return;
     if (!window.fbq) {
       const fbq: FbqFunction = (...args: unknown[]) => {
@@ -156,6 +157,7 @@ export function MetaPixelTracker() {
   }, [hasConsent, location.pathname]);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("analyticsPreview") === "1") return;
     const trackMetaEvent = (event: MouseEvent) => {
       if (getCookieConsent() !== "accepted") return;
       if (!(event.target instanceof Element) || event.defaultPrevented) return;

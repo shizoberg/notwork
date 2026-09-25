@@ -12,19 +12,23 @@ import {
   Database,
   Eye,
   EyeOff,
+  Flame,
   KeyRound,
   MessageSquareQuote,
+  Monitor,
   MousePointerClick,
   Pencil,
   Plus,
   RefreshCcw,
   ShieldCheck,
+  Smartphone,
+  Tablet,
   Ticket,
   Trash2,
   Users,
   X,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -91,10 +95,20 @@ type AnalyticsEvent = {
   source: string;
   campaign: string;
   device: string;
+  heatX?: number;
+  heatY?: number;
+};
+
+type HeatmapDevice = "mobile" | "tablet" | "desktop";
+
+type AnalyticsPageHeatmap = {
+  mobile: Record<string, number>;
+  tablet: Record<string, number>;
+  desktop: Record<string, number>;
 };
 
 type AnalyticsDailySummary = {
-  version: 1;
+  version: 1 | 2;
   date: string;
   updatedAt: string;
   eventCount: number;
@@ -115,6 +129,7 @@ type AnalyticsDailySummary = {
   scrollDepth: Record<string, number>;
   devices: Record<string, number>;
   buttonActions: Record<string, number>;
+  heatmaps?: Record<string, AnalyticsPageHeatmap>;
   pageMetrics?: Record<
     string,
     {
@@ -141,7 +156,7 @@ type AnalyticsCoverage = {
 };
 
 type AnalyticsAdminResponse = {
-  schemaVersion: 2 | 3;
+  schemaVersion: 2 | 3 | 4;
   events: AnalyticsEvent[];
   summaries: AnalyticsDailySummary[];
   days: number;
@@ -228,6 +243,7 @@ const eventNames: Record<string, string> = {
   scroll_depth: "Kaydırma",
   page_time: "Sayfada geçirilen süre",
   form_submit: "Form gönderimi",
+  heatmap_click: "Isı haritası tıklaması",
 };
 
 type AdminTab = "events" | "eventTools" | "analytics" | "networking" | "profiles" | "applications";
@@ -459,6 +475,9 @@ function AdminPage() {
   const [activeAdminTab, setActiveAdminTab] = useState<AdminTab>("events");
   const [selectedToolsEventSlug, setSelectedToolsEventSlug] = useState("21-agustos-2026");
   const [selectedEventAnalyticsPath, setSelectedEventAnalyticsPath] = useState("/17-eylul");
+  const [selectedHeatmapPath, setSelectedHeatmapPath] = useState("/");
+  const [selectedHeatmapDevice, setSelectedHeatmapDevice] =
+    useState<HeatmapDevice>("mobile");
   const backfillRunningRef = useRef(false);
   const selectedDaysRef = useRef(days);
 
@@ -843,7 +862,7 @@ function AdminPage() {
     if (!response.ok) throw new Error("Rapor şu anda alınamadı.");
     const data = (await response.json()) as Partial<AnalyticsAdminResponse>;
     if (
-      ![2, 3].includes(Number(data.schemaVersion)) ||
+      ![2, 3, 4].includes(Number(data.schemaVersion)) ||
       !Array.isArray(data.summaries) ||
       !data.coverage
     ) {
@@ -947,6 +966,14 @@ function AdminPage() {
   const eventPageReport = useMemo(
     () => buildEventPageReport(dailySummaries, selectedEventAnalyticsPath, days),
     [dailySummaries, selectedEventAnalyticsPath, days],
+  );
+  const heatmapPages = useMemo(() => buildHeatmapPages(dailySummaries), [dailySummaries]);
+  const activeHeatmapPath = heatmapPages.some((page) => page.path === selectedHeatmapPath)
+    ? selectedHeatmapPath
+    : heatmapPages[0]?.path || "/";
+  const heatmapReport = useMemo(
+    () => buildClickHeatmap(dailySummaries, activeHeatmapPath, selectedHeatmapDevice),
+    [dailySummaries, activeHeatmapPath, selectedHeatmapDevice],
   );
 
   if (events === null) {
@@ -1408,6 +1435,85 @@ function AdminPage() {
             </ChartCard>
             <ReportList title="Bu sayfadaki butonlar" rows={eventPageReport.buttonActions} />
           </div>
+        </section>
+
+        <section
+          className={`mt-6 overflow-hidden rounded-[2rem] border border-border bg-card p-5 ${
+            activeAdminTab === "analytics" ? "" : "hidden"
+          }`}
+        >
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-primary-deep">
+                <Flame size={15} /> tıklama ısı haritası
+              </div>
+              <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] sm:text-3xl">
+                Her sayfadaki ilgiyi gör
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm text-foreground/55">
+                Anonim tıklamalar sayfa ve cihaz türüne göre gerçek ekranın üzerinde gösterilir.
+              </p>
+            </div>
+            <div className="grid min-w-[260px] gap-1.5">
+              <label htmlFor="heatmap-page" className="text-xs font-black text-foreground/55">
+                Sayfa
+              </label>
+              <select
+                id="heatmap-page"
+                value={activeHeatmapPath}
+                onChange={(event) => setSelectedHeatmapPath(event.target.value)}
+                className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-bold outline-none focus:border-primary"
+              >
+                {heatmapPages.map((page) => (
+                  <option key={page.path} value={page.path}>
+                    {page.path} · {page.pageViews} görüntüleme · {page.clicks} tıklama
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex rounded-full border border-border bg-muted/45 p-1">
+              {([
+                ["mobile", "Mobil", Smartphone],
+                ["tablet", "Tablet", Tablet],
+                ["desktop", "Masaüstü", Monitor],
+              ] as const).map(([device, label, Icon]) => (
+                <button
+                  key={device}
+                  type="button"
+                  onClick={() => setSelectedHeatmapDevice(device)}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-black transition ${
+                    selectedHeatmapDevice === device
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-foreground/55"
+                  }`}
+                >
+                  <Icon size={14} /> {label}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2 text-xs">
+              <span className="rounded-full bg-primary/10 px-3 py-2 font-black text-primary-deep">
+                {heatmapReport.total} tıklama
+              </span>
+              <span className="rounded-full bg-muted px-3 py-2 font-bold text-foreground/55">
+                {heatmapReport.points.length} aktif alan
+              </span>
+            </div>
+          </div>
+
+          <ClickHeatmap
+            path={activeHeatmapPath}
+            device={selectedHeatmapDevice}
+            points={heatmapReport.points}
+            max={heatmapReport.max}
+          />
+          <p className="mt-3 text-xs leading-relaxed text-foreground/45">
+            Harita yalnızca analiz izni veren ziyaretçilerin bu sürüm yayına alındıktan sonraki
+            tıklamalarını içerir. Form alanlarının içeriği ve kişisel veri kaydedilmez.
+          </p>
         </section>
 
         <section
@@ -3644,6 +3750,171 @@ function ChangeBox({ title, member }: { title: string; member: NetworkMember }) 
       <div>{member.instagram ? `@${member.instagram}` : "instagram yok"}</div>
       <div className="mt-1 line-clamp-3 text-foreground/55">
         {member.motivation || "motivasyon yok"}
+      </div>
+    </div>
+  );
+}
+
+const heatmapColumns = 24;
+const heatmapRows = 60;
+
+type HeatmapPoint = {
+  column: number;
+  row: number;
+  count: number;
+};
+
+function buildHeatmapPages(summaries: AnalyticsDailySummary[]) {
+  const pages = new Map<string, { path: string; pageViews: number; clicks: number }>();
+  for (const summary of summaries) {
+    for (const [path, views] of Object.entries(summary.topPages || {})) {
+      const normalized = normalizeAnalyticsPath(path);
+      const current = pages.get(normalized) || { path: normalized, pageViews: 0, clicks: 0 };
+      current.pageViews += views || 0;
+      pages.set(normalized, current);
+    }
+    for (const [path, heatmap] of Object.entries(summary.heatmaps || {})) {
+      const normalized = normalizeAnalyticsPath(path);
+      const current = pages.get(normalized) || { path: normalized, pageViews: 0, clicks: 0 };
+      current.clicks += Object.values(heatmap.mobile || {}).reduce((sum, value) => sum + value, 0);
+      current.clicks += Object.values(heatmap.tablet || {}).reduce((sum, value) => sum + value, 0);
+      current.clicks += Object.values(heatmap.desktop || {}).reduce((sum, value) => sum + value, 0);
+      pages.set(normalized, current);
+    }
+  }
+  if (!pages.size) pages.set("/", { path: "/", pageViews: 0, clicks: 0 });
+  return [...pages.values()].sort(
+    (first, second) => second.clicks - first.clicks || second.pageViews - first.pageViews,
+  );
+}
+
+function buildClickHeatmap(
+  summaries: AnalyticsDailySummary[],
+  selectedPath: string,
+  device: HeatmapDevice,
+) {
+  const cells: Record<string, number> = {};
+  const normalizedPath = normalizeAnalyticsPath(selectedPath);
+  for (const summary of summaries) {
+    for (const [path, heatmap] of Object.entries(summary.heatmaps || {})) {
+      if (normalizeAnalyticsPath(path) !== normalizedPath) continue;
+      for (const [cell, value] of Object.entries(heatmap[device] || {})) {
+        cells[cell] = (cells[cell] || 0) + value;
+      }
+    }
+  }
+  const points = Object.entries(cells)
+    .map(([cell, count]) => {
+      const [column, row] = cell.split(":").map(Number);
+      return { column, row, count };
+    })
+    .filter(
+      (point) =>
+        Number.isInteger(point.column) &&
+        Number.isInteger(point.row) &&
+        point.column >= 0 &&
+        point.column < heatmapColumns &&
+        point.row >= 0 &&
+        point.row < heatmapRows &&
+        point.count > 0,
+    );
+  return {
+    points,
+    total: points.reduce((sum, point) => sum + point.count, 0),
+    max: Math.max(1, ...points.map((point) => point.count)),
+  };
+}
+
+function ClickHeatmap({
+  path,
+  device,
+  points,
+  max,
+}: {
+  path: string;
+  device: HeatmapDevice;
+  points: HeatmapPoint[];
+  max: number;
+}) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [pageHeight, setPageHeight] = useState(2200);
+  const previewWidth = device === "mobile" ? 390 : device === "tablet" ? 820 : 1440;
+  const scale = containerWidth ? Math.min(1, containerWidth / previewWidth) : 1;
+  const previewUrl = `${path}${path.includes("?") ? "&" : "?"}analyticsPreview=1`;
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+    const measure = () => setContainerWidth(element.clientWidth);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    setPageHeight(device === "mobile" ? 2600 : device === "tablet" ? 2400 : 2200);
+  }, [path, device]);
+
+  const measurePreview = () => {
+    window.setTimeout(() => {
+      const documentElement = iframeRef.current?.contentDocument?.documentElement;
+      const body = iframeRef.current?.contentDocument?.body;
+      const height = Math.max(documentElement?.scrollHeight || 0, body?.scrollHeight || 0, 900);
+      if (height) setPageHeight(Math.min(height, 12_000));
+    }, 300);
+  };
+
+  return (
+    <div className="mt-4 overflow-hidden rounded-[1.5rem] border border-border bg-muted/35">
+      <div ref={containerRef} className="max-h-[840px] overflow-auto">
+        <div style={{ width: previewWidth * scale, height: pageHeight * scale }}>
+          <div
+            className="relative origin-top-left overflow-hidden bg-background"
+            style={{ width: previewWidth, height: pageHeight, transform: `scale(${scale})` }}
+          >
+            <iframe
+              ref={iframeRef}
+              key={`${path}-${device}`}
+              src={previewUrl}
+              title={`${path} tıklama ısı haritası önizlemesi`}
+              aria-hidden="true"
+              tabIndex={-1}
+              onLoad={measurePreview}
+              className="pointer-events-none absolute inset-0 h-full w-full border-0 bg-background"
+            />
+            <div className="pointer-events-none absolute inset-0 z-10">
+              {points.map((point) => {
+                const strength = Math.sqrt(point.count / Math.max(1, max));
+                const size = 70 + strength * 70;
+                return (
+                  <span
+                    key={`${point.column}:${point.row}`}
+                    title={`${point.count} tıklama`}
+                    className="absolute rounded-full mix-blend-multiply"
+                    style={{
+                      left: `${((point.column + 0.5) / heatmapColumns) * 100}%`,
+                      top: `${((point.row + 0.5) / heatmapRows) * 100}%`,
+                      width: size,
+                      height: size,
+                      opacity: 0.38 + strength * 0.48,
+                      transform: "translate(-50%, -50%)",
+                      background:
+                        "radial-gradient(circle, rgba(255,40,30,.95) 0%, rgba(255,153,0,.72) 42%, rgba(255,214,10,0) 73%)",
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        {!points.length ? (
+          <div className="sticky bottom-4 mx-auto -mt-20 mb-4 w-fit rounded-full border border-border bg-background/95 px-4 py-2 text-xs font-bold text-foreground/60 shadow-lg backdrop-blur">
+            Bu sayfa ve cihaz için yeni tıklama bekleniyor
+          </div>
+        ) : null}
       </div>
     </div>
   );

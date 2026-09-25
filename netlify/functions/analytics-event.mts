@@ -6,6 +6,7 @@ const allowedEvents = new Set([
   "page_view",
   "click",
   "ticket_click",
+  "heatmap_click",
   "scroll_depth",
   "page_time",
   "form_submit",
@@ -22,6 +23,8 @@ type AnalyticsEvent = {
   source?: string;
   campaign?: string;
   device?: string;
+  heatX?: number;
+  heatY?: number;
 };
 
 function cleanText(value: unknown, maxLength: number) {
@@ -53,6 +56,12 @@ export default async (request: Request, _context: Context) => {
       source: cleanText(input.source, 80),
       campaign: cleanText(input.campaign, 100),
       device: cleanText(input.device, 20),
+      heatX: Number.isFinite(input.heatX)
+        ? Math.max(0, Math.min(1_000, Math.round(Number(input.heatX))))
+        : -1,
+      heatY: Number.isFinite(input.heatY)
+        ? Math.max(0, Math.min(1_000, Math.round(Number(input.heatY))))
+        : -1,
     };
 
     const day = now.toISOString().slice(0, 10);

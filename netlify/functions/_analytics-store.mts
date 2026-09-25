@@ -6,6 +6,13 @@ const analyticsPasswordHash = "bffc46786cfaa3b08499a75d77b037dff9a14f362ab183f72
 const rawStoreName = "site-analytics";
 const dailyStoreName = "site-analytics-daily";
 const dateKeyPattern = /^\d{4}-\d{2}-\d{2}$/;
+const heatmapColumns = 24;
+const heatmapRows = 60;
+const heatmapDevices = ["mobile", "tablet", "desktop"] as const;
+
+type HeatmapDevice = (typeof heatmapDevices)[number];
+type HeatmapCells = Record<string, number>;
+type PageHeatmap = Record<HeatmapDevice, HeatmapCells>;
 
 export type StoredAnalyticsEvent = {
   id: string;
@@ -20,10 +27,12 @@ export type StoredAnalyticsEvent = {
   source: string;
   campaign: string;
   device: string;
+  heatX?: number;
+  heatY?: number;
 };
 
 export type DailyAnalyticsSummary = {
-  version: 1;
+  version: 2;
   date: string;
   updatedAt: string;
   eventCount: number;
@@ -44,6 +53,7 @@ export type DailyAnalyticsSummary = {
   scrollDepth: Record<string, number>;
   devices: Record<string, number>;
   buttonActions: Record<string, number>;
+  heatmaps: Record<string, PageHeatmap>;
   pageMetrics: Record<
     string,
     {
@@ -61,6 +71,37 @@ export type DailyAnalyticsSummary = {
 function increment(values: Record<string, number>, key: string) {
   const normalizedKey = key.trim() || "Belirtilmedi";
   values[normalizedKey] = (values[normalizedKey] || 0) + 1;
+}
+
+function emptyPageHeatmap(): PageHeatmap {
+  return { mobile: {}, tablet: {}, desktop: {} };
+}
+
+function heatmapDevice(value: string): HeatmapDevice {
+  return heatmapDevices.includes(value as HeatmapDevice) ? (value as HeatmapDevice) : "desktop";
+}
+
+function addHeatmapClick(
+  heatmaps: Record<string, PageHeatmap>,
+  event: StoredAnalyticsEvent,
+) {
+  if (
+    !Number.isFinite(event.heatX) ||
+    !Number.isFinite(event.heatY) ||
+    Number(event.heatX) < 0 ||
+    Number(event.heatY) < 0
+  ) {
+    return;
+  }
+  const x = Math.max(0, Math.min(1_000, Number(event.heatX)));
+  const y = Math.max(0, Math.min(1_000, Number(event.heatY)));
+  const column = Math.min(heatmapColumns - 1, Math.floor((x / 1_001) * heatmapColumns));
+  const row = Math.min(heatmapRows - 1, Math.floor((y / 1_001) * heatmapRows));
+  const path = event.path || "/";
+  const device = heatmapDevice(event.device);
+  const page = heatmaps[path] || emptyPageHeatmap();
+  increment(page[device], `${column}:${row}`);
+  heatmaps[path] = page;
 }
 
 function isJuly14Ticket(event: StoredAnalyticsEvent) {
@@ -142,6 +183,7 @@ export function summarizeEvents(
   const scrollDepth: Record<string, number> = {};
   const devices: Record<string, number> = {};
   const buttonActions: Record<string, number> = {};
+  const heatmaps: Record<string, PageHeatmap> = {};
   const pageMetrics = new Map<
     string,
     {
@@ -163,6 +205,7 @@ export function summarizeEvents(
   let pageTimeCount = 0;
 
   for (const event of events) {
+    addHeatmapClick(heatmaps, event);
     const path = event.path || "/";
     const page = pageMetrics.get(path) || {
       pageViews: 0,
@@ -214,7 +257,7 @@ export function summarizeEvents(
   }
 
   return {
-    version: 1,
+    version: 2,
     date,
     updatedAt: new Date().toISOString(),
     eventCount: events.length,
@@ -230,6 +273,7 @@ export function summarizeEvents(
     scrollDepth,
     devices,
     buttonActions,
+    heatmaps,
     pageMetrics: Object.fromEntries(
       [...pageMetrics.entries()].map(([path, page]) => [
         path,
