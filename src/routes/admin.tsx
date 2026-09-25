@@ -108,7 +108,7 @@ type AnalyticsPageHeatmap = {
 };
 
 type AnalyticsDailySummary = {
-  version: 1 | 2 | 3;
+  version: 1 | 2 | 3 | 4;
   date: string;
   updatedAt: string;
   eventCount: number;
@@ -120,6 +120,7 @@ type AnalyticsDailySummary = {
     august21: number;
     september17?: number;
     october9?: number;
+    october11?: number;
   };
   pageTimeTotal: number;
   pageTimeCount: number;
@@ -157,7 +158,7 @@ type AnalyticsCoverage = {
 };
 
 type AnalyticsAdminResponse = {
-  schemaVersion: 2 | 3 | 4 | 5;
+  schemaVersion: 2 | 3 | 4 | 5 | 6;
   events: AnalyticsEvent[];
   summaries: AnalyticsDailySummary[];
   days: number;
@@ -268,7 +269,7 @@ const adminTabs: Array<{ id: AdminTab; label: string; description: string }> = [
   {
     id: "eventTools",
     label: "Etkinlik verileri",
-    description: "21 Ağustos, 17 Eylül ve 9 Ekim ürün kayıtları",
+    description: "21 Ağustos, 17 Eylül ve 11 Ekim ürün kayıtları",
   },
   { id: "analytics", label: "Analiz", description: "Trafik, bilet ve aksiyon grafikleri" },
   { id: "networking", label: "Networking", description: "Genel topluluk ağı ve onaylar" },
@@ -286,7 +287,7 @@ const eventToolsSlugs = ["21-agustos-2026", "17-eylul-2026", "9-ekim-2026"];
 
 const eventPageAnalyticsOptions = [
   { path: "/17-eylul", label: "17 Eylül · Fast" },
-  { path: "/9-ekim", label: "11 Ekim · Sahne" },
+  { path: "/11-ekim", label: "11 Ekim · Sahne" },
   { path: "/21agustos", label: "21 Ağustos · Rene Lokal" },
 ];
 
@@ -863,7 +864,7 @@ function AdminPage() {
     if (!response.ok) throw new Error("Rapor şu anda alınamadı.");
     const data = (await response.json()) as Partial<AnalyticsAdminResponse>;
     if (
-      ![2, 3, 4, 5].includes(Number(data.schemaVersion)) ||
+      ![2, 3, 4, 5, 6].includes(Number(data.schemaVersion)) ||
       !Array.isArray(data.summaries) ||
       !data.coverage
     ) {
@@ -1325,8 +1326,8 @@ function AdminPage() {
             />
             <Metric
               icon={Ticket}
-              label="9 Ekim etkinlik tıklaması"
-              value={report.ticketClicksByEvent.october9}
+              label="11 Ekim etkinlik tıklaması"
+              value={report.ticketClicksByEvent.october11}
               highlight
             />
           </div>
@@ -3233,13 +3234,13 @@ function EventRegistryAdmin({
             onChange={(event) =>
               setDraft((current) => ({ ...current, shortTitle: event.target.value }))
             }
-            placeholder="9 Ekim"
+            placeholder="11 Ekim"
           />
           <AdminField
             label="URL adı"
             value={draft.slug}
             onChange={(event) => setDraft((current) => ({ ...current, slug: event.target.value }))}
-            placeholder="9-ekim-2026"
+            placeholder="11-ekim-2026"
           />
           <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
             Durum
@@ -4183,9 +4184,11 @@ function buildReport(
       july14: totals.july14 + summary.ticketClicksByEvent.july14,
       august21: totals.august21 + summary.ticketClicksByEvent.august21,
       september17: totals.september17 + (summary.ticketClicksByEvent.september17 || 0),
-      october9: totals.october9 + (summary.ticketClicksByEvent.october9 || 0),
+      october11:
+        totals.october11 +
+        (summary.ticketClicksByEvent.october11 ?? summary.ticketClicksByEvent.october9 ?? 0),
     }),
-    { july14: 0, august21: 0, september17: 0, october9: 0 },
+    { july14: 0, august21: 0, september17: 0, october11: 0 },
   );
   const pageTimeTotal = summaries.reduce((total, summary) => total + summary.pageTimeTotal, 0);
   const pageTimeCount = summaries.reduce((total, summary) => total + summary.pageTimeCount, 0);
@@ -4205,7 +4208,7 @@ function buildReport(
     conversion: sessions ? ((ticketClicks / sessions) * 100).toFixed(1) : "0.0",
     clicks: count("click") + ticketClicks,
     averageTime: pageTimeCount ? Math.round(pageTimeTotal / pageTimeCount) : 0,
-    topPages: topRows(mergeSummaryRecords(summaries, "topPages")),
+    topPages: topRows(mergeNormalizedPageRecords(summaries)),
     topActions: topRows(mergeSummaryRecords(summaries, "topActions")),
     sources: topRows(mergeSummaryRecords(summaries, "sources")),
     scrollDepth: topRows(mergeSummaryRecords(summaries, "scrollDepth")),
@@ -4303,7 +4306,19 @@ function buildEventPageReport(
 
 function normalizeAnalyticsPath(value: string) {
   const path = (value || "/").split(/[?#]/, 1)[0] || "/";
-  return path.length > 1 ? path.replace(/\/+$/, "") : path;
+  const normalized = path.length > 1 ? path.replace(/\/+$/, "") : path;
+  return normalized === "/9-ekim" ? "/11-ekim" : normalized;
+}
+
+function mergeNormalizedPageRecords(summaries: AnalyticsDailySummary[]) {
+  const merged: Record<string, number> = {};
+  for (const summary of summaries) {
+    for (const [path, value] of Object.entries(summary.topPages || {})) {
+      const normalized = normalizeAnalyticsPath(path);
+      merged[normalized] = (merged[normalized] || 0) + value;
+    }
+  }
+  return merged;
 }
 
 function buildAnalyticsTimeline(summaries: AnalyticsDailySummary[], requestedDays: number) {
