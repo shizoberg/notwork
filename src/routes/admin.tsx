@@ -108,7 +108,7 @@ type AnalyticsPageHeatmap = {
 };
 
 type AnalyticsDailySummary = {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   date: string;
   updatedAt: string;
   eventCount: number;
@@ -130,6 +130,7 @@ type AnalyticsDailySummary = {
   devices: Record<string, number>;
   buttonActions: Record<string, number>;
   heatmaps?: Record<string, AnalyticsPageHeatmap>;
+  legacyButtonActionsByPage?: Record<string, Record<string, number>>;
   pageMetrics?: Record<
     string,
     {
@@ -156,7 +157,7 @@ type AnalyticsCoverage = {
 };
 
 type AnalyticsAdminResponse = {
-  schemaVersion: 2 | 3 | 4;
+  schemaVersion: 2 | 3 | 4 | 5;
   events: AnalyticsEvent[];
   summaries: AnalyticsDailySummary[];
   days: number;
@@ -862,7 +863,7 @@ function AdminPage() {
     if (!response.ok) throw new Error("Rapor şu anda alınamadı.");
     const data = (await response.json()) as Partial<AnalyticsAdminResponse>;
     if (
-      ![2, 3, 4].includes(Number(data.schemaVersion)) ||
+      ![2, 3, 4, 5].includes(Number(data.schemaVersion)) ||
       !Array.isArray(data.summaries) ||
       !data.coverage
     ) {
@@ -974,6 +975,10 @@ function AdminPage() {
   const heatmapReport = useMemo(
     () => buildClickHeatmap(dailySummaries, activeHeatmapPath, selectedHeatmapDevice),
     [dailySummaries, activeHeatmapPath, selectedHeatmapDevice],
+  );
+  const legacyHeatmapActions = useMemo(
+    () => buildLegacyHeatmapActions(dailySummaries, activeHeatmapPath),
+    [dailySummaries, activeHeatmapPath],
   );
 
   if (events === null) {
@@ -1496,8 +1501,13 @@ function AdminPage() {
             </div>
             <div className="flex gap-2 text-xs">
               <span className="rounded-full bg-primary/10 px-3 py-2 font-black text-primary-deep">
-                {heatmapReport.total} tıklama
+                {heatmapReport.total} gerçek tıklama
               </span>
+              {legacyHeatmapActions.total ? (
+                <span className="rounded-full bg-violet-500/10 px-3 py-2 font-black text-violet-700">
+                  {legacyHeatmapActions.total} geçmiş tahmini
+                </span>
+              ) : null}
               <span className="rounded-full bg-muted px-3 py-2 font-bold text-foreground/55">
                 {heatmapReport.points.length} aktif alan
               </span>
@@ -1509,6 +1519,7 @@ function AdminPage() {
             device={selectedHeatmapDevice}
             points={heatmapReport.points}
             max={heatmapReport.max}
+            legacyActions={legacyHeatmapActions.actions}
           />
           <p className="mt-3 text-xs leading-relaxed text-foreground/45">
             Harita yalnızca analiz izni veren ziyaretçilerin bu sürüm yayına alındıktan sonraki
@@ -3825,21 +3836,56 @@ function buildClickHeatmap(
   };
 }
 
+type LegacyHeatmapAction = { label: string; count: number };
+
+function buildLegacyHeatmapActions(
+  summaries: AnalyticsDailySummary[],
+  selectedPath: string,
+) {
+  const values: Record<string, number> = {};
+  const normalizedPath = normalizeAnalyticsPath(selectedPath);
+  for (const summary of summaries) {
+    for (const [path, actions] of Object.entries(summary.legacyButtonActionsByPage || {})) {
+      if (normalizeAnalyticsPath(path) !== normalizedPath) continue;
+      for (const [label, count] of Object.entries(actions || {})) {
+        values[label] = (values[label] || 0) + count;
+      }
+    }
+  }
+  const actions = Object.entries(values)
+    .map(([label, count]) => ({ label, count }))
+    .sort((first, second) => second.count - first.count);
+  return { actions, total: actions.reduce((sum, action) => sum + action.count, 0) };
+}
+
+type LegacyHeatmapPoint = LegacyHeatmapAction & {
+  left: number;
+  top: number;
+};
+
+function normalizeHeatmapLabel(value: string) {
+  return value.replace(/\s+/g, " ").trim().toLocaleLowerCase("tr-TR").slice(0, 120);
+}
+
 function ClickHeatmap({
   path,
   device,
   points,
   max,
+  legacyActions,
 }: {
   path: string;
   device: HeatmapDevice;
   points: HeatmapPoint[];
   max: number;
+  legacyActions: LegacyHeatmapAction[];
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [pageHeight, setPageHeight] = useState(2200);
+  const [previewRevision, setPreviewRevision] = useState(0);
+  const [legacyPoints, setLegacyPoints] = useState<LegacyHeatmapPoint[]>([]);
   const previewWidth = device === "mobile" ? 390 : device === "tablet" ? 820 : 1440;
   const scale = containerWidth ? Math.min(1, containerWidth / previewWidth) : 1;
   const previewUrl = `${path}${path.includes("?") ? "&" : "?"}analyticsPreview=1`;
@@ -3856,7 +3902,48 @@ function ClickHeatmap({
 
   useEffect(() => {
     setPageHeight(device === "mobile" ? 2600 : device === "tablet" ? 2400 : 2200);
+    setLegacyPoints([]);
   }, [path, device]);
+
+  useEffect(() => {
+    const previewDocument = iframeRef.current?.contentDocument;
+    if (!previewDocument || !legacyActions.length) {
+      setLegacyPoints([]);
+      return;
+    }
+    const width = Math.max(previewDocument.documentElement.scrollWidth, previewWidth, 1);
+    const height = Math.max(
+      previewDocument.documentElement.scrollHeight,
+      previewDocument.body?.scrollHeight || 0,
+      pageHeight,
+      1,
+    );
+    const elements = [...previewDocument.querySelectorAll<HTMLElement>("a, button, [data-analytics]")]
+      .map((element) => {
+        const label =
+          element.dataset.analyticsLabel ||
+          element.dataset.analytics ||
+          element.getAttribute("aria-label") ||
+          element.textContent ||
+          "";
+        return { element, label: normalizeHeatmapLabel(label) };
+      })
+      .filter((candidate) => candidate.label);
+
+    const matched = legacyActions.flatMap((action) => {
+      const normalizedAction = normalizeHeatmapLabel(action.label);
+      const candidate = elements.find(({ label }) => label === normalizedAction);
+      if (!candidate) return [];
+      const rect = candidate.element.getBoundingClientRect();
+      if (!rect.width || !rect.height) return [];
+      return [{
+        ...action,
+        left: ((rect.left + previewDocument.defaultView!.scrollX + rect.width / 2) / width) * 100,
+        top: ((rect.top + previewDocument.defaultView!.scrollY + rect.height / 2) / height) * 100,
+      }];
+    });
+    setLegacyPoints(matched);
+  }, [legacyActions, pageHeight, previewRevision, previewWidth]);
 
   const measurePreview = () => {
     window.setTimeout(() => {
@@ -3864,6 +3951,7 @@ function ClickHeatmap({
       const body = iframeRef.current?.contentDocument?.body;
       const height = Math.max(documentElement?.scrollHeight || 0, body?.scrollHeight || 0, 900);
       if (height) setPageHeight(Math.min(height, 12_000));
+      setPreviewRevision((revision) => revision + 1);
     }, 300);
   };
 
@@ -3907,15 +3995,43 @@ function ClickHeatmap({
                   />
                 );
               })}
+              {legacyPoints.map((point) => {
+                const legacyMax = Math.max(1, ...legacyPoints.map((item) => item.count));
+                const strength = Math.sqrt(point.count / legacyMax);
+                const size = 62 + strength * 60;
+                return (
+                  <span
+                    key={`legacy-${point.label}`}
+                    title={`${point.count} geçmiş tıklama · tahmini konum`}
+                    className="absolute rounded-full mix-blend-multiply"
+                    style={{
+                      left: `${point.left}%`,
+                      top: `${point.top}%`,
+                      width: size,
+                      height: size,
+                      opacity: 0.34 + strength * 0.42,
+                      transform: "translate(-50%, -50%)",
+                      background:
+                        "radial-gradient(circle, rgba(124,58,237,.92) 0%, rgba(59,130,246,.55) 44%, rgba(59,130,246,0) 74%)",
+                    }}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
-        {!points.length ? (
+        {!points.length && !legacyPoints.length ? (
           <div className="sticky bottom-4 mx-auto -mt-20 mb-4 w-fit rounded-full border border-border bg-background/95 px-4 py-2 text-xs font-bold text-foreground/60 shadow-lg backdrop-blur">
             Bu sayfa ve cihaz için yeni tıklama bekleniyor
           </div>
         ) : null}
       </div>
+      {legacyPoints.length ? (
+        <div className="flex items-center gap-2 border-t border-border bg-background/80 px-4 py-3 text-xs text-foreground/55">
+          <span className="h-3 w-3 rounded-full bg-violet-500/70" /> Mor alanlar eski buton
+          tıklamalarının güncel sayfa düzenindeki tahmini konumudur.
+        </div>
+      ) : null}
     </div>
   );
 }

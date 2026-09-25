@@ -30,8 +30,9 @@ export default async (request: Request, _context: Context) => {
         ({ date, summary }) =>
           rawDays.has(date) &&
           (!summary ||
-            summary.version !== 2 ||
+            summary.version !== 3 ||
             !summary.heatmaps ||
+            !summary.legacyButtonActionsByPage ||
             !summary.pageMetrics ||
             typeof summary.ticketClicksByEvent?.september17 !== "number" ||
             typeof summary.ticketClicksByEvent?.october9 !== "number"),
@@ -55,7 +56,7 @@ export default async (request: Request, _context: Context) => {
 
     return Response.json(
       {
-        schemaVersion: 4,
+        schemaVersion: 5,
         events: recent.events,
         summaries,
         days: safeDays,
@@ -67,7 +68,7 @@ export default async (request: Request, _context: Context) => {
       {
         headers: {
           "cache-control": "no-store, private",
-          "x-analytics-schema": "4",
+          "x-analytics-schema": "5",
         },
       },
     );

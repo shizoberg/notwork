@@ -32,7 +32,7 @@ export type StoredAnalyticsEvent = {
 };
 
 export type DailyAnalyticsSummary = {
-  version: 2;
+  version: 3;
   date: string;
   updatedAt: string;
   eventCount: number;
@@ -54,6 +54,7 @@ export type DailyAnalyticsSummary = {
   devices: Record<string, number>;
   buttonActions: Record<string, number>;
   heatmaps: Record<string, PageHeatmap>;
+  legacyButtonActionsByPage: Record<string, Record<string, number>>;
   pageMetrics: Record<
     string,
     {
@@ -102,6 +103,15 @@ function addHeatmapClick(
   const page = heatmaps[path] || emptyPageHeatmap();
   increment(page[device], `${column}:${row}`);
   heatmaps[path] = page;
+}
+
+function hasHeatmapCoordinates(event: StoredAnalyticsEvent) {
+  return (
+    Number.isFinite(event.heatX) &&
+    Number.isFinite(event.heatY) &&
+    Number(event.heatX) >= 0 &&
+    Number(event.heatY) >= 0
+  );
 }
 
 function isJuly14Ticket(event: StoredAnalyticsEvent) {
@@ -184,6 +194,7 @@ export function summarizeEvents(
   const devices: Record<string, number> = {};
   const buttonActions: Record<string, number> = {};
   const heatmaps: Record<string, PageHeatmap> = {};
+  const legacyButtonActionsByPage: Record<string, Record<string, number>> = {};
   const pageMetrics = new Map<
     string,
     {
@@ -221,6 +232,11 @@ export function summarizeEvents(
     if (["click", "ticket_click"].includes(event.type)) {
       page.clicks += 1;
       increment(page.buttonActions, event.label || event.target || "Buton");
+      if (!hasHeatmapCoordinates(event)) {
+        const legacyActions = legacyButtonActionsByPage[path] || {};
+        increment(legacyActions, event.label || event.target || "Buton");
+        legacyButtonActionsByPage[path] = legacyActions;
+      }
     }
     if (event.type === "ticket_click") page.ticketClicks += 1;
     if (event.type === "page_time" && event.value > 0) {
@@ -257,7 +273,7 @@ export function summarizeEvents(
   }
 
   return {
-    version: 2,
+    version: 3,
     date,
     updatedAt: new Date().toISOString(),
     eventCount: events.length,
@@ -274,6 +290,7 @@ export function summarizeEvents(
     devices,
     buttonActions,
     heatmaps,
+    legacyButtonActionsByPage,
     pageMetrics: Object.fromEntries(
       [...pageMetrics.entries()].map(([path, page]) => [
         path,
