@@ -74,6 +74,7 @@ import {
   seedEventNetworkSamples,
 } from "@/lib/event-network-api";
 import { getWordcloudAdmin, updateWordcloudAdmin } from "@/lib/wordcloud-api";
+import { getPostEventSurveyAdmin, type PostEventSurveyAdminPayload } from "@/lib/post-event-survey";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -248,7 +249,14 @@ const eventNames: Record<string, string> = {
   heatmap_click: "Isı haritası tıklaması",
 };
 
-type AdminTab = "events" | "eventTools" | "analytics" | "networking" | "profiles" | "applications";
+type AdminTab =
+  | "events"
+  | "eventTools"
+  | "analytics"
+  | "surveys"
+  | "networking"
+  | "profiles"
+  | "applications";
 
 type EventDatabaseInfo = {
   storeName: string;
@@ -272,6 +280,7 @@ const adminTabs: Array<{ id: AdminTab; label: string; description: string }> = [
     description: "21 Ağustos, 17 Eylül ve 11 Ekim ürün kayıtları",
   },
   { id: "analytics", label: "Analiz", description: "Trafik, bilet ve aksiyon grafikleri" },
+  { id: "surveys", label: "Anket", description: "Etkinlik sonrası bağ ve deneyim ölçümü" },
   { id: "networking", label: "Networking", description: "Genel topluluk ağı ve onaylar" },
   {
     id: "profiles",
@@ -449,6 +458,7 @@ function AdminPage() {
   const [members, setMembers] = useState<NetworkMember[]>([]);
   const [requests, setRequests] = useState<ChangeRequest[]>([]);
   const [startupApplications, setStartupApplications] = useState<StartupApplication[]>([]);
+  const [surveyData, setSurveyData] = useState<PostEventSurveyAdminPayload | null>(null);
   const [memberProfiles, setMemberProfiles] = useState<NotworkMemberProfile[]>([]);
   const [memberReferences, setMemberReferences] = useState<NotworkMemberReference[]>([]);
   const [temporaryCredentials, setTemporaryCredentials] = useState<TemporaryMemberCredential[]>([]);
@@ -478,8 +488,7 @@ function AdminPage() {
   const [selectedToolsEventSlug, setSelectedToolsEventSlug] = useState("21-agustos-2026");
   const [selectedEventAnalyticsPath, setSelectedEventAnalyticsPath] = useState("/17-eylul");
   const [selectedHeatmapPath, setSelectedHeatmapPath] = useState("/");
-  const [selectedHeatmapDevice, setSelectedHeatmapDevice] =
-    useState<HeatmapDevice>("mobile");
+  const [selectedHeatmapDevice, setSelectedHeatmapDevice] = useState<HeatmapDevice>("mobile");
   const backfillRunningRef = useRef(false);
   const selectedDaysRef = useRef(days);
 
@@ -665,6 +674,12 @@ function AdminPage() {
     if (!response.ok) throw new Error("Startup başvuruları alınamadı.");
     const data = (await response.json()) as { applications: StartupApplication[] };
     setStartupApplications(data.applications);
+  };
+
+  const loadSurveys = async (nextPassword = password) => {
+    const data = await getPostEventSurveyAdmin(nextPassword);
+    setSurveyData(data);
+    return data;
   };
 
   const loadMemberProfiles = async (nextPassword = password) => {
@@ -947,6 +962,7 @@ function AdminPage() {
         loadSelectedEventTools(selectedToolsEventSlug, password, registryEvents),
         loadStartupApplications(password),
         loadMemberProfiles(password),
+        loadSurveys(password),
       ]);
       failedLoads += auxiliaryLoads.filter((result) => result.status === "rejected").length;
       if (failedLoads > 0) {
@@ -1071,7 +1087,7 @@ function AdminPage() {
           </div>
         </header>
 
-        <nav className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        <nav className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
           {adminTabs.map((tab) => (
             <button
               key={tab.id}
@@ -1481,11 +1497,13 @@ function AdminPage() {
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex rounded-full border border-border bg-muted/45 p-1">
-              {([
-                ["mobile", "Mobil", Smartphone],
-                ["tablet", "Tablet", Tablet],
-                ["desktop", "Masaüstü", Monitor],
-              ] as const).map(([device, label, Icon]) => (
+              {(
+                [
+                  ["mobile", "Mobil", Smartphone],
+                  ["tablet", "Tablet", Tablet],
+                  ["desktop", "Masaüstü", Monitor],
+                ] as const
+              ).map(([device, label, Icon]) => (
                 <button
                   key={device}
                   type="button"
@@ -1761,6 +1779,10 @@ function AdminPage() {
           />
         </div>
 
+        <div className={activeAdminTab === "surveys" ? "" : "hidden"}>
+          <SurveyAdmin data={surveyData} refresh={() => loadSurveys(password)} />
+        </div>
+
         <section
           className={`mt-6 overflow-hidden rounded-2xl border border-border bg-card ${
             activeAdminTab === "analytics" ? "" : "hidden"
@@ -1803,6 +1825,120 @@ function AdminPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+function SurveyAdmin({
+  data,
+  refresh,
+}: {
+  data: PostEventSurveyAdminPayload | null;
+  refresh: () => Promise<unknown>;
+}) {
+  const followUpLabels: Record<string, string> = {
+    none: "henüz değil",
+    planning: "planlıyor",
+    messaged: "yazıştı",
+    met: "tekrar buluştu",
+    ongoing: "birlikte üretiyor",
+  };
+  const metrics = data
+    ? [
+        ["Yanıt", data.summary.total],
+        ["Deneyim", `${data.summary.overallAverage}/5`],
+        ["Bağlantı", `${data.summary.connectionAverage}/5`],
+        ["Bağın devamı", `${data.summary.continuedConnectionAverage}/5`],
+        ["Somut takip", `%${data.summary.meaningfulFollowUpRate}`],
+      ]
+    : [];
+
+  return (
+    <section className="mt-6 rounded-[2rem] border border-border bg-card p-5 sm:p-7">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="text-xs font-black uppercase tracking-[0.2em] text-primary-deep">
+            etkinlik sonrası
+          </div>
+          <h2 className="mt-2 text-3xl font-black tracking-[-0.04em]">Bağ kuruldu mu</h2>
+          <p className="mt-2 max-w-2xl text-sm text-foreground/55">
+            Etkinlik deneyimi bağlantı kalitesi ve etkinlikten sonra devam eden ilişkiler.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <a
+            href="/anket"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full border border-border bg-background px-4 py-2 text-sm font-bold"
+          >
+            anketi aç
+          </a>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            className="rounded-full bg-primary px-4 py-2 text-sm font-black text-primary-foreground"
+          >
+            yenile
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        {metrics.map(([label, value]) => (
+          <div key={label} className="rounded-2xl border border-primary/15 bg-primary/8 p-4">
+            <div className="text-xs font-bold text-foreground/45">{label}</div>
+            <div className="mt-2 text-3xl font-black text-primary-deep">{value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
+        <table className="w-full min-w-[900px] text-left text-sm">
+          <thead className="bg-muted/60 text-xs text-foreground/50">
+            <tr>
+              <th className="px-4 py-3">Katılımcı</th>
+              <th className="px-4 py-3">Etkinlik</th>
+              <th className="px-4 py-3">Deneyim</th>
+              <th className="px-4 py-3">Bağlantı</th>
+              <th className="px-4 py-3">Devam</th>
+              <th className="px-4 py-3">Sonraki temas</th>
+              <th className="px-4 py-3">Somut çıktı</th>
+              <th className="px-4 py-3">Tarih</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(data?.responses || []).map((response) => (
+              <tr key={response.id} className="border-t border-border/70 align-top">
+                <td className="px-4 py-3 font-bold">
+                  {response.memberName}
+                  {response.memberUsername ? (
+                    <span className="mt-1 block text-xs font-normal text-foreground/40">
+                      @{response.memberUsername}
+                    </span>
+                  ) : null}
+                </td>
+                <td className="px-4 py-3">{response.eventTitle}</td>
+                <td className="px-4 py-3 font-black">{response.overallRating}/5</td>
+                <td className="px-4 py-3 font-black">{response.connectionRating}/5</td>
+                <td className="px-4 py-3 font-black">{response.continuedConnectionRating}/5</td>
+                <td className="px-4 py-3">
+                  {followUpLabels[response.followUp] || response.followUp}
+                </td>
+                <td className="max-w-sm px-4 py-3 leading-6 text-foreground/65">
+                  {response.outcome}
+                </td>
+                <td className="whitespace-nowrap px-4 py-3 text-xs text-foreground/45">
+                  {new Date(response.createdAt).toLocaleString("tr-TR")}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {data && data.responses.length === 0 ? (
+          <p className="p-6 text-sm text-foreground/50">Henüz anket yanıtı yok.</p>
+        ) : null}
+      </div>
+    </section>
   );
 }
 
@@ -3839,10 +3975,7 @@ function buildClickHeatmap(
 
 type LegacyHeatmapAction = { label: string; count: number };
 
-function buildLegacyHeatmapActions(
-  summaries: AnalyticsDailySummary[],
-  selectedPath: string,
-) {
+function buildLegacyHeatmapActions(summaries: AnalyticsDailySummary[], selectedPath: string) {
   const values: Record<string, number> = {};
   const normalizedPath = normalizeAnalyticsPath(selectedPath);
   for (const summary of summaries) {
@@ -3919,7 +4052,9 @@ function ClickHeatmap({
       pageHeight,
       1,
     );
-    const elements = [...previewDocument.querySelectorAll<HTMLElement>("a, button, [data-analytics]")]
+    const elements = [
+      ...previewDocument.querySelectorAll<HTMLElement>("a, button, [data-analytics]"),
+    ]
       .map((element) => {
         const label =
           element.dataset.analyticsLabel ||
@@ -3937,11 +4072,13 @@ function ClickHeatmap({
       if (!candidate) return [];
       const rect = candidate.element.getBoundingClientRect();
       if (!rect.width || !rect.height) return [];
-      return [{
-        ...action,
-        left: ((rect.left + previewDocument.defaultView!.scrollX + rect.width / 2) / width) * 100,
-        top: ((rect.top + previewDocument.defaultView!.scrollY + rect.height / 2) / height) * 100,
-      }];
+      return [
+        {
+          ...action,
+          left: ((rect.left + previewDocument.defaultView!.scrollX + rect.width / 2) / width) * 100,
+          top: ((rect.top + previewDocument.defaultView!.scrollY + rect.height / 2) / height) * 100,
+        },
+      ];
     });
     setLegacyPoints(matched);
   }, [legacyActions, pageHeight, previewRevision, previewWidth]);
