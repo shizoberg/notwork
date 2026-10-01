@@ -42,7 +42,9 @@ export default async (request: Request, _context: Context) => {
     if (!input.event?.trim()) return new Response("Etkinlik seçimi gerekli", { status: 400 });
     const action = input.action || "get";
     if (action === "diagnoseAi") {
-      return Response.json(await probeNtwAi(), {
+      const scope =
+        input.event === "9-ekim-2026" ? "evt_9_ekim_2026-healthcheck" : "healthcheck";
+      return Response.json(await probeNtwAi(scope), {
         headers: { "cache-control": "no-store, private" },
       });
     }

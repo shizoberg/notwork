@@ -94,7 +94,7 @@ async function structuredResponse<T>(
   schema: Record<string, unknown>,
   instructions: string,
   input: unknown,
-  timeoutMs = 3500,
+  timeoutMs = 6000,
   diagnostic?: AiDiagnostic,
 ): Promise<T | null> {
   const requestBody = JSON.stringify({
@@ -251,13 +251,13 @@ export async function generateMatchAnalysis(
       offers: member.offers.map((row) => clean(row, 60)).slice(0, 5),
       offersDetail: clean(member.offersDetail, 120),
     })),
-    3500,
+    6000,
     diagnostic,
   );
   return clean(result?.analysis, 240) || null;
 }
 
-export async function probeNtwAi() {
+export async function probeNtwAi(scope = "healthcheck") {
   const diagnostic: AiDiagnostic = {};
   const startedAt = Date.now();
   const profiles: MatchProfile[] = [
@@ -283,7 +283,7 @@ export async function probeNtwAi() {
       needTag: "ekip",
     },
   ];
-  const analysis = await generateMatchAnalysis("healthcheck", profiles, diagnostic);
+  const analysis = await generateMatchAnalysis(scope, profiles, diagnostic);
   return {
     ok: Boolean(analysis),
     model,
