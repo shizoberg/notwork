@@ -63,7 +63,6 @@ function AugustMatchPage() {
   const [photoDataUrl, setPhotoDataUrl] = useState("");
   const [reviewConsent, setReviewConsent] = useState(false);
   const [isPhotoProcessing, setIsPhotoProcessing] = useState(false);
-  const [codeOpen, setCodeOpen] = useState(false);
   const [groupNameOpen, setGroupNameOpen] = useState(false);
   const [rotationPromptOpen, setRotationPromptOpen] = useState(false);
   const reviewPanelRef = useRef<HTMLDetailsElement>(null);
@@ -341,31 +340,11 @@ function AugustMatchPage() {
                 </div>
               )}
               {group && <p className="match-intro">notwork algoritması sizleri eşleştirdi.</p>}
-              {registration && (
-                <>
-                  <div className="match-self">
-                    <span>Senin kodun</span>
-                    <strong>{registration.participant.publicCode}</strong>
-                  </div>
-                  <button className="code-expand-action" onClick={() => setCodeOpen(true)}>
-                    <Maximize2 size={18} aria-hidden="true" />
-                    Kodu büyüt
-                  </button>
-                  <Dialog open={codeOpen} onOpenChange={setCodeOpen}>
-                    <DialogContent className="five-code-fullscreen">
-                      <DialogTitle className="sr-only">
-                        Senin kodun {registration.participant.publicCode}
-                      </DialogTitle>
-                      <DialogDescription className="sr-only">
-                        Bu kodu göstererek eşleştiğin kişileri bulabilirsin
-                      </DialogDescription>
-                      <div className="five-code-brand" aria-label="notwork">
-                        notwork
-                      </div>
-                      <div className="five-code-number">{registration.participant.publicCode}</div>
-                    </DialogContent>
-                  </Dialog>
-                </>
+              {registration && !group && (
+                <div className="match-self">
+                  <span>Senin kodun</span>
+                  <strong>{registration.participant.publicCode}</strong>
+                </div>
               )}
 
               {status === "loading" ? <LoadingCard /> : null}
@@ -388,10 +367,20 @@ function AugustMatchPage() {
               {status === "ready" && group ? (
                 <div className="space-y-5">
                   <div className="match-group-identity">
-                    <span>
-                      {group.round > 1 ? `${group.round}. tur · senin grubun` : "Senin grubun"}
-                    </span>
-                    <h2>{group.groupName}</h2>
+                    <div className="match-group-summary">
+                      <div className="match-group-name">
+                        <span>
+                          {group.round > 1 ? `${group.round}. tur · senin grubun` : "Senin grubun"}
+                        </span>
+                        <h2>{group.groupName}</h2>
+                      </div>
+                      {registration && (
+                        <div className="match-personal-code">
+                          <span>Senin kodun</span>
+                          <strong>{registration.participant.publicCode}</strong>
+                        </div>
+                      )}
+                    </div>
                     <button type="button" onClick={() => setGroupNameOpen(true)}>
                       <Maximize2 size={17} aria-hidden="true" />
                       Grup adını büyüt

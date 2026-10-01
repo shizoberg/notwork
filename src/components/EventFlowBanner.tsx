@@ -1,11 +1,5 @@
-import { Bell, Clock3, ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import {
-  currentEventFlowStep,
-  eventProductPaths,
-  getEventFlow,
-  type EventFlowState,
-} from "@/lib/event-flow";
+import { currentEventFlowStep, getEventFlow, type EventFlowState } from "@/lib/event-flow";
 import {
   getEventSelectionFromLocation,
   withEventSelection,
@@ -22,7 +16,6 @@ export function EventFlowBanner({
 }) {
   const preview = useEventPreview();
   const [flow, setFlow] = useState<EventFlowState | null>(null);
-  const [clock, setClock] = useState(Date.now());
   const selection = useMemo(() => getEventSelectionFromLocation(), []);
 
   useEffect(() => {
@@ -47,20 +40,13 @@ export function EventFlowBanner({
         currentStepIndex: 0,
         startedAt: now.toISOString(),
         endsAt: new Date(now.getTime() + (steps[0]?.durationMinutes || 60) * 60_000).toISOString(),
-        notices: [
-          {
-            id: "preview-notice",
-            text: "Admin önizlemesi · canlı bildirimler burada görünecek",
-            createdAt: now.toISOString(),
-          },
-        ],
+        notices: [],
         updatedAt: now.toISOString(),
         serverNow: now.toISOString(),
       };
       setFlow(demoFlow);
       onFlowChange?.(demoFlow);
-      const tick = window.setInterval(() => setClock(Date.now()), 1_000);
-      return () => window.clearInterval(tick);
+      return;
     }
     if (preview !== false) return;
     let active = true;
@@ -83,74 +69,23 @@ export function EventFlowBanner({
       if (document.visibilityState === "visible") void refresh();
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
-    const tick = window.setInterval(() => setClock(Date.now()), 1_000);
     return () => {
       active = false;
       window.clearInterval(poll);
-      window.clearInterval(tick);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [onFlowChange, preview, selection]);
 
   const step = currentEventFlowStep(flow);
-  const effectiveStatus =
-    flow?.status === "running" && flow.endsAt && Date.parse(flow.endsAt) <= clock
-      ? "awaiting_advance"
-      : flow?.status;
-
   useEffect(() => {
     if (!product || !flow || preview !== false) return;
-    if (effectiveStatus === "completed" || (step && step.product !== product)) {
+    if (flow.status === "completed" || (step && step.product !== product)) {
       const timer = window.setTimeout(() => {
         window.location.assign(withEventSelection("/linkler", selection));
       }, 650);
       return () => window.clearTimeout(timer);
     }
-  }, [effectiveStatus, flow, preview, product, selection, step]);
+  }, [flow, preview, product, selection, step]);
 
-  if (!flow || flow.status === "idle") return null;
-  const remainingSeconds = flow.endsAt
-    ? Math.max(0, Math.ceil((Date.parse(flow.endsAt) - clock) / 1_000))
-    : 0;
-  const latestNotice = flow.notices.at(-1);
-  const redirecting = Boolean(
-    product && (effectiveStatus === "completed" || step?.product !== product),
-  );
-  const target = step
-    ? withEventSelection(eventProductPaths[step.product], selection)
-    : withEventSelection("/linkler", selection);
-
-  return (
-    <aside className={`event-live-banner${redirecting ? " is-redirecting" : ""}`} role="status">
-      <span className="event-live-dot" aria-hidden="true" />
-      <Bell size={15} />
-      <span className="event-live-copy">
-        <strong>
-          {effectiveStatus === "completed"
-            ? "Etkinlik akışı tamamlandı"
-            : redirecting
-              ? "Yeni akış Linkler’de hazır"
-              : step?.label || "Etkinlik akışı"}
-        </strong>
-        <small>
-          {latestNotice?.text ||
-            (effectiveStatus === "awaiting_advance"
-              ? "Süre tamamlandı · yeni yönlendirme bekleniyor"
-              : "Şu an aktif")}
-        </small>
-      </span>
-      {effectiveStatus === "running" && !redirecting ? (
-        <span className="event-live-time">
-          <Clock3 size={14} />
-          {String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:
-          {String(remainingSeconds % 60).padStart(2, "0")}
-        </span>
-      ) : null}
-      {!product && step && effectiveStatus !== "completed" ? (
-        <a href={target} className="event-live-action">
-          Aç <ArrowRight size={14} />
-        </a>
-      ) : null}
-    </aside>
-  );
+  return null;
 }

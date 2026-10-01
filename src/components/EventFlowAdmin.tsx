@@ -1,4 +1,4 @@
-import { Bell, Check, Clock3, Play, RefreshCcw, SkipForward, Square, Trash2 } from "lucide-react";
+import { Clock3, Play, RefreshCcw, SkipForward, Square } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   currentEventFlowStep,
@@ -11,7 +11,6 @@ import type { NotworkEvent } from "@/lib/event-registry";
 export function EventFlowAdmin({ password, event }: { password: string; event: NotworkEvent }) {
   const [flow, setFlow] = useState<EventFlowState | null>(null);
   const [steps, setSteps] = useState<EventFlowStep[]>([]);
-  const [notice, setNotice] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [clock, setClock] = useState(Date.now());
@@ -27,10 +26,9 @@ export function EventFlowAdmin({ password, event }: { password: string; event: N
       const next = await updateEventFlow(password, selection, { action, ...input });
       setFlow(next);
       setSteps(next.steps);
-      if (action === "addNotice") setNotice("");
       setMessage(
         action === "start"
-          ? "Akış başladı. Katılımcı ekranlarındaki sayaç aktif."
+          ? "Akış başladı. Uygulama sırası aktif."
           : action === "advance"
             ? "Katılımcılar Linkler ekranına yönlendirildi."
             : "Etkinlik akışı güncellendi.",
@@ -186,50 +184,6 @@ export function EventFlowAdmin({ password, event }: { password: string; event: N
         </div>
       </div>
 
-      <div className="mt-5 rounded-[1.5rem] border border-primary/20 bg-primary/5 p-4">
-        <div className="flex items-center gap-2 text-sm font-black">
-          <Bell size={16} /> Canlı bildirim ekle
-        </div>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-          <input
-            value={notice}
-            maxLength={220}
-            onChange={(event) => setNotice(event.target.value)}
-            placeholder="Örn. Match için son 10 dakika"
-            className="min-w-0 flex-1 rounded-2xl border border-primary/20 bg-background px-4 py-3 text-sm"
-          />
-          <button
-            type="button"
-            disabled={busy || !notice.trim()}
-            onClick={() => void run("addNotice", { notice })}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground disabled:opacity-40"
-          >
-            <Check size={16} /> Yayınla
-          </button>
-        </div>
-        <div className="mt-3 grid gap-2">
-          {flow?.notices
-            .slice()
-            .reverse()
-            .map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-3 rounded-2xl bg-background/80 px-3 py-2 text-sm"
-              >
-                <span className="min-w-0 flex-1">{item.text}</span>
-                <button
-                  type="button"
-                  aria-label="Bildirimi kaldır"
-                  disabled={busy}
-                  onClick={() => void run("removeNotice", { noticeId: item.id })}
-                  className="text-foreground/40 hover:text-destructive"
-                >
-                  <Trash2 size={15} />
-                </button>
-              </div>
-            ))}
-        </div>
-      </div>
       {message ? <p className="mt-3 text-sm font-bold text-primary-deep">{message}</p> : null}
     </section>
   );

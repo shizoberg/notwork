@@ -147,10 +147,13 @@ try {
   await page.reload();
   await page.getByRole("region", { name: "Profilim" }).waitFor();
   assert.ok(await page.locator(".entry-profile-card").isVisible());
-  assert.deepEqual(
-    await page.locator(".entry-app-step .entry-app-copy strong").allInnerTexts(),
-    ["notwork match", "ntw.wordcloud", "Etkinlik Yorumu"],
-  );
+  assert.ok(await page.locator(".entry-profile-code").getByText("Senin kodun").isVisible());
+  assert.equal(await page.locator(".event-live-banner").count(), 0);
+  assert.deepEqual(await page.locator(".entry-app-step .entry-app-copy strong").allInnerTexts(), [
+    "notwork match",
+    "ntw.wordcloud",
+    "Etkinlik Yorumu",
+  ]);
   await page.screenshot({ path: "test-results/october/linkler-mobile.png", fullPage: true });
   await page.locator(".entry-app-step").filter({ hasText: "notwork match" }).click();
   await page.locator(".match-people article").first().waitFor();
@@ -159,37 +162,29 @@ try {
   assert.ok(await page.getByRole("region", { name: "Grup sohbeti" }).isVisible());
   assert.ok(await page.getByLabel("Grup sohbetine mesaj").isVisible());
   assert.ok(
-    await page.evaluate(() =>
-      document.querySelector(".event-chat").getBoundingClientRect().top <
-      document.querySelector(".match-people").getBoundingClientRect().top,
+    await page.evaluate(
+      () =>
+        document.querySelector(".event-chat").getBoundingClientRect().top <
+        document.querySelector(".match-people").getBoundingClientRect().top,
     ),
   );
   assert.deepEqual(
-    await page.evaluate(() =>
-      [".event-chat", ".match-photo", ".match-icebreaker"].map((selector) =>
-        document.querySelector(selector)?.getBoundingClientRect().top,
+    await page
+      .evaluate(() =>
+        [".event-chat", ".match-photo", ".match-icebreaker"].map(
+          (selector) => document.querySelector(selector)?.getBoundingClientRect().top,
+        ),
+      )
+      .then((positions) =>
+        positions.map((position, index) => index === 0 || position > positions[index - 1]),
       ),
-    ).then((positions) => positions.map((position, index) => index === 0 || position > positions[index - 1])),
     [true, true, true],
   );
-  await page.getByRole("button", { name: "Kodu büyüt", exact: true }).click();
-  await page.getByRole("dialog").waitFor();
-  await page.getByRole("dialog").evaluate(async (element) => {
-    await Promise.all(
-      element.getAnimations().map((animation) => animation.finished.catch(() => {})),
-    );
-  });
-  const codeBounds = await page.getByRole("dialog").boundingBox();
-  assert.ok(
-    Math.abs(codeBounds.x) <= 1 &&
-      Math.abs(codeBounds.y) <= 1 &&
-      codeBounds.width >= 389 &&
-      codeBounds.height >= 843,
-    "Code dialog covers mobile viewport",
-  );
-  await page.screenshot({ path: "test-results/october/match-code-mobile.png" });
-  await page.keyboard.press("Escape");
-  await page.getByRole("dialog").waitFor({ state: "detached" });
+  assert.ok(await page.locator(".match-group-identity").getByText("Senin kodun").isVisible());
+  assert.ok(await page.locator(".match-group-identity").getByText("Senin grubun").isVisible());
+  assert.equal(await page.getByRole("button", { name: "Kodu büyüt", exact: true }).count(), 0);
+  assert.equal(await page.locator(".event-live-banner").count(), 0);
+  await page.locator(".match-transition").waitFor({ state: "hidden" });
   await page.screenshot({ path: "test-results/october/match-mobile.png", fullPage: true });
   assert.equal(await page.locator(".match-group-identity h2").count(), 1);
   assert.equal(await page.locator(".match-people .match-person-code").count(), 2);
@@ -197,7 +192,9 @@ try {
   await page.getByRole("button", { name: "Grup adını büyüt" }).click();
   await page.getByRole("dialog").waitFor();
   await page.getByRole("dialog").evaluate(async (element) => {
-    await Promise.all(element.getAnimations().map((animation) => animation.finished.catch(() => {})));
+    await Promise.all(
+      element.getAnimations().map((animation) => animation.finished.catch(() => {})),
+    );
   });
   const groupNameBounds = await page.getByRole("dialog").boundingBox();
   assert.ok(groupNameBounds.width >= 389 && groupNameBounds.height >= 843);
@@ -220,10 +217,11 @@ try {
   await login.getByRole("button", { name: "Giriş yap ve devam et" }).click();
   await login.locator(".entry-app-step").first().waitFor();
   assert.ok(await login.locator(".entry-profile-card").isVisible());
-  assert.deepEqual(
-    await login.locator(".entry-app-step .entry-app-copy strong").allInnerTexts(),
-    ["notwork match", "ntw.wordcloud", "Etkinlik Yorumu"],
-  );
+  assert.deepEqual(await login.locator(".entry-app-step .entry-app-copy strong").allInnerTexts(), [
+    "notwork match",
+    "ntw.wordcloud",
+    "Etkinlik Yorumu",
+  ]);
   await login.locator(".entry-app-step").filter({ hasText: "notwork match" }).click();
   await login.locator(".match-people article").first().waitFor();
   await login.reload();
@@ -239,7 +237,7 @@ try {
       "No mobile horizontal overflow",
     );
   console.log(
-    "PASS mobile browser: one-question registration, short answers, completion, reload persistence, Match entry + group names/member names + analysis + enlarged name/code, no Five app, existing-profile login + reload. No external data writes.",
+    "PASS mobile browser: registration, reload persistence, Match entry + compact group/name code card + enlarged group name, no notice banner or Five app, existing-profile login + reload. No external data writes.",
   );
 } finally {
   await browser?.close();

@@ -713,7 +713,7 @@ function LinksPage() {
                     ) : null}
                   </div>
                   <div className="entry-profile-code">
-                    <span>Etkinlik kodu</span>
+                    <span>Senin kodun</span>
                     <strong>{profileCard.code}</strong>
                   </div>
                 </section>
