@@ -29,6 +29,10 @@ export async function functionSandbox() {
   }
   await fs.mkdir(path.join(temp, "netlify/data"), { recursive: true });
   await fs.writeFile(path.join(temp, "netlify/data/networking-seed.json"), "[]");
+  await fs.copyFile(
+    path.join(root, "netlify/data/21-agustos-wordcloud-seed.json"),
+    path.join(temp, "netlify/data/21-agustos-wordcloud-seed.json"),
+  );
   return {
     load: (name) => import(pathToFileURL(path.join(temp, "netlify/functions", `${name}.mjs`))),
     blobs: await import(pathToFileURL(mock)),

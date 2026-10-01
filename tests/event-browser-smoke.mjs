@@ -146,11 +146,32 @@ try {
   await page.locator(".entry-app-step").first().waitFor();
   await page.reload();
   await page.getByRole("region", { name: "Profilim" }).waitFor();
+  assert.ok(await page.locator(".entry-profile-card").isVisible());
+  assert.deepEqual(
+    await page.locator(".entry-app-step .entry-app-copy strong").allInnerTexts(),
+    ["notwork match", "ntw.wordcloud", "Etkinlik Yorumu"],
+  );
   await page.screenshot({ path: "test-results/october/linkler-mobile.png", fullPage: true });
   await page.locator(".entry-app-step").filter({ hasText: "notwork match" }).click();
   await page.locator(".match-people article").first().waitFor();
   assert.equal(await page.locator(".match-people article").count(), 2);
   await page.locator(".ntw-ai-analysis").waitFor();
+  assert.ok(await page.getByRole("region", { name: "Grup sohbeti" }).isVisible());
+  assert.ok(await page.getByLabel("Grup sohbetine mesaj").isVisible());
+  assert.ok(
+    await page.evaluate(() =>
+      document.querySelector(".event-chat").getBoundingClientRect().top <
+      document.querySelector(".match-people").getBoundingClientRect().top,
+    ),
+  );
+  assert.deepEqual(
+    await page.evaluate(() =>
+      [".event-chat", ".match-photo", ".match-icebreaker"].map((selector) =>
+        document.querySelector(selector)?.getBoundingClientRect().top,
+      ),
+    ).then((positions) => positions.map((position, index) => index === 0 || position > positions[index - 1])),
+    [true, true, true],
+  );
   await page.getByRole("button", { name: "Kodu büyüt", exact: true }).click();
   await page.getByRole("dialog").waitFor();
   await page.getByRole("dialog").evaluate(async (element) => {
@@ -197,6 +218,11 @@ try {
   await login.getByRole("checkbox").check();
   await login.getByRole("button", { name: "Giriş yap ve devam et" }).click();
   await login.locator(".entry-app-step").first().waitFor();
+  assert.ok(await login.locator(".entry-profile-card").isVisible());
+  assert.deepEqual(
+    await login.locator(".entry-app-step .entry-app-copy strong").allInnerTexts(),
+    ["notwork match", "ntw.wordcloud", "Etkinlik Yorumu"],
+  );
   await login.locator(".entry-app-step").filter({ hasText: "notwork match" }).click();
   await login.locator(".match-people article").first().waitFor();
   await login.reload();

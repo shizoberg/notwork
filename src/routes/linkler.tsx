@@ -40,9 +40,9 @@ import { createNoIndexSeo } from "@/lib/seo";
 export const Route = createFileRoute("/linkler")({
   head: () =>
     createNoIndexSeo({
-      title: "notwork Etkinlik Girişi | ntw.wordcloud, notwork match ve ntw.five",
+      title: "notwork Etkinlik Girişi | etkinlik uygulamaları",
       description:
-        "notwork etkinlik katılımcıları için kayıt, ntw.wordcloud, notwork match, ntw.five, WhatsApp topluluğu ve etkinlik yorumu bağlantıları.",
+        "notwork etkinlik katılımcıları için kayıt, etkinlik uygulamaları ve topluluk bağlantıları.",
       path: "/linkler",
     }),
   component: LinksPage,
@@ -710,7 +710,7 @@ function LinksPage() {
               )}
               <div className="entry-flow-summary">
                 <span>Bu akşamın akışı</span>
-                <p>Admin akışındaki sırayı takip et. Her adım seni bir sonrakine taşır.</p>
+                <p>Etkinlik adımlarını sırayla takip et. Sırası gelen uygulama burada açılır.</p>
               </div>
               <section className="entry-app-flow">
                 {activeEventLinks.map(

@@ -78,12 +78,17 @@ export function EventFlowBanner({
     void refresh();
     const poll = window.setInterval(() => {
       if (document.visibilityState === "visible") void refresh();
-    }, 3_000);
+    }, 15_000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
     const tick = window.setInterval(() => setClock(Date.now()), 1_000);
     return () => {
       active = false;
       window.clearInterval(poll);
       window.clearInterval(tick);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [onFlowChange, preview, selection]);
 

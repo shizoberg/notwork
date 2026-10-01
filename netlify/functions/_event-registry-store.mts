@@ -355,7 +355,7 @@ function octoberEvent(): NotworkEvent {
     schemaVersion: 1,
     id: octoberEventId,
     slug: "9-ekim-2026",
-    title: "notwork Classic",
+    title: "notwork Sahne",
     shortTitle: "11 Ekim",
     startsAt: "2026-10-11T17:00:00.000Z",
     endsAt: "2026-10-11T20:00:00.000Z",

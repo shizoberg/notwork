@@ -5,7 +5,7 @@ import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { EventFlowBanner } from "@/components/EventFlowBanner";
 import { cleanWordcloudAnswer, type WordcloudQuestion } from "@/lib/event-wordcloud";
 import { getEventSelectionFromLocation, withEventSelection } from "@/lib/event-registry";
-import { useEventPreview } from "@/lib/event-preview";
+import { previewEvent, useEventPreview } from "@/lib/event-preview";
 import {
   getWordcloudBootstrap,
   getWordcloudSessionStorageKey,
@@ -24,6 +24,7 @@ function WordcloudParticipantPage() {
   const eventSelection = getEventSelectionFromLocation();
   const sessionStorageKey = getWordcloudSessionStorageKey(eventSelection);
   const [questions, setQuestions] = useState<WordcloudQuestion[]>([]);
+  const [eventShortTitle, setEventShortTitle] = useState("notwork");
   const [sessionId, setSessionId] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -44,6 +45,7 @@ function WordcloudParticipantPage() {
       try {
         if (preview) {
           const updatedAt = new Date().toISOString();
+          setEventShortTitle(previewEvent()?.shortTitle || "Etkinlik");
           setSessionId("local-wordcloud-preview");
           setQuestions([
             {
@@ -82,6 +84,7 @@ function WordcloudParticipantPage() {
         if (ignore) return;
         setSessionId(existing);
         setQuestions(bootstrap.questions);
+        setEventShortTitle(bootstrap.event.shortTitle || bootstrap.event.title || "notwork");
       } catch {
         if (!ignore) setMessage("WordCloud şu an yüklenemedi. Birazdan tekrar dene.");
       } finally {
@@ -164,7 +167,7 @@ function WordcloudParticipantPage() {
         <div className="rounded-[2rem] border border-primary/20 bg-white p-5 shadow-xl shadow-primary/10">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-deep">
             <Sparkles className="h-3.5 w-3.5" />
-            21 Ağustos notwork
+            {eventShortTitle} notwork
           </div>
           <h1 className="mt-5 font-display text-4xl font-black leading-none tracking-[-0.04em]">
             ntw.wordcloud’a

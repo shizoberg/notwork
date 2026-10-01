@@ -7,37 +7,45 @@ export function EventChat({ token, groupId }: { token: string; groupId: string }
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
-  const [open, setOpen] = useState(false);
   const pending = useRef<{ id: string; text: string } | null>(null);
   useEffect(() => {
-    if (!open) return;
     let cancelled = false;
+    let loading = false;
     const refresh = async () => {
+      if (document.visibilityState !== "visible" || loading) return;
+      loading = true;
       try {
         const next = await eventChatRequest(token, undefined, undefined, groupId);
-        if (!cancelled) setRows(next);
+        if (!cancelled) {
+          setRows(next);
+          setError("");
+        }
       } catch {
         if (!cancelled) setError("Sohbete bağlanılamadı. Yeniden deniyoruz.");
+      } finally {
+        loading = false;
       }
     };
     void refresh();
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void refresh();
-    }, 10_000);
+    const timer = window.setInterval(() => void refresh(), 20_000);
+    document.addEventListener("visibilitychange", refresh);
     return () => {
       cancelled = true;
       clearInterval(timer);
+      document.removeEventListener("visibilitychange", refresh);
     };
-  }, [token, open, groupId]);
+  }, [token, groupId]);
   return (
-    <details className="match-photo event-chat" onToggle={(e) => setOpen(e.currentTarget.open)}>
-      <summary>
-        <MessageCircle size={20} />
+    <section className="event-chat" aria-label="Grup sohbeti">
+      <header className="event-chat-heading">
+        <span className="event-chat-icon">
+          <MessageCircle size={22} />
+        </span>
         <span>
           Grup sohbeti<small>Buradan haberleş, kolayca buluş</small>
         </span>
-        <span aria-hidden="true">＋</span>
-      </summary>
+        <span className="event-chat-live">CANLI</span>
+      </header>
       <p className="chat-note">Mesajları yalnızca eşleştiğin gruptaki kişiler görebilir.</p>
       <div className="chat-messages" role="log" aria-label="Grup mesajları" aria-live="polite">
         {rows.length ? (
@@ -98,6 +106,6 @@ export function EventChat({ token, groupId }: { token: string; groupId: string }
           {error}
         </p>
       )}
-    </details>
+    </section>
   );
 }

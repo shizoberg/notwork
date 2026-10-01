@@ -336,11 +336,14 @@ function AugustMatchPage() {
                         <DialogDescription className="sr-only">
                           Grup adını göstererek diğer üyeleri bulabilirsin
                         </DialogDescription>
-                        <div className="five-code-brand" aria-label="notwork">notwork</div>
+                        <div className="five-code-brand" aria-label="notwork">
+                          notwork
+                        </div>
                         <div className="five-code-number">{group.groupName}</div>
                       </DialogContent>
                     </Dialog>
                   </div>
+                  {token && <EventChat key={group.id} token={token} groupId={group.id} />}
                   <div className="match-people">
                     {otherMembers.map((member) => (
                       <article key={member.participantId}>
@@ -362,21 +365,6 @@ function AugustMatchPage() {
                       <p>{group.aiAnalysis}</p>
                     </div>
                   )}
-                  <div className="match-icebreaker">
-                    <p className="text-xs font-black uppercase tracking-[0.2em] text-primary-deep">
-                      İlk sözü aç
-                    </p>
-                    <ol className="mt-3 grid gap-2 text-sm font-semibold leading-6 text-foreground/75">
-                      {(group.conversationPrompts || [group.conversationPrompt]).map(
-                        (prompt, index) => (
-                          <li key={prompt} className="match-question">
-                            {prompt}
-                          </li>
-                        ),
-                      )}
-                    </ol>
-                  </div>
-
                   {!currentMemberDone ? (
                     <details ref={reviewPanelRef} className="match-photo">
                       <summary>
@@ -533,10 +521,20 @@ function AugustMatchPage() {
                       </div>
                     </details>
                   ) : null}
+                  <div className="match-icebreaker">
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-primary-deep">
+                      İlk sözü aç
+                    </p>
+                    <ol className="mt-3 grid gap-2 text-sm font-semibold leading-6 text-foreground/75">
+                      {(group.conversationPrompts || [group.conversationPrompt]).map((prompt) => (
+                        <li key={prompt} className="match-question">
+                          {prompt}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
                 </div>
               ) : null}
-
-              {token && group && <EventChat key={group.id} token={token} groupId={group.id} />}
               <p className="match-motto">Her an network kıymetlidir.</p>
               {group && (
                 <button
