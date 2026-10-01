@@ -160,7 +160,7 @@ export type NetworkInput = {
 
 export type NetworkAdminInput = {
   password?: string;
-  action?: "list" | "resetDemo" | "repairCodes";
+  action?: "list" | "resetDemo" | "repairCodes" | "seedSamples";
   event?: string;
   eventId?: string;
   eventSlug?: string;
@@ -351,6 +351,7 @@ async function resolveGeneralUsername(
 }
 
 async function upsertGeneralNetworkingMember(registration: EventNetworkRegistration) {
+  if (getEventNetworkDatasetInfo().mode === "demo") return;
   if (!registration.profile.generalNetworkOptIn) return;
 
   const store = getStore({ name: "networking-members", consistency: "strong" });
@@ -955,9 +956,7 @@ export async function eventChat(
   };
   if (input.action === "chatRead") {
     const messages =
-      (
-        await readAtomicState(store, key, () => ({ messages: [] as Message[] }))
-      )?.messages || [];
+      (await readAtomicState(store, key, () => ({ messages: [] as Message[] })))?.messages || [];
     matchChatKey(
       getNetworkPrefix(),
       registration.participant.id,
@@ -1095,6 +1094,31 @@ export async function listRegistrations(store: ReturnType<typeof getEventNetwork
   return [...uniqueRows.values()].sort((first, second) =>
     second.participant.registeredAt.localeCompare(first.participant.registeredAt),
   );
+}
+
+export async function listActiveMatchGroups(
+  store: ReturnType<typeof getEventNetworkStore>,
+  registrations: EventNetworkRegistration[],
+) {
+  const state = await readAtomicState(
+    store,
+    `${getNetworkPrefix()}/room-index-v2.json`,
+    emptyRooms<StoredActiveMatch>,
+  );
+  const names = new Map(
+    registrations.map((registration) => [
+      registration.participant.id,
+      `${registration.profile.firstName} ${registration.profile.lastName}`.trim(),
+    ]),
+  );
+  return Object.values(state?.groups || {}).map((group) => ({
+    id: group.id,
+    groupName: group.groupName || matchGroupName(group.id),
+    round: group.round,
+    score: group.score,
+    reason: group.reason,
+    memberNames: group.participantIds.map((id) => names.get(id) || "Katılımcı"),
+  }));
 }
 
 export async function updatePresenceByToken(
@@ -1422,9 +1446,9 @@ export async function seedSampleRegistrations(
         attendedEvent: getNetworkEventSlug(),
         action: "register",
         eventConsent: true,
-        aiAnalysisConsent: true,
+        aiAnalysisConsent: false,
         modelImprovementConsent: false,
-        generalNetworkOptIn: true,
+        generalNetworkOptIn: false,
         marketingOptIn: false,
       }),
     );

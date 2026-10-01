@@ -4,7 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "test:event": "node --test scripts/*.test.mts && node tests/ai-response.mjs && node tests/event-october-integration.mjs",
+    "test:event": "node --test scripts/*.test.mts && node tests/ai-response.mjs && node tests/event-october-integration.mjs && node tests/event-test-center.mjs",
     "test:members": "node tests/member-operations.mjs",
     "test:event:browser": "node tests/event-browser-smoke.mjs",
     "dev": "vite dev",

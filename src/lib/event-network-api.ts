@@ -256,24 +256,46 @@ export async function seedEventNetworkSamples(selection?: EventSelection) {
   return response.json() as Promise<{ registrations: EventNetworkRegistration[] }>;
 }
 
-export async function getEventNetworkAdmin(password: string, selection?: EventSelection) {
-  const activeSelection = resolvedSelection(selection);
-  const response = await fetch(adminUrl(activeSelection), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(withEventSelectionInput({ password, action: "list" }, activeSelection)),
-  });
-  if (!response.ok) throw new Error("21 Ağustos network kayıtları alınamadı.");
-  return response.json() as Promise<EventNetworkAdminPayload>;
-}
-
-export async function resetEventNetworkDemo(password: string, selection?: EventSelection) {
+export async function getEventNetworkAdmin(
+  password: string,
+  selection?: EventSelection,
+  mode?: "demo" | "live",
+) {
   const activeSelection = resolvedSelection(selection);
   const response = await fetch(adminUrl(activeSelection), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(
-      withEventSelectionInput({ password, action: "resetDemo" }, activeSelection),
+      withEventSelectionInput({ password, action: "list", mode }, activeSelection),
+    ),
+  });
+  if (!response.ok) throw new Error("21 Ağustos network kayıtları alınamadı.");
+  return response.json() as Promise<EventNetworkAdminPayload>;
+}
+
+export async function resetEventNetworkDemo(
+  password: string,
+  selection?: EventSelection,
+  mode?: "demo" | "live",
+) {
+  const activeSelection = resolvedSelection(selection);
+  const response = await fetch(adminUrl(activeSelection), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(
+      withEventSelectionInput({ password, action: "resetDemo", mode }, activeSelection),
+    ),
+  });
+  if (!response.ok) throw new Error(await response.text());
+  return response.json() as Promise<EventNetworkAdminPayload>;
+}
+
+export async function seedEventNetworkDemo(password: string, selection: EventSelection) {
+  const response = await fetch(adminUrl(selection), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(
+      withEventSelectionInput({ password, action: "seedSamples", mode: "demo" }, selection),
     ),
   });
   if (!response.ok) throw new Error(await response.text());

@@ -133,12 +133,18 @@ export async function getWordcloudResults(selection?: EventSelection): Promise<W
   return response.json();
 }
 
-export async function getWordcloudAdmin(password: string, selection?: EventSelection) {
+export async function getWordcloudAdmin(
+  password: string,
+  selection?: EventSelection,
+  mode?: "demo" | "live",
+) {
   const activeSelection = resolvedSelection(selection);
   const response = await fetch(adminUrl(activeSelection), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(withEventSelectionInput({ password, action: "list" }, activeSelection)),
+    body: JSON.stringify(
+      withEventSelectionInput({ password, action: "list", mode }, activeSelection),
+    ),
   });
   if (!response.ok) throw new Error("Admin verisi alınamadı.");
   return response.json() as Promise<{
@@ -169,12 +175,13 @@ export async function updateWordcloudAdmin(
     | { action: "resetDemo" }
     | { action: "seedLoadTest" },
   selection?: EventSelection,
+  mode?: "demo" | "live",
 ) {
   const activeSelection = resolvedSelection(selection);
   const response = await fetch(adminUrl(activeSelection), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(withEventSelectionInput({ password, ...payload }, activeSelection)),
+    body: JSON.stringify(withEventSelectionInput({ password, ...payload, mode }, activeSelection)),
   });
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<{

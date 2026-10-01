@@ -95,6 +95,14 @@ export type EventNetworkMatchGroup = {
 
 export type EventNetworkAdminPayload = {
   registrations: EventNetworkRegistration[];
+  groups?: Array<{
+    id: string;
+    groupName: string;
+    round: number;
+    score: number;
+    reason: string;
+    memberNames: string[];
+  }>;
   database?: {
     storeName: string;
     datasetCode: string;

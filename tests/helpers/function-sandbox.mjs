@@ -33,6 +33,10 @@ export async function functionSandbox() {
     path.join(root, "netlify/data/21-agustos-wordcloud-seed.json"),
     path.join(temp, "netlify/data/21-agustos-wordcloud-seed.json"),
   );
+  await fs.copyFile(
+    path.join(root, "netlify/data/21-agustos-network-sample.json"),
+    path.join(temp, "netlify/data/21-agustos-network-sample.json"),
+  );
   return {
     load: (name) => import(pathToFileURL(path.join(temp, "netlify/functions", `${name}.mjs`))),
     blobs: await import(pathToFileURL(mock)),

@@ -229,12 +229,21 @@ export async function fiveRequest<T>(input?: Record<string, unknown>, selection?
   return (await response.json()) as T;
 }
 
-export async function getFiveAdmin(password: string, selection?: EventSelection) {
+export async function getFiveAdmin(
+  password: string,
+  selection?: EventSelection,
+  mode?: "demo" | "live",
+) {
   const activeSelection = selection || getEventSelectionFromLocation();
   const response = await fetch("/api/admin/event-products/five", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(withEventSelectionInput({ password, action: "list" }, activeSelection)),
+    body: JSON.stringify(
+      withEventSelectionInput(
+        { password, action: mode === "demo" ? "peek" : "list", mode },
+        activeSelection,
+      ),
+    ),
   });
   if (!response.ok) throw new Error((await response.text()) || "ntw.five verisi alınamadı");
   return (await response.json()) as FiveAdminPayload;
@@ -244,12 +253,13 @@ export async function updateFiveAdmin(
   password: string,
   action: "seedDemo" | "resetDemo",
   selection?: EventSelection,
+  mode?: "demo" | "live",
 ) {
   const activeSelection = selection || getEventSelectionFromLocation();
   const response = await fetch("/api/admin/event-products/five", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(withEventSelectionInput({ password, action }, activeSelection)),
+    body: JSON.stringify(withEventSelectionInput({ password, action, mode }, activeSelection)),
   });
   if (!response.ok) throw new Error((await response.text()) || "ntw.five güncellenemedi");
   return (await response.json()) as FiveAdminPayload;

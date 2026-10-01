@@ -1,11 +1,15 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import type { Config, Context } from "@netlify/functions";
 import {
   getEventNetworkDatasetInfo,
   getEventNetworkStore,
+  getNextMatchGroup,
+  listActiveMatchGroups,
   listRegistrations,
   repairParticipantCodes,
   resetDemoEventNetworkDataset,
+  seedSampleRegistrations,
   type NetworkAdminInput,
 } from "./_event-network-store.mjs";
 import {
@@ -36,13 +40,37 @@ export default async (request: Request, _context: Context) => {
         const store = getEventNetworkStore();
         if (input.action === "repairCodes") {
           if (!eventIdentifier) return new Response("Etkinlik gerekli", { status: 400 });
-          return Response.json(await repairParticipantCodes(store), { headers: { "cache-control": "no-store, private" } });
+          return Response.json(await repairParticipantCodes(store), {
+            headers: { "cache-control": "no-store, private" },
+          });
         }
         if (input.action === "resetDemo") {
+          if (getEventNetworkDatasetInfo().mode !== "demo")
+            return new Response("Yalnızca demo verisi sıfırlanabilir", { status: 400 });
           await resetDemoEventNetworkDataset(store);
         }
+        if (input.action === "seedSamples") {
+          if (getEventNetworkDatasetInfo().mode !== "demo")
+            return new Response("Sanal veri yalnızca demo alanına yazılabilir", { status: 400 });
+          const samples = JSON.parse(
+            await readFile(
+              new URL("../data/21-agustos-network-sample.json", import.meta.url),
+              "utf8",
+            ),
+          );
+          await resetDemoEventNetworkDataset(store);
+          const seeded = await seedSampleRegistrations(store, samples);
+          for (const registration of seeded) {
+            if (registration.accessToken) await getNextMatchGroup(store, registration.accessToken);
+          }
+        }
+        const registrations = await listRegistrations(store);
         return Response.json(
-          { registrations: await listRegistrations(store), database: getEventNetworkDatasetInfo() },
+          {
+            registrations,
+            groups: await listActiveMatchGroups(store, registrations),
+            database: getEventNetworkDatasetInfo(),
+          },
           { headers: { "cache-control": "no-store, private" } },
         );
       },

@@ -47,7 +47,10 @@ export default async (request: Request, _context: Context) => {
         if (input.action === "resetDemo") await resetFiveDemoData(store);
         if (
           input.action === "seedDemo" ||
-          (input.action !== "resetDemo" && database.mode === "demo" && runtime?.enabled)
+          (input.action !== "resetDemo" &&
+            input.action !== "peek" &&
+            database.mode === "demo" &&
+            runtime?.enabled)
         ) {
           await seedFiveDemoData(store);
         }

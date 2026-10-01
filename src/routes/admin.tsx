@@ -1,5 +1,6 @@
 import { AnnouncementAdmin } from "@/components/AnnouncementAdmin";
 import { EventFlowAdmin } from "@/components/EventFlowAdmin";
+import { EventTestCenter } from "@/components/EventTestCenter";
 import { saveEventPreview, startEventPreview } from "@/lib/event-preview";
 import { MemberOperationsAdmin } from "@/components/MemberOperationsAdmin";
 import { createFileRoute } from "@tanstack/react-router";
@@ -234,7 +235,7 @@ const eventNames: Record<string, string> = {
 
 type AdminTab = "events" | "analytics" | "surveys" | "networking";
 
-type EventAdminSection = "overview" | "data" | "flow";
+type EventAdminSection = "overview" | "data" | "flow" | "test";
 type NetworkingAdminSection = "members" | "profiles";
 type AnalyticsAdminSection = "overview" | "pages" | "heatmap" | "actions";
 type EventSetupStep = "details" | "registration" | "products" | "review";
@@ -1132,6 +1133,7 @@ function AdminPage() {
                 { id: "overview", label: "Genel" },
                 { id: "data", label: "Etkinlik verileri" },
                 { id: "flow", label: "Etkinlik akışı" },
+                { id: "test", label: "Test merkezi" },
               ] as const
             ).map((section) => (
               <button
@@ -1229,15 +1231,21 @@ function AdminPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="text-xs font-bold uppercase tracking-[0.22em] text-primary-deep">
-                {eventSection === "data" ? "Etkinlik verileri" : "Etkinlik akışı"}
+                {eventSection === "data"
+                  ? "Etkinlik verileri"
+                  : eventSection === "test"
+                    ? "Test merkezi"
+                    : "Etkinlik akışı"}
               </div>
               <h2 className="mt-1 text-2xl font-black tracking-[-0.03em]">
                 {selectedToolsEvent?.title || "Etkinlik seç"}
               </h2>
               <p className="mt-1 text-sm text-foreground/60">
-                {eventSection === "data"
-                  ? "Bu etkinliğin uygulama kayıtları ve katılımcı verileri."
-                  : "Uygulama sırasını ve etkinlik anındaki geçişleri yönet."}
+                {eventSection === "test"
+                  ? "Bu etkinliğin sanal kayıtlarını, cevaplarını ve eşleşmelerini canlı veriden ayrı incele."
+                  : eventSection === "data"
+                    ? "Bu etkinliğin uygulama kayıtları ve katılımcı verileri."
+                    : "Uygulama sırasını ve etkinlik anındaki geçişleri yönet."}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {selectedToolsEvent
@@ -1275,14 +1283,16 @@ function AdminPage() {
                   ))}
                 </select>
               </label>
-              <a
-                href={withEventSelection("/linkler", selectedToolsEventSelection)}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full border border-primary/30 bg-background px-4 py-2 text-sm font-bold"
-              >
-                Linkler girişini aç
-              </a>
+              {eventSection !== "test" ? (
+                <a
+                  href={withEventSelection("/linkler", selectedToolsEventSelection)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-primary/30 bg-background px-4 py-2 text-sm font-bold"
+                >
+                  Linkler girişini aç
+                </a>
+              ) : null}
               {eventSection === "data" ? (
                 <button
                   type="button"
@@ -1303,6 +1313,14 @@ function AdminPage() {
             key={selectedToolsEvent.id}
             password={password}
             event={selectedToolsEvent}
+          />
+        ) : null}
+
+        {activeAdminTab === "events" && eventSection === "test" && selectedToolsEvent ? (
+          <EventTestCenter
+            key={selectedToolsEvent.id}
+            event={selectedToolsEvent}
+            password={password}
           />
         ) : null}
 
