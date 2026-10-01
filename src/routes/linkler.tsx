@@ -150,7 +150,7 @@ function LinksPage() {
   const [registrationPath, setRegistrationPath] = useState<RegistrationPath>("choose");
   const [registrationStep, setRegistrationStep] = useState<RegistrationStep>("standard");
   const [eventQuestionIndex, setEventQuestionIndex] = useState(0);
-  const [experienceChoice, setExperienceChoice] = useState<ExperienceChoice>(null);
+  const [experienceChoice, setExperienceChoice] = useState<ExperienceChoice>("enhanced");
   const [draftHydrated, setDraftHydrated] = useState(false);
   const [loginIdentity, setLoginIdentity] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -209,9 +209,9 @@ function LinksPage() {
     needTag: "",
     marketingOptIn: false,
     eventConsent: false,
-    aiAnalysisConsent: false,
+    aiAnalysisConsent: true,
     modelImprovementConsent: false,
-    generalNetworkOptIn: false,
+    generalNetworkOptIn: true,
   });
 
   const registrationPrompts = useMemo(
@@ -313,16 +313,19 @@ function LinksPage() {
           Date.now() - storedDraft.savedAt <= registrationDraftMaxAge
         ) {
           if (active) {
+            const restoredChoice = storedDraft.experienceChoice || "enhanced";
             setForm((current) => ({
               ...current,
               ...storedDraft.form,
+              aiAnalysisConsent: restoredChoice === "enhanced",
+              generalNetworkOptIn: restoredChoice === "enhanced",
               attendedEvent:
                 selectedEvent?.slug || storedDraft.form.attendedEvent || current.attendedEvent,
             }));
             setRegistrationPath(storedDraft.registrationPath);
             setRegistrationStep(storedDraft.registrationStep);
             setEventQuestionIndex(Math.min(3, Math.max(0, storedDraft.eventQuestionIndex || 0)));
-            setExperienceChoice(storedDraft.experienceChoice || null);
+            setExperienceChoice(restoredChoice);
             setLoginIdentity(storedDraft.loginIdentity || "");
           }
         } else {
@@ -592,9 +595,10 @@ function LinksPage() {
         needTag: "networking",
         generalNetworkOptIn: true,
         eventConsent: false,
-        aiAnalysisConsent: false,
+        aiAnalysisConsent: true,
         modelImprovementConsent: false,
       }));
+      setExperienceChoice("enhanced");
       setRegistrationPath("new");
       setRegistrationStep("event");
       setMessage("Demo üye girişi tamamlandı. Şimdi etkinliğe özel soruları yanıtla.");
@@ -1207,7 +1211,7 @@ function RegistrationGate({
             <div className="entry-experience-choice" role="group" aria-label="Etkinlik deneyimi">
               <div>
                 <strong>Etkinlik deneyimini seç</strong>
-                <span>Bir seçim yapmadan kayıt tamamlanmaz.</span>
+                <span>Önerilen seçenek hazır. Dilersen temel deneyime geçebilirsin.</span>
               </div>
               <button
                 type="button"
@@ -1223,7 +1227,12 @@ function RegistrationGate({
                 }}
               >
                 <b>önerilen</b>
-                <span>Gelişmiş network deneyimini aç</span>
+                <span className="entry-experience-label">
+                  Gelişmiş network deneyimini aç
+                  <span className="entry-experience-check" aria-hidden="true">
+                    <Check size={15} strokeWidth={3} />
+                  </span>
+                </span>
                 <small>AI destekli Match/Five analizi ve networking ağında görünürlük</small>
               </button>
               <button
@@ -1239,7 +1248,12 @@ function RegistrationGate({
                   }));
                 }}
               >
-                <span>Temel deneyimle devam et</span>
+                <span className="entry-experience-label">
+                  Temel deneyimle devam et
+                  <span className="entry-experience-check" aria-hidden="true">
+                    <Check size={15} strokeWidth={3} />
+                  </span>
+                </span>
                 <small>Kurallı eşleştirme çalışır, profil networking ağında yayınlanmaz</small>
               </button>
             </div>
@@ -1295,7 +1309,11 @@ function RegistrationGate({
             onClick={() => void submitRegistration()}
             className="entry-question-next"
           >
-            {isSaving ? "Kayıt oluşturuluyor…" : "Kaydı tamamla"}
+            {isSaving
+              ? "Kayıt oluşturuluyor…"
+              : experienceChoice === "enhanced"
+                ? "Gelişmiş deneyime onay ver ve kaydı tamamla"
+                : "Temel deneyimle kaydı tamamla"}
             <Check />
           </button>
         )}

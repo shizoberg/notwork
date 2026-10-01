@@ -198,23 +198,6 @@ type ChangeRequest = {
   proposed: NetworkMember;
 };
 
-type StartupApplication = {
-  id: string;
-  createdAt: string;
-  name: string;
-  email: string;
-  phone: string;
-  projectName: string;
-  stage: string;
-  projectSummary: string;
-  need: string;
-  notification: {
-    recipients: string[];
-    status: "sent" | "not_configured" | "failed";
-    error?: string;
-  };
-};
-
 const blankMember: NetworkMember = {
   id: "",
   name: "",
@@ -249,14 +232,10 @@ const eventNames: Record<string, string> = {
   heatmap_click: "Isı haritası tıklaması",
 };
 
-type AdminTab =
-  | "events"
-  | "eventTools"
-  | "analytics"
-  | "surveys"
-  | "networking"
-  | "profiles"
-  | "applications";
+type AdminTab = "events" | "analytics" | "surveys" | "networking";
+
+type EventAdminSection = "overview" | "data" | "flow";
+type NetworkingAdminSection = "members" | "profiles";
 
 type EventDatabaseInfo = {
   storeName: string;
@@ -272,27 +251,14 @@ const adminTabs: Array<{ id: AdminTab; label: string; description: string }> = [
   {
     id: "events",
     label: "Etkinlikler",
-    description: "Etkinlik oluştur, ürünleri ve veriyi ayarla",
+    description: "Ayarlar, etkinlik verileri ve akış",
   },
-  {
-    id: "eventTools",
-    label: "Etkinlik verileri",
-    description: "21 Ağustos, 17 Eylül ve 11 Ekim ürün kayıtları",
-  },
+  { id: "networking", label: "Networking", description: "Topluluk üyeleri ve profiller" },
   { id: "analytics", label: "Analiz", description: "Trafik, bilet ve aksiyon grafikleri" },
   { id: "surveys", label: "Anket", description: "Etkinlik sonrası bağ ve deneyim ölçümü" },
-  { id: "networking", label: "Networking", description: "Genel topluluk ağı ve onaylar" },
-  {
-    id: "profiles",
-    label: "Profiller",
-    description: "Doğrulanmış üyeler, rozetler ve geçici girişler",
-  },
-  { id: "applications", label: "Başvurular", description: "Network Startup proje başvuruları" },
 ];
 
 const adminUiVersion = "Admin v3 · etkinlik platformu";
-
-const eventToolsSlugs = ["21-agustos-2026", "17-eylul-2026", "9-ekim-2026"];
 
 const eventPageAnalyticsOptions = [
   { path: "/17-eylul", label: "17 Eylül · Fast" },
@@ -457,7 +423,6 @@ function AdminPage() {
   });
   const [members, setMembers] = useState<NetworkMember[]>([]);
   const [requests, setRequests] = useState<ChangeRequest[]>([]);
-  const [startupApplications, setStartupApplications] = useState<StartupApplication[]>([]);
   const [surveyData, setSurveyData] = useState<PostEventSurveyAdminPayload | null>(null);
   const [memberProfiles, setMemberProfiles] = useState<NotworkMemberProfile[]>([]);
   const [memberReferences, setMemberReferences] = useState<NotworkMemberReference[]>([]);
@@ -485,22 +450,29 @@ function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeAdminTab, setActiveAdminTab] = useState<AdminTab>("events");
+  const [eventSection, setEventSection] = useState<EventAdminSection>("overview");
+  const [networkingSection, setNetworkingSection] = useState<NetworkingAdminSection>("members");
+  const [eventToolsLoading, setEventToolsLoading] = useState(false);
   const [selectedToolsEventSlug, setSelectedToolsEventSlug] = useState("21-agustos-2026");
   const [selectedEventAnalyticsPath, setSelectedEventAnalyticsPath] = useState("/17-eylul");
   const [selectedHeatmapPath, setSelectedHeatmapPath] = useState("/");
   const [selectedHeatmapDevice, setSelectedHeatmapDevice] = useState<HeatmapDevice>("mobile");
   const backfillRunningRef = useRef(false);
+  const eventToolsRequestIdRef = useRef(0);
   const selectedDaysRef = useRef(days);
 
   const selectedToolsEvent = useMemo(
     () =>
       eventRegistry.find((event) => event.slug === selectedToolsEventSlug) ||
-      eventRegistry.find((event) => event.slug === "21-agustos-2026") ||
+      eventRegistry.find((event) => event.id === eventRegistryInfo?.primaryEventId) ||
+      eventRegistry[0] ||
       null,
-    [eventRegistry, selectedToolsEventSlug],
+    [eventRegistry, eventRegistryInfo?.primaryEventId, selectedToolsEventSlug],
   );
 
-  const selectedToolsEventSelection: EventSelection = { event: selectedToolsEventSlug };
+  const selectedToolsEventSelection: EventSelection = selectedToolsEvent
+    ? { eventId: selectedToolsEvent.id }
+    : {};
 
   const loadNetwork = async (nextPassword = password) => {
     const response = await fetch("/api/networking/admin", {
@@ -514,25 +486,41 @@ function AdminPage() {
     setRequests(data.requests);
   };
 
-  const loadWordcloud = async (nextPassword = password, eventSlug = selectedToolsEventSlug) => {
+  const loadWordcloud = async (
+    nextPassword = password,
+    eventSlug = selectedToolsEventSlug,
+    requestId?: number,
+  ) => {
     const data = await getWordcloudAdmin(nextPassword, { event: eventSlug });
-    setWordcloudQuestions(data.questions);
-    setWordcloudAnswers(data.answers);
-    setWordcloudResults(data.results);
-    setWordcloudDatabase(data.database || null);
+    if (requestId === undefined || requestId === eventToolsRequestIdRef.current) {
+      setWordcloudQuestions(data.questions);
+      setWordcloudAnswers(data.answers);
+      setWordcloudResults(data.results);
+      setWordcloudDatabase(data.database || null);
+    }
     return data;
   };
 
-  const loadEventNetwork = async (nextPassword = password, eventSlug = selectedToolsEventSlug) => {
+  const loadEventNetwork = async (
+    nextPassword = password,
+    eventSlug = selectedToolsEventSlug,
+    requestId?: number,
+  ) => {
     const data = await getEventNetworkAdmin(nextPassword, { event: eventSlug });
-    setEventRegistrations(data.registrations);
-    setEventDatabase(data.database || null);
+    if (requestId === undefined || requestId === eventToolsRequestIdRef.current) {
+      setEventRegistrations(data.registrations);
+      setEventDatabase(data.database || null);
+    }
     return data;
   };
 
-  const loadFive = async (nextPassword = password, eventSlug = selectedToolsEventSlug) => {
+  const loadFive = async (
+    nextPassword = password,
+    eventSlug = selectedToolsEventSlug,
+    requestId?: number,
+  ) => {
     const data = await getFiveAdmin(nextPassword, { event: eventSlug });
-    setFiveData(data);
+    if (requestId === undefined || requestId === eventToolsRequestIdRef.current) setFiveData(data);
     return data;
   };
 
@@ -544,7 +532,10 @@ function AdminPage() {
       data.events.find((event) => event.id === preferredEventId) ||
       data.events.find((event) => event.id === data.registry.primaryEventId) ||
       data.events[0];
-    if (selected) setEventEditor(eventToEditorDraft(selected));
+    if (selected) {
+      setEventEditor(eventToEditorDraft(selected));
+      setSelectedToolsEventSlug(selected.slug);
+    }
   };
 
   const loadEventRegistry = async (nextPassword = password, preferredEventId = "") => {
@@ -560,44 +551,46 @@ function AdminPage() {
   ) => {
     const selectedEvent = availableEvents.find((event) => event.slug === eventSlug);
     if (!selectedEvent) throw new Error("Etkinlik ürün ayarları bulunamadı.");
+    const requestId = ++eventToolsRequestIdRef.current;
 
+    setEventToolsLoading(true);
     setNetworkMessage("");
     setWordcloudMessage("");
     setFiveMessage("");
+    setEventRegistrations([]);
+    setEventDatabase(null);
+    setWordcloudQuestions([]);
+    setWordcloudAnswers([]);
+    setWordcloudResults(null);
+    setWordcloudDatabase(null);
+    setFiveData(null);
 
     const tasks: Array<Promise<unknown>> = [];
     if (selectedEvent.products.matchlab.enabled) {
       tasks.push(
-        loadEventNetwork(nextPassword, eventSlug).then(async (data) => {
+        loadEventNetwork(nextPassword, eventSlug, requestId).then(async (data) => {
           if (
+            requestId === eventToolsRequestIdRef.current &&
             eventSlug === "17-eylul-2026" &&
             selectedEvent.products.matchlab.dataMode === "demo" &&
             data.registrations.length === 0
           ) {
             await seedEventNetworkSamples({ event: eventSlug });
-            await loadEventNetwork(nextPassword, eventSlug);
+            await loadEventNetwork(nextPassword, eventSlug, requestId);
           }
         }),
       );
-    } else {
-      setEventRegistrations([]);
-      setEventDatabase(null);
     }
     if (selectedEvent.products.wordcloud.enabled) {
-      tasks.push(loadWordcloud(nextPassword, eventSlug));
-    } else {
-      setWordcloudQuestions([]);
-      setWordcloudAnswers([]);
-      setWordcloudResults(null);
-      setWordcloudDatabase(null);
+      tasks.push(loadWordcloud(nextPassword, eventSlug, requestId));
     }
     if (selectedEvent.products.five.enabled) {
-      tasks.push(loadFive(nextPassword, eventSlug));
-    } else {
-      setFiveData(null);
+      tasks.push(loadFive(nextPassword, eventSlug, requestId));
     }
 
     const results = await Promise.allSettled(tasks);
+    if (requestId !== eventToolsRequestIdRef.current) return;
+    setEventToolsLoading(false);
     const failed = results.filter((result) => result.status === "rejected").length;
     if (failed) throw new Error(`${failed} etkinlik ürünü yüklenemedi.`);
   };
@@ -605,6 +598,10 @@ function AdminPage() {
   const selectEventRegistryItem = (event: NotworkEvent) => {
     setEventRegistryMessage("");
     setEventEditor(eventToEditorDraft(event));
+    setSelectedToolsEventSlug(event.slug);
+    void loadSelectedEventTools(event.slug, password, eventRegistry).catch((caught) => {
+      setError(caught instanceof Error ? caught.message : "Etkinlik verileri yüklenemedi.");
+    });
   };
 
   const saveEventRegistryItem = async () => {
@@ -663,17 +660,6 @@ function AdminPage() {
     } finally {
       setEventRegistryLoading(false);
     }
-  };
-
-  const loadStartupApplications = async (nextPassword = password) => {
-    const response = await fetch("/api/startup-applications?action=list", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: nextPassword }),
-    });
-    if (!response.ok) throw new Error("Startup başvuruları alınamadı.");
-    const data = (await response.json()) as { applications: StartupApplication[] };
-    setStartupApplications(data.applications);
   };
 
   const loadSurveys = async (nextPassword = password) => {
@@ -950,17 +936,23 @@ function AdminPage() {
       setDays(nextDays);
       backfillAnalytics(data.missingDays);
       let registryEvents = eventRegistry;
+      let toolsEventSlug = selectedToolsEventSlug;
       let failedLoads = 0;
       try {
         const registryData = await loadEventRegistry(password);
         registryEvents = registryData.events;
+        toolsEventSlug =
+          registryData.selectedEvent?.slug ||
+          registryData.events.find((event) => event.id === registryData.registry.primaryEventId)
+            ?.slug ||
+          registryData.events[0]?.slug ||
+          selectedToolsEventSlug;
       } catch {
         failedLoads += 1;
       }
       const auxiliaryLoads = await Promise.allSettled([
         loadNetwork(password),
-        loadSelectedEventTools(selectedToolsEventSlug, password, registryEvents),
-        loadStartupApplications(password),
+        loadSelectedEventTools(toolsEventSlug, password, registryEvents),
         loadMemberProfiles(password),
         loadSurveys(password),
       ]);
@@ -1053,21 +1045,23 @@ function AdminPage() {
               {adminUiVersion}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            {[7, 30, 90].map((range) => (
-              <button
-                key={range}
-                type="button"
-                onClick={() => void loadReport(range)}
-                className={`rounded-full border px-3 py-2 text-xs font-semibold ${
-                  days === range
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card"
-                }`}
-              >
-                {range} gün
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-2">
+            {activeAdminTab === "analytics"
+              ? [7, 30, 90].map((range) => (
+                  <button
+                    key={range}
+                    type="button"
+                    onClick={() => void loadReport(range)}
+                    className={`rounded-full border px-3 py-2 text-xs font-semibold ${
+                      days === range
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card"
+                    }`}
+                  >
+                    {range} gün
+                  </button>
+                ))
+              : null}
             <button
               type="button"
               onClick={() => {
@@ -1087,23 +1081,23 @@ function AdminPage() {
           </div>
         </header>
 
-        <nav className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
+        <nav aria-label="Admin bölümleri" className="mt-6 grid grid-cols-2 gap-2 lg:grid-cols-4">
           {adminTabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveAdminTab(tab.id)}
-              className={`rounded-[1.5rem] border p-4 text-left transition ${
+              aria-current={activeAdminTab === tab.id ? "page" : undefined}
+              className={`rounded-2xl border px-4 py-3 text-left transition ${
                 activeAdminTab === tab.id
                   ? "border-primary/50 bg-primary/12 shadow-[0_18px_50px_rgba(143,203,208,0.18)]"
                   : "border-border bg-card hover:border-primary/30"
               }`}
             >
-              <span className="text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
-                Sekme
+              <span className="block text-base font-black sm:text-lg">{tab.label}</span>
+              <span className="mt-0.5 hidden text-xs text-foreground/55 sm:block">
+                {tab.description}
               </span>
-              <span className="mt-1 block text-xl font-black">{tab.label}</span>
-              <span className="mt-1 block text-sm text-foreground/50">{tab.description}</span>
             </button>
           ))}
         </nav>
@@ -1114,7 +1108,50 @@ function AdminPage() {
           </div>
         ) : null}
 
-        <div className={activeAdminTab === "events" ? "" : "hidden"}>
+        {activeAdminTab === "events" ? (
+          <nav
+            aria-label="Etkinlik bölümleri"
+            className="mt-5 flex gap-2 overflow-x-auto rounded-2xl border border-border bg-card p-2"
+          >
+            {(
+              [
+                { id: "overview", label: "Genel" },
+                { id: "data", label: "Etkinlik verileri" },
+                { id: "flow", label: "Etkinlik akışı" },
+              ] as const
+            ).map((section) => (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => {
+                  setEventSection(section.id);
+                  if (section.id === "data" && selectedToolsEvent) {
+                    setError("");
+                    void loadSelectedEventTools(
+                      selectedToolsEvent.slug,
+                      password,
+                      eventRegistry,
+                    ).catch((caught) => {
+                      setError(
+                        caught instanceof Error ? caught.message : "Etkinlik verileri yüklenemedi.",
+                      );
+                    });
+                  }
+                }}
+                aria-current={eventSection === section.id ? "page" : undefined}
+                className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                  eventSection === section.id
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-foreground/60 hover:bg-muted"
+                }`}
+              >
+                {section.label}
+              </button>
+            ))}
+          </nav>
+        ) : null}
+
+        <div className={activeAdminTab === "events" && eventSection === "overview" ? "" : "hidden"}>
           <section className="tool-surface mb-5">
             <h2>Test verisiyle önizle</h2>
             <p>
@@ -1154,20 +1191,22 @@ function AdminPage() {
         </div>
 
         <section
-          className={`mt-6 rounded-[2rem] border border-primary/25 bg-primary/10 p-5 ${
-            activeAdminTab === "eventTools" ? "" : "hidden"
+          className={`mt-5 rounded-[2rem] border border-primary/25 bg-primary/10 p-5 ${
+            activeAdminTab === "events" && eventSection !== "overview" ? "" : "hidden"
           }`}
         >
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="text-xs font-bold uppercase tracking-[0.22em] text-primary-deep">
-                Etkinlik ürün verileri
+                {eventSection === "data" ? "Etkinlik verileri" : "Etkinlik akışı"}
               </div>
               <h2 className="mt-1 text-2xl font-black tracking-[-0.03em]">
                 {selectedToolsEvent?.title || "Etkinlik seç"}
               </h2>
               <p className="mt-1 text-sm text-foreground/60">
-                notwork match, WordCloud ve ntw.five verilerini aynı panelden yönet.
+                {eventSection === "data"
+                  ? "Bu etkinliğin uygulama kayıtları ve katılımcı verileri."
+                  : "Uygulama sırasını ve etkinlik anındaki geçişleri yönet."}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {selectedToolsEvent
@@ -1188,6 +1227,23 @@ function AdminPage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
+              <label className="flex flex-col gap-1 text-xs font-bold text-foreground/60">
+                Etkinlik seç
+                <select
+                  value={selectedToolsEvent?.slug || ""}
+                  onChange={(event) => {
+                    const selected = eventRegistry.find((item) => item.slug === event.target.value);
+                    if (selected) selectEventRegistryItem(selected);
+                  }}
+                  className="min-w-48 rounded-xl border border-primary/25 bg-background px-3 py-2 text-sm font-bold text-foreground"
+                >
+                  {eventRegistry.map((event) => (
+                    <option key={event.id} value={event.slug}>
+                      {event.shortTitle}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <a
                 href={withEventSelection("/linkler", selectedToolsEventSelection)}
                 target="_blank"
@@ -1196,54 +1252,27 @@ function AdminPage() {
               >
                 Linkler girişini aç
               </a>
-              <button
-                type="button"
-                onClick={() =>
-                  void loadSelectedEventTools(selectedToolsEventSlug, password, eventRegistry)
-                }
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
-              >
-                <RefreshCcw size={15} /> verileri yenile
-              </button>
-            </div>
-          </div>
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
-            {eventToolsSlugs.map((eventSlug) => {
-              const item = eventRegistry.find((event) => event.slug === eventSlug);
-              if (!item) return null;
-              const isActive = eventSlug === selectedToolsEventSlug;
-              return (
+              {eventSection === "data" ? (
                 <button
-                  key={eventSlug}
                   type="button"
-                  onClick={() => {
-                    setSelectedToolsEventSlug(eventSlug);
-                    void loadSelectedEventTools(eventSlug, password, eventRegistry);
-                  }}
-                  className={`rounded-[1.5rem] border p-4 text-left transition ${
-                    isActive
-                      ? "border-primary bg-background shadow-[0_16px_40px_rgba(143,203,208,0.22)]"
-                      : "border-primary/20 bg-background/55 hover:border-primary/50"
-                  }`}
+                  onClick={() =>
+                    void loadSelectedEventTools(selectedToolsEventSlug, password, eventRegistry)
+                  }
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
                 >
-                  <span className="text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
-                    Etkinlik
-                  </span>
-                  <span className="mt-1 block text-xl font-black">{item.shortTitle}</span>
-                  <span className="mt-1 block text-sm text-foreground/50">
-                    {eventProductKeys
-                      .filter((product) => item.products[product].enabled)
-                      .map((product) => item.products[product].label)
-                      .join(" · ") || "Ürün kapalı"}
-                  </span>
+                  <RefreshCcw size={15} /> verileri yenile
                 </button>
-              );
-            })}
+              ) : null}
+            </div>
           </div>
         </section>
 
-        {activeAdminTab === "eventTools" && selectedToolsEvent ? (
-          <EventFlowAdmin password={password} event={selectedToolsEvent} />
+        {activeAdminTab === "events" && eventSection === "flow" && selectedToolsEvent ? (
+          <EventFlowAdmin
+            key={selectedToolsEvent.id}
+            password={password}
+            event={selectedToolsEvent}
+          />
         ) : null}
 
         <section
@@ -1690,60 +1719,105 @@ function AdminPage() {
           <ReportList title="Kaydırma derinliği" rows={report.scrollDepth} suffix=" ulaşım" />
         </section>
 
-        <div className={activeAdminTab === "eventTools" ? "" : "hidden"}>
-          {selectedToolsEvent?.products.wordcloud.enabled ? (
-            <WordcloudAdmin
-              eventTitle={selectedToolsEvent.shortTitle}
-              selection={selectedToolsEventSelection}
-              questions={wordcloudQuestions}
-              answers={wordcloudAnswers}
-              results={wordcloudResults}
-              database={wordcloudDatabase}
-              draft={wordcloudDraft}
-              message={wordcloudMessage}
-              setDraft={setWordcloudDraft}
-              refresh={async () => {
-                await loadWordcloud(password, selectedToolsEventSlug);
-              }}
-              wordcloudAction={wordcloudAction}
-            />
-          ) : null}
-
-          {selectedToolsEvent?.products.matchlab.enabled ? (
-            <EventNetworkAdmin
-              eventTitle={selectedToolsEvent.shortTitle}
-              selection={selectedToolsEventSelection}
-              registrations={eventRegistrations}
-              database={eventDatabase}
-              message={networkMessage}
-              refresh={async () => {
-                await loadEventNetwork(password, selectedToolsEventSlug);
-              }}
-              seedSamples={seedEventNetwork}
-              resetDemo={resetEventNetwork}
-            />
-          ) : null}
-
-          {selectedToolsEvent?.products.five.enabled ? (
-            <FiveAdmin
-              eventTitle={selectedToolsEvent.shortTitle}
-              selection={selectedToolsEventSelection}
-              data={fiveData}
-              message={fiveMessage}
-              refresh={() => loadFive(password, selectedToolsEventSlug)}
-              runAction={fiveAction}
-            />
-          ) : null}
-
-          {selectedToolsEvent &&
-          eventProductKeys.every((product) => !selectedToolsEvent.products[product].enabled) ? (
-            <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-sm text-foreground/55">
-              Bu etkinlik için henüz aktif bir ürün yok. Etkinlikler sekmesinden ürün açabilirsin.
+        <div className={activeAdminTab === "events" && eventSection === "data" ? "" : "hidden"}>
+          {eventToolsLoading ? (
+            <div
+              role="status"
+              className="mt-6 rounded-2xl border border-primary/20 bg-card px-5 py-6 text-sm font-semibold text-foreground/60"
+            >
+              {selectedToolsEvent?.shortTitle || "Etkinlik"} verileri yükleniyor…
             </div>
+          ) : null}
+          {!eventToolsLoading ? (
+            <>
+              {selectedToolsEvent?.products.wordcloud.enabled ? (
+                <WordcloudAdmin
+                  eventTitle={selectedToolsEvent.shortTitle}
+                  selection={selectedToolsEventSelection}
+                  questions={wordcloudQuestions}
+                  answers={wordcloudAnswers}
+                  results={wordcloudResults}
+                  database={wordcloudDatabase}
+                  draft={wordcloudDraft}
+                  message={wordcloudMessage}
+                  setDraft={setWordcloudDraft}
+                  refresh={async () => {
+                    await loadWordcloud(password, selectedToolsEventSlug);
+                  }}
+                  wordcloudAction={wordcloudAction}
+                />
+              ) : null}
+
+              {selectedToolsEvent?.products.matchlab.enabled ? (
+                <EventNetworkAdmin
+                  eventTitle={selectedToolsEvent.shortTitle}
+                  selection={selectedToolsEventSelection}
+                  registrations={eventRegistrations}
+                  database={eventDatabase}
+                  message={networkMessage}
+                  refresh={async () => {
+                    await loadEventNetwork(password, selectedToolsEventSlug);
+                  }}
+                  seedSamples={seedEventNetwork}
+                  resetDemo={resetEventNetwork}
+                />
+              ) : null}
+
+              {selectedToolsEvent?.products.five.enabled ? (
+                <FiveAdmin
+                  eventTitle={selectedToolsEvent.shortTitle}
+                  selection={selectedToolsEventSelection}
+                  data={fiveData}
+                  message={fiveMessage}
+                  refresh={() => loadFive(password, selectedToolsEventSlug)}
+                  runAction={fiveAction}
+                />
+              ) : null}
+
+              {selectedToolsEvent &&
+              eventProductKeys.every((product) => !selectedToolsEvent.products[product].enabled) ? (
+                <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-sm text-foreground/55">
+                  Bu etkinlik için henüz aktif bir ürün yok. Etkinlikler → Etkinlikler bölümünden
+                  ürün açabilirsin.
+                </div>
+              ) : null}
+            </>
           ) : null}
         </div>
 
-        <div className={activeAdminTab === "networking" ? "" : "hidden"}>
+        {activeAdminTab === "networking" ? (
+          <nav
+            aria-label="Networking bölümleri"
+            className="mt-5 flex gap-2 rounded-2xl border border-border bg-card p-2"
+          >
+            {(
+              [
+                { id: "members", label: "Üyeler ve onaylar" },
+                { id: "profiles", label: "Profiller" },
+              ] as const
+            ).map((section) => (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => setNetworkingSection(section.id)}
+                aria-current={networkingSection === section.id ? "page" : undefined}
+                className={`rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                  networkingSection === section.id
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-foreground/60 hover:bg-muted"
+                }`}
+              >
+                {section.label}
+              </button>
+            ))}
+          </nav>
+        ) : null}
+
+        <div
+          className={
+            activeAdminTab === "networking" && networkingSection === "members" ? "" : "hidden"
+          }
+        >
           <NetworkingAdmin
             members={members}
             requests={requests}
@@ -1756,7 +1830,11 @@ function AdminPage() {
           />
         </div>
 
-        <div className={activeAdminTab === "profiles" ? "" : "hidden"}>
+        <div
+          className={
+            activeAdminTab === "networking" && networkingSection === "profiles" ? "" : "hidden"
+          }
+        >
           <AnnouncementAdmin password={password} />
           <MemberOperationsAdmin password={password} refresh={() => loadMemberProfiles(password)} />
           <MemberProfilesAdmin
@@ -1769,13 +1847,6 @@ function AdminPage() {
             issueCredentials={() => memberProfileAction("issueCredentials")}
             resetPassword={resetMemberPassword}
             moderateReference={moderateMemberReference}
-          />
-        </div>
-
-        <div className={activeAdminTab === "applications" ? "" : "hidden"}>
-          <StartupApplicationsAdmin
-            applications={startupApplications}
-            refresh={() => loadStartupApplications(password)}
           />
         </div>
 
@@ -1936,126 +2007,6 @@ function SurveyAdmin({
         </table>
         {data && data.responses.length === 0 ? (
           <p className="p-6 text-sm text-foreground/50">Henüz anket yanıtı yok.</p>
-        ) : null}
-      </div>
-    </section>
-  );
-}
-
-function StartupApplicationsAdmin({
-  applications,
-  refresh,
-}: {
-  applications: StartupApplication[];
-  refresh: () => Promise<void>;
-}) {
-  const notificationLabels: Record<StartupApplication["notification"]["status"], string> = {
-    sent: "mail gönderildi",
-    not_configured: "mail servisi ayarlı değil",
-    failed: "mail gönderilemedi",
-  };
-
-  return (
-    <section className="mt-8 overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
-        <div>
-          <h2 className="text-xl font-black">Network Startup başvuruları</h2>
-          <p className="mt-1 text-sm text-foreground/50">
-            Formdan gelen projeler burada tutulur; bildirimler Berk maillerine gönderilir.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => void refresh()}
-          className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
-        >
-          <RefreshCcw size={14} /> yenile
-        </button>
-      </div>
-
-      <div className="grid gap-3 border-b border-border bg-muted/35 p-5 md:grid-cols-3">
-        <Metric icon={Users} label="Toplam başvuru" value={applications.length} highlight />
-        <Metric
-          icon={Check}
-          label="Mail bildirimi giden"
-          value={applications.filter((item) => item.notification.status === "sent").length}
-        />
-        <Metric
-          icon={Eye}
-          label="Bekleyen / panelde"
-          value={applications.filter((item) => item.notification.status !== "sent").length}
-        />
-      </div>
-
-      <div className="grid gap-4 p-5">
-        {applications.map((application) => (
-          <article
-            key={application.id}
-            className="rounded-2xl border border-border bg-background p-4"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <div className="text-xs text-foreground/45">
-                  {new Date(application.createdAt).toLocaleString("tr-TR")}
-                </div>
-                <h3 className="mt-1 text-lg font-black">
-                  {application.projectName || "İsimsiz proje"}
-                </h3>
-                <p className="mt-1 text-sm font-bold">
-                  {application.name} ·{" "}
-                  <a className="text-primary-deep underline" href={`mailto:${application.email}`}>
-                    {application.email}
-                  </a>
-                </p>
-                {application.phone ? (
-                  <p className="mt-1 text-sm text-foreground/55">{application.phone}</p>
-                ) : null}
-              </div>
-              <div className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-black text-primary-deep">
-                {application.stage}
-              </div>
-            </div>
-
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <div className="rounded-xl bg-muted/60 p-3">
-                <div className="text-xs font-black uppercase tracking-[0.16em] text-foreground/45">
-                  Proje özeti
-                </div>
-                <p className="mt-2 whitespace-pre-line text-sm leading-6 text-foreground/70">
-                  {application.projectSummary}
-                </p>
-              </div>
-              <div className="rounded-xl bg-muted/60 p-3">
-                <div className="text-xs font-black uppercase tracking-[0.16em] text-foreground/45">
-                  Aradığı destek
-                </div>
-                <p className="mt-2 whitespace-pre-line text-sm leading-6 text-foreground/70">
-                  {application.need || "Belirtilmedi."}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-foreground/50">
-              <span>
-                Bildirim:{" "}
-                <strong className="text-foreground">
-                  {notificationLabels[application.notification.status]}
-                </strong>
-              </span>
-              <span>{application.notification.recipients.join(" / ")}</span>
-            </div>
-            {application.notification.error ? (
-              <p className="mt-2 rounded-xl bg-destructive/10 p-3 text-xs text-destructive">
-                {application.notification.error}
-              </p>
-            ) : null}
-          </article>
-        ))}
-
-        {applications.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-foreground/45">
-            Henüz Network Startup başvurusu yok.
-          </div>
         ) : null}
       </div>
     </section>

@@ -1395,14 +1395,15 @@
 .entry-experience-choice button:first-of-type {
   overflow: hidden;
   padding: 15px 15px 16px;
-  border-color: rgba(42, 164, 202, 0.45);
-  background:
-    radial-gradient(circle at 90% 5%, rgba(118, 220, 244, 0.38), transparent 35%),
-    linear-gradient(135deg, #168eb5 0%, #0b6687 60%, #084f6b 100%);
+  border-color: rgba(42, 164, 202, 0.35);
+  background: rgba(236, 249, 253, 0.95);
+  color: #31586a;
+}
+.entry-experience-choice button:first-of-type.is-selected {
+  border-color: rgba(42, 164, 202, 0.65);
+  background: linear-gradient(135deg, #147da1, #0b6687);
   color: #fff;
-  box-shadow:
-    0 14px 30px rgba(8, 91, 122, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  box-shadow: 0 12px 28px rgba(8, 91, 122, 0.23);
 }
 .entry-experience-choice button:first-of-type::after {
   position: absolute;
@@ -1427,10 +1428,10 @@
   width: fit-content;
   margin-bottom: 3px;
   padding: 4px 7px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 1px solid rgba(11, 113, 148, 0.22);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.92);
+  background: rgba(11, 113, 148, 0.08);
+  color: #146681;
   font-size: 8px;
   font-weight: 850;
   letter-spacing: 0.14em;
@@ -1450,7 +1451,50 @@
   line-height: 1.45;
 }
 .entry-experience-choice button:first-of-type small {
-  color: rgba(255, 255, 255, 0.76);
+  color: #638391;
+}
+.entry-experience-choice button:first-of-type.is-selected > b {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+.entry-experience-choice button:first-of-type.is-selected small {
+  color: rgba(255, 255, 255, 0.82);
+}
+.entry-experience-choice .entry-experience-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.entry-experience-choice .entry-experience-check {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  border: 1.5px solid rgba(49, 88, 106, 0.35);
+  border-radius: 50%;
+}
+.entry-experience-choice .entry-experience-check svg {
+  opacity: 0;
+}
+.entry-experience-choice button.is-selected .entry-experience-check {
+  border-color: #fff;
+  background: #fff;
+  color: #0b6687;
+}
+.entry-experience-choice button.is-selected .entry-experience-check svg {
+  opacity: 1;
+}
+.entry-experience-choice button.is-selected.is-basic .entry-experience-check {
+  border-color: #0b6687;
+  background: #0b6687;
+  color: #fff;
+}
+.entry-experience-choice button:focus-visible {
+  outline: 3px solid #0b6687;
+  outline-offset: 3px;
 }
 .entry-experience-choice button.is-selected {
   border-color: rgba(11, 113, 148, 0.5);
@@ -1462,7 +1506,7 @@
   color: rgba(255, 255, 255, 0.76);
 }
 .entry-experience-choice button.is-selected.is-basic {
-  border-color: rgba(77, 112, 128, 0.28);
+  border-color: #0b6687;
   background: rgba(255, 255, 255, 0.92);
   color: #31586a;
   box-shadow: 0 8px 20px rgba(41, 78, 93, 0.1);
