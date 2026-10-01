@@ -11,9 +11,8 @@ export const eventConfig: EventProductConfig = {
   eventLabel: "sahne",
   imageTitle: "notwork sahne",
   imageSubtitle: "11 ekim · etkinlik start 20.00 · rene lokal",
-  titleLines: ["notwork", "sahne"],
-  description:
-    "Dört ilham veren başarısızlık hikâyesi, canlı ntw.wordcloud ve iki networking arasında ntw.match.lab ile tasarlanmış klasik notwork deneyimi.",
+  titleLines: ["notwork sahne"],
+  description: "Başarısızlık hikâyeleri ve networking.",
   date: "11 Ekim 2026",
   day: "Pazar",
   time: "Etkinlik start 20.00",
@@ -21,31 +20,35 @@ export const eventConfig: EventProductConfig = {
   venue: "Rene Lokal",
   venueUrl: "https://share.google/X6ssk8zMnf49YzrkD",
   city: "Bornova · İzmir",
-  experienceLabel: "Networking + ilham veren hikâyeler",
+  experienceLabel: "",
   experienceDetail: "Sahne, WordCloud ve doğru eşleşmeler",
   gallery: [
     {
       src: "/community/8.jpg",
       alt: "notwork Sahne etkinliğinde sahne ve konuşmacı",
       label: "sahne",
+      hideSubtitle: true,
       position: "center 38%",
     },
     {
-      src: "/events/9-ekim/notwork-sahne-etkinlik-akisi.jpg",
-      alt: "notwork Sahne WordCloud, başarısızlık hikâyeleri, eşleşme ve networking akışı",
+      src: "/events/9-ekim/notwork-sahne-akis-sade.webp",
+      alt: "Notwork Sahne akışı: interaktif sorular, iki başarısızlık hikâyesi, networking, iki yeni hikâye ve final networking",
       label: "akış",
+      hideCaption: true,
       position: "center",
     },
     {
       src: "/community/14.jpg",
       alt: "notwork etkinliğinde networking yapan katılımcılar",
       label: "match",
+      hideSubtitle: true,
       position: "center 48%",
     },
     {
       src: "/community/27.jpg",
       alt: "notwork Sahne gecesinin community atmosferi",
       label: "community",
+      hideSubtitle: true,
       position: "center 46%",
     },
     {
@@ -92,7 +95,7 @@ export const eventConfig: EventProductConfig = {
     {
       id: "single",
       name: "Tek kişilik",
-      note: "Sahne + interaktif deneyim + networking",
+      note: "",
       price: 600,
     },
     {
@@ -106,18 +109,15 @@ export const eventConfig: EventProductConfig = {
   ticketGift: "Her bilete ntw sticker paketi + ntw anahtarlık hediye.",
   ticketUrl:
     "https://www.biletimgo.com/etkinlik/notwork-basarisizlik-hikayeleri-network-event-30395",
-  flowEyebrow: "notwork sahne akışı",
-  flowTitleLines: ["Başarısızlık hikâyeleri", "ve gerçek networking."],
-  flowDescription:
-    "Önce mikrofon size uzanır. Ardından dört gerçek hikâye dinler, notwork match ile doğru kişilerle eşleşir ve geceyi serbest networking ile tamamlarsınız.",
+  flowEyebrow: "5 adımda",
+  flowTitleLines: ["Gecenin akışı"],
+  flowDescription: "",
   flow: [
     {
       duration: "interaktif kısım",
       product: "ntw.wordcloud",
       title: "Mikrofonu size uzatıyoruz.",
-      description:
-        "Ekranda sorular görünür. Telefonunuzdan verdiğiniz cevaplar anında birleşir; odanın ortak düşüncesi canlı olarak büyür.",
-      highlights: ["interaktif sorular", "ortak cevaplar ekranda"],
+      description: "Cevapların ekranda anlık olarak görünür.",
       icon: Cloud,
       accent: "bg-[#b8eff0] text-[#07353a]",
     },
@@ -125,9 +125,7 @@ export const eventConfig: EventProductConfig = {
       duration: "ilk iki sunum",
       product: "2 ilham veren hikâye",
       title: "İlk iki başarısızlık hikâyesi.",
-      description:
-        "İlk iki konuşmacı sahneye çıkar. Denediklerini, olduramadıklarını ve bu süreçten çıkardıkları gerçek dersleri anlatır.",
-      highlights: ["ilk 2 konuşmacı", "gerçek hikâyeler"],
+      description: "İki konuşmacı denediklerini ve öğrendiklerini anlatır.",
       icon: Mic2,
       accent: "bg-[#ffd1e5] text-[#63233f]",
     },
@@ -135,9 +133,7 @@ export const eventConfig: EventProductConfig = {
       duration: "30 dakika",
       product: "notwork match",
       title: "Eşleştirme sistemi devreye girer.",
-      description:
-        "Uygulamamız sizi ihtiyaçlarınıza ve sunabileceklerinize göre üç kişilik bir grupla eşleştirir. Kiminle ve neden tanıştığınızı görürsünüz.",
-      highlights: ["3 kişilik eşleşme", "neden eşleştiğiniz görünür"],
+      description: "İhtiyaçlarına göre üç kişilik bir gruba eşleşirsin.",
       icon: UsersRound,
       accent: "bg-[#d8c6ff] text-[#392263]",
     },
@@ -145,9 +141,7 @@ export const eventConfig: EventProductConfig = {
       duration: "iki yeni sunum",
       product: "2 ilham veren hikâye",
       title: "İki yeni başarısızlık hikâyesi.",
-      description:
-        "İkinci bölümde iki yeni konuşmacı sahneye çıkar ve kendi kırılma noktalarını, hatalarını ve öğrendiklerini paylaşır.",
-      highlights: ["2 yeni konuşmacı", "yeni deneyimler"],
+      description: "İki yeni konuşmacı kırılma noktalarını paylaşır.",
       icon: MessageCircleQuestion,
       accent: "bg-[#ffe5a8] text-[#61450a]",
     },
@@ -155,17 +149,14 @@ export const eventConfig: EventProductConfig = {
       duration: "60 dakika",
       product: "gerçek networking",
       title: "Gece gerçek bağlantılarla devam eder.",
-      description:
-        "Eşleştiğiniz kişilerle sohbeti sürdürür, konuşmacılarla tanışır ve gecenin kalanında yeni bağlantılar kurarsınız.",
-      highlights: ["yüz yüze sohbet", "serbest networking"],
+      description: "Tanıştığın kişilerle sohbet devam eder.",
       icon: Sparkles,
       accent: "bg-[#c9f1d7] text-[#174d2d]",
     },
   ],
   flowLayoutClass: "lg:grid-cols-3 xl:grid-cols-5",
   communityEyebrow: "sahne geceden fazlası",
-  communityDescription:
-    "Aynı hikâyeleri dinleyen insanlar etkinlikten sonra network ağı ve community buluşmaları içinde birbirini yeniden bulur.",
+  communityDescription: "Etkinlikten sonra da bağlantılar devam eder.",
   communityGallery: [
     "/community/27.jpg",
     "/community/22.jpg",

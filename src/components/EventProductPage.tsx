@@ -11,7 +11,7 @@ import {
   Ticket,
   type LucideIcon,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 
@@ -28,6 +28,8 @@ export type EventGalleryImage = {
   muted?: boolean;
   loop?: boolean;
   controls?: boolean;
+  hideCaption?: boolean;
+  hideSubtitle?: boolean;
 };
 
 export type EventTicketOption = {
@@ -86,6 +88,7 @@ export function EventProductPage({ config }: { config: EventProductConfig }) {
   const [activeImage, setActiveImage] = useState(0);
   const [selectedTicket, setSelectedTicket] = useState(config.tickets[0]?.id || "");
   const [ticketRedirectNotice, setTicketRedirectNotice] = useState(false);
+  const [primaryTicketVisible, setPrimaryTicketVisible] = useState(false);
   const selectedOption =
     config.tickets.find((option) => option.id === selectedTicket) || config.tickets[0];
 
@@ -100,6 +103,17 @@ export function EventProductPage({ config }: { config: EventProductConfig }) {
     window.setTimeout(() => setTicketRedirectNotice(false), 3500);
   };
 
+  useEffect(() => {
+    const primaryTicket = document.getElementById("primary-ticket-cta");
+    if (!primaryTicket || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setPrimaryTicketVisible(entry.isIntersecting),
+      { rootMargin: "0px 0px -135px 0px", threshold: 0.5 },
+    );
+    observer.observe(primaryTicket);
+    return () => observer.disconnect();
+  }, []);
+
   if (!selectedOption) return null;
 
   return (
@@ -108,19 +122,7 @@ export function EventProductPage({ config }: { config: EventProductConfig }) {
       <main>
         <section className="relative overflow-hidden border-b border-border/60">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(143,203,208,0.32),transparent_32%),radial-gradient(circle_at_90%_12%,rgba(255,171,207,0.24),transparent_27%),linear-gradient(180deg,#f8fbfa_0%,#eef6f5_100%)]" />
-          <div className="relative mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-10 lg:px-8">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 sm:mb-5 sm:gap-3">
-              <Link
-                to="/etkinlikler"
-                className="inline-flex items-center gap-2 text-sm font-black text-foreground/60 transition hover:text-primary-deep"
-              >
-                <ArrowLeft size={16} /> Etkinliklere dön
-              </Link>
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-white/65 px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-primary-deep backdrop-blur">
-                <span className="h-2 w-2 rounded-full bg-primary blink" /> {config.eventLabel}
-              </div>
-            </div>
-
+          <div className="relative mx-auto max-w-7xl px-3 pb-4 pt-2 sm:px-6 sm:py-8 lg:px-8">
             <div className="grid grid-cols-1 items-start gap-4 sm:gap-7 lg:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)] lg:gap-10">
               <EventGallery
                 gallery={config.gallery}
@@ -152,11 +154,13 @@ export function EventProductPage({ config }: { config: EventProductConfig }) {
           Anlaşmalı bilet sayfamıza yönlendiriliyorsunuz.
         </div>
       ) : null}
-      <FloatingTicketCta
-        config={config}
-        selectedOption={selectedOption}
-        onTicketRedirect={showTicketRedirectNotice}
-      />
+      {!primaryTicketVisible ? (
+        <FloatingTicketCta
+          config={config}
+          selectedOption={selectedOption}
+          onTicketRedirect={showTicketRedirectNotice}
+        />
+      ) : null}
       <SiteFooter />
     </div>
   );
@@ -183,7 +187,7 @@ function EventGallery({
   return (
     <div className="min-w-0">
       <div className="relative overflow-hidden rounded-[1.55rem] border border-white/80 bg-[#0a1618] shadow-[0_22px_64px_rgba(15,45,50,0.16)] sm:rounded-[2.5rem] sm:shadow-[0_30px_90px_rgba(15,45,50,0.18)]">
-        <div className="aspect-[5/6] max-h-[760px] w-full sm:aspect-[5/6] lg:aspect-[4/5]">
+        <div className="aspect-[4/5] max-h-[760px] w-full sm:aspect-[5/6] lg:aspect-[4/5]">
           {image.mediaType === "video" ? (
             <video
               key={image.src}
@@ -209,21 +213,30 @@ function EventGallery({
             />
           )}
         </div>
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#071416]/75 via-transparent to-black/5" />
-        <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full border border-white/25 bg-black/25 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white backdrop-blur-md sm:left-7 sm:top-7 sm:px-3 sm:py-1.5 sm:text-xs sm:tracking-[0.2em]">
-          notwork / {image.label}
-        </div>
         <div
-          className={`absolute left-3 right-3 flex items-end justify-between gap-3 sm:left-7 sm:right-7 sm:gap-4 ${
-            image.controls ? "bottom-14 sm:bottom-16" : "bottom-3 sm:bottom-7"
+          className={`pointer-events-none absolute inset-0 ${
+            image.hideCaption ? "" : "bg-gradient-to-t from-[#071416]/75 via-transparent to-black/5"
+          }`}
+        />
+        <div
+          className={`absolute left-3 flex items-end justify-between gap-3 sm:left-7 sm:gap-4 ${
+            image.hideCaption
+              ? "bottom-3 right-auto sm:bottom-7"
+              : image.controls
+                ? "bottom-14 right-3 sm:bottom-16 sm:right-7"
+                : "bottom-3 right-3 sm:bottom-7 sm:right-7"
           }`}
         >
-          <div className="text-white">
-            <div className="font-brand text-3xl sm:text-6xl">{image.title || imageTitle}</div>
-            <div className="mt-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/70 sm:mt-1 sm:text-xs sm:tracking-[0.22em]">
-              {image.subtitle || imageSubtitle}
+          {!image.hideCaption ? (
+            <div className="text-white">
+              <div className="font-brand text-3xl sm:text-6xl">{image.title || imageTitle}</div>
+              {!image.hideSubtitle ? (
+                <div className="mt-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-white/70 sm:mt-1 sm:text-xs sm:tracking-[0.22em]">
+                  {image.subtitle || imageSubtitle}
+                </div>
+              ) : null}
             </div>
-          </div>
+          ) : null}
           <div className="flex gap-2">
             <GalleryButton label="Önceki görsel" onClick={() => onMove(-1)}>
               <ArrowLeft size={18} />
@@ -306,25 +319,33 @@ function PurchasePanel({
             <CalendarDays size={14} aria-hidden="true" />
             {config.date} · {config.time}
           </span>
-          <span>
-            <Sparkles size={14} aria-hidden="true" />
-            {config.experienceLabel}
-          </span>
+          {config.experienceLabel ? (
+            <span>
+              <Sparkles size={14} aria-hidden="true" />
+              {config.experienceLabel}
+            </span>
+          ) : null}
           <a href={config.venueUrl} target="_blank" rel="noreferrer">
             <MapPin size={14} aria-hidden="true" />
             {config.venue} · {config.city} ↗
           </a>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded-full bg-foreground px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-background">
-            notwork experience
+        <div className="flex flex-nowrap items-center gap-1.5 overflow-hidden">
+          <span className="whitespace-nowrap rounded-full bg-foreground px-2 py-1 text-[8px] font-black uppercase tracking-[0.04em] text-background sm:px-2.5 sm:text-[9px] sm:tracking-[0.12em]">
+            social networking experience
           </span>
-          <span className="rounded-full bg-[#d8c6ff] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#392263]">
+          <span className="whitespace-nowrap rounded-full bg-[#d8c6ff] px-2 py-1 text-[8px] font-black uppercase tracking-[0.04em] text-[#392263] sm:px-2.5 sm:text-[9px] sm:tracking-[0.12em]">
             {config.capacityLabel || "limited capacity"}
           </span>
         </div>
 
-        <h1 className="mt-3 font-display text-[2.4rem] font-black leading-[0.82] tracking-[-0.075em] sm:mt-5 sm:text-[clamp(3.1rem,7vw,5.4rem)]">
+        <h1
+          className={`mt-3 font-display font-black leading-[0.9] tracking-[-0.075em] sm:mt-5 ${
+            config.titleLines.length === 1
+              ? "whitespace-nowrap text-[clamp(1.95rem,8.8vw,2.7rem)] sm:text-[clamp(2.35rem,3vw,2.8rem)]"
+              : "text-[2.4rem] sm:text-[clamp(3.1rem,7vw,5.4rem)]"
+          }`}
+        >
           {config.titleLines.map((line) => (
             <span key={line} className="block">
               {line}
@@ -335,18 +356,17 @@ function PurchasePanel({
           {config.description}
         </p>
 
-        <div id="biletler" className="mt-5 scroll-mt-24 sm:mt-7">
+        <div id="biletler" className="mt-4 scroll-mt-24 sm:mt-7">
           <div className="flex items-end justify-between gap-3">
             <div>
               <div className="text-xs font-black uppercase tracking-[0.2em] text-primary-deep">
                 biletini seç
               </div>
-              <div className="mt-1 text-sm text-muted-foreground">Tüm deneyimler bilete dahil.</div>
             </div>
             <Ticket className="text-primary-deep" size={24} />
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:grid-cols-1 sm:gap-2.5">
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:mt-4 sm:gap-2.5">
             {config.tickets.map((option) => {
               const selected = selectedTicket === option.id;
               return (
@@ -354,20 +374,20 @@ function PurchasePanel({
                   key={option.id}
                   type="button"
                   onClick={() => onTicketChange(option.id)}
-                  className={`relative flex min-h-28 w-full flex-col items-start gap-2 rounded-2xl border p-3 text-left transition sm:min-h-0 sm:flex-row sm:items-center sm:gap-3 sm:p-4 ${
+                  className={`relative flex min-h-16 w-full items-center gap-3 rounded-2xl border p-3 text-left transition sm:min-h-0 sm:p-4 ${
                     selected
                       ? "border-primary bg-primary/10 shadow-[0_12px_35px_rgba(77,175,184,0.14)]"
                       : "border-border bg-background hover:border-primary/45"
                   }`}
                 >
                   <span
-                    className={`absolute right-3 top-3 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border sm:static ${
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
                       selected ? "border-primary bg-primary" : "border-border bg-white"
                     }`}
                   >
                     {selected ? <Check size={13} strokeWidth={3} /> : null}
                   </span>
-                  <span className="min-w-0 flex-1 pr-5 sm:pr-0">
+                  <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="font-black">{option.name}</span>
                       {option.badge ? (
@@ -376,49 +396,23 @@ function PurchasePanel({
                         </span>
                       ) : null}
                     </span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {option.note}
-                    </span>
+                    {option.note ? (
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        {option.note}
+                      </span>
+                    ) : null}
                   </span>
-                  <span className="mt-auto shrink-0 text-lg font-black sm:mt-0">
-                    {option.price} TL
-                  </span>
+                  <span className="shrink-0 text-lg font-black">{option.price} TL</span>
                 </button>
               );
             })}
           </div>
 
           {config.ticketGift ? (
-            <div className="mt-3 flex items-center gap-3 rounded-2xl border border-[#f2c55b]/45 bg-[#fff3c9] p-3 text-[#523a06]">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f2c55b]/35">
-                <Gift size={18} />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-[10px] font-black uppercase tracking-[0.17em]">
-                  bilet hediyesi
-                </span>
-                <span className="mt-0.5 block text-xs font-bold leading-snug sm:text-sm">
-                  {config.ticketGift}
-                </span>
-              </span>
+            <div className="mt-3 flex items-center gap-2 text-xs font-bold text-[#765c24]">
+              <Gift size={16} aria-hidden="true" /> {config.ticketGift}
             </div>
           ) : null}
-        </div>
-
-        <div className="mt-4 flex items-end justify-between border-t border-border pt-4 sm:mt-5 sm:pt-5">
-          <div>
-            <div className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              toplam
-            </div>
-            <div className="mt-0.5 text-2xl font-black tracking-[-0.04em] sm:mt-1 sm:text-3xl">
-              {selectedOption.price} TL
-            </div>
-          </div>
-          <div className="text-right text-xs leading-relaxed text-muted-foreground">
-            Güvenli ödeme
-            <br />
-            bilet platformunda
-          </div>
         </div>
 
         <TicketButton
@@ -426,16 +420,6 @@ function PurchasePanel({
           selectedOption={selectedOption}
           onTicketRedirect={onTicketRedirect}
         />
-
-        <p className="mt-2 text-center text-[10px] font-semibold leading-relaxed text-muted-foreground sm:text-xs">
-          Bilet aldığında anlaşmalı bilet sayfamız BiletimGO’ya yönlendirileceksin.
-        </p>
-
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold text-muted-foreground sm:mt-4 sm:gap-2 sm:text-xs">
-          <Check size={14} className="text-primary-deep" /> Kontenjan sınırlıdır
-          <span>·</span>
-          <Check size={14} className="text-primary-deep" /> Tüm deneyimler dahil
-        </div>
       </div>
     </aside>
   );
@@ -453,6 +437,7 @@ function TicketButton({
   if (config.ticketUrl) {
     return (
       <a
+        id="primary-ticket-cta"
         href={config.ticketUrl}
         target="_blank"
         rel="noreferrer"
@@ -478,6 +463,7 @@ function TicketButton({
 
   return (
     <button
+      id="primary-ticket-cta"
       type="button"
       disabled
       className="mt-5 flex min-h-14 w-full cursor-not-allowed items-center justify-center gap-2 rounded-2xl bg-foreground/85 px-5 py-4 text-base font-black text-background/80"
@@ -548,9 +534,11 @@ function EventFlow({ config }: { config: EventProductConfig }) {
               ))}
             </h2>
           </div>
-          <p className="max-w-md text-sm leading-relaxed text-white/55 sm:text-base">
-            {config.flowDescription}
-          </p>
+          {config.flowDescription ? (
+            <p className="max-w-md text-sm leading-relaxed text-white/55 sm:text-base">
+              {config.flowDescription}
+            </p>
+          ) : null}
         </div>
 
         <div
@@ -637,12 +625,6 @@ function CommunitySection({ config }: { config: EventProductConfig }) {
                 className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-xs font-black text-background transition hover:bg-primary-deep sm:px-5 sm:py-3 sm:text-sm"
               >
                 Community’ye katıl <ArrowRight size={16} />
-              </Link>
-              <Link
-                to="/networking"
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2.5 text-xs font-black transition hover:border-primary sm:px-5 sm:py-3 sm:text-sm"
-              >
-                Network ağını gör
               </Link>
             </div>
           </div>
