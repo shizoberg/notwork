@@ -200,6 +200,48 @@
 .match-glass .match-next-button:disabled {
   opacity: 0.55;
 }
+.match-next-actions {
+  display: grid;
+  gap: 10px;
+}
+.match-review-link {
+  width: 100%;
+  padding: 10px 14px;
+  color: #46708a;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.match-rotation-dialog {
+  max-width: 430px;
+  border: 1px solid #a9d2ea;
+  border-radius: 26px;
+  background: #eff8ff;
+  color: #173e57;
+}
+.match-rotation-actions {
+  display: grid;
+  gap: 9px;
+  margin-top: 12px;
+}
+.match-rotation-actions button {
+  min-height: 48px;
+  border: 1px solid #abcfe4;
+  border-radius: 16px;
+  background: #fff;
+  color: #2d6384;
+  font-weight: 750;
+}
+.match-rotation-actions button:last-child {
+  border-color: #287cac;
+  background: #287cac;
+  color: #fff;
+}
+.match-rotation-actions button:disabled {
+  opacity: 0.55;
+}
 .match-glass details.match-photo:not(.event-chat) {
   border-color: #bad6e8;
   background: linear-gradient(135deg, #e7f3fded, #d4e7f4be);

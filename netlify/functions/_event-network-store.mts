@@ -650,6 +650,21 @@ async function rememberGroupForEveryParticipant(
   );
 }
 
+async function ensureGroupSeenForEveryParticipant(
+  store: ReturnType<typeof getEventNetworkStore>,
+  match: StoredActiveMatch,
+) {
+  await Promise.all(
+    match.participantIds.map(async (participantId) => {
+      const cursor = await readCursor(store, participantId);
+      match.participantIds.forEach((memberId) => {
+        if (memberId !== participantId) cursor.seen.add(memberId);
+      });
+      await writeCursor(store, participantId, Math.max(cursor.round, match.round), cursor.seen);
+    }),
+  );
+}
+
 async function getActiveMatch(
   store: ReturnType<typeof getEventNetworkStore>,
   participantId: string,
@@ -920,7 +935,12 @@ export async function eventChat(
   if (!registration || registration.participant.status !== "registered")
     throw new Error("Etkinlik oturumu gerekli");
   const activeGroup = await getActiveMatch(store, registration.participant.id);
-  const key = matchChatKey(getNetworkPrefix(), registration.participant.id, activeGroup, input.groupId);
+  const key = matchChatKey(
+    getNetworkPrefix(),
+    registration.participant.id,
+    activeGroup,
+    input.groupId,
+  );
   type Message = {
     id: string;
     participantId: string;
@@ -929,14 +949,21 @@ export async function eventChat(
     text: string;
     createdAt: string;
   };
-  if (input.action === "chatRead")
-    return (
+  if (input.action === "chatRead") {
+    const messages =
       (
         (await store.get(key, { type: "json", consistency: "strong" })) as {
           messages: Message[];
         } | null
-      )?.messages || []
+      )?.messages || [];
+    matchChatKey(
+      getNetworkPrefix(),
+      registration.participant.id,
+      await getActiveMatch(store, registration.participant.id),
+      activeGroup?.id,
     );
+    return messages;
+  }
   const message = clean(input.message, 500);
   const id = clean(input.messageId, 80);
   if (!message || !/^[a-zA-Z0-9-]{8,80}$/.test(id)) throw new Error("Mesaj geçersiz");
@@ -1122,6 +1149,7 @@ export async function getNextMatchGroup(
     .filter((row) => row.participant.id !== current.participant.id)
     .filter((row) => row.profile.emailNormalized !== current.profile.emailNormalized)
     .filter((row) => row.participant.status === "registered")
+    .filter((row) => !cursor.seen.has(row.participant.id))
     .filter((row) => (presenceMap.get(row.participant.id) || "open") !== "paused");
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const roomIndex = (await store.get(`${getNetworkPrefix()}/room-index-v2.json`, {
@@ -1331,6 +1359,7 @@ export async function completeActiveMatchByToken(
     input,
     activeMatch.photoOwnerParticipantId === registration.participant.id,
   );
+  await ensureGroupSeenForEveryParticipant(store, activeMatch);
   await atomicState(
     store,
     `${getNetworkPrefix()}/room-index-v2.json`,
@@ -1344,6 +1373,28 @@ export async function completeActiveMatchByToken(
     completedCount: 1,
     totalCount: activeMatch.participantIds.length,
   };
+}
+
+export async function rotateActiveMatchByToken(
+  store: ReturnType<typeof getEventNetworkStore>,
+  accessToken: string,
+  groupId: string,
+) {
+  const registration = await getRegistrationByToken(store, accessToken);
+  if (!registration || registration.participant.status !== "registered")
+    throw new Error("Etkinlik oturumu gerekli");
+  if (!groupId) throw new Error("Grup kimliği gerekli");
+  const activeMatch = await getActiveMatch(store, registration.participant.id);
+  if (!activeMatch || activeMatch.id !== groupId)
+    throw new Error("Grubun değişti. Yeni eşleşmeni aç.");
+  await ensureGroupSeenForEveryParticipant(store, activeMatch);
+  const released = await atomicState(
+    store,
+    `${getNetworkPrefix()}/room-index-v2.json`,
+    emptyRooms<StoredActiveMatch>,
+    (state) => releaseRoom(state, registration.participant.id, groupId),
+  );
+  return { ok: true as const, released };
 }
 
 export async function seedSampleRegistrations(
@@ -1391,16 +1442,33 @@ export async function repairParticipantCodes(store: ReturnType<typeof getEventNe
   let repaired = 0;
   for (const row of invalidCodes.slice(0, 5)) {
     const key = participantKey(row.participant.id);
-    const current = await store.get(key, { type: "json", consistency: "strong" }) as EventNetworkRegistration;
+    const current = (await store.get(key, {
+      type: "json",
+      consistency: "strong",
+    })) as EventNetworkRegistration;
     if (!current || current.participant.publicCode !== row.participant.publicCode) continue;
     const code = await reservePublicCode(store, current.participant.id);
-    await store.setJSON(`${getNetworkPrefix()}/code-repair-backups/${current.participant.id}.json`, current, { onlyIfNew: true });
+    await store.setJSON(
+      `${getNetworkPrefix()}/code-repair-backups/${current.participant.id}.json`,
+      current,
+      { onlyIfNew: true },
+    );
     for (const recordKey of [key, profileKey(current.profile.emailNormalized)]) {
-      await atomicState(store, recordKey, () => current, (record: EventNetworkRegistration) => {
-        record.participant.publicCode = code;
-      });
+      await atomicState(
+        store,
+        recordKey,
+        () => current,
+        (record: EventNetworkRegistration) => {
+          record.participant.publicCode = code;
+        },
+      );
     }
-    await syncMemberEventCode(current.profile.username, current.profile.emailNormalized, current.participant.eventId, code);
+    await syncMemberEventCode(
+      current.profile.username,
+      current.profile.emailNormalized,
+      current.participant.eventId,
+      code,
+    );
     repaired++;
   }
   return { repaired, remaining: Math.max(0, invalidCodes.length - repaired) };

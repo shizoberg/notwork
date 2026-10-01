@@ -17,8 +17,13 @@ import {
   resumeEventNetwork,
   getEventNetworkMatch,
   getEventNetworkTokenStorageKey,
+  rotateEventNetworkMatch,
 } from "@/lib/event-network-api";
-import { getEventSelectionFromLocation, withEventSelection } from "@/lib/event-registry";
+import {
+  getEventSelectionFromLocation,
+  getPublicEventContext,
+  withEventSelection,
+} from "@/lib/event-registry";
 import { useEventPreview } from "@/lib/event-preview";
 import { matchPreview, registration as matchPreviewRegistration } from "@/lib/match-preview";
 
@@ -44,7 +49,7 @@ export const Route = createFileRoute("/21-agustos/eslesme")({
 
 function AugustMatchPage() {
   const preview = useEventPreview();
-  const eventSelection = getEventSelectionFromLocation();
+  const eventSelection = useMemo(() => getEventSelectionFromLocation(), []);
   const tokenStorageKey = getEventNetworkTokenStorageKey(eventSelection);
   const [token, setToken] = useState("");
   const [group, setGroup] = useState<EventNetworkMatchGroup | null>(null);
@@ -60,6 +65,7 @@ function AugustMatchPage() {
   const [isPhotoProcessing, setIsPhotoProcessing] = useState(false);
   const [codeOpen, setCodeOpen] = useState(false);
   const [groupNameOpen, setGroupNameOpen] = useState(false);
+  const [rotationPromptOpen, setRotationPromptOpen] = useState(false);
   const reviewPanelRef = useRef<HTMLDetailsElement>(null);
 
   const currentMember = useMemo(
@@ -85,27 +91,24 @@ function AugustMatchPage() {
     [group],
   );
 
-  const loadMatch = useCallback(
-    async (nextToken = token, silent = false) => {
-      if (!nextToken) return;
-      if (!silent) {
-        setStatus("loading");
-        setMessage("");
-      }
-      try {
-        const result = await getEventNetworkMatch(nextToken);
-        setPresence(result.presence);
-        setRegistration(result.registration);
-        setGroup(result.group);
-        setStatus(result.status === "ready" ? "ready" : result.status);
-        return result;
-      } catch (error) {
-        setMessage(error instanceof Error ? error.message : "Eşleşme alınamadı.");
-        setStatus("idle");
-      }
-    },
-    [token],
-  );
+  const loadMatch = useCallback(async (nextToken: string, silent = false) => {
+    if (!nextToken) return;
+    if (!silent) {
+      setStatus("loading");
+      setMessage("");
+    }
+    try {
+      const result = await getEventNetworkMatch(nextToken);
+      setPresence(result.presence);
+      setRegistration(result.registration);
+      setGroup(result.group);
+      setStatus(result.status === "ready" ? "ready" : result.status);
+      return result;
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Eşleşme alınamadı.");
+      setStatus("idle");
+    }
+  }, []);
 
   useEffect(() => {
     if (preview === null) return;
@@ -124,6 +127,18 @@ function AugustMatchPage() {
           setGroup(result.group);
           setStatus("ready");
           return;
+        }
+        if (!recoveredToken) {
+          try {
+            const { event } = await getPublicEventContext(eventSelection);
+            recoveredToken =
+              localStorage.getItem(getEventNetworkTokenStorageKey({ eventId: event.id })) ||
+              localStorage.getItem(getEventNetworkTokenStorageKey({ event: event.slug })) ||
+              "";
+            if (recoveredToken) localStorage.setItem(tokenStorageKey, recoveredToken);
+          } catch {
+            // The normal profile session can still restore this event registration.
+          }
         }
         setStatus("loading");
         let recovered;
@@ -156,7 +171,7 @@ function AugustMatchPage() {
     return () => {
       cancelled = true;
     };
-  }, [tokenStorageKey, preview]);
+  }, [tokenStorageKey, preview, eventSelection, loadMatch]);
 
   useEffect(() => {
     if (!token || !["ready", "empty"].includes(status)) return;
@@ -175,6 +190,55 @@ function AugustMatchPage() {
     );
     return () => window.clearInterval(interval);
   }, [group, loadMatch, status, token]);
+
+  useEffect(() => {
+    if (!group?.id || !token || status !== "ready") return;
+    const promptKey = `notwork-match-next-prompt:${group.id}`;
+    if (localStorage.getItem(promptKey)) return;
+    const dueAt = Date.parse(group.generatedAt) + 15 * 60_000;
+    const timer = window.setTimeout(
+      () => setRotationPromptOpen(true),
+      Math.max(0, dueAt - Date.now()),
+    );
+    return () => window.clearTimeout(timer);
+  }, [group?.id, group?.generatedAt, status, token]);
+
+  useEffect(() => {
+    setComment("");
+    setPhotoDataUrl("");
+    setReviewConsent(false);
+    setRating(5);
+    setRotationPromptOpen(false);
+  }, [group?.id]);
+
+  const dismissRotationPrompt = () => {
+    if (group) localStorage.setItem(`notwork-match-next-prompt:${group.id}`, "dismissed");
+    setRotationPromptOpen(false);
+  };
+
+  const rotateMatch = async () => {
+    if (!group || !token || isCompleting) return;
+    const currentGroupId = group.id;
+    setIsCompleting(true);
+    setMessage("");
+    setRotationPromptOpen(false);
+    try {
+      await rotateEventNetworkMatch(token, currentGroupId);
+      localStorage.setItem(`notwork-match-next-prompt:${currentGroupId}`, "accepted");
+      setGroup(null);
+      const nextMatch = await loadMatch(token);
+      setMessage(
+        nextMatch?.group
+          ? "Yeni grubun hazır. Tanışma zamanı."
+          : "Yeni bağlantıların için daha önce tanışmadığın kişiler bekleniyor.",
+      );
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Yeni eşleşme başlatılamadı.");
+      setRotationPromptOpen(true);
+    } finally {
+      setIsCompleting(false);
+    }
+  };
 
   const completeMatch = async () => {
     if (!token) return;
@@ -324,7 +388,9 @@ function AugustMatchPage() {
               {status === "ready" && group ? (
                 <div className="space-y-5">
                   <div className="match-group-identity">
-                    <span>Senin grubun</span>
+                    <span>
+                      {group.round > 1 ? `${group.round}. tur · senin grubun` : "Senin grubun"}
+                    </span>
                     <h2>{group.groupName}</h2>
                     <button type="button" onClick={() => setGroupNameOpen(true)}>
                       <Maximize2 size={17} aria-hidden="true" />
@@ -537,22 +603,61 @@ function AugustMatchPage() {
               ) : null}
               <p className="match-motto">Her an network kıymetlidir.</p>
               {group && (
-                <button
-                  className="tool-primary match-next-button"
-                  disabled={isCompleting}
-                  onClick={() => {
-                    if (!reviewPanelRef.current) return;
-                    reviewPanelRef.current.open = true;
-                    reviewPanelRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-                    setMessage("Yeni gruba geçmeden önce kısa yorumunu ve puanını bırak.");
-                  }}
-                >
-                  Puanla ve yeni grup belirle →
-                </button>
+                <div className="match-next-actions">
+                  <button
+                    className="tool-primary match-next-button"
+                    disabled={isCompleting}
+                    onClick={() => setRotationPromptOpen(true)}
+                  >
+                    Yeni eşleşme iste →
+                  </button>
+                  {!currentMemberDone && (
+                    <button
+                      className="match-review-link"
+                      onClick={() => {
+                        if (!reviewPanelRef.current) return;
+                        reviewPanelRef.current.open = true;
+                        reviewPanelRef.current.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        });
+                      }}
+                    >
+                      Önce bu gruba fotoğraf ve yorum bırak
+                    </button>
+                  )}
+                </div>
               )}
+              <Dialog
+                open={rotationPromptOpen && Boolean(group)}
+                onOpenChange={(open) => {
+                  if (!open) dismissRotationPrompt();
+                  else setRotationPromptOpen(true);
+                }}
+              >
+                <DialogContent className="match-rotation-dialog">
+                  <DialogTitle>Yeni kişilerle eşleşmek ister misin?</DialogTitle>
+                  <DialogDescription>
+                    Evet dersen bu grup kapanır ve herkes daha önce tanışmadığı boşta olan
+                    katılımcılarla yeniden eşleşir.
+                  </DialogDescription>
+                  <div className="match-rotation-actions">
+                    <button type="button" onClick={dismissRotationPrompt} disabled={isCompleting}>
+                      Bu grupta kal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void rotateMatch()}
+                      disabled={isCompleting}
+                    >
+                      {isCompleting ? "Yeni kişiler aranıyor…" : "Evet, yeni eşleşme bul"}
+                    </button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               {status === "idle" && token ? (
                 <button
-                  onClick={() => void loadMatch()}
+                  onClick={() => void loadMatch(token)}
                   className="w-full rounded-full bg-[#8ee4e8] px-5 py-4 text-sm font-black text-[#071112]"
                 >
                   Eşleşmemi getir

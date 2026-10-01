@@ -210,6 +210,7 @@ try {
   await page.locator(".entry-app-step").first().waitFor();
   assert.equal(await page.locator(".entry-app-step").filter({ hasText: "ntw.five" }).count(), 0);
   const login = await newPage();
+  await login.clock.install({ time: new Date() });
   await login.goto(`${base}/linkler?event=${slug}`);
   await login.getByRole("button", { name: "Sadece zorunlu", exact: true }).click();
   await login.getByRole("button", { name: /^Giriş yap Kullanıcı/ }).click();
@@ -227,6 +228,10 @@ try {
   await login.locator(".match-people article").first().waitFor();
   await login.reload();
   await login.locator(".match-people article").first().waitFor();
+  await login.clock.fastForward(15 * 60_000 + 1_000);
+  await login.getByRole("dialog").getByText("Yeni kişilerle eşleşmek ister misin?").waitFor();
+  await login.getByRole("dialog").getByRole("button", { name: "Bu grupta kal" }).click();
+  await login.getByRole("dialog").waitFor({ state: "hidden" });
   assert.deepEqual(errors, [], "No client runtime errors");
   for (const p of [page, login])
     assert.ok(

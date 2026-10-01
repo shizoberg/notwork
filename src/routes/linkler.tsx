@@ -156,7 +156,7 @@ function LinksPage() {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginConsent, setLoginConsent] = useState(false);
   const eventSelection = useMemo<EventSelection>(
-    () => (activeEvent ? { event: activeEvent.slug } : {}),
+    () => (activeEvent ? { eventId: activeEvent.id } : {}),
     [activeEvent],
   );
   const tokenStorageKey = useMemo(
@@ -294,8 +294,13 @@ function LinksPage() {
         console.error(error);
       }
 
-      const selection: EventSelection = selectedEvent ? { event: selectedEvent.slug } : {};
+      const selection: EventSelection = selectedEvent ? { eventId: selectedEvent.id } : {};
       const activeTokenStorageKey = getEventNetworkTokenStorageKey(selection);
+      if (selectedEvent && !localStorage.getItem(activeTokenStorageKey)) {
+        const previousKey = getEventNetworkTokenStorageKey({ event: selectedEvent.slug });
+        const previousToken = localStorage.getItem(previousKey);
+        if (previousToken) localStorage.setItem(activeTokenStorageKey, previousToken);
+      }
       const activeDraftStorageKey = `${activeTokenStorageKey}:registration-draft:v1`;
       try {
         const storedDraft = JSON.parse(
@@ -490,6 +495,11 @@ function LinksPage() {
   const isFlowControlled = Boolean(
     currentFlowProduct && liveFlow && ["running", "awaiting_advance"].includes(liveFlow.status),
   );
+  const isFlowStepLocked = (product: EventProductKey | null) =>
+    Boolean(
+      product &&
+      (liveFlow?.status === "completed" || (isFlowControlled && product !== currentFlowProduct)),
+    );
 
   function toggleOffer(offer: string) {
     setForm((current) => {
@@ -718,15 +728,15 @@ function LinksPage() {
                     <a
                       key={title}
                       href={
-                        isFlowControlled && product !== currentFlowProduct
+                        isFlowStepLocked(product)
                           ? undefined
                           : preview && href.startsWith("/")
                             ? `${href}${href.includes("?") ? "&" : "?"}preview=event`
                             : href
                       }
-                      aria-disabled={isFlowControlled && product !== currentFlowProduct}
+                      aria-disabled={isFlowStepLocked(product)}
                       className={`entry-app-step group${
-                        isFlowControlled && product !== currentFlowProduct ? " is-locked" : ""
+                        isFlowStepLocked(product) ? " is-locked" : ""
                       }`}
                     >
                       <span className="entry-app-index">{String(index + 1).padStart(2, "0")}</span>
@@ -738,7 +748,11 @@ function LinksPage() {
                         <small>{description}</small>
                       </span>
                       <span className="entry-app-action">
-                        {isFlowControlled && product !== currentFlowProduct ? "Sırada" : "Başla"}{" "}
+                        {isFlowStepLocked(product)
+                          ? liveFlow?.status === "completed"
+                            ? "Tamamlandı"
+                            : "Sırada"
+                          : "Başla"}{" "}
                         <ArrowRight size={15} />
                       </span>
                     </a>

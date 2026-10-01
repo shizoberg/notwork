@@ -224,6 +224,26 @@ export async function completeEventNetworkMatchWithReview(
   }>;
 }
 
+export async function rotateEventNetworkMatch(
+  accessToken: string,
+  groupId: string,
+  selection?: EventSelection,
+) {
+  if (isEventPreview() && accessToken === "local-match-preview")
+    return (await import("./match-preview")).rotatePreview(groupId);
+  const activeSelection = resolvedSelection(selection);
+  const response = await fetch(apiUrl(activeSelection), {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(
+      withEventSelectionInput({ action: "rotateMatch", accessToken, groupId }, activeSelection),
+    ),
+  });
+  if (!response.ok) throw new Error(await response.text());
+  return response.json() as Promise<{ ok: true; released: boolean }>;
+}
+
 export async function seedEventNetworkSamples(selection?: EventSelection) {
   const activeSelection = resolvedSelection(selection);
   const response = await fetch(apiUrl(activeSelection), {

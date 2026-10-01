@@ -214,6 +214,38 @@ try {
     { groupId: a.id, message: "Eski gruba yazma", messageId: "old-group-message" },
     400,
   );
+  const roundTwoRooms = await store.get(`${prefix}/room-index-v2.json`);
+  const [rotationA, rotationB, untouched] = Object.values(roundTwoRooms.groups);
+  const rotationAIndex = indexById.get(rotationA.participantIds[0]);
+  const rotationBIndex = indexById.get(rotationB.participantIds[0]);
+  await callMatch(rotationAIndex, "chatSend", {
+    groupId: rotationA.id,
+    message: "İkinci tur sohbeti",
+    messageId: "round-two-chat-001",
+  });
+  await callMatch(rotationBIndex, "chatRead", { groupId: rotationA.id }, 400);
+  await callMatch(rotationBIndex, "rotateMatch", { groupId: rotationA.id }, 400);
+  const switched = await callMatch(rotationAIndex, "rotateMatch", { groupId: rotationA.id });
+  assert.equal(switched.data.released, true);
+  const afterFirstRotation = await store.get(`${prefix}/room-index-v2.json`);
+  assert.ok(rotationA.participantIds.every((id) => !afterFirstRotation.members[id]));
+  assert.ok(untouched.participantIds.every((id) => afterFirstRotation.members[id] === untouched.id));
+  await callMatch(rotationAIndex, "chatRead", { groupId: rotationA.id }, 400);
+  await callMatch(rotationAIndex, "chatSend", {
+    groupId: rotationA.id,
+    message: "Eski sohbet kapalı",
+    messageId: "closed-group-chat",
+  }, 400);
+  assert.equal((await callMatch(rotationAIndex, "match")).data.status, "empty");
+  await callMatch(rotationBIndex, "rotateMatch", { groupId: rotationB.id });
+  const newGroup = (await callMatch(rotationAIndex, "match")).data.group;
+  assert.ok(newGroup && newGroup.id !== rotationA.id);
+  assert.ok(
+    newGroup.members.every(
+      (member) => member.isCurrentUser || !rotationA.participantIds.includes(member.participantId),
+    ),
+    "A new round must use previously unseen participants",
+  );
   assert.equal((await store.list({ prefix: `${prefix}/match-history/` })).blobs.length >= 33, true);
   report.match = {
     participants: 100,
@@ -222,6 +254,7 @@ try {
     waiting: 1,
     chatsIsolated: true,
     rematch: true,
+    explicitRotation: true,
     photos: 33,
   };
 
@@ -247,6 +280,43 @@ try {
   await flow.mutateEventFlow(eventId, "advance");
   assert.equal((await flow.readEventFlow(eventId)).currentStepIndex, 1);
   report.flow = { startsOnlyByAdmin: true, durationConfig: true, notices: true, advance: true };
+  const nextEvent = await registry.createEvent({
+    title: "notwork Ankara",
+    slug: "ankara-test-2026",
+    shortTitle: "Ankara Test",
+    startsAt: "2026-12-01T17:00:00.000Z",
+    status: "live",
+    entry: { isOpen: true },
+    products: {
+      matchlab: { enabled: true, visible: true, state: "live", dataMode: "live" },
+    },
+  });
+  assert.equal((await registry.getEvent(nextEvent.slug)).id, nextEvent.id);
+  assert.equal((await flow.readEventFlow(nextEvent.id)).status, "idle");
+  const otherEventRegistration = await request(
+    network,
+    {
+      action: "register",
+      event: nextEvent.id,
+      firstName: "Ankara",
+      lastName: "Test",
+      email: "ankara-test@example.org",
+      offers: ["tasarım"],
+      needs: "Yeni bağlantılar",
+      needTag: "networking",
+      attendedEvent: nextEvent.slug,
+      eventConsent: true,
+      generalNetworkOptIn: false,
+    },
+    "",
+    201,
+  );
+  assert.notEqual(otherEventRegistration.data.participant.eventId, registrations[0].participant.eventId);
+  assert.equal(
+    (await store.list({ prefix: `events/${nextEvent.id}/live/matchlab/` })).blobs.length > 0,
+    true,
+  );
+  report.newEvent = { ownDataset: true, ownFlow: true, foundBySlug: true };
   report.paidCalls = 0;
   report.realDataTouched = false;
   console.log(JSON.stringify(report, null, 2));

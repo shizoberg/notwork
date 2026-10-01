@@ -60,6 +60,7 @@ try {
   await fresh.screenshot({ path: "test-results/october/sandbox-new-home.png", fullPage: true });
   await fresh.locator(".entry-app-step").filter({ hasText: "notwork match" }).click();
   await fresh.getByRole("region", { name: "Grup sohbeti" }).waitFor();
+  assert.match(fresh.url(), /eslesme\?eventId=evt_9_ekim_2026/);
   assert.ok(await fresh.getByLabel("Grup sohbetine mesaj").isVisible());
   await fresh.getByLabel("Grup sohbetine mesaj").fill("Masada buluşalım");
   await fresh.getByRole("button", { name: "Mesaj gönder" }).click();
@@ -68,6 +69,16 @@ try {
   await fresh.getByText("Masada buluşalım").waitFor();
   await fresh.locator(".event-route-transition").waitFor({ state: "detached" });
   await fresh.screenshot({ path: "test-results/october/sandbox-match-chat.png", fullPage: true });
+  await fresh.getByRole("button", { name: "Yeni eşleşme iste" }).click();
+  await fresh.getByRole("dialog").getByText("Yeni kişilerle eşleşmek ister misin?").waitFor();
+  const rotationResponse = fresh.waitForResponse(
+    (response) =>
+      response.url().includes("/api/event-products/network") &&
+      response.request().postData()?.includes('"action":"rotateMatch"'),
+  );
+  await fresh.getByRole("dialog").getByRole("button", { name: "Evet, yeni eşleşme bul" }).click();
+  assert.deepEqual(await (await rotationResponse).json(), { ok: true, released: true });
+  await fresh.getByRole("dialog").waitFor({ state: "hidden" });
 
   const existing = await page();
   await existing.getByRole("button", { name: /^Giriş yap Kullanıcı/ }).click();

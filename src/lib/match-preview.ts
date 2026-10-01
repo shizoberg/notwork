@@ -89,3 +89,11 @@ export function completePreview(input: {
     totalCount: 3,
   };
 }
+
+export function rotatePreview(groupId: string) {
+  if (groupId !== `preview-${round}`) return { ok: true as const, released: false };
+  round++;
+  if (typeof window !== "undefined")
+    window.localStorage.setItem("notwork-match-preview-round", String(round));
+  return { ok: true as const, released: true };
+}

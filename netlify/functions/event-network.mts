@@ -9,6 +9,7 @@ import {
   getNextMatchGroup,
   getRegistrationByToken,
   registerNetworkProfile,
+  rotateActiveMatchByToken,
   resumeNetworkProfile,
   resetDemoEventNetworkDataset,
   seedSampleRegistrations,
@@ -149,6 +150,16 @@ export default async (request: Request, _context: Context) => {
         );
         if (!result) return new Response("Kayıt bulunamadı", { status: 404 });
         return json(result);
+      }
+
+      if (action === "rotateMatch") {
+        return json(
+          await rotateActiveMatchByToken(
+            store,
+            clean(input.accessToken, 100),
+            clean(input.groupId, 100),
+          ),
+        );
       }
 
       if (action === "seedSamples") {
