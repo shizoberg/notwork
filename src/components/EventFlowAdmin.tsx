@@ -15,6 +15,8 @@ export function EventFlowAdmin({ password, event }: { password: string; event: N
   const [busy, setBusy] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiProbe, setAiProbe] = useState("");
+  const [loadBusy, setLoadBusy] = useState(false);
+  const [loadProbe, setLoadProbe] = useState("");
   const [clock, setClock] = useState(Date.now());
   const selection = useMemo(() => ({ event: event.slug }), [event.slug]);
 
@@ -99,6 +101,35 @@ export function EventFlowAdmin({ password, event }: { password: string; event: N
     }
   }
 
+  async function testStorageLoad(sampleSize: 20 | 100) {
+    setLoadBusy(true);
+    setLoadProbe("");
+    try {
+      const response = await fetch("/api/admin/events/flow", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password, event: event.slug, action: "diagnoseLoad", sampleSize }),
+      });
+      if (!response.ok) throw new Error(`Altyapı testi tamamlanamadı (${response.status})`);
+      const result = (await response.json()) as {
+        passed: boolean;
+        requested: number;
+        fulfilled: number;
+        stored: number;
+        durationMs: number;
+        p95Ms: number | null;
+        failures: string[];
+      };
+      setLoadProbe(
+        `${result.passed ? "Başarılı" : "Hata"} · ${result.fulfilled}/${result.requested} işlem · kaydedilen ${result.stored} · toplam ${result.durationMs} ms · p95 ${result.p95Ms ?? "—"} ms${result.failures.length ? ` · ${result.failures.join("; ")}` : ""}`,
+      );
+    } catch (error) {
+      setLoadProbe(error instanceof Error ? error.message : "Altyapı testi tamamlanamadı");
+    } finally {
+      setLoadBusy(false);
+    }
+  }
+
   return (
     <section className="mt-6 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-[var(--shadow-card)]">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -123,6 +154,22 @@ export function EventFlowAdmin({ password, event }: { password: string; event: N
           </button>
           <button
             type="button"
+            disabled={loadBusy}
+            onClick={() => void testStorageLoad(20)}
+            className="inline-flex items-center gap-2 rounded-full border border-primary/25 px-4 py-2 text-sm font-black"
+          >
+            {loadBusy ? "Altyapı test ediliyor…" : "20 eşzamanlı işlem testi"}
+          </button>
+          <button
+            type="button"
+            disabled={loadBusy}
+            onClick={() => void testStorageLoad(100)}
+            className="inline-flex items-center gap-2 rounded-full border border-primary/25 px-4 py-2 text-sm font-black"
+          >
+            100 eşzamanlı işlem testi
+          </button>
+          <button
+            type="button"
             disabled={busy}
             onClick={() => void run("get")}
             className="inline-flex items-center gap-2 rounded-full border border-primary/25 px-4 py-2 text-sm font-black"
@@ -134,6 +181,11 @@ export function EventFlowAdmin({ password, event }: { password: string; event: N
       {aiProbe ? (
         <p role="status" className="mt-3 text-sm font-bold text-primary-deep">
           {aiProbe}
+        </p>
+      ) : null}
+      {loadProbe ? (
+        <p role="status" className="mt-3 text-sm font-bold text-primary-deep">
+          {loadProbe}
         </p>
       ) : null}
 

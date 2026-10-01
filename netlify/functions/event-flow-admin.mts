@@ -3,6 +3,7 @@ import type { Config, Context } from "@netlify/functions";
 import type { EventFlowStep } from "../../src/lib/event-flow.ts";
 import { mutateEventFlow, readEventFlow } from "./_event-flow-store.mjs";
 import { probeNtwAi } from "./_ntw-ai.mjs";
+import { probeStorageLoad } from "./_load-diagnostic.mjs";
 
 type AdminInput = {
   password?: string;
@@ -16,7 +17,9 @@ type AdminInput = {
     | "reset"
     | "addNotice"
     | "removeNotice"
-    | "diagnoseAi";
+    | "diagnoseAi"
+    | "diagnoseLoad";
+  sampleSize?: 20 | 100;
   steps?: EventFlowStep[];
   notice?: string;
   noticeId?: string;
@@ -40,6 +43,13 @@ export default async (request: Request, _context: Context) => {
     const action = input.action || "get";
     if (action === "diagnoseAi") {
       return Response.json(await probeNtwAi(), {
+        headers: { "cache-control": "no-store, private" },
+      });
+    }
+    if (action === "diagnoseLoad") {
+      if (input.sampleSize !== 20 && input.sampleSize !== 100)
+        return new Response("Geçersiz test boyutu", { status: 400 });
+      return Response.json(await probeStorageLoad(input.sampleSize), {
         headers: { "cache-control": "no-store, private" },
       });
     }

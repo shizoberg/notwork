@@ -21,6 +21,7 @@ try {
   const profile = (await sandbox.load("member-profile")).default;
   const members = await sandbox.load("_member-profile-store");
   const flow = await sandbox.load("_event-flow-store");
+  const loadDiagnostic = await sandbox.load("_load-diagnostic");
   const request = async (handler, body, cookie = "", expected = 200) => {
     const response = await handler(
       new Request("https://notwork.test/api/test", {
@@ -38,6 +39,14 @@ try {
     };
   };
   await registry.ensureEventRegistrySeeded();
+  const isolatedProbe = await loadDiagnostic.probeStorageLoad(20);
+  assert.equal(isolatedProbe.passed, true);
+  assert.equal(isolatedProbe.stored, 20);
+  assert.equal(
+    (await sandbox.blobs.getStore({ name: "ntw-load-diagnostic" }).list()).blobs.length,
+    0,
+    "Synthetic load keys must be removed",
+  );
   const event = await registry.getEvent(eventId);
   event.status = "live";
   event.revision = 100;
