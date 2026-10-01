@@ -42,11 +42,7 @@ try {
   const isolatedProbe = await loadDiagnostic.probeStorageLoad(20);
   assert.equal(isolatedProbe.passed, true);
   assert.equal(isolatedProbe.stored, 20);
-  assert.equal(isolatedProbe.delayedStored, 20);
-  assert.equal(isolatedProbe.initialWriteAccepted, true);
-  assert.equal(isolatedProbe.duplicateWriteRejected, true);
-  assert.equal(isolatedProbe.conditionalWriteAccepted, true);
-  assert.equal(isolatedProbe.staleWriteRejected, true);
+  assert.equal(isolatedProbe.databaseBacked, false);
   assert.equal(
     (await sandbox.blobs.getStore({ name: "ntw-load-diagnostic" }).list()).blobs.length,
     0,

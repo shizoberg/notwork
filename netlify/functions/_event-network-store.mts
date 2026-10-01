@@ -1,5 +1,7 @@
 import {
   atomicState,
+  readAtomicState,
+  deleteAtomicPrefix,
   emptyRooms,
   claimRoom,
   releaseRoom,
@@ -240,6 +242,7 @@ export async function resetDemoEventNetworkDataset(store: ReturnType<typeof getE
   }
   const { blobs } = await store.list({ prefix: `${getNetworkPrefix()}/` });
   await Promise.all(blobs.map((blob) => store.delete(blob.key)));
+  await deleteAtomicPrefix(`${getNetworkPrefix()}/`);
 }
 
 export function clean(value: unknown, maxLength: number) {
@@ -669,10 +672,11 @@ async function getActiveMatch(
   store: ReturnType<typeof getEventNetworkStore>,
   participantId: string,
 ) {
-  const state = (await store.get(`${getNetworkPrefix()}/room-index-v2.json`, {
-    type: "json",
-    consistency: "strong",
-  })) as RoomIndex<StoredActiveMatch> | null;
+  const state = await readAtomicState(
+    store,
+    `${getNetworkPrefix()}/room-index-v2.json`,
+    emptyRooms<StoredActiveMatch>,
+  );
   return state?.groups[state.members[participantId]] || null;
 }
 
@@ -952,9 +956,7 @@ export async function eventChat(
   if (input.action === "chatRead") {
     const messages =
       (
-        (await store.get(key, { type: "json", consistency: "strong" })) as {
-          messages: Message[];
-        } | null
+        await readAtomicState(store, key, () => ({ messages: [] as Message[] }))
       )?.messages || [];
     matchChatKey(
       getNetworkPrefix(),
@@ -1152,10 +1154,11 @@ export async function getNextMatchGroup(
     .filter((row) => !cursor.seen.has(row.participant.id))
     .filter((row) => (presenceMap.get(row.participant.id) || "open") !== "paused");
   for (let attempt = 0; attempt < 5; attempt += 1) {
-    const roomIndex = (await store.get(`${getNetworkPrefix()}/room-index-v2.json`, {
-      type: "json",
-      consistency: "strong",
-    })) as RoomIndex<StoredActiveMatch> | null;
+    const roomIndex = await readAtomicState(
+      store,
+      `${getNetworkPrefix()}/room-index-v2.json`,
+      emptyRooms<StoredActiveMatch>,
+    );
     const currentGroupId = roomIndex?.members[current.participant.id];
     const currentActiveMatch = currentGroupId ? roomIndex?.groups[currentGroupId] : null;
     if (currentActiveMatch) {

@@ -116,20 +116,13 @@ export function EventFlowAdmin({ password, event }: { password: string; event: N
         requested: number;
         fulfilled: number;
         stored: number;
-        delayedStored: number;
-        initialWriteAccepted: boolean;
-        duplicateWriteRejected: boolean;
-        seededCount: number | null;
-        seededEtagPresent: boolean;
-        conditionalWriteAccepted: boolean;
-        staleWriteRejected: boolean;
-        conditionalCount: number | null;
+        databaseBacked: boolean;
         durationMs: number;
         p95Ms: number | null;
         failures: string[];
       };
       setLoadProbe(
-        `${result.passed ? "Başarılı" : "Hata"} · ${result.fulfilled}/${result.requested} işlem · kaydedilen ${result.stored} (750 ms sonra ${result.delayedStored}) · ilk yazma ${result.initialWriteAccepted ? "evet" : "hayır"} · ikinci ilk-yazma reddi ${result.duplicateWriteRejected ? "evet" : "hayır"} · etag ${result.seededEtagPresent ? "var" : "yok"} · koşullu yazma ${result.conditionalWriteAccepted ? "evet" : "hayır"} · eski etag reddi ${result.staleWriteRejected ? "evet" : "hayır"} · kontrol değeri ${result.conditionalCount ?? "—"} · toplam ${result.durationMs} ms · p95 ${result.p95Ms ?? "—"} ms${result.failures.length ? ` · ${result.failures.join("; ")}` : ""}`,
+        `${result.passed ? "Başarılı" : "Hata"} · ${result.fulfilled}/${result.requested} işlem · kaydedilen ${result.stored} · ${result.databaseBacked ? "Netlify Database" : "yerel test"} · toplam ${result.durationMs} ms · p95 ${result.p95Ms ?? "—"} ms${result.failures.length ? ` · ${result.failures.join("; ")}` : ""}`,
       );
     } catch (error) {
       setLoadProbe(error instanceof Error ? error.message : "Altyapı testi tamamlanamadı");
