@@ -59,8 +59,21 @@ try {
   );
   globalThis.fetch = async () => Response.json({ output: [] });
   assert.equal(await ai.generateMatchAnalysis("invalid-response", [profile]), null);
-  globalThis.fetch = async () => new Response("quota", { status: 429 });
+  let quotaCalls = 0;
+  globalThis.fetch = async () => {
+    quotaCalls++;
+    return Response.json(
+      { error: { code: "credit_balance_exhausted", message: "No credits" } },
+      { status: 429 },
+    );
+  };
   assert.equal(await ai.generateMatchAnalysis("quota-test", [profile]), null);
+  assert.equal(await ai.generateMatchAnalysis("quota-test", [profile]), null);
+  assert.equal(quotaCalls, 1, "A depleted API must use fallback during cooldown");
+  const depletedProbe = await ai.probeNtwAi();
+  assert.equal(depletedProbe.ok, false);
+  assert.equal(depletedProbe.httpStatus, 429);
+  assert.equal(depletedProbe.errorCode, "credit_balance_exhausted");
   globalThis.fetch = async () => {
     throw new Error("simulated network failure");
   };

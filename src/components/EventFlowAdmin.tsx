@@ -83,11 +83,14 @@ export function EventFlowAdmin({ password, event }: { password: string; event: N
         durationMs: number;
         reason: string;
         httpStatus: number | null;
+        errorCode: string | null;
       };
       setAiProbe(
         result.ok
           ? `OpenAI çalışıyor · ${result.model} · ${result.durationMs} ms`
-          : `OpenAI yanıtı alınamadı · ${result.reason}${result.httpStatus ? ` (${result.httpStatus})` : ""} · ${result.durationMs} ms`,
+          : result.errorCode === "credit_balance_exhausted"
+            ? "OpenAI API kredisi tükendi. Kredi yüklendiğinde yeniden test et. Eşleştirme yedek algoritmayla devam eder."
+            : `OpenAI yanıtı alınamadı · ${result.reason}${result.httpStatus ? ` (${result.httpStatus})` : ""} · ${result.durationMs} ms`,
       );
     } catch (error) {
       setAiProbe(error instanceof Error ? error.message : "OpenAI testi tamamlanamadı");

@@ -22,7 +22,7 @@ const model = "gpt-5.6-luna";
 const maxCallsPerEvent = 400;
 const maxRequestBytes = 30_000;
 
-type AiDiagnostic = { reason?: string; httpStatus?: number };
+type AiDiagnostic = { reason?: string; httpStatus?: number; errorCode?: string };
 
 function clean(value: unknown, max = 400) {
   return typeof value === "string"
@@ -39,22 +39,39 @@ function safeScope(value: string) {
 }
 
 async function reserveCall(scope: string) {
-  if (!process.env.OPENAI_API_KEY || process.env.NTW_AI_ENABLED === "false") return false;
+  if (!process.env.OPENAI_API_KEY) return "missing_key";
+  if (process.env.NTW_AI_ENABLED === "false") return "disabled";
   try {
     return await atomicState(
       getStore({ name: "ntw-ai", consistency: "strong" }),
       `usage/${safeScope(scope)}.json`,
-      () => ({ calls: 0, updatedAt: "" }),
+      () => ({ calls: 0, updatedAt: "", pausedUntil: "" }),
       (state) => {
-        if (state.calls >= maxCallsPerEvent) return false;
+        if (state.pausedUntil && Date.parse(state.pausedUntil) > Date.now()) return "cooldown";
+        if (state.calls >= maxCallsPerEvent) return "budget_or_store";
         state.calls += 1;
         state.updatedAt = new Date().toISOString();
-        return true;
+        return "ok";
       },
     );
   } catch (error) {
     console.error("ntw ai bütçe sayacı güncellenemedi", error);
-    return false;
+    return "budget_or_store";
+  }
+}
+
+async function pauseScope(scope: string, durationMs: number) {
+  try {
+    await atomicState(
+      getStore({ name: "ntw-ai", consistency: "strong" }),
+      `usage/${safeScope(scope)}.json`,
+      () => ({ calls: 0, updatedAt: "", pausedUntil: "" }),
+      (state) => {
+        state.pausedUntil = new Date(Date.now() + durationMs).toISOString();
+      },
+    );
+  } catch (error) {
+    console.error("ntw ai bekleme süresi kaydedilemedi", error);
   }
 }
 
@@ -96,13 +113,9 @@ async function structuredResponse<T>(
     if (diagnostic) diagnostic.reason = "request_too_large";
     return null;
   }
-  if (!(await reserveCall(scope))) {
-    if (diagnostic)
-      diagnostic.reason = !process.env.OPENAI_API_KEY
-        ? "missing_key"
-        : process.env.NTW_AI_ENABLED === "false"
-          ? "disabled"
-          : "budget_or_store";
+  const reservation = await reserveCall(scope);
+  if (reservation !== "ok") {
+    if (diagnostic) diagnostic.reason = reservation;
     return null;
   }
 
@@ -119,11 +132,22 @@ async function structuredResponse<T>(
       body: requestBody,
     });
     if (!response.ok) {
+      const errorText = await response.text();
+      let errorCode = "";
+      try {
+        const payload = JSON.parse(errorText) as { error?: { code?: unknown } };
+        if (typeof payload.error?.code === "string") errorCode = payload.error.code;
+      } catch {
+        // Some upstream errors are not JSON; keep only the HTTP status.
+      }
       if (diagnostic) {
         diagnostic.reason = "http_error";
         diagnostic.httpStatus = response.status;
+        diagnostic.errorCode = errorCode;
       }
-      console.error("ntw ai yanıt hatası", response.status, (await response.text()).slice(0, 300));
+      if (response.status === 429)
+        await pauseScope(scope, errorCode === "credit_balance_exhausted" ? 60_000 : 10_000);
+      console.error("ntw ai yanıt hatası", response.status, errorCode || errorText.slice(0, 100));
       return null;
     }
     const output = outputText(await response.json());
@@ -266,6 +290,7 @@ export async function probeNtwAi() {
     durationMs: Date.now() - startedAt,
     reason: analysis ? "ok" : diagnostic.reason || "empty_analysis",
     httpStatus: diagnostic.httpStatus || null,
+    errorCode: diagnostic.errorCode || null,
   };
 }
 

@@ -74,6 +74,22 @@ function baseFlow(
   };
 }
 
+function reconcileIdleFlow(
+  flow: Omit<EventFlowState, "serverNow">,
+  event: NonNullable<Awaited<ReturnType<typeof getEvent>>>,
+) {
+  if (flow.status !== "idle") return flow;
+  const durations = new Map(flow.steps.map((step) => [step.product, step.durationMinutes]));
+  return {
+    ...flow,
+    steps: defaultSteps(event).map((step) => ({
+      ...step,
+      durationMinutes: normalizeDuration(durations.get(step.product) ?? step.durationMinutes),
+    })),
+    currentStepIndex: -1,
+  };
+}
+
 function publicFlow(flow: Omit<EventFlowState, "serverNow">): EventFlowState {
   const now = new Date();
   const timedOut =
@@ -92,7 +108,7 @@ export async function readEventFlow(identifier: string) {
     type: "json",
     consistency: "strong",
   })) as Omit<EventFlowState, "serverNow"> | null;
-  return publicFlow(stored?.version === 1 ? stored : baseFlow(event));
+  return publicFlow(reconcileIdleFlow(stored?.version === 1 ? stored : baseFlow(event), event));
 }
 
 export async function mutateEventFlow(
@@ -108,7 +124,7 @@ export async function mutateEventFlow(
     type: "json",
     consistency: "strong",
   })) as Omit<EventFlowState, "serverNow"> | null;
-  const flow = existing?.version === 1 ? existing : baseFlow(event);
+  const flow = reconcileIdleFlow(existing?.version === 1 ? existing : baseFlow(event), event);
   const now = new Date();
 
   if (action === "configure") {

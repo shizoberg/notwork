@@ -42,7 +42,14 @@ try {
   event.status = "live";
   event.revision = 100;
   event.entry.isOpen = true;
-  assert.equal(new Date(event.startsAt).toLocaleTimeString("tr-TR", {timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit"}), "20:00");
+  assert.equal(
+    new Date(event.startsAt).toLocaleTimeString("tr-TR", {
+      timeZone: "Europe/Istanbul",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    "20:00",
+  );
   assert.equal(event.products.five.enabled, false);
   for (const product of [event.products.matchlab, event.products.wordcloud]) {
     Object.assign(product, { enabled: true, visible: true, state: "live", dataMode: "live" });
@@ -229,13 +236,20 @@ try {
   assert.equal(switched.data.released, true);
   const afterFirstRotation = await store.get(`${prefix}/room-index-v2.json`);
   assert.ok(rotationA.participantIds.every((id) => !afterFirstRotation.members[id]));
-  assert.ok(untouched.participantIds.every((id) => afterFirstRotation.members[id] === untouched.id));
+  assert.ok(
+    untouched.participantIds.every((id) => afterFirstRotation.members[id] === untouched.id),
+  );
   await callMatch(rotationAIndex, "chatRead", { groupId: rotationA.id }, 400);
-  await callMatch(rotationAIndex, "chatSend", {
-    groupId: rotationA.id,
-    message: "Eski sohbet kapalı",
-    messageId: "closed-group-chat",
-  }, 400);
+  await callMatch(
+    rotationAIndex,
+    "chatSend",
+    {
+      groupId: rotationA.id,
+      message: "Eski sohbet kapalı",
+      messageId: "closed-group-chat",
+    },
+    400,
+  );
   assert.equal((await callMatch(rotationAIndex, "match")).data.status, "empty");
   await callMatch(rotationBIndex, "rotateMatch", { groupId: rotationB.id });
   const newGroup = (await callMatch(rotationAIndex, "match")).data.group;
@@ -264,6 +278,28 @@ try {
   assert.equal(reviewKeys.filter((row) => row.key.includes("/five-")).length, 0);
   assert.deepEqual(await store.get(archiveKey), { preserved: true });
   report.octoberProducts = { match: true, wordcloud: true, five: false };
+  const { serverNow: _serverNow, ...idleFlow } = await flow.readEventFlow(eventId);
+  await sandbox.blobs
+    .getStore({ name: "notwork-event-registry" })
+    .setJSON(`runtime/${eventId}/flow-v1.json`, {
+      ...idleFlow,
+      steps: [
+        { product: "five", label: "Eski Five", durationMinutes: 90 },
+        { product: "wordcloud", label: "Wordcloud", durationMinutes: 45 },
+        { product: "matchlab", label: "Match", durationMinutes: 75 },
+      ],
+    });
+  assert.deepEqual(
+    (await flow.readEventFlow(eventId)).steps.map((step) => [step.product, step.durationMinutes]),
+    [
+      ["matchlab", 75],
+      ["wordcloud", 45],
+    ],
+    "Idle flow must follow enabled products and registry order",
+  );
+  await flow.mutateEventFlow(eventId, "start");
+  assert.equal((await flow.readEventFlow(eventId)).steps[0].product, "matchlab");
+  await flow.mutateEventFlow(eventId, "reset");
   assert.equal((await flow.readEventFlow(eventId)).status, "idle");
   await flow.mutateEventFlow(eventId, "configure", {
     steps: [
@@ -311,7 +347,10 @@ try {
     "",
     201,
   );
-  assert.notEqual(otherEventRegistration.data.participant.eventId, registrations[0].participant.eventId);
+  assert.notEqual(
+    otherEventRegistration.data.participant.eventId,
+    registrations[0].participant.eventId,
+  );
   assert.equal(
     (await store.list({ prefix: `events/${nextEvent.id}/live/matchlab/` })).blobs.length > 0,
     true,
