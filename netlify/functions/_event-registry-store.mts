@@ -357,8 +357,8 @@ function octoberEvent(): NotworkEvent {
     slug: "9-ekim-2026",
     title: "notwork Classic",
     shortTitle: "11 Ekim",
-    startsAt: "2026-10-11T16:30:00.000Z",
-    endsAt: "2026-10-11T19:30:00.000Z",
+    startsAt: "2026-10-11T17:00:00.000Z",
+    endsAt: "2026-10-11T20:00:00.000Z",
     timezone: "Europe/Istanbul",
     status: "scheduled",
     location: {

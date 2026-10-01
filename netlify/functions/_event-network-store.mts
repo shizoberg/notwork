@@ -14,6 +14,7 @@ import { scorePair, selectMatchCandidates, stableTieBreaker } from "./_matchmaki
 import { syncMemberEventCode } from "./_member-profile-store.mjs";
 import { participantDisplayCode } from "./_participant-code.mjs";
 import { matchChatKey } from "./_match-chat.mjs";
+import { matchGroupName } from "./_match-group-name.mjs";
 import { generateMatchAnalysis, rerankMatchCandidates } from "./_ntw-ai.mjs";
 
 type EventNetworkProfile = {
@@ -92,6 +93,7 @@ type EventNetworkMatchMember = {
 
 type EventNetworkMatchGroup = {
   id: string;
+  groupName: string;
   groupSize: number;
   round: number;
   score: number;
@@ -107,6 +109,7 @@ type EventNetworkMatchGroup = {
 
 type StoredActiveMatch = {
   id: string;
+  groupName?: string;
   round: number;
   score: number;
   reason: string;
@@ -673,7 +676,14 @@ async function writeActiveMatch(
     store,
     `${getNetworkPrefix()}/room-index-v2.json`,
     emptyRooms<StoredActiveMatch>,
-    (state) => claimRoom(state, match),
+    (state) => {
+      if (match.participantIds.some((id) => state.members[id])) return false;
+      match.groupName = matchGroupName(
+        match.id,
+        Object.values(state.groups).map((group) => group.groupName || matchGroupName(group.id)),
+      );
+      return claimRoom(state, match);
+    },
   );
 }
 
@@ -695,6 +705,7 @@ async function buildActiveMatchGroup(
 
   return {
     id: match.id,
+    groupName: match.groupName || matchGroupName(match.id),
     groupSize: rows.length,
     round: match.round,
     score: match.score,
@@ -1146,7 +1157,9 @@ export async function getNextMatchGroup(
       nextRound,
     );
     let selected = deterministicSelected;
-    if (current.aiConsent?.analysis) {
+    // During the initial crowd surge, keep room creation independent of API latency.
+    // The deterministic scorer still handles every candidate; AI analysis runs after claim.
+    if (current.aiConsent?.analysis && availableCandidates.length <= 10) {
       const aiShortlist = availableCandidates
         .filter((candidate) => candidate.aiConsent?.analysis)
         .map((row) => ({
@@ -1246,6 +1259,7 @@ export async function getNextMatchGroup(
     }
     const group: EventNetworkMatchGroup = {
       id: groupId,
+      groupName: storedMatch.groupName || matchGroupName(groupId),
       groupSize,
       round: nextRound,
       score,

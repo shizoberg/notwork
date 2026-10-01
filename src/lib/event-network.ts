@@ -79,6 +79,7 @@ export type EventNetworkMatchMember = {
 
 export type EventNetworkMatchGroup = {
   id: string;
+  groupName: string;
   groupSize: number;
   round: number;
   score: number;

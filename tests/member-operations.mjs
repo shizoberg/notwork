@@ -17,6 +17,7 @@ try {
     "_matchmaking",
     "_participant-code",
     "_match-chat",
+    "_match-group-name",
     "_ntw-ai",
     "_event-network-store",
     "_event-review-store",

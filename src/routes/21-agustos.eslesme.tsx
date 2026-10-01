@@ -59,6 +59,7 @@ function AugustMatchPage() {
   const [reviewConsent, setReviewConsent] = useState(false);
   const [isPhotoProcessing, setIsPhotoProcessing] = useState(false);
   const [codeOpen, setCodeOpen] = useState(false);
+  const [groupNameOpen, setGroupNameOpen] = useState(false);
   const reviewPanelRef = useRef<HTMLDetailsElement>(null);
 
   const currentMember = useMemo(
@@ -322,15 +323,31 @@ function AugustMatchPage() {
 
               {status === "ready" && group ? (
                 <div className="space-y-5">
+                  <div className="match-group-identity">
+                    <span>Senin grubun</span>
+                    <h2>{group.groupName}</h2>
+                    <button type="button" onClick={() => setGroupNameOpen(true)}>
+                      <Maximize2 size={17} aria-hidden="true" />
+                      Grup adını büyüt
+                    </button>
+                    <Dialog open={groupNameOpen} onOpenChange={setGroupNameOpen}>
+                      <DialogContent className="five-code-fullscreen match-group-name-fullscreen">
+                        <DialogTitle className="sr-only">{group.groupName} grubu</DialogTitle>
+                        <DialogDescription className="sr-only">
+                          Grup adını göstererek diğer üyeleri bulabilirsin
+                        </DialogDescription>
+                        <div className="five-code-brand" aria-label="notwork">notwork</div>
+                        <div className="five-code-number">{group.groupName}</div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                   <div className="match-people">
                     {otherMembers.map((member) => (
                       <article key={member.participantId}>
-                        <div
-                          className={`match-code${member.publicCode.length > 4 ? " is-long" : ""}`}
-                        >
-                          {member.publicCode}
+                        <div className="match-code is-person-name">
+                          <h2>{member.name}</h2>
                         </div>
-                        <h2>{member.name}</h2>
+                        <p className="match-person-code">{member.publicCode}</p>
                         <p>{member.offers.join(" · ")}</p>
                         {member.isPhotoOwner && <Camera size={14} aria-label="Fotoğraf görevi" />}
                       </article>

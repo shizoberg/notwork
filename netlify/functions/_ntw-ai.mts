@@ -75,6 +75,7 @@ async function structuredResponse<T>(
   schema: Record<string, unknown>,
   instructions: string,
   input: unknown,
+  timeoutMs = 3500,
 ): Promise<T | null> {
   const requestBody = JSON.stringify({
     model,
@@ -92,7 +93,7 @@ async function structuredResponse<T>(
     return null;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 6000);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
@@ -173,6 +174,7 @@ export async function rerankMatchCandidates(
         offersDetail: clean(candidate.offersDetail, 120),
       })),
     },
+    2000,
   );
   const validIds = new Set(shortlist.map((row) => row.participant.id));
   const selected = [...new Set(result?.participantIds || [])].filter((id) => validIds.has(id));
@@ -186,7 +188,7 @@ export async function generateMatchAnalysis(scope: string, members: MatchProfile
     {
       type: "object",
       additionalProperties: false,
-      properties: { analysis: { type: "string", maxLength: 240 } },
+      properties: { analysis: { type: "string" } },
       required: ["analysis"],
     },
     "Sen notwork match analizisin. Bu grubun neden eşleştiğini ve bu buluşmadan ne doğabileceğini doğal Türkçeyle tek cümlede anlat. Kesin sonuç vaat etme. İsim kullanma. En fazla 220 karakter yaz.",
@@ -211,7 +213,7 @@ export async function generateFiveAnalysis(
     {
       type: "object",
       additionalProperties: false,
-      properties: { analysis: { type: "string", maxLength: 260 } },
+      properties: { analysis: { type: "string" } },
       required: ["analysis"],
     },
     "Sen ntw five problem masası analizisin. Sorunun özünü, insanların ayırt edici katkılarını ve birlikte üretebilecekleri olası çözüm yönünü tek doğal Türkçe cümlede açıkla. Kesin sonuç vaat etme. İsim kullanma. En fazla 240 karakter yaz.",

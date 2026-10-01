@@ -17,7 +17,8 @@ try {
   const event = await registry.getEvent(eventId);
   Object.assign(event, { revision: 100, status: "live" });
   event.entry.isOpen = true;
-  for (const product of Object.values(event.products))
+  assert.equal(event.products.five.enabled, false);
+  for (const product of [event.products.matchlab, event.products.wordcloud])
     Object.assign(product, { enabled: true, visible: true, state: "live", dataMode: "live" });
   await registry.getEventRegistryStore().setJSON(`events/${eventId}.json`, event);
   const modules = Object.fromEntries(
@@ -169,40 +170,24 @@ try {
   await page.keyboard.press("Escape");
   await page.getByRole("dialog").waitFor({ state: "detached" });
   await page.screenshot({ path: "test-results/october/match-mobile.png", fullPage: true });
-  await page.goto(`${base}/five/live?eventId=${eventId}`);
-  await page.getByRole("region", { name: "Five başlangıç seçenekleri" }).waitFor();
-  await page.getByRole("button", { name: /Problemini yaz/ }).click();
-  for (let field = 0; field < 4; field++) {
-    await page
-      .locator("form textarea")
-      .nth(field)
-      .fill("Yeni müşterilere ulaşmanın yolunu arıyorum");
-  }
-  await page.locator('form input[type="checkbox"]').check();
-  await page.getByRole("button", { name: "Problemi ekle", exact: true }).click();
-  await page.getByRole("button", { name: "Kodu büyüt", exact: true }).waitFor();
-  await page.reload();
-  await page.getByRole("button", { name: "Kodu büyüt", exact: true }).waitFor();
-  await page
-    .locator(".event-route-transition, .five-thinking-overlay")
-    .waitFor({ state: "detached" });
-  await page.getByRole("button", { name: "Kodu büyüt", exact: true }).click();
+  assert.equal(await page.locator(".match-group-identity h2").count(), 1);
+  assert.equal(await page.locator(".match-people .match-person-code").count(), 2);
+  assert.ok((await page.locator(".match-people h2").first().innerText()).includes("Demo"));
+  await page.getByRole("button", { name: "Grup adını büyüt" }).click();
+  await page.getByRole("dialog").waitFor();
   await page.getByRole("dialog").evaluate(async (element) => {
-    await Promise.all(
-      element.getAnimations().map((animation) => animation.finished.catch(() => {})),
-    );
+    await Promise.all(element.getAnimations().map((animation) => animation.finished.catch(() => {})));
   });
-  const fiveCodeBounds = await page.getByRole("dialog").boundingBox();
-  assert.ok(
-    Math.abs(fiveCodeBounds.x) <= 1 &&
-      Math.abs(fiveCodeBounds.y) <= 1 &&
-      fiveCodeBounds.height >= 843,
-    "Five group code covers mobile viewport",
-  );
+  const groupNameBounds = await page.getByRole("dialog").boundingBox();
+  assert.ok(groupNameBounds.width >= 389 && groupNameBounds.height >= 843);
+  const enlargedName = await page.getByRole("dialog").innerText();
+  assert.ok(enlargedName.includes(await page.locator(".match-group-identity h2").innerText()));
+  await page.screenshot({ path: "test-results/october/match-group-name-mobile.png" });
   await page.keyboard.press("Escape");
   await page.getByRole("dialog").waitFor({ state: "detached" });
-  await page.screenshot({ path: "test-results/october/five-mobile.png", fullPage: true });
-  assert.ok(await page.getByRole("region", { name: "Grup sohbeti" }).count());
+  await page.goto(`${base}/linkler?event=${slug}`);
+  await page.locator(".entry-app-step").first().waitFor();
+  assert.equal(await page.locator(".entry-app-step").filter({ hasText: "ntw.five" }).count(), 0);
   const login = await newPage();
   await login.goto(`${base}/linkler?event=${slug}`);
   await login.getByRole("button", { name: "Sadece zorunlu", exact: true }).click();
@@ -223,7 +208,7 @@ try {
       "No mobile horizontal overflow",
     );
   console.log(
-    "PASS mobile browser: one-question registration, short answers, completion, reload persistence, Match entry + group + analysis + enlarged code, Five problem submission + retained table/chat, existing-profile login + reload. No external data writes.",
+    "PASS mobile browser: one-question registration, short answers, completion, reload persistence, Match entry + group names/member names + analysis + enlarged name/code, no Five app, existing-profile login + reload. No external data writes.",
   );
 } finally {
   await browser?.close();

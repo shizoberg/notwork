@@ -21,6 +21,10 @@ try {
     assert.equal(url, "https://api.openai.com/v1/responses");
     calls++;
     const request = JSON.parse(options.body);
+    assert.equal(request.model, "gpt-5.6-luna");
+    if (request.text.format.name.endsWith("analysis")) {
+      assert.deepEqual(request.text.format.schema.properties.analysis, { type: "string" });
+    }
     const result =
       request.text.format.name === "ntw_match_ranking"
         ? { participantIds: ["a", "b"] }

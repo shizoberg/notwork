@@ -18,7 +18,6 @@ const report = {};
 try {
   const registry = await sandbox.load("_event-registry-store");
   const network = (await sandbox.load("event-network")).default;
-  const five = (await sandbox.load("five")).default;
   const profile = (await sandbox.load("member-profile")).default;
   const members = await sandbox.load("_member-profile-store");
   const flow = await sandbox.load("_event-flow-store");
@@ -43,7 +42,9 @@ try {
   event.status = "live";
   event.revision = 100;
   event.entry.isOpen = true;
-  for (const product of Object.values(event.products)) {
+  assert.equal(new Date(event.startsAt).toLocaleTimeString("tr-TR", {timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit"}), "20:00");
+  assert.equal(event.products.five.enabled, false);
+  for (const product of [event.products.matchlab, event.products.wordcloud]) {
     Object.assign(product, { enabled: true, visible: true, state: "live", dataMode: "live" });
   }
   // This registry and every data store exist ONLY inside the memory double.
@@ -120,13 +121,6 @@ try {
       cookies[i],
       expected,
     );
-  const callFive = (i, action, input = {}, expected = 200) =>
-    request(
-      five,
-      { event: eventId, action, accessToken: registrations[i].accessToken, ...input },
-      cookies[i],
-      expected,
-    );
   await Promise.all(
     registrations.map(async (row, i) => {
       assert.equal((await callMatch(i, "me")).data.participant.id, row.participant.id);
@@ -171,6 +165,8 @@ try {
   );
   const indexById = new Map(registrations.map((row, i) => [row.participant.id, i]));
   const groups = Object.values(rooms.groups);
+  assert.equal(new Set(groups.map((group) => group.groupName)).size, 33);
+  assert.ok(groups.every((group) => /^\p{L}+[0-9]*$/u.test(group.groupName)));
   const a = groups[0],
     b = groups[1];
   const ai = indexById.get(a.participantIds[0]),
@@ -229,134 +225,17 @@ try {
     photos: 33,
   };
 
-  // 25 problems, 100 people, each owner must stay in their newly created table.
-  const problems = await Promise.all(
-    Array.from({ length: 25 }, async (_, n) => {
-      const result = (
-        await callFive(
-          n * 4,
-          "submitLive",
-          {
-            title: `Problem ${n}: ilk müşteriye ulaşmak`,
-            description: "İlk müşterilerime nasıl ulaşacağımı anlamak istiyorum",
-            tried: "Toplulukta farklı görüşmeler yaptım",
-            desiredOutcome: "Uygulanabilir bir sonraki adım belirlemek",
-            category: "startup",
-            consent: true,
-          },
-          201,
-        )
-      ).data;
-      const table = (await callFive(n * 4, "tableState")).data.table;
-      assert.ok(table.people.some((person) => person.id === result.identity.id));
-      return table.problemId;
-    }),
-  );
-  await Promise.all(
-    registrations.flatMap((_, i) =>
-      i % 4 ? [callFive(i, "tableJoin", { problemId: problems[Math.floor(i / 4)] })] : [],
-    ),
-  );
-  const tables = await Promise.all(
-    Array.from({ length: 25 }, async (_, n) => (await callFive(n * 4, "tableState")).data.table),
-  );
-  assert.ok(
-    tables.every(
-      (table) => table.people.length === 4 && table.phase === "ready" && table.aiAnalysis,
-    ),
-  );
-  assert.equal(
-    new Set(tables.flatMap((table) => table.people.map((person) => person.id))).size,
-    100,
-  );
-  await callFive(0, "tableChat", {
-    tableId: tables[0].id,
-    messageId: "five-chat-0001",
-    text: "Kendi masamızda buluşalım",
-  });
-  assert.equal((await callFive(1, "tableState")).data.table.messages.length, 1);
-  assert.equal((await callFive(4, "tableState")).data.table.messages?.length || 0, 0);
-  await callFive(
-    4,
-    "tableChat",
-    { tableId: tables[0].id, messageId: "five-chat-foreign", text: "Başka masaya yazma" },
-    400,
-  );
-  await callFive(0, "tableLeave", { tableId: tables[0].id, round: 0 }, 400);
-  let now = originalNow();
-  Date.now = () => now;
-  await Promise.all(
-    tables.map((table, n) => callFive(n * 4, "tableStart", { tableId: table.id, round: 0 })),
-  );
-  now += 300001;
-  const ownerIndex = (table) =>
-    registrations.findIndex((row) => `event:${row.participant.id}` === table.photoOwner);
-  await callFive(
-    (ownerIndex(tables[0]) + 1) % 4,
-    "tablePhoto",
-    { tableId: tables[0].id, round: 0, photoDataUrl: photo, consent: true },
-    400,
-  );
-  await Promise.all(
-    tables.map((table) =>
-      callFive(ownerIndex(table), "tablePhoto", {
-        tableId: table.id,
-        round: 0,
-        photoDataUrl: photo,
-        consent: true,
-      }),
-    ),
-  );
-  for (let round = 0; round < 4; round++) {
-    await Promise.all(
-      tables.map((table, n) => callFive(n * 4, "tableNext", { tableId: table.id, round })),
-    );
-    now += 300001;
-  }
-  await Promise.all(
-    registrations.map((_, i) =>
-      callFive(i, "tableOutcome", {
-        tableId: tables[Math.floor(i / 4)].id,
-        solved: true,
-        solution: "Üç müşteri görüşmesiyle fikrimizi test edeceğiz",
-        rating: 5,
-        comment: "Birlikte uygulanabilir bir adım bulduk",
-        reviewConsent: true,
-      }),
-    ),
-  );
-  await Promise.all(
-    registrations.map((_, i) =>
-      callFive(i, "tableLeave", { tableId: tables[Math.floor(i / 4)].id, round: 3 }),
-    ),
-  );
-  assert.ok(
-    (await Promise.all(registrations.map((_, i) => callFive(i, "tableState")))).every(
-      (result) => !result.data.table,
-    ),
-  );
-  Date.now = originalNow;
   const reviewStore = (await sandbox.load("_event-review-store")).getEventReviewStore();
   const reviewKeys = (await reviewStore.list({ prefix: `reviews/${slug}/` })).blobs;
   assert.equal(reviewKeys.filter((row) => row.key.includes("/match-")).length, 33);
-  assert.equal(reviewKeys.filter((row) => row.key.includes("/five-")).length, 100);
-  const reviews = await Promise.all(reviewKeys.map((row) => reviewStore.get(row.key)));
-  assert.equal(reviews.filter((row) => row.photoDataUrl).length, 58);
+  assert.equal(reviewKeys.filter((row) => row.key.includes("/five-")).length, 0);
   assert.deepEqual(await store.get(archiveKey), { preserved: true });
-  report.five = {
-    participants: 100,
-    tables: 25,
-    ownerRetained: true,
-    groupChatsIsolated: true,
-    photos: 25,
-    outcomes: 100,
-    rounds: 4,
-  };
+  report.octoberProducts = { match: true, wordcloud: true, five: false };
   assert.equal((await flow.readEventFlow(eventId)).status, "idle");
   await flow.mutateEventFlow(eventId, "configure", {
     steps: [
       { product: "matchlab", durationMinutes: 60 },
-      { product: "five", durationMinutes: 90 },
+      { product: "wordcloud", durationMinutes: 60 },
     ],
   });
   assert.equal((await flow.readEventFlow(eventId)).endsAt, "");
@@ -372,7 +251,7 @@ try {
   report.realDataTouched = false;
   console.log(JSON.stringify(report, null, 2));
   console.log(
-    "PASS October event handler integration: login/register/resume, 100-person match and Five, chat isolation, photos/reviews, rematch, event separation and admin flow.",
+    "PASS October event handler integration: login/register/resume, 100-person Match and Wordcloud-only configuration, chat isolation, photos/reviews, rematch, event separation and admin flow.",
   );
 } finally {
   globalThis.fetch = originalFetch;

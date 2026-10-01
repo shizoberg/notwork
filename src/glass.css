@@ -810,6 +810,67 @@
   font-weight: 550;
   margin-top: 14px;
 }
+.match-people .match-code.is-person-name {
+  width: 104px;
+  height: 104px;
+  max-width: 100%;
+  padding: 10px;
+}
+.match-people .match-code.is-person-name h2 {
+  margin: 0;
+  font-size: clamp(13px, 3.2vw, 16px) !important;
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+.match-people .match-person-code {
+  margin-top: 12px;
+  color: #356d8e;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+.match-group-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 20px;
+  border: 1px solid #fff;
+  border-radius: 26px;
+  background: linear-gradient(145deg, #ffffffca, #d8ebf781);
+  text-align: center;
+}
+.match-group-identity > span {
+  color: #688ba0;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+.match-group-identity h2 {
+  color: #244e70;
+  font-size: clamp(30px, 7vw, 46px);
+  font-weight: 800;
+  line-height: 1;
+}
+.match-group-identity > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #dceefa;
+  color: #244e70;
+  font-size: 13px;
+  font-weight: 800;
+}
+.match-group-name-fullscreen .five-code-number {
+  font-size: clamp(52px, 14vw, 170px);
+  overflow-wrap: anywhere;
+}
 .match-people p {
   font-size: 11px;
   color: #8397a3;

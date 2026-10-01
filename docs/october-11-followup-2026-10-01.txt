@@ -1,0 +1,44 @@
+NOTWORK — 11 EKİM EK KONTROLÜ (1 EKİM 2026)
+
+Etkinlik ürünleri: Match ve Wordcloud. Five bu etkinlikte kapalı; genel Five
+testleri başka etkinlikler için korunuyor. Wordcloud uygulamasının akışına ve
+verisine dokunulmadı. Match → Wordcloud akışının sayacı admin başlatana kadar
+idle kalıyor. Etkinliğin veri kimliği evt_9_ekim_2026 olarak korunuyor.
+
+Başlangıç saatinin kod varsayılanı 11 Ekim 20.00 Europe/Istanbul (17.00 UTC)
+olarak ayarlandı. Canlı etkinlik kaydı ayrı bir Netlify Blob revizyonunda olduğu
+için bu kod değişikliği mevcut canlı kaydın 19.30 saatini tek başına değiştirmez.
+Canlı panelde 20.00 kaydı ayrıca yapılmalı; sayaç başlatılmamalı.
+
+Match gruplarına her aktif grupta benzersiz, tek sözcüklü hayvan/burç adı
+veriliyor. Grup adları ekranda ve tam ekranda büyük görünüyor. Eşleşenlerin
+isimleri dairelerin içinde; dört karakterli kişisel kodları dairelerin altında.
+Grup ve üye kimlikleri ile etkinlik verisi değişmedi.
+
+AI hata zincirinde önceki düzeltme Response.json() ayrıştırmasıdır. Geçerli
+Responses API biçimi, 429, bozuk yanıt, bağlantı hatası, bütçe sınırı ve kapalı
+mod sahte cevaplarla test edildi. API çağrısı başarısız olursa kural tabanlı
+eşleşme ve açıklama devam eder. 100 kişilik ilk yükte AI aday yeniden sıralaması
+beklenmez; deterministik eşleştirme grubu hemen kurar, AI analizi grup
+kurulduktan sonra yapılır. Aday havuzu 10 kişiye indiğinde AI sıralama tekrar
+denenebilir. Sıralama zaman aşımı 2 saniye, grup analizi 3,5 saniye. Bu,
+Netlify fonksiyon süresinin AI erişimine bağlı uzamasını sınırlar. Model adı
+gpt-5.6-luna OpenAI'nin güncel model listesinde geçerlidir. Şema uyumluluğu
+için metin uzunluğu JSON Schema kısıtı kaldırıldı; üretilen yanıt uygulamada
+yine 240 karaktere kırpılıyor. Canlı API anahtarı,
+kota ve fonksiyon logları yönetim erişimi olmadan doğrulanmış sayılmaz.
+
+İzole test sonucu: 50 mevcut oturum + 50 yeni katılımcı; toplam 100 eşzamanlı
+kayıt. 33 ayrı üçlü grup, 99 eşleşen ve 1 bekleyen kişi (100 üçe bölünmediği
+için). Ayrı sohbet, tekrar eşleşme, 33 fotoğraflı değerlendirme ve grup adlarının
+benzersizliği doğrulandı. Aktif grup yoklaması 13 Blob okuması, 0 listeleme.
+Mobil Chrome'da kayıt, mevcut hesap, Match, tam ekran grup adı, üye adları ve
+kodları, Five'ın gizli kalması, yeniden yükleme ve yatay taşma test edildi.
+Production build ve üyelik testleri geçti. Bunlar izole testlerdir; Netlify'nin
+canlı trafik/kapasite garantisi veya canlı OpenAI anahtarı testi değildir.
+
+Canlıya geçmeden önce: panelde etkinlik saatini 20.00 olarak kaydet, giriş
+durumunu ve akış süresini kontrol et, Match'i ve Wordcloud'u etkinlik günü
+canlı moduna al, sonra yönetim panelinden timer start ver. Dağıtımdan sonra
+tek test katılımcısıyla AI sonucunu ve fonksiyon logunu doğrula. Eski etkinlik
+verilerini silme veya bu etkinliğin iç kimliğini yeniden adlandırma.

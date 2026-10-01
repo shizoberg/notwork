@@ -42,6 +42,7 @@ export function matchPreview() {
   ];
   const group: EventNetworkMatchGroup = {
     id: `preview-${round}`,
+    groupName: round % 2 ? "Panda" : "Kaplan",
     groupSize: 3,
     round,
     score: 90,
