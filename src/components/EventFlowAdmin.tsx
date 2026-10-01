@@ -13,6 +13,8 @@ export function EventFlowAdmin({ password, event }: { password: string; event: N
   const [steps, setSteps] = useState<EventFlowStep[]>([]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiProbe, setAiProbe] = useState("");
   const [clock, setClock] = useState(Date.now());
   const selection = useMemo(() => ({ event: event.slug }), [event.slug]);
 
@@ -65,6 +67,35 @@ export function EventFlowAdmin({ password, event }: { password: string; event: N
     : 0;
   const running = flow?.status === "running" || flow?.status === "awaiting_advance";
 
+  async function testAiConnection() {
+    setAiBusy(true);
+    setAiProbe("");
+    try {
+      const response = await fetch("/api/admin/events/flow", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password, event: event.slug, action: "diagnoseAi" }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const result = (await response.json()) as {
+        ok: boolean;
+        model: string;
+        durationMs: number;
+        reason: string;
+        httpStatus: number | null;
+      };
+      setAiProbe(
+        result.ok
+          ? `OpenAI çalışıyor · ${result.model} · ${result.durationMs} ms`
+          : `OpenAI yanıtı alınamadı · ${result.reason}${result.httpStatus ? ` (${result.httpStatus})` : ""} · ${result.durationMs} ms`,
+      );
+    } catch (error) {
+      setAiProbe(error instanceof Error ? error.message : "OpenAI testi tamamlanamadı");
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
   return (
     <section className="mt-6 rounded-[2rem] border border-primary/25 bg-card p-5 shadow-[var(--shadow-card)]">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -78,15 +109,30 @@ export function EventFlowAdmin({ password, event }: { password: string; event: N
             katılımcı yeni uygulamayı oradan açar.
           </p>
         </div>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void run("get")}
-          className="inline-flex items-center gap-2 rounded-full border border-primary/25 px-4 py-2 text-sm font-black"
-        >
-          <RefreshCcw size={15} /> Yenile
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={aiBusy}
+            onClick={() => void testAiConnection()}
+            className="inline-flex items-center gap-2 rounded-full border border-primary/25 px-4 py-2 text-sm font-black"
+          >
+            {aiBusy ? "OpenAI test ediliyor…" : "OpenAI bağlantısını test et"}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void run("get")}
+            className="inline-flex items-center gap-2 rounded-full border border-primary/25 px-4 py-2 text-sm font-black"
+          >
+            <RefreshCcw size={15} /> Yenile
+          </button>
+        </div>
       </div>
+      {aiProbe ? (
+        <p role="status" className="mt-3 text-sm font-bold text-primary-deep">
+          {aiProbe}
+        </p>
+      ) : null}
 
       <div className="mt-5 grid gap-3 md:grid-cols-[1fr_auto]">
         <div className="grid gap-2">

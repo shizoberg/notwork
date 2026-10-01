@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import type { Config, Context } from "@netlify/functions";
 import type { EventFlowStep } from "../../src/lib/event-flow.ts";
 import { mutateEventFlow, readEventFlow } from "./_event-flow-store.mjs";
+import { probeNtwAi } from "./_ntw-ai.mjs";
 
 type AdminInput = {
   password?: string;
@@ -14,7 +15,8 @@ type AdminInput = {
     | "complete"
     | "reset"
     | "addNotice"
-    | "removeNotice";
+    | "removeNotice"
+    | "diagnoseAi";
   steps?: EventFlowStep[];
   notice?: string;
   noticeId?: string;
@@ -36,6 +38,11 @@ export default async (request: Request, _context: Context) => {
     if (!validPassword(input.password)) return new Response("Yetkisiz erişim", { status: 401 });
     if (!input.event?.trim()) return new Response("Etkinlik seçimi gerekli", { status: 400 });
     const action = input.action || "get";
+    if (action === "diagnoseAi") {
+      return Response.json(await probeNtwAi(), {
+        headers: { "cache-control": "no-store, private" },
+      });
+    }
     const flow =
       action === "get"
         ? await readEventFlow(input.event)

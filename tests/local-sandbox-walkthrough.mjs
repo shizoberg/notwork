@@ -10,7 +10,10 @@ const pages = [];
 const password = "NotworkDemo2026!";
 
 async function page() {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+  });
   const result = await context.newPage();
   result.setDefaultTimeout(20_000);
   result.on("pageerror", (error) => errors.push(error.message));
@@ -23,7 +26,13 @@ async function page() {
 async function finishEventQuestions(target) {
   const next = target.getByRole("button", { name: /Etkinlik sorularına geç/ });
   if (await next.isVisible()) {
-    if (!(await target.getByRole("button", { name: "tasarım", exact: true }).getAttribute("aria-pressed"))?.includes("true")) {
+    if (
+      !(
+        await target
+          .getByRole("button", { name: "tasarım", exact: true })
+          .getAttribute("aria-pressed")
+      )?.includes("true")
+    ) {
       await target.getByRole("button", { name: "tasarım", exact: true }).click();
     }
     await next.click();
@@ -53,7 +62,6 @@ try {
   await fresh.getByLabel("Ad", { exact: true }).fill("Yeni");
   await fresh.getByLabel("Soyad", { exact: true }).fill("Ziyaretçi");
   await fresh.getByLabel("E-posta", { exact: true }).fill(`yeni-${Date.now()}@demo.example.org`);
-  await fresh.getByRole("combobox").selectOption("ilk-etkinligim");
   await finishEventQuestions(fresh);
   await checkHome(fresh);
   await fresh.locator(".entry-completion").waitFor({ state: "detached" });
@@ -89,7 +97,10 @@ try {
   await existing.getByRole("button", { name: /Etkinlik sorularına geç/ }).waitFor();
   await finishEventQuestions(existing);
   await checkHome(existing);
-  await existing.screenshot({ path: "test-results/october/sandbox-existing-home.png", fullPage: true });
+  await existing.screenshot({
+    path: "test-results/october/sandbox-existing-home.png",
+    fullPage: true,
+  });
 
   const ready = await page();
   await ready.getByRole("button", { name: /^Giriş yap Kullanıcı/ }).click();
@@ -110,7 +121,9 @@ try {
   await ready.getByLabel("Cevabın").waitFor();
   assert.ok(await ready.getByText("11 Ekim notwork").isVisible());
   assert.deepEqual(errors, []);
-  console.log("PASS local sandbox: new account, existing profile needing event answers, completed event profile, Match chat persistence, ordered event home, Wordcloud handoff.");
+  console.log(
+    "PASS local sandbox: new account, existing profile needing event answers, completed event profile, Match chat persistence, ordered event home, Wordcloud handoff.",
+  );
 } finally {
   await browser.close();
 }

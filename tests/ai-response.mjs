@@ -48,10 +48,13 @@ try {
     ),
     ["a", "b"],
   );
+  const probe = await ai.probeNtwAi();
+  assert.equal(probe.ok, true);
+  assert.equal(probe.reason, "ok");
   const aiStore = sandbox.blobs.getStore({ name: "ntw-ai" });
   assert.equal(
     (await aiStore.list({ prefix: "events/" })).blobs.length,
-    3,
+    4,
     "Successful prompts are archived",
   );
   globalThis.fetch = async () => Response.json({ output: [] });
@@ -69,7 +72,7 @@ try {
   assert.equal(await ai.generateMatchAnalysis("budget-test", [profile]), null);
   process.env.NTW_AI_ENABLED = "false";
   assert.equal(await ai.generateMatchAnalysis("disabled", [profile]), null);
-  assert.equal(calls, 3);
+  assert.equal(calls, 4);
   console.log(
     "PASS AI: real Response.json decoding, Match/Five text, reranking, archival, invalid reply, 429, network failure, budget cap and disabled fallback. Paid calls: 0.",
   );

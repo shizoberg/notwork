@@ -22,6 +22,8 @@ const model = "gpt-5.6-luna";
 const maxCallsPerEvent = 400;
 const maxRequestBytes = 30_000;
 
+type AiDiagnostic = { reason?: string; httpStatus?: number };
+
 function clean(value: unknown, max = 400) {
   return typeof value === "string"
     ? value
@@ -76,6 +78,7 @@ async function structuredResponse<T>(
   instructions: string,
   input: unknown,
   timeoutMs = 3500,
+  diagnostic?: AiDiagnostic,
 ): Promise<T | null> {
   const requestBody = JSON.stringify({
     model,
@@ -89,8 +92,19 @@ async function structuredResponse<T>(
       format: { type: "json_schema", name: schemaName, strict: true, schema },
     },
   });
-  if (Buffer.byteLength(requestBody, "utf8") > maxRequestBytes || !(await reserveCall(scope)))
+  if (Buffer.byteLength(requestBody, "utf8") > maxRequestBytes) {
+    if (diagnostic) diagnostic.reason = "request_too_large";
     return null;
+  }
+  if (!(await reserveCall(scope))) {
+    if (diagnostic)
+      diagnostic.reason = !process.env.OPENAI_API_KEY
+        ? "missing_key"
+        : process.env.NTW_AI_ENABLED === "false"
+          ? "disabled"
+          : "budget_or_store";
+    return null;
+  }
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -105,10 +119,19 @@ async function structuredResponse<T>(
       body: requestBody,
     });
     if (!response.ok) {
+      if (diagnostic) {
+        diagnostic.reason = "http_error";
+        diagnostic.httpStatus = response.status;
+      }
       console.error("ntw ai yanıt hatası", response.status, (await response.text()).slice(0, 300));
       return null;
     }
-    const result = JSON.parse(outputText(await response.json())) as T;
+    const output = outputText(await response.json());
+    if (!output) {
+      if (diagnostic) diagnostic.reason = "empty_response";
+      return null;
+    }
+    const result = JSON.parse(output) as T;
     try {
       await getStore({ name: "ntw-ai", consistency: "strong" }).setJSON(
         `events/${safeScope(scope)}/prompts/${Date.now()}-${randomUUID()}.json`,
@@ -128,6 +151,8 @@ async function structuredResponse<T>(
     }
     return result;
   } catch (error) {
+    if (diagnostic)
+      diagnostic.reason = controller.signal.aborted ? "timeout" : "invalid_response_or_network";
     console.error("ntw ai çağrısı tamamlanamadı", error);
     return null;
   } finally {
@@ -181,7 +206,11 @@ export async function rerankMatchCandidates(
   return selected.length === desiredCount ? selected : null;
 }
 
-export async function generateMatchAnalysis(scope: string, members: MatchProfile[]) {
+export async function generateMatchAnalysis(
+  scope: string,
+  members: MatchProfile[],
+  diagnostic?: AiDiagnostic,
+) {
   const result = await structuredResponse<{ analysis: string }>(
     scope,
     "ntw_match_analysis",
@@ -198,8 +227,46 @@ export async function generateMatchAnalysis(scope: string, members: MatchProfile
       offers: member.offers.map((row) => clean(row, 60)).slice(0, 5),
       offersDetail: clean(member.offersDetail, 120),
     })),
+    3500,
+    diagnostic,
   );
   return clean(result?.analysis, 240) || null;
+}
+
+export async function probeNtwAi() {
+  const diagnostic: AiDiagnostic = {};
+  const startedAt = Date.now();
+  const profiles: MatchProfile[] = [
+    {
+      participant: { id: "health-1" },
+      offers: ["tasarım"],
+      offersDetail: "ürün prototipi",
+      needs: "teknik ortak",
+      needTag: "ekip",
+    },
+    {
+      participant: { id: "health-2" },
+      offers: ["yazılım"],
+      offersDetail: "web geliştirme",
+      needs: "ürün fikri",
+      needTag: "fikir",
+    },
+    {
+      participant: { id: "health-3" },
+      offers: ["pazarlama"],
+      offersDetail: "lansman planı",
+      needs: "ekip",
+      needTag: "ekip",
+    },
+  ];
+  const analysis = await generateMatchAnalysis("healthcheck", profiles, diagnostic);
+  return {
+    ok: Boolean(analysis),
+    model,
+    durationMs: Date.now() - startedAt,
+    reason: analysis ? "ok" : diagnostic.reason || "empty_analysis",
+    httpStatus: diagnostic.httpStatus || null,
+  };
 }
 
 export async function generateFiveAnalysis(

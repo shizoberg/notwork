@@ -130,11 +130,19 @@ try {
   await page.goto(`${base}/linkler?event=${slug}`);
   await page.getByRole("button", { name: "Sadece zorunlu", exact: true }).click();
   await page.getByRole("button", { name: /Profil oluştur/ }).click();
+  assert.equal(
+    await page.getByRole("progressbar", { name: "Kayıt ilerlemesi" }).getAttribute("aria-valuenow"),
+    "0",
+  );
+  assert.equal(await page.getByRole("combobox").count(), 0);
   await page.getByLabel("Ad", { exact: true }).fill("Yeni");
   await page.getByLabel("Soyad", { exact: true }).fill("Katılımcı");
   await page.getByLabel("E-posta", { exact: true }).fill("browser-new@example.org");
-  await page.getByRole("combobox").selectOption("ilk-etkinligim");
   await page.getByRole("button", { name: "tasarım", exact: true }).click();
+  assert.equal(
+    await page.getByRole("progressbar", { name: "Kayıt ilerlemesi" }).getAttribute("aria-valuenow"),
+    "40",
+  );
   await page.getByRole("button", { name: /Etkinlik sorularına geç/ }).click();
   for (const answer of ["Tasarımcıyım", "Prototip", "Birlikte üretim"]) {
     await page.locator("textarea").fill(answer);

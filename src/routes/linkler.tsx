@@ -271,7 +271,9 @@ function LinksPage() {
   useEffect(() => {
     if (preview === null) return;
     if (preview) {
-      setActiveEvent(previewEvent());
+      const event = previewEvent();
+      setActiveEvent(event);
+      if (event) setForm((current) => ({ ...current, attendedEvent: event.slug }));
       setPreviewReady(new URLSearchParams(window.location.search).get("step") === "apps");
       setIsLoading(false);
       return;
@@ -315,7 +317,7 @@ function LinksPage() {
               ...current,
               ...storedDraft.form,
               attendedEvent:
-                storedDraft.form.attendedEvent || selectedEvent?.slug || current.attendedEvent,
+                selectedEvent?.slug || storedDraft.form.attendedEvent || current.attendedEvent,
             }));
             setRegistrationPath(storedDraft.registrationPath);
             setRegistrationStep(storedDraft.registrationStep);
@@ -462,23 +464,36 @@ function LinksPage() {
     if (registrationPath === "choose") return 0;
     if (registrationPath === "login") {
       const completed = [loginIdentity.trim(), loginPassword, loginConsent].filter(Boolean).length;
-      return Math.round((completed / 3) * 45);
+      return Math.round((completed / 3) * 35);
     }
-
-    const completed = [
-      form.firstName.trim(),
-      form.lastName.trim(),
-      form.email.includes("@"),
-      form.attendedEvent,
-      form.offers.length > 0,
-      true,
-      true,
-      true,
-      form.needTag,
-      form.eventConsent,
-    ].filter(Boolean).length;
-    return Math.round((completed / 10) * 100);
-  }, [form, hasRegistration, loginConsent, loginIdentity, loginPassword, registrationPath]);
+    if (registrationStep === "standard") {
+      const completed = [
+        form.firstName.trim(),
+        form.lastName.trim(),
+        form.email.includes("@"),
+        form.offers.length > 0,
+      ].filter(Boolean).length;
+      return completed * 10;
+    }
+    return Math.min(
+      99,
+      40 + eventQuestionIndex * 15 + (form.eventConsent ? 5 : 0) + (experienceChoice ? 5 : 0),
+    );
+  }, [
+    eventQuestionIndex,
+    experienceChoice,
+    form.email,
+    form.eventConsent,
+    form.firstName,
+    form.lastName,
+    form.offers.length,
+    hasRegistration,
+    loginConsent,
+    loginIdentity,
+    loginPassword,
+    registrationPath,
+    registrationStep,
+  ]);
 
   const progressCopy = useMemo(() => {
     if (hasRegistration) return { label: "Hazırsın", hint: "Uygulama akışın hazır" };
@@ -531,7 +546,7 @@ function LinksPage() {
           firstName: form.firstName.trim(),
           lastName: form.lastName.trim(),
           email: form.email.trim(),
-          attendedEvent: form.attendedEvent,
+          attendedEvent: activeEvent?.slug || form.attendedEvent,
           intro: form.intro.trim(),
           offers: form.offers,
           offersDetail: form.offersDetail.trim(),
@@ -1028,26 +1043,25 @@ function RegistrationGate({
             onChange={(email) => setForm((current) => ({ ...current, email }))}
           />
         </div>
-        <label className="mt-4 block text-sm font-bold">
-          Hangi Notwork etkinliğine katıldın?
-          <select
-            value={form.attendedEvent}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, attendedEvent: event.target.value }))
-            }
-            className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-base outline-none focus:border-primary"
-          >
-            <option value="">Etkinliği seç</option>
-            {activeEvent && !notworkEventOptions.some((item) => item.value === activeEvent.slug) ? (
-              <option value={activeEvent.slug}>{activeEvent.title}</option>
-            ) : null}
-            {notworkEventOptions.map((eventOption) => (
-              <option key={eventOption.value} value={eventOption.value}>
-                {eventOption.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        {!activeEvent && (
+          <label className="mt-4 block text-sm font-bold">
+            Hangi Notwork etkinliğine katılıyorsun?
+            <select
+              value={form.attendedEvent}
+              onChange={(event) =>
+                setForm((current) => ({ ...current, attendedEvent: event.target.value }))
+              }
+              className="mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-base outline-none focus:border-primary"
+            >
+              <option value="">Etkinliği seç</option>
+              {notworkEventOptions.map((eventOption) => (
+                <option key={eventOption.value} value={eventOption.value}>
+                  {eventOption.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <div className="mt-4">
           <h2 className="text-lg font-black">Neler yapabilirsin?</h2>
           <p className="mt-1 text-xs text-foreground/50">
