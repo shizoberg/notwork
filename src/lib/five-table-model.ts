@@ -72,7 +72,8 @@ export function joinTable(
       id: `table-${n}`,
       code: `F${String(n).padStart(3, "0")}`,
       problemId: problem.id,
-      ownerId: problem.ownerId || person.id,
+      // A popular problem can have several tables; each needs a seated host.
+      ownerId: person.id,
       title: problem.title,
       people: [],
       phase: "waiting",
@@ -184,7 +185,7 @@ export function tableAction(
   const table = memberTable(state, personId, id);
   if (action === "leave") {
     if (table.ownerId === personId && table.phase !== "finished")
-      throw new Error("Problem sahibi masa tamamlanmadan ayrılamaz.");
+      throw new Error("Masa sahibi masa tamamlanmadan ayrılamaz.");
     if (table.phase === "finished" && !hasCompleteTableOutcome(table.outcomes?.[personId]))
       throw new Error("Ayrılmadan önce çözüm sonucunu paylaş.");
     table.people = table.people.filter((p) => p.id !== personId);
@@ -209,7 +210,7 @@ export function tableAction(
   }
   if (action === "start") {
     if (table.phase === "active") return table;
-    if (table.ownerId !== personId) throw new Error("Masayı problem sahibi başlatabilir.");
+    if (table.ownerId !== personId) throw new Error("Masayı masa sahibi başlatabilir.");
     if (table.phase !== "ready" || table.people.length !== 4)
       throw new Error("Başlamak için masada dört kişi olmalı.");
     table.phase = "active";

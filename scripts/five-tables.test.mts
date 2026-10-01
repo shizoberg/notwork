@@ -16,6 +16,16 @@ const person = (i: number) => ({
   code: `P${i}`,
   problem: `Problem ${i}`,
 });
+test("a second table for the same problem has a starter who is actually seated there", () => {
+  const state = emptyTables();
+  const problem = { id: "shared-problem", title: "Problem", ownerId: "0" };
+  for (let i = 0; i < 8; i++) joinTable(state, person(i), problem);
+  const second = state.tables[state.members["4"]];
+  assert.ok(second.people.some((person) => person.id === second.ownerId));
+  tableAction(state, second.ownerId, second.id, "start", 1000, 0);
+  assert.equal(second.phase, "active");
+  assert.equal(state.tables[state.members["0"]].phase, "ready");
+});
 test("four seats, persisted code, authoritative timer, one photo owner, four rounds and stale actions", () => {
   const s = emptyTables();
   for (let i = 0; i < 4; i++)

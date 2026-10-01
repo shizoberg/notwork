@@ -681,7 +681,7 @@ async function buildActiveMatchGroup(
   store: ReturnType<typeof getEventNetworkStore>,
   match: StoredActiveMatch,
   current: EventNetworkRegistration,
-  presenceMap: Map<string, EventNetworkPresence>,
+  presenceMap?: Map<string, EventNetworkPresence>,
 ) {
   const doneParticipantIds = new Set(match.completedParticipantIds || []);
   const rows = (
@@ -691,6 +691,7 @@ async function buildActiveMatchGroup(
       ),
     )
   ).filter(Boolean) as EventNetworkRegistration[];
+  const groupPresence = presenceMap ?? (await getPresenceMap(store, rows));
 
   return {
     id: match.id,
@@ -703,7 +704,7 @@ async function buildActiveMatchGroup(
     members: rows.map((registration) =>
       toMatchMember(
         registration,
-        presenceMap.get(registration.participant.id) || "meeting",
+        groupPresence.get(registration.participant.id) || "meeting",
         registration.participant.id === current.participant.id,
         doneParticipantIds.has(registration.participant.id),
         match.photoOwnerParticipantId === registration.participant.id,
@@ -1080,19 +1081,21 @@ export async function getNextMatchGroup(
   const current = await getRegistrationByToken(store, accessToken);
   if (!current) return null;
 
-  const rows = await listRegistrations(store);
-  const presenceMap = await getPresenceMap(store, rows);
-  const currentPresence = presenceMap.get(current.participant.id) || "open";
+  // Most polling requests already belong to a group. Read only that group,
+  // rather than scanning every participant and presence record on each poll.
   const activeMatch = await getActiveMatch(store, current.participant.id);
   if (activeMatch) {
     return {
       status: "ready",
       registration: current,
       presence: "meeting" as const,
-      group: await buildActiveMatchGroup(store, activeMatch, current, presenceMap),
+      group: await buildActiveMatchGroup(store, activeMatch, current),
     };
   }
 
+  const rows = await listRegistrations(store);
+  const presenceMap = await getPresenceMap(store, rows);
+  const currentPresence = presenceMap.get(current.participant.id) || "open";
   if (currentPresence === "paused") {
     return {
       status: "paused",
@@ -1247,7 +1250,8 @@ export async function getNextMatchGroup(
       round: nextRound,
       score,
       reason,
-      aiAnalysis,
+      aiAnalysis: storedMatch.aiAnalysis,
+      analysisSource: storedMatch.analysisSource,
       members: groupRegistrations.map((registration) =>
         toMatchMember(
           registration,

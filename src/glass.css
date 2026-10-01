@@ -2581,7 +2581,8 @@
   position: fixed;
   inset: 0;
   transform: none;
-  translate: none;
+  /* Override Dialog's centered translation, including its animation fill. */
+  translate: none !important;
   width: 100vw;
   height: 100dvh;
   max-width: none;

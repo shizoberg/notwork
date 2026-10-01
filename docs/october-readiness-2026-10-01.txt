@@ -1,0 +1,126 @@
+NOTWORK — 11 EKİM ETKİNLİK KONTROLÜ
+Tarih: 1 Ekim 2026
+Başlangıç sürümü: 8dbb856 (main)
+
+SONUÇ
+İzole testler ve mobil tarayıcı akışı tamamlandı. Bu çalışma sırasında canlı
+katılımcı kayıtları, etkinlik modu veya sayaç değiştirilmedi. OpenAI'ye ücretli
+çağrı yapılmadı. Aşağıdaki düzeltmeler yerel kodda; bu kontrol bir canlı dağıtım
+veya Netlify üzerinde gerçek 100 cihazlık kapasite testi değildir.
+
+ÖNCEKİ ALTI OLAY
+1. AI metni görünmüyordu.
+   Bugün doğrulanan hata: fetch Response nesnesi response.json() ile açılmadan
+   okunuyordu; geçerli API cevabı bile JSON ayrıştırma hatasına düşebiliyordu.
+   Ayrıca ilk Match yanıtında yedek analiz ve analysisSource eksikti. İkisi de
+   düzeltildi. O gece API anahtarı/kota/model erişimi durumunun ayrıca loglarla
+   doğrulanması gerekir; bunları kesin tarihsel neden olarak kabul etmiyoruz.
+
+2. Grup sohbetleri ortak görünüyordu.
+   Önceki düzeltme: sohbet anahtarı etkinlik + aktif grup kimliğine bağlandı;
+   üyelik ve beklenen groupId doğrulanıyor. Başka gruptan ve eski gruptan mesaj
+   gönderme isteği reddedildi. Match ve Five grupları birbirinin mesajını görmedi.
+
+3. Kayıtlı kullanıcı ilk eşleşmeye giremiyordu.
+   Önceki düzeltmeler: etkinlik slug/id oturum eşitleme, kaydı cookie ile devam
+   ettirme, bekleme ekranında yeniden eşleşme arama ve kodu aynı görünen farklı
+   kişileri havuzdan çıkarmama. 11 Ekim slug/id geçişiyle kayıt/giriş/yenileme
+   testleri geçti. Eski etkinliğin tokenı yeni etkinliğe taşınmadı.
+
+4. Five problem sahibini masadan çıkarıyordu.
+   Önceki düzeltmeler: submitLive sonrası sahibin masaya alınması ve atomik
+   masa üyeliği. 25 problem sahibinin masada kalması doğrulandı.
+   Bugün bulunan ayrı hata: aynı probleme ikinci masa açıldığında masa sahibi
+   ilk masadaki kişi oluyordu; ikinci masada kimse başlatamıyordu. Her masanın
+   başlatanı artık o masada oturan ilk kişi. Ayrı regresyon testi eklendi.
+
+5. Site kesildi.
+   Geçmişte Netlify kredi/limit sorunu bildirildi. O ana ait sağlayıcı logları
+   bu çalışmada incelenmedi; tek ve kesin kök neden iddia edilmiyor.
+   Bugün ölçülen maliyet etkeni: aktif Match yenilemesi tüm havuzu ve presence
+   kayıtlarını okuyordu. 100 kişilik izole havuzda aynı handler isteği 210 Blob
+   okuması + 1 listelemeden 13 okuma + 0 listelemeye indi (okumada %93,8 azalma).
+   Bu oran bütün uygulamanın faturasındaki azalma anlamına gelmez.
+
+6. Kişisel kodlar aynı veya çok uzundu.
+   Önceki düzeltmeler: katılımcıya özgü dört karakter ve atomik rezervasyon.
+   100 eşzamanlı kayıtta benzersiz dört karakter, ayrıca 1.000 kod örneği geçti.
+   Mobil testte yeni hata bulundu: büyütülen kod penceresi ekranın yarısı kadar
+   sola/yukarı kayıyordu. Dialog'un translate stili tam ekranda geçersiz kılındı;
+   Match ve Five için pencere boyutu/konumu tarayıcıda ölçülerek doğrulandı.
+
+KORUNAN SON REVİZELER
+- Linkler: temel bilgiler, sorular tek tek, tamamlanma geçişi, Profilim kartı.
+- Etkinlik serbest metinlerinde eski 40 karakter alt sınırı yok; kısa cevaplarla
+  kayıt test edildi. Genel profil kayıt formunun 140 karakter kuralı ayrı.
+- AI/networking gelişmiş deneyim tercihi ve temel deneyim yolu mevcut.
+- Match: üçlü grup, gruba özel sohbet, yeniden eşleşme, fotoğraf sorumlusu,
+  puan/yorum/fotoğraf ve doğru etkinlikte arşiv.
+- Five: problem yaz veya bir probleme katıl; dört kişilik masa, beş dakikalık
+  sunucu sayacı, fotoğraf sorumlusu, dört tur, sonuç/puan/yorum ve masadan ayrılma.
+- Five problem/çözüm alanlarında en az 20 karakter kuralı devam ediyor.
+- Timer admin start verince başlıyor. Uygulama sırası ve bildirimler panelde.
+  Uygulama değişiminde Linkler'e dönülüyor; Five kendiliğinden zorla açılmıyor.
+- 9 Ekim iç kimliği korunuyor: evt_9_ekim_2026 / 9-ekim-2026.
+  Kullanıcıya gösterilen etkinlik 11 Ekim. Veri prefix'i yeniden adlandırılmadı.
+
+TEST KAPSAMI VE SONUÇLAR
+- 10 hedef birim/regresyon testi: 100 kişilik eşleşme, çakışan oda işlemleri,
+  Five kapasitesi, kısa kod, sohbet anahtarı ve oturum alias'ları.
+- Gerçek function handler'ları; bellekte sürümlü, CAS destekli Blob taklidi.
+  Netlify SDK'ya/sunucusuna test verisi yazılmaz.
+- 50 mevcut üyeyle eşzamanlı giriş; ardından 50 mevcut + 50 yeni katılımcının
+  toplam 100 eşzamanlı etkinlik kaydı.
+- Match: 33 üçlü grup, 99 kişi eşleşti, 1 kişi bekliyor. 100 sayısı üçe bölünmediği
+  için 1 kişinin beklemesi normaldir. Tek üyelik, yeniden eşleşme, grup izolasyonu.
+- Match: 33 fotoğraflı değerlendirme doğru etkinlik anahtarında saklandı.
+- Five: 100 kişi, 25 masa, masa başına 4 kişi; sohbet izolasyonu, dört tur,
+  fotoğraf yetkisi, 25 fotoğraf, 100 sonuç/değerlendirme ve tüm üyelerin ayrılması.
+- Toplam 58 fotoğraf ve 133 değerlendirme izole etkinlik deposunda doğrulandı.
+- AI: Responses JSON okuma, Match/Five analiz, aday seçimi, prompt arşivi;
+  bozuk cevap, 429, bağlantı hatası, kapalı mod ve 400 çağrı sınırı fallback'i.
+- Üyelik/duyuru/Gmail mevcut regresyon testleri geçti. Eski test mock'una CAS
+  ve yeni modül bağımlılıkları eklendi; eski bileşen yolu düzeltildi.
+- Mobil Chrome 390 x 844: yeni kayıt, kısa cevaplar, yenilemeyle devam,
+  Match grubu/analiz/kod büyütme, Five problem ekleme/masada kalma/sohbet,
+  mevcut profille giriş ve Match'e geçiş. JavaScript çalışma hatası ve yatay
+  taşma gözlenmedi. API'ler bu testte gerçek handler + bellek deposuna yönlendirildi.
+- Production build geçti. Bu build kontrolü kendi başına Netlify dağıtımı değildir.
+
+CANLIDAN SALT OKUNUR GÖRÜLEN AYARLAR — 1 EKİM
+Kaynaklar: /api/events/context?event=9-ekim-2026 ve /api/events/flow?event=9-ekim-2026
+- Ana etkinlik: evt_9_ekim_2026; durum scheduled.
+- Panel başlığı: notwork Classic. shortTitle: 11 Ekim.
+- startsAt: 2026-10-11T16:30:00.000Z, yani Türkiye saati 19.30.
+  Son istenen Sahne / 20.00 bilgisiyle uyuşmuyor; panelde eşitlenmeli.
+- entry.isOpen true olsa da canlı giriş arayüzü ayrıca status=live arıyor.
+- Match ve Wordcloud: ready, demo. Five: disabled, gizli, demo.
+- Timer: idle; startedAt ve endsAt boş. Başlatılmadı.
+- Akış: Match 60 dk -> Wordcloud 60 dk. Five bu akışta yok.
+  Bilet sayfasındaki Wordcloud ile açılış sırası ile panel sırası aynı değil.
+
+CANLIYA HAZIRLIKTA KALANLAR
+1. Bu kod düzeltmelerini dağıtıp Netlify dağıtım sonucunu doğrulamak.
+2. Admin panel başlığını Sahne, başlangıcı 11 Ekim 20.00 olarak eşitlemek.
+3. Kullanılacak uygulamaları ve sıralarını belirlemek. Five kullanılacaksa
+   etkinleştirmek, görünür yapmak ve akışa eklemek; etkinlik verisini live seçmek.
+4. Yeni canlı veri alanını eski event verilerine dokunmadan kontrol etmek.
+   Timer başlatmayı etkinlikte adminin eylemine bırakmak.
+5. Sunucudaki OpenAI anahtarı/model erişimi ve Netlify kalan kredi/limitlerini
+   panelden doğrulamak. Bu testte anahtar veya ücretli model çağrısı doğrulanmadı.
+6. Gerçek Netlify gecikmesi, soğuk başlatma ve uzun süreli 100 cihaz yükü henüz
+   ölçülmedi. İzole testlerin geçmesi bir hosting kapasite garantisi değildir.
+
+TEKRAR ÇALIŞTIRMA
+npm run test:event
+npm run test:members
+npm run build
+
+Mobil test için ayrı terminalde yerel dev server:
+npm run dev -- --host 127.0.0.1 --port 5189 --strictPort
+Sonra:
+PLAYWRIGHT_MODULE=/path/to/playwright/index.mjs npm run test:event:browser
+PLAYWRIGHT_CHANNEL varsayılanı chrome; EVENT_TEST_URL varsayılanı
+http://127.0.0.1:5189. Ekran görüntüleri test-results/october altına yazılır.
+Bu mobil test dış ağ isteklerini engeller ve tüm API işlemlerini bellek deposuna
+yönlendirir. Canlı site üzerinde çalıştırılmaz.

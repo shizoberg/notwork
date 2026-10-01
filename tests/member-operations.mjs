@@ -10,29 +10,14 @@ try {
   await fs.mkdir(path.join(temp, "functions"));
   await fs.mkdir(path.join(temp, "data"));
   await fs.writeFile(path.join(temp, "data/networking-seed.json"), "[]");
-  await fs.writeFile(
-    path.join(temp, "functions/mock.mjs"),
-    `
-    const stores = new Map();
-    export function getStore({ name }) {
-      if (!stores.has(name)) {
-        const data = new Map();
-        stores.set(name, {
-          get: async (key) => structuredClone(data.get(key) ?? null),
-          setJSON: async (key, value, options = {}) => { if (options.onlyIfNew && data.has(key)) return { modified: false }; data.set(key, structuredClone(value)); return { modified: true }; },
-          set: async (key, value) => { data.set(key, value); },
-          delete: async (key) => { data.delete(key); },
-          list: async ({ prefix = '' }) => ({ blobs: [...data.keys()].filter(key => key.startsWith(prefix)).map(key => ({ key })) }),
-        });
-      }
-      return stores.get(name);
-    }
-  `,
-  );
+  await fs.copyFile(new URL('./helpers/memory-blobs.mjs', import.meta.url), path.join(temp, 'functions/mock.mjs'));
   for (const file of [
     "_test-members",
     "_atomic-state",
     "_matchmaking",
+    "_participant-code",
+    "_match-chat",
+    "_ntw-ai",
     "_event-network-store",
     "_event-review-store",
     "_announcements",
@@ -296,11 +281,11 @@ try {
   const preferenceRows = await announcements.announcementStore().list({ prefix: "preferences/" });
   assert.equal(preferenceRows.blobs.length, 4, "preference history is append-only");
   const formSource = await fs.readFile(
-    new URL("../src/routes/linkler.tsx", import.meta.url),
+    new URL("../src/components/AnnouncementConsent.tsx", import.meta.url),
     "utf8",
   );
   assert.ok(
-    formSource.includes(preference.text),
+    formSource.replace(/\s+/g, " ").includes(preference.text),
     "recorded wording matches the displayed checkbox",
   );
   const network = await load("_event-network-store");

@@ -107,7 +107,7 @@ async function structuredResponse<T>(
       console.error("ntw ai yanıt hatası", response.status, (await response.text()).slice(0, 300));
       return null;
     }
-    const result = JSON.parse(outputText(await response)) as T;
+    const result = JSON.parse(outputText(await response.json())) as T;
     try {
       await getStore({ name: "ntw-ai", consistency: "strong" }).setJSON(
         `events/${safeScope(scope)}/prompts/${Date.now()}-${randomUUID()}.json`,

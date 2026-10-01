@@ -468,7 +468,7 @@ export function FiveTables() {
               {(table.phase === "waiting" || table.phase === "ready") && (
                 <>
                   <p>
-                    {table.people.length}/4 kişi · problem sahibi masada, çözüm havuzundan yeni
+                    {table.people.length}/4 kişi · masa sahibi masada, çözüm havuzundan yeni
                     katılımcılar bekleniyor.
                   </p>
                   {table.phase === "ready" && table.ownerId === data.identity.id && (
@@ -482,7 +482,7 @@ export function FiveTables() {
                     </button>
                   )}
                   {table.phase === "ready" && table.ownerId !== data.identity.id && (
-                    <p>Problem sahibi masayı başlatacak.</p>
+                    <p>Masa sahibi masayı başlatacak.</p>
                   )}
                   {preview && table.phase === "waiting" && (
                     <button className="five-demo-action" onClick={() => void act("demoFill")}>
