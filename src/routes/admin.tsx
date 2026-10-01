@@ -236,6 +236,15 @@ type AdminTab = "events" | "analytics" | "surveys" | "networking";
 
 type EventAdminSection = "overview" | "data" | "flow";
 type NetworkingAdminSection = "members" | "profiles";
+type AnalyticsAdminSection = "overview" | "pages" | "heatmap" | "actions";
+type EventSetupStep = "details" | "registration" | "products" | "review";
+
+const eventSetupSteps: Array<{ id: EventSetupStep; label: string; description: string }> = [
+  { id: "details", label: "Etkinlik", description: "Ad, tarih ve yer" },
+  { id: "registration", label: "Giriş", description: "Kayıt ve sorular" },
+  { id: "products", label: "Uygulamalar", description: "Sıra ve veri modu" },
+  { id: "review", label: "Kontrol", description: "Önizle ve kaydet" },
+];
 
 type EventDatabaseInfo = {
   storeName: string;
@@ -452,6 +461,8 @@ function AdminPage() {
   const [activeAdminTab, setActiveAdminTab] = useState<AdminTab>("events");
   const [eventSection, setEventSection] = useState<EventAdminSection>("overview");
   const [networkingSection, setNetworkingSection] = useState<NetworkingAdminSection>("members");
+  const [analyticsSection, setAnalyticsSection] = useState<AnalyticsAdminSection>("overview");
+  const [eventDataProduct, setEventDataProduct] = useState<EventProductKey>("matchlab");
   const [eventToolsLoading, setEventToolsLoading] = useState(false);
   const [selectedToolsEventSlug, setSelectedToolsEventSlug] = useState("21-agustos-2026");
   const [selectedEventAnalyticsPath, setSelectedEventAnalyticsPath] = useState("/17-eylul");
@@ -473,6 +484,9 @@ function AdminPage() {
   const selectedToolsEventSelection: EventSelection = selectedToolsEvent
     ? { eventId: selectedToolsEvent.id }
     : {};
+  const activeEventDataProduct = selectedToolsEvent?.products[eventDataProduct].enabled
+    ? eventDataProduct
+    : eventProductKeys.find((product) => selectedToolsEvent?.products[product].enabled);
 
   const loadNetwork = async (nextPassword = password) => {
     const response = await fetch("/api/networking/admin", {
@@ -1151,24 +1165,37 @@ function AdminPage() {
           </nav>
         ) : null}
 
+        {activeAdminTab === "analytics" ? (
+          <nav
+            aria-label="Analiz bölümleri"
+            className="mt-5 flex gap-2 overflow-x-auto rounded-2xl border border-border bg-card p-2"
+          >
+            {(
+              [
+                { id: "overview", label: "Genel bakış" },
+                { id: "pages", label: "Sayfalar ve biletler" },
+                { id: "heatmap", label: "Tıklama haritası" },
+                { id: "actions", label: "Aksiyonlar" },
+              ] as const
+            ).map((section) => (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => setAnalyticsSection(section.id)}
+                aria-current={analyticsSection === section.id ? "page" : undefined}
+                className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                  analyticsSection === section.id
+                    ? "bg-primary text-primary-foreground"
+                    : "text-foreground/60 hover:bg-muted"
+                }`}
+              >
+                {section.label}
+              </button>
+            ))}
+          </nav>
+        ) : null}
+
         <div className={activeAdminTab === "events" && eventSection === "overview" ? "" : "hidden"}>
-          <section className="tool-surface mb-5">
-            <h2>Test verisiyle önizle</h2>
-            <p>
-              Seçili etkinliğin kaydedilmiş akışıyla kayıt → uygulamalar ekranını incele. Örnek
-              kişiler bu cihazda tutulur.
-            </p>
-            <button
-              className="tool-primary"
-              disabled={!eventRegistry.some((event) => event.id === eventEditor.id)}
-              onClick={() => {
-                const event = eventRegistry.find((event) => event.id === eventEditor.id);
-                if (event) startEventPreview(event);
-              }}
-            >
-              Linkler önizlemesini aç
-            </button>
-          </section>
           <EventRegistryAdmin
             events={eventRegistry}
             registry={eventRegistryInfo}
@@ -1187,6 +1214,10 @@ function AdminPage() {
             saveEvent={saveEventRegistryItem}
             setPrimaryEvent={setPrimaryEventRegistryItem}
             archiveEvent={archiveEventRegistryItem}
+            previewEvent={() => {
+              const event = eventRegistry.find((item) => item.id === eventEditor.id);
+              if (event) startEventPreview(event);
+            }}
           />
         </div>
 
@@ -1277,7 +1308,7 @@ function AdminPage() {
 
         <section
           className={`mt-7 overflow-hidden rounded-[2rem] border border-primary/25 bg-[radial-gradient(circle_at_top_left,rgba(143,203,208,0.22),transparent_34%),linear-gradient(135deg,hsl(var(--card)),hsl(var(--background)))] p-5 shadow-[var(--shadow-card)] ${
-            activeAdminTab === "analytics" ? "" : "hidden"
+            activeAdminTab === "analytics" && analyticsSection === "overview" ? "" : "hidden"
           }`}
         >
           <div className="flex flex-wrap items-end justify-between gap-4">
@@ -1286,7 +1317,7 @@ function AdminPage() {
                 notwork analytics
               </div>
               <h2 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-5xl">
-                Trafik komuta merkezi
+                Genel bakış
               </h2>
               <p className="mt-2 max-w-2xl text-sm text-foreground/60">
                 Ziyaret, bilet tıklaması, buton davranışı ve sayfada geçirilen süreyi tek ekranda
@@ -1397,7 +1428,7 @@ function AdminPage() {
 
         <section
           className={`mt-6 overflow-hidden rounded-[2rem] border border-border bg-card p-5 ${
-            activeAdminTab === "analytics" ? "" : "hidden"
+            activeAdminTab === "analytics" && analyticsSection === "pages" ? "" : "hidden"
           }`}
         >
           <div className="flex flex-wrap items-end justify-between gap-4">
@@ -1489,8 +1520,18 @@ function AdminPage() {
         </section>
 
         <section
+          className={`mt-6 grid gap-5 lg:grid-cols-3 ${
+            activeAdminTab === "analytics" && analyticsSection === "pages" ? "" : "hidden"
+          }`}
+        >
+          <ReportList title="En çok görüntülenen sayfalar" rows={report.topPages} />
+          <ReportList title="Trafik kaynakları" rows={report.sources} />
+          <ReportList title="Kaydırma derinliği" rows={report.scrollDepth} suffix=" ulaşım" />
+        </section>
+
+        <section
           className={`mt-6 overflow-hidden rounded-[2rem] border border-border bg-card p-5 ${
-            activeAdminTab === "analytics" ? "" : "hidden"
+            activeAdminTab === "analytics" && analyticsSection === "heatmap" ? "" : "hidden"
           }`}
         >
           <div className="flex flex-wrap items-end justify-between gap-4">
@@ -1577,7 +1618,7 @@ function AdminPage() {
 
         <section
           className={`mt-6 grid gap-5 xl:grid-cols-[1.3fr_0.7fr] ${
-            activeAdminTab === "analytics" ? "" : "hidden"
+            activeAdminTab === "analytics" && analyticsSection === "overview" ? "" : "hidden"
           }`}
         >
           <ChartCard
@@ -1670,8 +1711,8 @@ function AdminPage() {
         </section>
 
         <section
-          className={`mt-6 grid gap-5 xl:grid-cols-3 ${
-            activeAdminTab === "analytics" ? "" : "hidden"
+          className={`mt-6 grid gap-5 ${
+            activeAdminTab === "analytics" && analyticsSection === "actions" ? "" : "hidden"
           }`}
         >
           <ChartCard title="Buton takip paneli" description="En çok tıklanan CTA ve linkler">
@@ -1694,13 +1735,11 @@ function AdminPage() {
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
-          <ReportList title="En çok görüntülenen sayfalar" rows={report.topPages} />
-          <ReportList title="Trafik kaynakları" rows={report.sources} />
         </section>
 
         <section
           className={`mt-6 grid gap-5 lg:grid-cols-2 ${
-            activeAdminTab === "analytics" ? "" : "hidden"
+            activeAdminTab === "analytics" && analyticsSection === "actions" ? "" : "hidden"
           }`}
         >
           <ActionTable title="Son buton ve CTA tıklamaları" events={report.buttonEvents} />
@@ -1711,15 +1750,42 @@ function AdminPage() {
         </section>
 
         <section
-          className={`mt-6 grid gap-5 lg:grid-cols-2 ${
-            activeAdminTab === "analytics" ? "" : "hidden"
+          className={`mt-6 grid gap-5 ${
+            activeAdminTab === "analytics" && analyticsSection === "actions" ? "" : "hidden"
           }`}
         >
           <ReportList title="En çok kullanılan aksiyonlar" rows={report.topActions} />
-          <ReportList title="Kaydırma derinliği" rows={report.scrollDepth} suffix=" ulaşım" />
         </section>
 
         <div className={activeAdminTab === "events" && eventSection === "data" ? "" : "hidden"}>
+          {selectedToolsEvent && activeEventDataProduct ? (
+            <nav
+              aria-label="Uygulama verileri"
+              className="mt-5 flex gap-2 overflow-x-auto rounded-2xl border border-border bg-card p-2"
+            >
+              {eventProductKeys
+                .filter((product) => selectedToolsEvent.products[product].enabled)
+                .sort(
+                  (a, b) =>
+                    selectedToolsEvent.products[a].order - selectedToolsEvent.products[b].order,
+                )
+                .map((product) => (
+                  <button
+                    key={product}
+                    type="button"
+                    onClick={() => setEventDataProduct(product)}
+                    aria-current={activeEventDataProduct === product ? "page" : undefined}
+                    className={`shrink-0 rounded-xl px-4 py-2.5 text-sm font-bold ${
+                      activeEventDataProduct === product
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground/60 hover:bg-muted"
+                    }`}
+                  >
+                    {selectedToolsEvent.products[product].label}
+                  </button>
+                ))}
+            </nav>
+          ) : null}
           {eventToolsLoading ? (
             <div
               role="status"
@@ -1730,7 +1796,8 @@ function AdminPage() {
           ) : null}
           {!eventToolsLoading ? (
             <>
-              {selectedToolsEvent?.products.wordcloud.enabled ? (
+              {selectedToolsEvent?.products.wordcloud.enabled &&
+              activeEventDataProduct === "wordcloud" ? (
                 <WordcloudAdmin
                   eventTitle={selectedToolsEvent.shortTitle}
                   selection={selectedToolsEventSelection}
@@ -1748,7 +1815,8 @@ function AdminPage() {
                 />
               ) : null}
 
-              {selectedToolsEvent?.products.matchlab.enabled ? (
+              {selectedToolsEvent?.products.matchlab.enabled &&
+              activeEventDataProduct === "matchlab" ? (
                 <EventNetworkAdmin
                   eventTitle={selectedToolsEvent.shortTitle}
                   selection={selectedToolsEventSelection}
@@ -1763,7 +1831,7 @@ function AdminPage() {
                 />
               ) : null}
 
-              {selectedToolsEvent?.products.five.enabled ? (
+              {selectedToolsEvent?.products.five.enabled && activeEventDataProduct === "five" ? (
                 <FiveAdmin
                   eventTitle={selectedToolsEvent.shortTitle}
                   selection={selectedToolsEventSelection}
@@ -1856,7 +1924,7 @@ function AdminPage() {
 
         <section
           className={`mt-6 overflow-hidden rounded-2xl border border-border bg-card ${
-            activeAdminTab === "analytics" ? "" : "hidden"
+            activeAdminTab === "analytics" && analyticsSection === "actions" ? "" : "hidden"
           }`}
         >
           <div className="border-b border-border px-5 py-4 font-bold">Son 100 aksiyon</div>
@@ -3160,6 +3228,7 @@ function EventRegistryAdmin({
   saveEvent,
   setPrimaryEvent,
   archiveEvent,
+  previewEvent,
 }: {
   events: NotworkEvent[];
   registry: EventRegistryInfo | null;
@@ -3173,9 +3242,71 @@ function EventRegistryAdmin({
   saveEvent: () => Promise<void>;
   setPrimaryEvent: () => Promise<void>;
   archiveEvent: () => Promise<void>;
+  previewEvent: () => void;
 }) {
   const selectedEvent = events.find((event) => event.id === draft.id);
   const isPrimary = Boolean(draft.id && registry?.primaryEventId === draft.id);
+  const [step, setStep] = useState<EventSetupStep>("details");
+  const [formError, setFormError] = useState("");
+  const [eventSearch, setEventSearch] = useState("");
+  const [eventFilter, setEventFilter] = useState<"all" | "upcoming" | "past">("all");
+  const stepIndex = eventSetupSteps.findIndex((item) => item.id === step);
+  const now = Date.now();
+  const visibleEvents = events
+    .filter((event) => {
+      const matchesSearch = `${event.title} ${event.shortTitle} ${event.location.city}`
+        .toLocaleLowerCase("tr-TR")
+        .includes(eventSearch.trim().toLocaleLowerCase("tr-TR"));
+      const upcoming =
+        event.status !== "completed" &&
+        event.status !== "archived" &&
+        new Date(event.endsAt || event.startsAt).getTime() >= now;
+      return (
+        matchesSearch &&
+        (eventFilter === "all" || (eventFilter === "upcoming" ? upcoming : !upcoming))
+      );
+    })
+    .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
+  const orderedProducts = [...eventProductKeys].sort(
+    (a, b) => draft.products[a].order - draft.products[b].order,
+  );
+  const changeStep = (nextStep: EventSetupStep) => {
+    setFormError("");
+    setStep(nextStep);
+  };
+  const submitEvent = () => {
+    const start = new Date(draft.startsAt).getTime();
+    const end = draft.endsAt ? new Date(draft.endsAt).getTime() : null;
+    if (
+      !draft.title.trim() ||
+      !Number.isFinite(start) ||
+      (end !== null && (!Number.isFinite(end) || end <= start))
+    ) {
+      setFormError(
+        "Etkinlik adı ve geçerli başlangıç tarihi gerekli. Bitiş, başlangıçtan sonra olmalı.",
+      );
+      setStep("details");
+      return;
+    }
+    setFormError("");
+    void saveEvent();
+  };
+  const moveProduct = (product: EventProductKey, direction: -1 | 1) => {
+    const index = orderedProducts.indexOf(product);
+    const otherIndex = index + direction;
+    if (otherIndex < 0 || otherIndex >= orderedProducts.length) return;
+    const nextOrder = [...orderedProducts];
+    [nextOrder[index], nextOrder[otherIndex]] = [nextOrder[otherIndex], nextOrder[index]];
+    setDraft((current) => ({
+      ...current,
+      products: Object.fromEntries(
+        eventProductKeys.map((key) => [
+          key,
+          { ...current.products[key], order: nextOrder.indexOf(key) + 1 },
+        ]),
+      ) as NotworkEvent["products"],
+    }));
+  };
   const updateProduct = (
     product: EventProductKey,
     updater: (
@@ -3198,20 +3329,51 @@ function EventRegistryAdmin({
             </div>
             <h2 className="mt-1 text-2xl font-black">Etkinlikler</h2>
             <p className="mt-1 text-sm text-foreground/55">
-              Her etkinliğin ürünleri ve verisi ayrı tutulur.
+              Bir etkinlik seç veya yenisini oluştur. Ayarları sağdaki adımlardan tamamla.
             </p>
           </div>
           <button
             type="button"
-            onClick={createEvent}
+            onClick={() => {
+              createEvent();
+              changeStep("details");
+            }}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 py-2 text-xs font-black text-primary-foreground"
           >
-            <Plus size={14} /> yeni
+            <Plus size={14} /> etkinlik oluştur
           </button>
         </div>
 
+        <label className="mt-4 block text-xs font-bold text-foreground/55">
+          Etkinlik ara
+          <input
+            value={eventSearch}
+            onChange={(event) => setEventSearch(event.target.value)}
+            placeholder="Ad veya şehir"
+            className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary"
+          />
+        </label>
+        <div className="mt-2 flex gap-2" aria-label="Etkinlik filtresi">
+          {(
+            [
+              ["all", "Tümü"],
+              ["upcoming", "Yaklaşan"],
+              ["past", "Geçmiş"],
+            ] as const
+          ).map(([filter, label]) => (
+            <button
+              key={filter}
+              type="button"
+              onClick={() => setEventFilter(filter)}
+              aria-pressed={eventFilter === filter}
+              className={`rounded-full px-3 py-1.5 text-xs font-bold ${eventFilter === filter ? "bg-primary text-primary-foreground" : "border border-border text-foreground/60"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <div className="mt-4 grid max-h-[620px] gap-2 overflow-y-auto pr-1">
-          {events.map((event) => {
+          {visibleEvents.map((event) => {
             const enabledProducts = eventProductKeys.filter(
               (product) => event.products[product].enabled,
             ).length;
@@ -3220,7 +3382,10 @@ function EventRegistryAdmin({
               <button
                 key={event.id}
                 type="button"
-                onClick={() => selectEvent(event)}
+                onClick={() => {
+                  selectEvent(event);
+                  changeStep("details");
+                }}
                 className={`rounded-2xl border p-3 text-left transition ${
                   active
                     ? "border-primary/55 bg-primary/12"
@@ -3245,9 +3410,9 @@ function EventRegistryAdmin({
               </button>
             );
           })}
-          {!events.length ? (
+          {!visibleEvents.length ? (
             <div className="rounded-2xl border border-dashed border-border p-5 text-center text-sm text-foreground/50">
-              Henüz etkinlik kaydı yok.
+              {events.length ? "Bu aramada etkinlik bulunamadı." : "Henüz etkinlik kaydı yok."}
             </div>
           ) : null}
         </div>
@@ -3265,7 +3430,8 @@ function EventRegistryAdmin({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          void saveEvent();
+          if (step === "review") submitEvent();
+          else changeStep(eventSetupSteps[Math.min(stepIndex + 1, eventSetupSteps.length - 1)].id);
         }}
         className="rounded-[2rem] border border-border bg-card p-4 shadow-sm sm:p-6"
       >
@@ -3308,458 +3474,588 @@ function EventRegistryAdmin({
           </div>
         ) : null}
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <AdminField
-            label="Etkinlik adı"
-            value={draft.title}
-            onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
-            required
-          />
-          <AdminField
-            label="Kısa ad"
-            value={draft.shortTitle}
-            onChange={(event) =>
-              setDraft((current) => ({ ...current, shortTitle: event.target.value }))
-            }
-            placeholder="11 Ekim"
-          />
-          <AdminField
-            label="URL adı"
-            value={draft.slug}
-            onChange={(event) => setDraft((current) => ({ ...current, slug: event.target.value }))}
-            placeholder="11-ekim-2026"
-          />
-          <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
-            Durum
-            <select
-              value={draft.status}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  status: event.target.value as EventLifecycleStatus,
-                }))
-              }
-              className="rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+        <nav
+          aria-label="Etkinlik oluşturma adımları"
+          className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4"
+        >
+          {eventSetupSteps.map((item, index) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => changeStep(item.id)}
+              aria-current={step === item.id ? "step" : undefined}
+              className={`rounded-2xl border px-3 py-3 text-left transition ${
+                step === item.id
+                  ? "border-primary/60 bg-primary/12"
+                  : "border-border bg-background hover:border-primary/30"
+              }`}
             >
-              {Object.entries(eventStatusLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <AdminField
-            label="Başlangıç"
-            type="datetime-local"
-            value={draft.startsAt}
-            onChange={(event) =>
-              setDraft((current) => ({ ...current, startsAt: event.target.value }))
-            }
-            required
-          />
-          <AdminField
-            label="Bitiş"
-            type="datetime-local"
-            value={draft.endsAt}
-            onChange={(event) =>
-              setDraft((current) => ({ ...current, endsAt: event.target.value }))
-            }
-          />
-          <AdminField
-            label="Mekân"
-            value={draft.location.name}
-            onChange={(event) =>
-              setDraft((current) => ({
-                ...current,
-                location: { ...current.location, name: event.target.value },
-              }))
-            }
-          />
-          <AdminField
-            label="Şehir"
-            value={draft.location.city}
-            onChange={(event) =>
-              setDraft((current) => ({
-                ...current,
-                location: { ...current.location, city: event.target.value },
-              }))
-            }
-          />
-          <AdminField
-            label="Adres"
-            value={draft.location.address}
-            onChange={(event) =>
-              setDraft((current) => ({
-                ...current,
-                location: { ...current.location, address: event.target.value },
-              }))
-            }
-            className="sm:col-span-2"
-          />
-          <AdminField
-            label="Harita bağlantısı"
-            type="url"
-            value={draft.location.mapUrl}
-            onChange={(event) =>
-              setDraft((current) => ({
-                ...current,
-                location: { ...current.location, mapUrl: event.target.value },
-              }))
-            }
-            className="sm:col-span-2"
-          />
-        </div>
-
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <label className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3 text-sm font-bold">
-            <input
-              type="checkbox"
-              checked={draft.entry.isOpen}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  entry: { ...current.entry, isOpen: event.target.checked },
-                }))
-              }
-              className="size-4 accent-[hsl(var(--primary))]"
-            />
-            Katılımcı girişi açık
-          </label>
-          <label className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3 text-sm font-bold">
-            <input
-              type="checkbox"
-              checked={draft.entry.requireRegistration}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  entry: { ...current.entry, requireRegistration: event.target.checked },
-                }))
-              }
-              className="size-4 accent-[hsl(var(--primary))]"
-            />
-            Önce profil/kayıt iste
-          </label>
-        </div>
-
-        <div className="mt-7 flex items-center gap-2">
-          <MessageSquareQuote size={18} className="text-primary-deep" />
-          <h3 className="font-black">Etkinlik akışı</h3>
-        </div>
-        <div className="mt-4 grid gap-3">
-          {(
-            [
-              ["appsTitle", "Uygulama ekranı başlığı", "Şimdi notwork zamanı"],
-              ["appsSubtitle", "Uygulama ekranı açıklaması", "Akışa göre uygulamanı seç"],
-            ] as const
-          ).map(([key, label, fallback]) => (
-            <label key={key} className="text-sm font-bold">
-              {label}
-              <input
-                className="mt-2 w-full rounded-xl border border-border bg-background p-3"
-                maxLength={key === "appsTitle" ? 120 : 240}
-                value={draft.entry[key] ?? fallback}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    entry: { ...current.entry, [key]: event.target.value },
-                  }))
-                }
-              />
-            </label>
+              <span className="block text-xs font-black text-primary-deep">
+                {index + 1}. {item.label}
+              </span>
+              <span className="mt-1 block text-[11px] text-foreground/55">{item.description}</span>
+            </button>
           ))}
-        </div>
-        <h3 className="mt-7 font-black">Etkinlik özel soruları</h3>
-        <p className="mt-1 text-sm text-foreground/55">
-          Kayıtlı veya yeni katılımcı standart bilgilerini girdikten sonra bu etkinliğe özel üç
-          soruyu yanıtlar.
-        </p>
-        <div className="mt-4 grid gap-3">
-          {(
-            [
-              ["introLabel", "1. soru", "introPlaceholder", "1. soru açıklaması"],
-              ["offersLabel", "2. soru", "offersPlaceholder", "2. soru açıklaması"],
-              ["needsLabel", "3. soru", "needsPlaceholder", "3. soru açıklaması"],
-            ] as const
-          ).map(([labelKey, label, placeholderKey, placeholderLabel]) => (
-            <div
-              key={labelKey}
-              className="grid gap-2 rounded-2xl border border-border bg-background p-3 sm:grid-cols-2"
-            >
+        </nav>
+        {formError ? (
+          <p
+            role="alert"
+            className="mt-4 rounded-xl bg-destructive/10 p-3 text-sm font-bold text-destructive"
+          >
+            {formError}
+          </p>
+        ) : null}
+
+        {step === "details" ? (
+          <>
+            <p className="mt-6 text-sm text-foreground/60">
+              Önce etkinliğin adını, tarihini ve yerini belirle.
+            </p>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <AdminField
-                label={label}
-                value={draft.entry.registrationPrompts[labelKey]}
+                label="Etkinlik adı"
+                value={draft.title}
                 onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    entry: {
-                      ...current.entry,
-                      registrationPrompts: {
-                        ...current.entry.registrationPrompts,
-                        [labelKey]: event.target.value,
-                      },
-                    },
-                  }))
+                  setDraft((current) => ({ ...current, title: event.target.value }))
                 }
+                required
               />
               <AdminField
-                label={placeholderLabel}
-                value={draft.entry.registrationPrompts[placeholderKey]}
+                label="Kısa ad"
+                value={draft.shortTitle}
                 onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    entry: {
-                      ...current.entry,
-                      registrationPrompts: {
-                        ...current.entry.registrationPrompts,
-                        [placeholderKey]: event.target.value,
-                      },
-                    },
-                  }))
+                  setDraft((current) => ({ ...current, shortTitle: event.target.value }))
                 }
+                placeholder="11 Ekim"
               />
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-7 flex items-center gap-2">
-          <Database size={18} className="text-primary-deep" />
-          <h3 className="font-black">Etkinlik ürünleri</h3>
-        </div>
-        <p className="mt-1 text-sm text-foreground/55">
-          Ürünü aç, linklerde göster ve demo/canlı verisini etkinlik bazında seç.
-        </p>
-
-        <div className="mt-4 grid gap-3">
-          {eventProductKeys.map((product) => {
-            const config = draft.products[product];
-            const eventIdentity = {
-              id: draft.id || "yeni-etkinlik",
-              slug: draft.slug || "yeni-etkinlik",
-            };
-            const demoNamespace = createEventProductNamespace(eventIdentity, product, "demo");
-            const liveNamespace = createEventProductNamespace(eventIdentity, product, "live");
-            return (
-              <article
-                key={product}
-                className={`rounded-[1.5rem] border p-4 ${
-                  config.enabled ? "border-primary/40 bg-primary/8" : "border-border bg-background"
-                }`}
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h4 className="text-lg font-black">{config.label}</h4>
-                    <p className="mt-1 text-xs text-foreground/50">
-                      {productDescriptions[product]}
-                    </p>
-                  </div>
-                  <label className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-black">
-                    <input
-                      type="checkbox"
-                      checked={config.enabled}
-                      onChange={(event) =>
-                        updateProduct(product, (current) => ({
-                          ...current,
-                          enabled: event.target.checked,
-                          state: event.target.checked
-                            ? current.state === "disabled"
-                              ? "draft"
-                              : current.state
-                            : "disabled",
-                        }))
-                      }
-                      className="size-4 accent-[hsl(var(--primary))]"
-                    />
-                    {config.enabled ? "aktif" : "kapalı"}
-                  </label>
-                </div>
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-4">
-                  <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
-                    Link sırası
-                    <input
-                      type="number"
-                      min="1"
-                      max="20"
-                      value={config.order}
-                      onChange={(event) =>
-                        updateProduct(product, (current) => ({
-                          ...current,
-                          order: Math.max(1, Math.min(20, Number(event.target.value) || 1)),
-                        }))
-                      }
-                      className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-bold outline-none"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
-                    Veri modu
-                    <select
-                      value={config.dataMode}
-                      disabled={!config.enabled}
-                      onChange={(event) =>
-                        updateProduct(product, (current) => ({
-                          ...current,
-                          dataMode: event.target.value as EventDataMode,
-                        }))
-                      }
-                      className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-bold outline-none disabled:opacity-45"
-                    >
-                      <option value="demo">Demo</option>
-                      <option value="live">Canlı</option>
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
-                    Ürün durumu
-                    <select
-                      value={config.state}
-                      disabled={!config.enabled}
-                      onChange={(event) =>
-                        updateProduct(product, (current) => ({
-                          ...current,
-                          state: event.target.value as EventProductState,
-                        }))
-                      }
-                      className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-bold outline-none disabled:opacity-45"
-                    >
-                      {Object.entries(productStateLabels)
-                        .filter(([value]) => value !== "disabled")
-                        .map(([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
-                  <label className="flex items-center gap-3 self-end rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-bold">
-                    <input
-                      type="checkbox"
-                      checked={config.visible}
-                      disabled={!config.enabled}
-                      onChange={(event) =>
-                        updateProduct(product, (current) => ({
-                          ...current,
-                          visible: event.target.checked,
-                        }))
-                      }
-                      className="size-4 accent-[hsl(var(--primary))]"
-                    />
-                    Linklerde göster
-                  </label>
-                </div>
-
-                {config.enabled ? (
-                  <div className="mt-3 grid gap-2 text-[11px] sm:grid-cols-2">
-                    <div className="rounded-xl bg-card px-3 py-2">
-                      <span className="font-black uppercase tracking-wider text-foreground/40">
-                        Demo
-                      </span>
-                      <div className="mt-1 break-all font-mono">{demoNamespace.keyPrefix}</div>
-                    </div>
-                    <div className="rounded-xl bg-card px-3 py-2">
-                      <span className="font-black uppercase tracking-wider text-foreground/40">
-                        Canlı
-                      </span>
-                      <div className="mt-1 break-all font-mono">{liveNamespace.keyPrefix}</div>
-                    </div>
-                  </div>
-                ) : null}
-              </article>
-            );
-          })}
-        </div>
-
-        <div className="mt-4 grid gap-3 rounded-2xl border border-border bg-background p-4 lg:grid-cols-[0.75fr_1.25fr]">
-          <div>
-            <h3 className="text-sm font-black">Veri modu ne yapar?</h3>
-            <div className="mt-2 grid gap-2 text-xs leading-5 text-foreground/60">
-              <p>
-                <strong className="text-foreground">Demo:</strong> Güvenli test verisidir; canlı
-                katılımcı kayıtlarına karışmaz.
-              </p>
-              <p>
-                <strong className="text-foreground">Canlı:</strong> Etkinlik günü gerçek
-                katılımcıların kullandığı kalıcı veri alanıdır.
-              </p>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-black">Ürün durumları</h3>
-            <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
-              {productStateDescriptions.map((item) => (
-                <p
-                  key={item.label}
-                  className="rounded-xl bg-card px-3 py-2 text-[11px] leading-4 text-foreground/55"
+              <AdminField
+                label="URL adı"
+                value={draft.slug}
+                onChange={(event) =>
+                  setDraft((current) => ({ ...current, slug: event.target.value }))
+                }
+                placeholder="11-ekim-2026"
+              />
+              <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
+                Durum
+                <select
+                  value={draft.status}
+                  onChange={(event) =>
+                    setDraft((current) => ({
+                      ...current,
+                      status: event.target.value as EventLifecycleStatus,
+                    }))
+                  }
+                  className="rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
                 >
-                  <strong className="text-foreground">{item.label}:</strong> {item.description}
-                </p>
-              ))}
+                  {Object.entries(eventStatusLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <AdminField
+                label="Başlangıç"
+                type="datetime-local"
+                value={draft.startsAt}
+                onChange={(event) =>
+                  setDraft((current) => ({ ...current, startsAt: event.target.value }))
+                }
+                required
+              />
+              <AdminField
+                label="Bitiş"
+                type="datetime-local"
+                value={draft.endsAt}
+                onChange={(event) =>
+                  setDraft((current) => ({ ...current, endsAt: event.target.value }))
+                }
+              />
+              <AdminField
+                label="Mekân"
+                value={draft.location.name}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    location: { ...current.location, name: event.target.value },
+                  }))
+                }
+              />
+              <AdminField
+                label="Şehir"
+                value={draft.location.city}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    location: { ...current.location, city: event.target.value },
+                  }))
+                }
+              />
+              <AdminField
+                label="Adres"
+                value={draft.location.address}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    location: { ...current.location, address: event.target.value },
+                  }))
+                }
+                className="sm:col-span-2"
+              />
+              <AdminField
+                label="Harita bağlantısı"
+                type="url"
+                value={draft.location.mapUrl}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    location: { ...current.location, mapUrl: event.target.value },
+                  }))
+                }
+                className="sm:col-span-2"
+              />
             </div>
-          </div>
-        </div>
+          </>
+        ) : null}
+        {step === "registration" ? (
+          <>
+            <p className="mt-6 text-sm text-foreground/60">
+              Katılımcının Linkler girişinde göreceği metinleri ve soruları düzenle.
+            </p>
 
-        {draft.id && draft.slug ? (
-          <div className="mt-5 rounded-[1.5rem] border border-border bg-background p-4">
-            <div className="flex items-start gap-3">
-              <Eye size={18} className="mt-0.5 shrink-0 text-primary-deep" />
-              <div>
-                <h3 className="font-black">Etkinlik kontrol bağlantıları</h3>
-                <p className="mt-1 text-xs text-foreground/50">
-                  Her bağlantı bu etkinliğin seçili demo veya canlı veri alanını kullanır.
-                </p>
-              </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <label className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3 text-sm font-bold">
+                <input
+                  type="checkbox"
+                  checked={draft.entry.isOpen}
+                  onChange={(event) =>
+                    setDraft((current) => ({
+                      ...current,
+                      entry: { ...current.entry, isOpen: event.target.checked },
+                    }))
+                  }
+                  className="size-4 accent-[hsl(var(--primary))]"
+                />
+                Katılımcı girişi açık
+              </label>
+              <label className="flex items-center gap-3 rounded-2xl border border-border bg-background p-3 text-sm font-bold">
+                <input
+                  type="checkbox"
+                  checked={draft.entry.requireRegistration}
+                  onChange={(event) =>
+                    setDraft((current) => ({
+                      ...current,
+                      entry: { ...current.entry, requireRegistration: event.target.checked },
+                    }))
+                  }
+                  className="size-4 accent-[hsl(var(--primary))]"
+                />
+                Önce profil/kayıt iste
+              </label>
             </div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              <a
-                href={`${withEventSelection("/linkler", { eventId: draft.id })}&preview=event`}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => {
-                  if (selectedEvent) saveEventPreview(selectedEvent);
-                }}
-                className="rounded-xl border border-primary/30 bg-primary/10 px-3 py-3 text-sm font-black transition hover:border-primary/60"
-              >
-                Etkinlik girişini aç
-              </a>
+
+            <div className="mt-7 flex items-center gap-2">
+              <MessageSquareQuote size={18} className="text-primary-deep" />
+              <h3 className="font-black">Etkinlik akışı</h3>
+            </div>
+            <div className="mt-4 grid gap-3">
               {(
                 [
-                  ["matchlab", "/21-agustos/eslesme"],
-                  ["wordcloud", "/21-agustos/wordcloud"],
-                  ["five", "/five/live"],
+                  ["appsTitle", "Uygulama ekranı başlığı", "Şimdi notwork zamanı"],
+                  ["appsSubtitle", "Uygulama ekranı açıklaması", "Akışa göre uygulamanı seç"],
                 ] as const
-              ).map(([product, path]) => {
+              ).map(([key, label, fallback]) => (
+                <label key={key} className="text-sm font-bold">
+                  {label}
+                  <input
+                    className="mt-2 w-full rounded-xl border border-border bg-background p-3"
+                    maxLength={key === "appsTitle" ? 120 : 240}
+                    value={draft.entry[key] ?? fallback}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        entry: { ...current.entry, [key]: event.target.value },
+                      }))
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+            <h3 className="mt-7 font-black">Etkinlik özel soruları</h3>
+            <p className="mt-1 text-sm text-foreground/55">
+              Kayıtlı veya yeni katılımcı standart bilgilerini girdikten sonra bu etkinliğe özel üç
+              soruyu yanıtlar.
+            </p>
+            <div className="mt-4 grid gap-3">
+              {(
+                [
+                  ["introLabel", "1. soru", "introPlaceholder", "1. soru açıklaması"],
+                  ["offersLabel", "2. soru", "offersPlaceholder", "2. soru açıklaması"],
+                  ["needsLabel", "3. soru", "needsPlaceholder", "3. soru açıklaması"],
+                ] as const
+              ).map(([labelKey, label, placeholderKey, placeholderLabel]) => (
+                <div
+                  key={labelKey}
+                  className="grid gap-2 rounded-2xl border border-border bg-background p-3 sm:grid-cols-2"
+                >
+                  <AdminField
+                    label={label}
+                    value={draft.entry.registrationPrompts[labelKey]}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        entry: {
+                          ...current.entry,
+                          registrationPrompts: {
+                            ...current.entry.registrationPrompts,
+                            [labelKey]: event.target.value,
+                          },
+                        },
+                      }))
+                    }
+                  />
+                  <AdminField
+                    label={placeholderLabel}
+                    value={draft.entry.registrationPrompts[placeholderKey]}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        entry: {
+                          ...current.entry,
+                          registrationPrompts: {
+                            ...current.entry.registrationPrompts,
+                            [placeholderKey]: event.target.value,
+                          },
+                        },
+                      }))
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          </>
+        ) : null}
+        {step === "products" ? (
+          <>
+            <p className="mt-6 text-sm text-foreground/60">
+              Katılımcıya açılacak uygulamaları seç, Linkler sırasını ayarla ve demo/canlı verisini
+              belirle.
+            </p>
+
+            <div className="mt-7 flex items-center gap-2">
+              <Database size={18} className="text-primary-deep" />
+              <h3 className="font-black">Etkinlik ürünleri</h3>
+            </div>
+            <p className="mt-1 text-sm text-foreground/55">
+              Ürünü aç, linklerde göster ve demo/canlı verisini etkinlik bazında seç.
+            </p>
+
+            <div className="mt-4 grid gap-3">
+              {orderedProducts.map((product, index) => {
                 const config = draft.products[product];
+                const eventIdentity = {
+                  id: draft.id || "yeni-etkinlik",
+                  slug: draft.slug || "yeni-etkinlik",
+                };
+                const demoNamespace = createEventProductNamespace(eventIdentity, product, "demo");
+                const liveNamespace = createEventProductNamespace(eventIdentity, product, "live");
                 return (
-                  <a
+                  <article
                     key={product}
-                    href={`${withEventSelection(path, { eventId: draft.id })}&preview=event`}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-disabled={!config.enabled}
-                    onClick={(event) => {
-                      if (!config.enabled) event.preventDefault();
-                      else if (selectedEvent) saveEventPreview(selectedEvent);
-                    }}
-                    className={`rounded-xl border px-3 py-3 text-sm font-black transition ${
+                    className={`rounded-[1.5rem] border p-4 ${
                       config.enabled
-                        ? "border-border bg-card hover:border-primary/45"
-                        : "cursor-not-allowed border-border bg-card text-foreground/30"
+                        ? "border-primary/40 bg-primary/8"
+                        : "border-border bg-background"
                     }`}
                   >
-                    {config.label} · {config.enabled ? config.dataMode : "kapalı"}
-                  </a>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-lg font-black">
+                          {index + 1}. {config.label}
+                        </h4>
+                        <p className="mt-1 text-xs text-foreground/50">
+                          {productDescriptions[product]}
+                        </p>
+                      </div>
+                      <label className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-black">
+                        <input
+                          type="checkbox"
+                          checked={config.enabled}
+                          onChange={(event) =>
+                            updateProduct(product, (current) => ({
+                              ...current,
+                              enabled: event.target.checked,
+                              state: event.target.checked
+                                ? current.state === "disabled"
+                                  ? "draft"
+                                  : current.state
+                                : "disabled",
+                            }))
+                          }
+                          className="size-4 accent-[hsl(var(--primary))]"
+                        />
+                        {config.enabled ? "aktif" : "kapalı"}
+                      </label>
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-2 text-xs font-bold text-foreground/60">
+                      <span>Linkler sırası</span>
+                      <button
+                        type="button"
+                        onClick={() => moveProduct(product, -1)}
+                        disabled={index === 0}
+                        aria-label={`${config.label} uygulamasını yukarı taşı`}
+                        className="rounded-lg border border-border bg-card px-3 py-1.5 disabled:opacity-35"
+                      >
+                        ↑ Yukarı
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveProduct(product, 1)}
+                        disabled={index === orderedProducts.length - 1}
+                        aria-label={`${config.label} uygulamasını aşağı taşı`}
+                        className="rounded-lg border border-border bg-card px-3 py-1.5 disabled:opacity-35"
+                      >
+                        ↓ Aşağı
+                      </button>
+                    </div>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                      <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
+                        Veri modu
+                        <select
+                          value={config.dataMode}
+                          disabled={!config.enabled}
+                          onChange={(event) =>
+                            updateProduct(product, (current) => ({
+                              ...current,
+                              dataMode: event.target.value as EventDataMode,
+                            }))
+                          }
+                          className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-bold outline-none disabled:opacity-45"
+                        >
+                          <option value="demo">Demo</option>
+                          <option value="live">Canlı</option>
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1.5 text-xs text-foreground/60">
+                        Ürün durumu
+                        <select
+                          value={config.state}
+                          disabled={!config.enabled}
+                          onChange={(event) =>
+                            updateProduct(product, (current) => ({
+                              ...current,
+                              state: event.target.value as EventProductState,
+                            }))
+                          }
+                          className="rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-bold outline-none disabled:opacity-45"
+                        >
+                          {Object.entries(productStateLabels)
+                            .filter(([value]) => value !== "disabled")
+                            .map(([value, label]) => (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            ))}
+                        </select>
+                      </label>
+                      <label className="flex items-center gap-3 self-end rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-bold">
+                        <input
+                          type="checkbox"
+                          checked={config.visible}
+                          disabled={!config.enabled}
+                          onChange={(event) =>
+                            updateProduct(product, (current) => ({
+                              ...current,
+                              visible: event.target.checked,
+                            }))
+                          }
+                          className="size-4 accent-[hsl(var(--primary))]"
+                        />
+                        Linklerde göster
+                      </label>
+                    </div>
+
+                    {config.enabled ? (
+                      <div className="mt-3 grid gap-2 text-[11px] sm:grid-cols-2">
+                        <div className="rounded-xl bg-card px-3 py-2">
+                          <span className="font-black uppercase tracking-wider text-foreground/40">
+                            Demo
+                          </span>
+                          <div className="mt-1 break-all font-mono">{demoNamespace.keyPrefix}</div>
+                        </div>
+                        <div className="rounded-xl bg-card px-3 py-2">
+                          <span className="font-black uppercase tracking-wider text-foreground/40">
+                            Canlı
+                          </span>
+                          <div className="mt-1 break-all font-mono">{liveNamespace.keyPrefix}</div>
+                        </div>
+                      </div>
+                    ) : null}
+                  </article>
                 );
               })}
-              {draft.products.wordcloud.enabled ? (
-                <a
-                  href={withEventSelection("/21-agustos/sonuclar", { event: draft.slug })}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-xl border border-border bg-card px-3 py-3 text-sm font-black transition hover:border-primary/45"
-                >
-                  WordCloud sahne ekranı
-                </a>
-              ) : null}
             </div>
-          </div>
+
+            <div className="mt-4 grid gap-3 rounded-2xl border border-border bg-background p-4 lg:grid-cols-[0.75fr_1.25fr]">
+              <div>
+                <h3 className="text-sm font-black">Veri modu ne yapar?</h3>
+                <div className="mt-2 grid gap-2 text-xs leading-5 text-foreground/60">
+                  <p>
+                    <strong className="text-foreground">Demo:</strong> Güvenli test verisidir; canlı
+                    katılımcı kayıtlarına karışmaz.
+                  </p>
+                  <p>
+                    <strong className="text-foreground">Canlı:</strong> Etkinlik günü gerçek
+                    katılımcıların kullandığı kalıcı veri alanıdır.
+                  </p>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-sm font-black">Ürün durumları</h3>
+                <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                  {productStateDescriptions.map((item) => (
+                    <p
+                      key={item.label}
+                      className="rounded-xl bg-card px-3 py-2 text-[11px] leading-4 text-foreground/55"
+                    >
+                      <strong className="text-foreground">{item.label}:</strong> {item.description}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : null}
+        {step === "review" ? (
+          <>
+            <div className="mt-6 rounded-2xl border border-primary/25 bg-primary/8 p-4">
+              <h3 className="font-black">Kaydetmeden önce kontrol et</h3>
+              <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-foreground/50">Etkinlik</dt>
+                  <dd className="font-bold">{draft.title || "Ad girilmedi"}</dd>
+                </div>
+                <div>
+                  <dt className="text-foreground/50">Başlangıç</dt>
+                  <dd className="font-bold">
+                    {draft.startsAt
+                      ? new Date(draft.startsAt).toLocaleString("tr-TR")
+                      : "Tarih girilmedi"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-foreground/50">Yer</dt>
+                  <dd className="font-bold">
+                    {[draft.location.name, draft.location.city].filter(Boolean).join(" · ") ||
+                      "Belirtilmedi"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-foreground/50">Giriş</dt>
+                  <dd className="font-bold">
+                    {draft.entry.isOpen ? "Açık" : "Kapalı"} ·{" "}
+                    {draft.entry.requireRegistration ? "Profil gerekli" : "Profil isteğe bağlı"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-foreground/50">Etkinlik durumu</dt>
+                  <dd className="font-bold">{eventStatusLabels[draft.status]}</dd>
+                </div>
+                <div className="sm:col-span-2">
+                  <dt className="text-foreground/50">Uygulama sırası</dt>
+                  <dd className="font-bold">
+                    {orderedProducts
+                      .filter((product) => draft.products[product].enabled)
+                      .map(
+                        (product) =>
+                          `${draft.products[product].label} (${draft.products[product].dataMode === "demo" ? "Demo" : "Canlı"})`,
+                      )
+                      .join(" → ") || "Uygulama seçilmedi"}
+                  </dd>
+                </div>
+              </dl>
+              <p className="mt-3 text-xs text-foreground/55">
+                Yeni etkinlik kaydedildiğinde kendi veri alanı ve giriş bağlantısı oluşturulur.
+                Katılımcı girişini açmadan önce önizlemede akışı test et.
+              </p>
+            </div>
+
+            {draft.id && draft.slug ? (
+              <div className="mt-5 rounded-[1.5rem] border border-border bg-background p-4">
+                <div className="flex items-start gap-3">
+                  <Eye size={18} className="mt-0.5 shrink-0 text-primary-deep" />
+                  <div>
+                    <h3 className="font-black">Etkinlik kontrol bağlantıları</h3>
+                    <p className="mt-1 text-xs text-foreground/50">
+                      Her bağlantı bu etkinliğin seçili demo veya canlı veri alanını kullanır.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={previewEvent}
+                  className="mt-3 w-full rounded-xl border border-primary/30 bg-primary/10 px-3 py-3 text-left text-sm font-black transition hover:border-primary/60"
+                >
+                  Kayıt → uygulamalar önizlemesini aç
+                </button>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  <a
+                    href={`${withEventSelection("/linkler", { eventId: draft.id })}&preview=event`}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => {
+                      if (selectedEvent) saveEventPreview(selectedEvent);
+                    }}
+                    className="rounded-xl border border-primary/30 bg-primary/10 px-3 py-3 text-sm font-black transition hover:border-primary/60"
+                  >
+                    Etkinlik girişini aç
+                  </a>
+                  {(
+                    [
+                      ["matchlab", "/21-agustos/eslesme"],
+                      ["wordcloud", "/21-agustos/wordcloud"],
+                      ["five", "/five/live"],
+                    ] as const
+                  ).map(([product, path]) => {
+                    const config = draft.products[product];
+                    return (
+                      <a
+                        key={product}
+                        href={`${withEventSelection(path, { eventId: draft.id })}&preview=event`}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-disabled={!config.enabled}
+                        onClick={(event) => {
+                          if (!config.enabled) event.preventDefault();
+                          else if (selectedEvent) saveEventPreview(selectedEvent);
+                        }}
+                        className={`rounded-xl border px-3 py-3 text-sm font-black transition ${
+                          config.enabled
+                            ? "border-border bg-card hover:border-primary/45"
+                            : "cursor-not-allowed border-border bg-card text-foreground/30"
+                        }`}
+                      >
+                        {config.label} · {config.enabled ? config.dataMode : "kapalı"}
+                      </a>
+                    );
+                  })}
+                  {draft.products.wordcloud.enabled ? (
+                    <a
+                      href={withEventSelection("/21-agustos/sonuclar", { event: draft.slug })}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-xl border border-border bg-card px-3 py-3 text-sm font-black transition hover:border-primary/45"
+                    >
+                      WordCloud sahne ekranı
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+          </>
         ) : null}
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
@@ -3769,7 +4065,25 @@ function EventRegistryAdmin({
               : "Yeni etkinlik henüz kaydedilmedi."}
           </div>
           <div className="flex flex-wrap gap-2">
-            {draft.id && !isPrimary && draft.status !== "archived" ? (
+            {stepIndex > 0 ? (
+              <button
+                type="button"
+                onClick={() => changeStep(eventSetupSteps[stepIndex - 1].id)}
+                className="rounded-full border border-border px-4 py-2.5 text-sm font-black"
+              >
+                Geri
+              </button>
+            ) : null}
+            {stepIndex < eventSetupSteps.length - 1 ? (
+              <button
+                type="button"
+                onClick={() => changeStep(eventSetupSteps[stepIndex + 1].id)}
+                className="rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground"
+              >
+                Devam et →
+              </button>
+            ) : null}
+            {step === "review" && draft.id && !isPrimary && draft.status !== "archived" ? (
               <button
                 type="button"
                 onClick={() => {
@@ -3783,13 +4097,15 @@ function EventRegistryAdmin({
                 <Archive size={15} /> arşivle
               </button>
             ) : null}
-            <button
-              type="submit"
-              disabled={loading || draft.status === "archived"}
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground disabled:opacity-50"
-            >
-              <Check size={16} /> {loading ? "kaydediliyor…" : draft.id ? "kaydet" : "oluştur"}
-            </button>
+            {step === "review" ? (
+              <button
+                type="submit"
+                disabled={loading || draft.status === "archived"}
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground disabled:opacity-50"
+              >
+                <Check size={16} /> {loading ? "kaydediliyor…" : draft.id ? "kaydet" : "oluştur"}
+              </button>
+            ) : null}
           </div>
         </div>
       </form>
