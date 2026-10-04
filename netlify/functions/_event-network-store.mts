@@ -1177,6 +1177,7 @@ export async function getNextMatchGroup(
     .filter((row) => row.participant.status === "registered")
     .filter((row) => !cursor.seen.has(row.participant.id))
     .filter((row) => (presenceMap.get(row.participant.id) || "open") !== "paused");
+  let waitingCount = 1;
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const roomIndex = await readAtomicState(
       store,
@@ -1198,6 +1199,7 @@ export async function getNextMatchGroup(
     const availableCandidates = candidateRows.filter(
       (candidate) => !activeParticipantIds.has(candidate.participant.id),
     );
+    waitingCount = availableCandidates.length + 1;
     if (availableCandidates.length < 2) break;
 
     const groupSize = pickGroupSize(
@@ -1346,6 +1348,7 @@ export async function getNextMatchGroup(
   const existing = await getActiveMatch(store, current.participant.id);
   return {
     status: existing ? "ready" : "empty",
+    waitingCount: existing ? undefined : waitingCount,
     registration: current,
     presence: existing ? ("meeting" as const) : currentPresence,
     group: existing ? await buildActiveMatchGroup(store, existing, current, presenceMap) : null,

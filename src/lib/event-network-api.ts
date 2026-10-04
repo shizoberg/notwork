@@ -173,6 +173,7 @@ export async function getEventNetworkMatch(accessToken: string, selection?: Even
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<{
     status: "ready" | "empty" | "paused";
+    waitingCount?: number;
     registration: EventNetworkRegistration;
     presence: EventNetworkPresence;
     group: EventNetworkMatchGroup | null;

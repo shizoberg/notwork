@@ -57,6 +57,7 @@ function AugustMatchPage() {
   const [presence, setPresence] = useState<EventNetworkPresence>("open");
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "empty" | "paused">("idle");
   const [message, setMessage] = useState("");
+  const [waitingCount, setWaitingCount] = useState(1);
   const [isCompleting, setIsCompleting] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -97,17 +98,20 @@ function AugustMatchPage() {
       setMessage("");
     }
     try {
-      const result = await getEventNetworkMatch(nextToken);
+      const result = await getEventNetworkMatch(nextToken, eventSelection);
+      setWaitingCount("waitingCount" in result ? result.waitingCount || 1 : 1);
       setPresence(result.presence);
       setRegistration(result.registration);
       setGroup(result.group);
       setStatus(result.status === "ready" ? "ready" : result.status);
       return result;
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Eşleşme alınamadı.");
-      setStatus("idle");
+      if (!silent) {
+        setMessage(error instanceof Error ? error.message : "Eşleşme alınamadı.");
+        setStatus("idle");
+      }
     }
-  }, []);
+  }, [eventSelection]);
 
   useEffect(() => {
     if (preview === null) return;
@@ -143,13 +147,13 @@ function AugustMatchPage() {
         let recovered;
         if (recoveredToken) {
           try {
-            recovered = await getEventNetworkMe(recoveredToken);
+            recovered = await getEventNetworkMe(recoveredToken, eventSelection);
           } catch {
             recovered = null;
           }
         }
         if (!recovered) {
-          recovered = await resumeEventNetwork();
+          recovered = await resumeEventNetwork(eventSelection);
           recoveredToken = recovered.accessToken || "";
           if (recoveredToken) localStorage.setItem(tokenStorageKey, recoveredToken);
         }
@@ -185,7 +189,7 @@ function AugustMatchPage() {
           pending = false;
         }
       },
-      status === "empty" ? 8_000 : 12_000,
+      status === "empty" ? 15_000 : 12_000,
     );
     return () => window.clearInterval(interval);
   }, [group, loadMatch, status, token]);
@@ -222,14 +226,14 @@ function AugustMatchPage() {
     setMessage("");
     setRotationPromptOpen(false);
     try {
-      await rotateEventNetworkMatch(token, currentGroupId);
+      await rotateEventNetworkMatch(token, currentGroupId, eventSelection);
       localStorage.setItem(`notwork-match-next-prompt:${currentGroupId}`, "accepted");
       setGroup(null);
       const nextMatch = await loadMatch(token);
       setMessage(
         nextMatch?.group
           ? "Yeni grubun hazır. Tanışma zamanı."
-          : "Yeni bağlantıların için daha önce tanışmadığın kişiler bekleniyor.",
+          : "Bekleme havuzundasın. Yeni kişiler katılınca eşleşmen otomatik açılacak.",
       );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Yeni eşleşme başlatılamadı.");
@@ -354,7 +358,7 @@ function AugustMatchPage() {
               {status === "empty" ? (
                 <EmptyState
                   title="Grubun için katılımcılar bekleniyor"
-                  text="Bu ekranı açık tut. İki uygun katılımcı hazır olduğunda üçlü grubun otomatik görünecek."
+                  text={`Şu an havuzda sen dahil ${waitingCount} uygun kişi var. Üçlü grup için en az 3 kişi gerekiyor. Biraz bekle; yeni kişiler geldiğinde eşleşmen otomatik açılacak. İstersen sonra tekrar deneyebilirsin.`}
                 />
               ) : null}
               {message ? (
