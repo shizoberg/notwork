@@ -84,9 +84,11 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
       const results = await Promise.allSettled(choices.map(getPublicEventContext));
       if (cancelled) return;
       const candidates = results.flatMap((r) => (r.status === "fulfilled" ? [r.value.event] : []));
-      const activeEvent =
-        candidates.find((candidate) => candidate.entry.isOpen && candidate.status === "live") ||
-        candidates[0] || null;
+      const activeEvent = selected
+        ? candidates[0] || null
+        : candidates.find((candidate) => candidate.entry.isOpen && candidate.status === "live") ||
+          candidates.find((candidate) => candidate.entry.isOpen) ||
+          candidates[0] || null;
       // Restore both identifiers before mounting apps that read their session once.
       if (activeEvent) syncEventSessionAliases(localStorage, activeEvent);
       setEvent(activeEvent);
