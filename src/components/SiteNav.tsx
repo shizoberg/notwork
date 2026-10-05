@@ -267,12 +267,18 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
     ? "rounded-full bg-[#8ee4e8] px-4 py-2 text-xs font-black text-[#071112] shadow-[0_0_22px_rgba(142,228,232,0.28)]"
     : "rounded-full bg-primary px-4 py-2 text-xs font-black text-primary-foreground shadow-[0_0_22px_rgba(113,204,210,0.2)]";
   const linksHref = withEventSelection("/linkler", eventSelection);
+  const currentApp = location.pathname.includes("wordcloud")
+    ? "ntw.wordcloud"
+    : location.pathname.includes("eslesme")
+      ? "notwork match"
+      : location.pathname.includes("five")
+        ? "ntw.five"
+        : location.pathname.includes("etkinlik-degerlendirme")
+          ? "Yorum"
+          : null;
   const tabs = [
     { label: "Linkler", active: location.pathname === "/linkler" },
-    { label: "ntw.wordcloud", active: location.pathname.includes("wordcloud") },
-    { label: "notwork match", active: location.pathname.includes("eslesme") },
-    { label: "ntw.five", active: location.pathname.includes("five") },
-    { label: "Yorum", active: location.pathname.includes("etkinlik-degerlendirme") },
+    ...(currentApp ? [{ label: currentApp, active: true }] : []),
   ];
 
   return (
