@@ -2709,20 +2709,24 @@ function WordcloudAdmin({
             >
               anket ekranı
             </a>
-            <button
-              type="button"
-              onClick={() => void wordcloudAction({ action: "seedLoadTest" })}
-              className="inline-flex items-center gap-1 rounded-full border border-primary/35 bg-primary/10 px-3 py-2 text-xs font-black text-primary-deep"
-            >
-              100 kişi test
-            </button>
-            <button
-              type="button"
-              onClick={() => void wordcloudAction({ action: "resetDemo" })}
-              className="inline-flex items-center gap-1 rounded-full border border-destructive/30 px-3 py-2 text-xs font-black text-destructive"
-            >
-              demo sıfırla
-            </button>
+            {database?.mode !== "live" ? (
+              <button
+                type="button"
+                onClick={() => void wordcloudAction({ action: "seedLoadTest" })}
+                className="inline-flex items-center gap-1 rounded-full border border-primary/35 bg-primary/10 px-3 py-2 text-xs font-black text-primary-deep"
+              >
+                100 kişi test
+              </button>
+            ) : null}
+            {database?.mode !== "live" ? (
+              <button
+                type="button"
+                onClick={() => void wordcloudAction({ action: "resetDemo" })}
+                className="inline-flex items-center gap-1 rounded-full border border-destructive/30 px-3 py-2 text-xs font-black text-destructive"
+              >
+                demo sıfırla
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={() => void refresh()}
@@ -2967,8 +2971,10 @@ function EventNetworkAdmin({
         <div>
           <h2 className="text-xl font-black">{eventTitle} notwork match kayıtları</h2>
           <p className="mt-1 text-sm text-foreground/50">
-            Etkinlik kodu, yetkinlikler, ihtiyaç ve izin tercihleri. Şimdilik demo database ile
-            oynuyoruz.
+            Etkinlik kodu, yetkinlikler, ihtiyaç ve izin tercihleri.{" "}
+            {database?.mode === "live"
+              ? "Canlı katılımcı verileri görüntüleniyor."
+              : "Demo veri alanı görüntüleniyor."}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -2978,22 +2984,26 @@ function EventNetworkAdmin({
             rel="noreferrer"
             className="rounded-full border border-border px-3 py-2 text-xs font-bold"
           >
-            Test kaydı aç
+            {database?.mode === "live" ? "Katılımcı girişini aç" : "Test kaydı aç"}
           </a>
-          <button
-            type="button"
-            onClick={() => void seedSamples()}
-            className="rounded-full border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-bold text-primary-deep"
-          >
-            Demo test verisi oluştur
-          </button>
-          <button
-            type="button"
-            onClick={() => void resetDemo()}
-            className="rounded-full border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs font-bold text-destructive"
-          >
-            Demo sıfırla
-          </button>
+          {database?.mode !== "live" ? (
+            <button
+              type="button"
+              onClick={() => void seedSamples()}
+              className="rounded-full border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-bold text-primary-deep"
+            >
+              Demo test verisi oluştur
+            </button>
+          ) : null}
+          {database?.mode !== "live" ? (
+            <button
+              type="button"
+              onClick={() => void resetDemo()}
+              className="rounded-full border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs font-bold text-destructive"
+            >
+              Demo sıfırla
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => void refresh()}
@@ -3014,7 +3024,7 @@ function EventNetworkAdmin({
           value={database?.demoDatabaseCode || `${selection.event || "event"}-demo`}
         />
         <DatabaseBadge
-          label="Canlı gün açılacak database"
+          label={database?.mode === "live" ? "Canlı database" : "Canlı gün açılacak database"}
           value={database?.liveDatabaseCode || `${selection.event || "event"}-live`}
         />
         <div className="rounded-2xl border border-border bg-background p-4 text-xs text-foreground/55 md:col-span-3">
