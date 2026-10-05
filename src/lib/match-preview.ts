@@ -35,6 +35,9 @@ let round =
     ? 1
     : Number(window.localStorage.getItem("notwork-match-preview-round")) || 1;
 export function matchPreview() {
+  const longNameDemo =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("demo") === "long-name";
   const codes = round % 2 ? ["C03", "A12", "B07"] : ["C03", "D18", "E24"];
   const prompts = [
     "Son zamanlarda fikrini değiştiren bir şey neydi?",
@@ -42,7 +45,9 @@ export function matchPreview() {
   ];
   const group: EventNetworkMatchGroup = {
     id: `preview-${round}`,
-    groupName: round % 2 ? "Panda" : "Kaplan",
+    groupName: longNameDemo
+      ? "Taşın altına elini koyanlar"
+      : round % 2 ? "İş bitiriciler" : "Hızlı aksiyon alanlar",
     groupSize: 3,
     round,
     score: 90,

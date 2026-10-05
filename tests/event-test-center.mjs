@@ -28,6 +28,18 @@ try {
   await inspect(selected, "demo", async () => {
     const store = network.getEventNetworkStore();
     await network.resetDemoEventNetworkDataset(store);
+    const first = await network.seedSampleRegistrations(store, samples.slice(0, 1));
+    const firstWait = await network.getNextMatchGroup(store, first[0].accessToken);
+    assert.equal(firstWait.status, "empty");
+    assert.equal(firstWait.waitingCount, 1);
+    await network.seedSampleRegistrations(store, samples.slice(1, 2));
+    const secondWait = await network.getNextMatchGroup(store, first[0].accessToken);
+    assert.equal(secondWait.status, "empty");
+    assert.equal(secondWait.waitingCount, 2);
+    const third = await network.seedSampleRegistrations(store, samples.slice(2, 3));
+    assert.equal((await network.getNextMatchGroup(store, first[0].accessToken)).status, "ready");
+    assert.equal(third.length, 1);
+    await network.resetDemoEventNetworkDataset(store);
     const seeded = await network.seedSampleRegistrations(store, samples);
     assert.equal(seeded.length, 12);
     for (const registration of seeded) {

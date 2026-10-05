@@ -14,11 +14,11 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { SiteNav } from "@/components/SiteNav";
 import { EventFlowBanner } from "@/components/EventFlowBanner";
-import { currentEventFlowStep, type EventFlowState } from "@/lib/event-flow";
 import { PasswordResetRequest } from "@/components/PasswordResetRequest";
 import { notworkEventOptions, type EventNetworkRegistration } from "@/lib/event-network";
 import {
   getEventNetworkMe,
+  getEventNetworkMatch,
   getEventNetworkTokenStorageKey,
   registerEventNetwork,
   resumeEventNetwork,
@@ -145,7 +145,6 @@ function LinksPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
-  const [liveFlow, setLiveFlow] = useState<EventFlowState | null>(null);
   const [message, setMessage] = useState("");
   const [registrationPath, setRegistrationPath] = useState<RegistrationPath>("choose");
   const [registrationStep, setRegistrationStep] = useState<RegistrationStep>("standard");
@@ -172,11 +171,7 @@ function LinksPage() {
           ...link,
           title: product?.label || link.title,
           href: withEventSelection(link.href, eventSelection),
-          enabled: product
-            ? product.enabled &&
-              product.visible &&
-              (preview || (product.state === "live" && product.dataMode === "live"))
-            : true,
+          enabled: product ? product.enabled && product.visible : true,
           order:
             product?.order ?? (link.product === "five" ? 1 : link.product === "wordcloud" ? 2 : 3),
         };
@@ -509,15 +504,6 @@ function LinksPage() {
   }, [hasRegistration, registrationPath, registrationStep]);
 
   const activeEventLinks = useMemo(() => eventLinks.filter((link) => link.enabled), [eventLinks]);
-  const currentFlowProduct = currentEventFlowStep(liveFlow)?.product || null;
-  const isFlowControlled = Boolean(
-    currentFlowProduct && liveFlow && ["running", "awaiting_advance"].includes(liveFlow.status),
-  );
-  const isFlowStepLocked = (product: EventProductKey | null) =>
-    Boolean(
-      product &&
-      (liveFlow?.status === "completed" || (isFlowControlled && product !== currentFlowProduct)),
-    );
 
   function toggleOffer(offer: string) {
     setForm((current) => {
@@ -639,6 +625,19 @@ function LinksPage() {
     };
   }, [hasRegistration]);
 
+  useEffect(() => {
+    if (preview || !hasRegistration || !activeEvent?.products.matchlab.enabled) return;
+    const accessToken = localStorage.getItem(tokenStorageKey);
+    if (!accessToken) return;
+    // Spread a crowd's first match requests; the Match page can still load immediately.
+    const timer = window.setTimeout(() => {
+      void getEventNetworkMatch(accessToken, eventSelection).catch(() => {
+        // Match retries normally when the participant opens the app.
+      });
+    }, 3_000 + Math.floor(Math.random() * 10_000));
+    return () => window.clearTimeout(timer);
+  }, [activeEvent?.products.matchlab.enabled, eventSelection, hasRegistration, preview, tokenStorageKey]);
+
   return (
     <div
       className={`event-entry min-h-screen bg-background text-foreground${hasRegistration ? "" : " is-registering"}`}
@@ -654,7 +653,7 @@ function LinksPage() {
         </div>
       )}
       <SiteNav variant="event" />
-      <EventFlowBanner onFlowChange={setLiveFlow} />
+      <EventFlowBanner />
       <main id="etkinlik-girisi" className="scroll-mt-24 px-4 py-5 sm:py-10">
         <div className="mx-auto max-w-3xl">
           <header className={`entry-heading${hasRegistration ? " is-ready" : ""}`}>
@@ -665,7 +664,13 @@ function LinksPage() {
             />
             {hasRegistration && (
               <>
-                <h1>{activeEvent?.entry.appsTitle || "Şimdi notwork zamanı"}</h1>
+                <div className="entry-welcome-heading">
+                  <h1>{activeEvent?.entry.appsTitle || "Şimdi notwork zamanı"}</h1>
+                  <div className="entry-welcome-mascot">
+                    <span>Hoş geldin{profileCard?.firstName ? ` ${profileCard.firstName}` : ""} 👋</span>
+                    <img src="/brand/notwork-match-waiting-mascot.png" alt="Notwork maskotu" />
+                  </div>
+                </div>
                 <p>{activeEvent?.entry.appsSubtitle || "Akışa göre uygulamanı seç"}</p>
               </>
             )}
@@ -739,24 +744,17 @@ function LinksPage() {
               )}
               <div className="entry-flow-summary">
                 <span>Bu akşamın akışı</span>
-                <p>Etkinlik adımlarını sırayla takip et. Sırası gelen uygulama burada açılır.</p>
+                <p>Uygulamalar arasında dilediğin zaman geçebilirsin. Güncel yönlendirmeleri bildirimlerden takip et.</p>
               </div>
               <section className="entry-app-flow">
                 {activeEventLinks.map(
-                  ({ product, title, description, href, icon: Icon }, index) => (
+                  ({ title, description, href, icon: Icon }, index) => (
                     <a
                       key={title}
-                      href={
-                        isFlowStepLocked(product)
-                          ? undefined
-                          : preview && href.startsWith("/")
-                            ? `${href}${href.includes("?") ? "&" : "?"}preview=event`
-                            : href
-                      }
-                      aria-disabled={isFlowStepLocked(product)}
-                      className={`entry-app-step group${
-                        isFlowStepLocked(product) ? " is-locked" : ""
-                      }`}
+                      href={preview && href.startsWith("/")
+                        ? `${href}${href.includes("?") ? "&" : "?"}preview=event`
+                        : href}
+                      className="entry-app-step group"
                     >
                       <span className="entry-app-index">{String(index + 1).padStart(2, "0")}</span>
                       <span className="entry-app-icon">
@@ -767,11 +765,7 @@ function LinksPage() {
                         <small>{description}</small>
                       </span>
                       <span className="entry-app-action">
-                        {isFlowStepLocked(product)
-                          ? liveFlow?.status === "completed"
-                            ? "Tamamlandı"
-                            : "Sırada"
-                          : "Başla"}{" "}
+                        Başla{" "}
                         <ArrowRight size={15} />
                       </span>
                     </a>
@@ -809,7 +803,51 @@ function LinksPage() {
           )}
         </div>
       </main>
+      {!hasRegistration && <LinklerMascotAssistant />}
     </div>
+  );
+}
+
+const mascotMessages = [
+  "eşleşmen için arkada çalışıyorum...",
+  "doğru insanları bir araya getiriyorum...",
+  "yeni bağlantılar hazırlanıyor...",
+];
+
+function LinklerMascotAssistant() {
+  const [messageIndex, setMessageIndex] = useState(0);
+  const [letters, setLetters] = useState(0);
+  const [showMessage, setShowMessage] = useState(true);
+
+  useEffect(() => {
+    const message = mascotMessages[messageIndex];
+    setLetters(0);
+    setShowMessage(true);
+    const typeTimer = window.setInterval(() => {
+      setLetters((count) => Math.min(count + 1, message.length));
+    }, 65);
+    const hideTimer = window.setTimeout(() => setShowMessage(false), 6_000);
+    const nextTimer = window.setTimeout(
+      () => setMessageIndex((index) => (index + 1) % mascotMessages.length),
+      11_000,
+    );
+    return () => {
+      window.clearInterval(typeTimer);
+      window.clearTimeout(hideTimer);
+      window.clearTimeout(nextTimer);
+    };
+  }, [messageIndex]);
+
+  return (
+    <aside className="entry-mascot-assistant" aria-label="Notwork asistanı">
+      {showMessage && (
+        <p className="entry-mascot-message" aria-live="off">
+          {mascotMessages[messageIndex].slice(0, letters)}
+          <span className="entry-mascot-caret" aria-hidden="true" />
+        </p>
+      )}
+      <img src="/brand/notwork-match-waiting-mascot.png" alt="Notwork asistanı" />
+    </aside>
   );
 }
 

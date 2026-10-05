@@ -1,16 +1,20 @@
 import { createHash } from "node:crypto";
 
-// Names are short enough to identify a group aloud in a busy room.
 const names = [
-  "Panda", "Kaplan", "Aslan", "Pars", "Panter", "Jaguar", "Vaşak", "Kartal",
-  "Şahin", "Atmaca", "Turna", "Leylek", "Baykuş", "Anka", "Kuzgun", "Sincap",
-  "Zürafa", "Zebra", "Ceylan", "Geyik", "Karaca", "Tilki", "Kurt", "Ayı",
-  "Koala", "Lemur", "Samur", "Yunus", "Balina", "Orka", "Fok", "Penguen",
-  "Flamingo", "Pelikan", "Tukan", "Albatros", "Martı", "Kırlangıç", "Serçe", "Arı",
-  "Kelebek", "Tavus", "Tavşan", "Kirpi", "Kunduz", "Kanguru", "Fil", "Goril",
-  "Koç", "Boğa", "İkizler", "Yengeç", "Başak", "Terazi", "Akrep", "Yay",
-  "Oğlak", "Kova", "Balık", "Mors", "Puma", "Karınca", "Çita", "Anakonda",
-  "Kobra", "Akbaba", "Güvercin", "Karabatak", "Sülün", "Bıldırcın", "Ahtapot", "Denizatı",
+  "İş bitiriciler", "Hızlı aksiyon alanlar", "Risk severler", "Hayalperestler",
+  "Büyük düşünenler", "Oyun kurucular", "Fırsat avcıları", "Ezber bozanlar",
+  "Rota çizenler", "Fikir avcıları", "Gelecek kurucuları", "İlk hamleciler",
+  "Çözümcüler", "Fırsatçılar", "Vizyonerler", "Meraklılar", "Üreticiler",
+  "Keşifçiler", "Cesurlar", "Bağlantıcılar", "Yaratıcılar", "Öncüler",
+  "Kurucular", "Yenilikçiler", "Maceracılar", "Büyük oyuncular",
+  "Kervanı yolda dizenler", "Bir yolunu bulanlar", "Aklına koyanlar",
+  "Taşın altına elini koyanlar", "Kendi yolunu açanlar", "Fırsatı koklayanlar",
+  "Oyunu değiştirenler", "Fikri büyütenler", "Sınır zorlayanlar",
+  "İşi sahiplenenler", "Sahaya çıkanlar", "Harekete hazırlar",
+  "Yeni yol açanlar", "Kapı açanlar", "Fikrin peşindekiler",
+  "Şansını yaratanlar", "Geleceği düşünenler", "Farklı düşünenler",
+  "Büyük hayalciler", "Cesur kafalar", "Hızlı düşünenler",
+  "Birlikte üretenler", "Gerçek notworkler", "Kaybedenler kulübü",
 ] as const;
 
 export function matchGroupName(groupId: string, occupied: Iterable<string> = []) {
@@ -20,9 +24,9 @@ export function matchGroupName(groupId: string, occupied: Iterable<string> = [])
     const name = names[(start + offset) % names.length];
     if (!used.has(name)) return name;
   }
-  // A rare large event can exceed the name pool while preserving a single word.
+  // A large event can exceed the name pool; keep names unique.
   for (let suffix = 2; ; suffix++) {
-    const name = `${names[start]}${suffix}`;
+    const name = `${names[start]} ${suffix}`;
     if (!used.has(name)) return name;
   }
 }

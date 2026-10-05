@@ -1,8 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, Navigate, useLocation } from "@tanstack/react-router";
-import { Clock3, Network, MessageCircle, ArrowLeft } from "lucide-react";
-import { getPublicEventContext, type NotworkEvent } from "@/lib/event-registry";
-import { SiteNav } from "@/components/SiteNav";
+import { Home, Network, MessagesSquare, Sparkles } from "lucide-react";
+import { getPublicEventContext, withEventSelection, type NotworkEvent } from "@/lib/event-registry";
 import { previewEvent, useEventPreview } from "@/lib/event-preview";
 import { syncEventSessionAliases } from "@/lib/event-session";
 
@@ -13,9 +12,9 @@ type EventTransition = {
 };
 
 const apps = [
-  { key: "five", label: "Five", href: "/five/live", icon: Clock3 },
-  { key: "wordcloud", label: "WordCloud", href: "/21-agustos/wordcloud", icon: MessageCircle },
-  { key: "matchlab", label: "Match", href: "/21-agustos/eslesme", icon: Network },
+  { href: "/five/live", key: "five", label: "Five", icon: MessagesSquare },
+  { href: "/21-agustos/wordcloud", key: "wordcloud", label: "Wordcloud", icon: Sparkles },
+  { href: "/21-agustos/eslesme", key: "matchlab", label: "Match", icon: Network },
 ] as const;
 export function isEventAppPath(path: string) {
   return path === "/linkler" || apps.some((app) => app.href === path);
@@ -87,7 +86,7 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
       const candidates = results.flatMap((r) => (r.status === "fulfilled" ? [r.value.event] : []));
       const activeEvent =
         candidates.find((candidate) => candidate.entry.isOpen && candidate.status === "live") ||
-        null;
+        candidates[0] || null;
       // Restore both identifiers before mounting apps that read their session once.
       if (activeEvent) syncEventSessionAliases(localStorage, activeEvent);
       setEvent(activeEvent);
@@ -100,23 +99,6 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
       clearInterval(timer);
     };
   }, [pathname, searchStr, preview]);
-  const visibleApps =
-    preview && !event
-      ? [...apps]
-      : event
-        ? apps
-            .filter((app) => {
-              const product = event.products[app.key];
-              return (
-                product.enabled &&
-                product.visible &&
-                (preview || (product.state === "live" && product.dataMode === "live"))
-              );
-            })
-            .sort((a, b) => event.products[a.key].order - event.products[b.key].order)
-        : [];
-  const selectedApp = apps.find((app) => app.href === pathname);
-  const available = preview || (event && (!selectedApp || visibleApps.includes(selectedApp)));
   if (!preview && event && !new URLSearchParams(searchStr).has("eventId"))
     return <Navigate to={pathname} search={{ eventId: event.id }} replace />;
   return (
@@ -149,65 +131,28 @@ export function EventExperienceShell({ children }: { children: ReactNode }) {
           Etkinlik önizlemesi · yalnızca bu cihazda
         </p>
       )}
-      {available ? (
-        children
-      ) : (
-        <>
-          <SiteNav />
-          <main className="event-closed">
-            <span className="ntw-glass-mark">
-              <img src="/brand/notwork-logo.png" alt="notwork" />
-            </span>
-            <h1>
-              {loading
-                ? "Etkinlik kontrol ediliyor"
-                : event
-                  ? "Bu uygulama henüz açık değil"
-                  : "Etkinlikte buluşalım"}
-            </h1>
-            <p>
-              {event
-                ? "Açık uygulamaları aşağıdaki menüden seçebilirsin"
-                : "11 Ekim tarihinde etkinlik anında aktif olacaktır"}
-            </p>
-            <Link to="/ntw">Etkinlik anına dön ↗</Link>
-          </main>
-        </>
-      )}
-      <nav
-        className={`mobile-glass-dock event-app-dock ${pathname === "/linkler" ? "event-entry-dock" : ""}`}
-        aria-label="Etkinlik uygulamaları"
-        style={{ gridTemplateColumns: `repeat(${visibleApps.length + 1},1fr)` }}
-      >
-        <Link
-          to="/linkler"
-          search={
-            preview
-              ? { preview: "event", ...(event ? { eventId: event.id } : {}) }
-              : event
-                ? { eventId: event.id }
-                : {}
-          }
-          aria-label="Linkler sayfasına dön"
-        >
-          <ArrowLeft size={20} />
-          <span>notwork</span>
-        </Link>
-        {visibleApps.map(({ href, key, label, icon: Icon }) => (
-          <Link
-            key={key}
-            to={href}
-            search={
-              preview
-                ? { preview: "event", ...(event ? { eventId: event.id } : {}) }
-                : { eventId: event!.id }
-            }
-            aria-current={pathname === href ? "page" : undefined}
-          >
-            <Icon size={22} strokeWidth={1.65} />
-            <span>{label}</span>
-          </Link>
-        ))}
+      {children}
+      <nav className={`mobile-glass-dock event-app-dock${pathname === "/linkler" ? " event-entry-dock" : ""}`} aria-label="Etkinlik uygulamaları">
+        {[
+          { href: "/linkler", label: "Ana ekran", icon: Home },
+          ...apps.filter((app) => event
+            ? event.products[app.key].enabled && event.products[app.key].visible && event.products[app.key].state !== "disabled"
+            : app.href === pathname)
+            .sort((a, b) => (event?.products[a.key].order ?? 0) - (event?.products[b.key].order ?? 0)),
+        ].map((app) => {
+          const Icon = app.icon;
+          const href = preview
+            ? `${event ? withEventSelection(app.href, { eventId: event.id }) : app.href}${event ? "&" : "?"}preview=event`
+            : event
+              ? withEventSelection(app.href, { eventId: event.id })
+              : app.href;
+          return (
+            <Link key={app.href} to={href} aria-current={pathname === app.href ? "page" : undefined}>
+              <Icon size={20} strokeWidth={1.8} aria-hidden="true" />
+              <span>{app.label}</span>
+            </Link>
+          );
+        })}
       </nav>
     </div>
   );

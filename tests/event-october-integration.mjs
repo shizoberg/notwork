@@ -183,7 +183,7 @@ try {
   const indexById = new Map(registrations.map((row, i) => [row.participant.id, i]));
   const groups = Object.values(rooms.groups);
   assert.equal(new Set(groups.map((group) => group.groupName)).size, 33);
-  assert.ok(groups.every((group) => /^\p{L}+[0-9]*$/u.test(group.groupName)));
+  assert.ok(groups.every((group) => /^\p{L}+(?: \p{L}+)*(?: \d+)?$/u.test(group.groupName)));
   const a = groups[0],
     b = groups[1];
   const ai = indexById.get(a.participantIds[0]),

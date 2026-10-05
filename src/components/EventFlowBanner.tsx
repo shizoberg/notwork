@@ -1,10 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { currentEventFlowStep, getEventFlow, type EventFlowState } from "@/lib/event-flow";
-import {
-  getEventSelectionFromLocation,
-  withEventSelection,
-  type EventProductKey,
-} from "@/lib/event-registry";
+import { getEventFlow, type EventFlowState } from "@/lib/event-flow";
+import { getEventSelectionFromLocation, type EventProductKey } from "@/lib/event-registry";
 import { previewEvent, useEventPreview } from "@/lib/event-preview";
 
 export function EventFlowBanner({
@@ -76,16 +72,11 @@ export function EventFlowBanner({
     };
   }, [onFlowChange, preview, selection]);
 
-  const step = currentEventFlowStep(flow);
-  useEffect(() => {
-    if (!product || !flow || preview !== false) return;
-    if (flow.status === "completed" || (step && step.product !== product)) {
-      const timer = window.setTimeout(() => {
-        window.location.assign(withEventSelection("/linkler", selection));
-      }, 650);
-      return () => window.clearTimeout(timer);
-    }
-  }, [flow, preview, product, selection, step]);
-
-  return null;
+  const notices = flow?.notices || [];
+  if (!notices.length) return null;
+  return (
+    <aside className="event-flow-notices" aria-label="Etkinlik bildirimleri" role="status">
+      {notices.slice(-3).map((notice) => <p key={notice.id}>{notice.text}</p>)}
+    </aside>
+  );
 }

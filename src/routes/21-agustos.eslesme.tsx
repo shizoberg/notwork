@@ -93,6 +93,10 @@ function AugustMatchPage() {
 
   const loadMatch = useCallback(async (nextToken: string, silent = false) => {
     if (!nextToken) return;
+    if (preview && new URLSearchParams(window.location.search).get("demo") === "waiting") {
+      setStatus("empty");
+      return;
+    }
     if (!silent) {
       setStatus("loading");
       setMessage("");
@@ -111,7 +115,7 @@ function AugustMatchPage() {
         setStatus("idle");
       }
     }
-  }, [eventSelection]);
+  }, [eventSelection, preview]);
 
   useEffect(() => {
     if (preview === null) return;
@@ -127,8 +131,10 @@ function AugustMatchPage() {
           setToken("local-match-preview");
           setRegistration(matchPreviewRegistration);
           setPresence(result.presence);
-          setGroup(result.group);
-          setStatus("ready");
+          const waitingDemo = new URLSearchParams(window.location.search).get("demo") === "waiting";
+          setGroup(waitingDemo ? null : result.group);
+          setWaitingCount(waitingDemo ? 1 : 3);
+          setStatus(waitingDemo ? "empty" : "ready");
           return;
         }
         if (!recoveredToken) {
@@ -320,10 +326,9 @@ function AugustMatchPage() {
       <main id="matchlab" className="scroll-mt-24 overflow-hidden">
         <section className="relative px-4 pb-12 pt-8 sm:px-8 sm:pt-12">
           <div className="relative mx-auto max-w-3xl">
-            <div className="mb-6 text-center">
-              <h1 className="mt-4 text-5xl font-black leading-none tracking-[-0.08em] text-foreground sm:text-7xl">
-                notwork match
-              </h1>
+            <div className="match-brand-row mb-6">
+              <h1 className="match-brand-gradient">notwork match</h1>
+              <span className="match-beta-badge">beta v3.0</span>
             </div>
 
             <section
@@ -398,7 +403,9 @@ function AugustMatchPage() {
                         <div className="five-code-brand" aria-label="notwork">
                           notwork
                         </div>
-                        <div className="five-code-number">{group.groupName}</div>
+                        <div className={`five-code-number${group.groupName.length > 18 ? " is-long" : ""}`}>
+                          {group.groupName}
+                        </div>
                       </DialogContent>
                     </Dialog>
                   </div>

@@ -1216,7 +1216,7 @@ export async function getNextMatchGroup(
     let selected = deterministicSelected;
     // During the initial crowd surge, keep room creation independent of API latency.
     // The deterministic scorer still handles every candidate; AI analysis runs after claim.
-    if (current.aiConsent?.analysis && availableCandidates.length <= 10) {
+    if (current.aiConsent?.analysis && rows.length <= 6) {
       const aiShortlist = availableCandidates
         .filter((candidate) => candidate.aiConsent?.analysis)
         .map((row) => ({
@@ -1277,7 +1277,9 @@ export async function getNextMatchGroup(
     if (!claimed) continue;
 
     let aiAnalysis: string | undefined;
-    if (groupRegistrations.every((registration) => registration.aiConsent?.analysis)) {
+    // At event scale, the rules result is already stored and returned without waiting on AI.
+    // Limit optional analysis to the quiet first arrivals; never fan out 30+ model calls.
+    if (rows.length <= 6 && groupRegistrations.every((registration) => registration.aiConsent?.analysis)) {
       aiAnalysis =
         (await generateMatchAnalysis(getNetworkPrefix(), groupRegistrations)) || undefined;
       if (aiAnalysis) {
