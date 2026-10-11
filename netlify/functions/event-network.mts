@@ -86,7 +86,11 @@ export default async (request: Request, _context: Context) => {
     return await runWithEventRequestContext(eventIdentifier, "matchlab", async () => {
       const action = clean(input.action, 30);
       const store = getEventNetworkStore();
-      const memberSession = await getMemberProfileBySession(readMemberSessionCookie(request));
+      // Matching/chat authenticate with the event token; only registration/resume need the profile cookie.
+      const memberSession =
+        action === "register" || action === "resume"
+          ? await getMemberProfileBySession(readMemberSessionCookie(request))
+          : null;
 
       if (action === "register") {
         if (

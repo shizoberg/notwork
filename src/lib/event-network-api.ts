@@ -1,5 +1,6 @@
 import type {
   EventNetworkAdminPayload,
+  MatchLaunchProgress,
   EventNetworkMatchGroup,
   EventNetworkPresence,
   EventNetworkRegistration,
@@ -174,6 +175,7 @@ export async function getEventNetworkMatch(accessToken: string, selection?: Even
   return response.json() as Promise<{
     status: "ready" | "empty" | "paused";
     waitingCount?: number;
+    waitingReason?: "admin" | "matching";
     registration: EventNetworkRegistration;
     presence: EventNetworkPresence;
     group: EventNetworkMatchGroup | null;
@@ -301,4 +303,18 @@ export async function seedEventNetworkDemo(password: string, selection: EventSel
   });
   if (!response.ok) throw new Error(await response.text());
   return response.json() as Promise<EventNetworkAdminPayload>;
+}
+
+export async function updateMatchLaunch(
+  password: string,
+  action: "startMatching" | "processMatching",
+  selection: EventSelection,
+) {
+  const response = await fetch(adminUrl(selection), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(withEventSelectionInput({ password, action }, selection)),
+  });
+  if (!response.ok) throw new Error(await response.text());
+  return response.json() as Promise<{ matching: MatchLaunchProgress }>;
 }

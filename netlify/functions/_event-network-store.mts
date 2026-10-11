@@ -160,7 +160,13 @@ export type NetworkInput = {
 
 export type NetworkAdminInput = {
   password?: string;
-  action?: "list" | "resetDemo" | "repairCodes" | "seedSamples";
+  action?:
+    | "list"
+    | "resetDemo"
+    | "repairCodes"
+    | "seedSamples"
+    | "startMatching"
+    | "processMatching";
   event?: string;
   eventId?: string;
   eventSlug?: string;
@@ -1138,13 +1144,114 @@ export async function updatePresenceByToken(
   return { registration, presence: safePresence };
 }
 
+export type MatchLaunchState = {
+  status: "waiting" | "running" | "open";
+  participantIds: string[];
+  cursor: number;
+  runId: string;
+};
+
+function initialMatchLaunch(): MatchLaunchState {
+  const dataset = getEventNetworkDatasetInfo();
+  return {
+    status: dataset.eventId === "evt_9_ekim_2026" && dataset.mode === "live" ? "waiting" : "open",
+    participantIds: [],
+    cursor: 0,
+    runId: "",
+  };
+}
+
+export async function getMatchLaunchState(store: ReturnType<typeof getEventNetworkStore>) {
+  return readAtomicState(store, `${getNetworkPrefix()}/match-launch.json`, initialMatchLaunch);
+}
+
+export async function startMatchLaunch(store: ReturnType<typeof getEventNetworkStore>) {
+  const rows = (await listRegistrations(store)).filter(
+    (row) => row.participant.status === "registered",
+  );
+  return atomicState(
+    store,
+    `${getNetworkPrefix()}/match-launch.json`,
+    initialMatchLaunch,
+    (state) => {
+      if (state.status !== "running") {
+        state.status = "running";
+        state.participantIds = rows.map((row) => row.participant.id);
+        state.cursor = 0;
+        state.runId = crypto.randomUUID();
+      }
+      return { ...state };
+    },
+  );
+}
+
+// Bounded, resumable chunks: no single Function has to form every group at once.
+// Room claims remain atomic, so retries and two admin tabs cannot duplicate membership.
+export async function processMatchLaunch(store: ReturnType<typeof getEventNetworkStore>) {
+  const job = await getMatchLaunchState(store);
+  if (job.status !== "running") return job;
+  const rows = await listRegistrations(store);
+  const participants = new Map(rows.map((row) => [row.participant.id, row]));
+  const presenceMap = await getPresenceMap(store, rows);
+  const eligibleIds = new Set(job.participantIds);
+  const end = Math.min(job.cursor + 6, job.participantIds.length);
+  for (let index = job.cursor; index < end; index++) {
+    const current = participants.get(job.participantIds[index]);
+    if (current?.participant.status === "registered") {
+      await matchRegistration(store, current, { rows, presenceMap, eligibleIds });
+    }
+  }
+  return atomicState(
+    store,
+    `${getNetworkPrefix()}/match-launch.json`,
+    initialMatchLaunch,
+    (state) => {
+      if (state.runId === job.runId && state.status === "running") {
+        state.cursor = Math.max(state.cursor, end);
+        if (state.cursor >= state.participantIds.length) state.status = "open";
+      }
+      return { ...state };
+    },
+  );
+}
+
 export async function getNextMatchGroup(
   store: ReturnType<typeof getEventNetworkStore>,
   accessToken: string,
 ) {
   const current = await getRegistrationByToken(store, accessToken);
   if (!current) return null;
+  const activeMatch = await getActiveMatch(store, current.participant.id);
+  if (activeMatch) {
+    return {
+      status: "ready",
+      registration: current,
+      presence: "meeting" as const,
+      group: await buildActiveMatchGroup(store, activeMatch, current),
+    };
+  }
+  const launch = await getMatchLaunchState(store);
+  if (launch.status !== "open") {
+    return {
+      status: "empty",
+      waitingReason: launch.status === "waiting" ? "admin" : "matching",
+      registration: current,
+      presence: "open" as const,
+      group: null,
+    };
+  }
+  return matchRegistration(store, current);
+}
 
+async function matchRegistration(
+  store: ReturnType<typeof getEventNetworkStore>,
+  current: EventNetworkRegistration,
+  batch?: {
+    rows: EventNetworkRegistration[];
+    presenceMap: Map<string, EventNetworkPresence>;
+    eligibleIds: Set<string>;
+  },
+) {
   // Most polling requests already belong to a group. Read only that group,
   // rather than scanning every participant and presence record on each poll.
   const activeMatch = await getActiveMatch(store, current.participant.id);
@@ -1157,10 +1264,10 @@ export async function getNextMatchGroup(
     };
   }
 
-  const rows = await listRegistrations(store);
-  const presenceMap = await getPresenceMap(store, rows);
+  const rows = batch?.rows || (await listRegistrations(store));
+  const presenceMap = batch?.presenceMap || (await getPresenceMap(store, rows));
   const currentPresence = presenceMap.get(current.participant.id) || "open";
-  if (currentPresence === "paused") {
+  if (currentPresence === "paused" || current.participant.status !== "registered") {
     return {
       status: "paused",
       registration: current,
@@ -1172,6 +1279,7 @@ export async function getNextMatchGroup(
   const cursor = await readCursor(store, current.participant.id);
   const nextRound = cursor.round + 1;
   const candidateRows = rows
+    .filter((row) => !batch || batch.eligibleIds.has(row.participant.id))
     .filter((row) => row.participant.id !== current.participant.id)
     .filter((row) => row.profile.emailNormalized !== current.profile.emailNormalized)
     .filter((row) => row.participant.status === "registered")
@@ -1216,7 +1324,7 @@ export async function getNextMatchGroup(
     let selected = deterministicSelected;
     // During the initial crowd surge, keep room creation independent of API latency.
     // The deterministic scorer still handles every candidate; AI analysis runs after claim.
-    if (current.aiConsent?.analysis && rows.length <= 6) {
+    if (!batch && current.aiConsent?.analysis && rows.length <= 6) {
       const aiShortlist = availableCandidates
         .filter((candidate) => candidate.aiConsent?.analysis)
         .map((row) => ({
@@ -1279,7 +1387,11 @@ export async function getNextMatchGroup(
     let aiAnalysis: string | undefined;
     // At event scale, the rules result is already stored and returned without waiting on AI.
     // Limit optional analysis to the quiet first arrivals; never fan out 30+ model calls.
-    if (rows.length <= 6 && groupRegistrations.every((registration) => registration.aiConsent?.analysis)) {
+    if (
+      !batch &&
+      rows.length <= 6 &&
+      groupRegistrations.every((registration) => registration.aiConsent?.analysis)
+    ) {
       aiAnalysis =
         (await generateMatchAnalysis(getNetworkPrefix(), groupRegistrations)) || undefined;
       if (aiAnalysis) {

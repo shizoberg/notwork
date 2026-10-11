@@ -164,6 +164,16 @@ try {
   ]);
   await page.screenshot({ path: "test-results/october/linkler-mobile.png", fullPage: true });
   await page.locator(".entry-app-step").filter({ hasText: "notwork match" }).click();
+  await page.getByText("Kaydın tamam, birlikte başlayacağız").waitFor();
+  assert.equal(await page.locator(".match-people article").count(), 0);
+  const matchContext = await sandbox.load("_event-product-context");
+  const matchStore = await sandbox.load("_event-network-store");
+  await matchContext.runWithEventRequestContext(eventId, "matchlab", async () => {
+    const store = matchStore.getEventNetworkStore();
+    let job = await matchStore.startMatchLaunch(store);
+    while (job.status === "running") job = await matchStore.processMatchLaunch(store);
+  });
+  await page.reload();
   await page.locator(".match-people article").first().waitFor();
   assert.equal(await page.locator(".match-people article").count(), 2);
   await page.locator(".ntw-ai-analysis").waitFor();

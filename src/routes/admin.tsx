@@ -1,3 +1,4 @@
+import type { MatchLaunchProgress } from "@/lib/event-network";
 import { AnnouncementAdmin } from "@/components/AnnouncementAdmin";
 import { EventFlowAdmin } from "@/components/EventFlowAdmin";
 import { EventTestCenter } from "@/components/EventTestCenter";
@@ -71,6 +72,7 @@ import type {
 } from "@/lib/member-profile";
 import {
   getEventNetworkAdmin,
+  updateMatchLaunch,
   resetEventNetworkDemo,
   seedEventNetworkSamples,
 } from "@/lib/event-network-api";
@@ -450,6 +452,8 @@ function AdminPage() {
   const [wordcloudMessage, setWordcloudMessage] = useState("");
   const [eventRegistrations, setEventRegistrations] = useState<EventNetworkRegistration[]>([]);
   const [eventDatabase, setEventDatabase] = useState<EventDatabaseInfo | null>(null);
+  const [matchLaunch, setMatchLaunch] = useState<MatchLaunchProgress | null>(null);
+  const [matchLaunching, setMatchLaunching] = useState(false);
   const [fiveData, setFiveData] = useState<FiveAdminPayload | null>(null);
   const [fiveMessage, setFiveMessage] = useState("");
   const [eventRegistry, setEventRegistry] = useState<NotworkEvent[]>([]);
@@ -525,6 +529,7 @@ function AdminPage() {
     if (requestId === undefined || requestId === eventToolsRequestIdRef.current) {
       setEventRegistrations(data.registrations);
       setEventDatabase(data.database || null);
+      setMatchLaunch(data.matching || null);
     }
     return data;
   };
@@ -769,6 +774,46 @@ function AdminPage() {
     setProfileMessage(
       `${profile.name} için yeni geçici şifre üretildi. CSV dosyasını şimdi indir.`,
     );
+  };
+
+  const launchEventMatches = async () => {
+    if (matchLaunching) return;
+    const selection = selectedToolsEventSelection;
+    const slug = selectedToolsEventSlug;
+    const requestId = eventToolsRequestIdRef.current;
+    setMatchLaunching(true);
+    setNetworkMessage("");
+    try {
+      let { matching } = await updateMatchLaunch(password, "startMatching", selection);
+      if (requestId === eventToolsRequestIdRef.current) setMatchLaunch(matching);
+      while (matching.status === "running") {
+        const previous = matching.processed;
+        ({ matching } = await updateMatchLaunch(password, "processMatching", selection));
+        if (requestId === eventToolsRequestIdRef.current) setMatchLaunch(matching);
+        if (matching.status === "running" && matching.processed <= previous) {
+          throw new Error(
+            "İşlem ilerlemedi. Eşleştirmeye devam et düğmesiyle kaldığın yerden sürdürebilirsin.",
+          );
+        }
+      }
+      const result = await loadEventNetwork(password, slug, requestId);
+      if (requestId === eventToolsRequestIdRef.current) {
+        const matched = (result.groups || []).reduce(
+          (sum, group) => sum + group.memberNames.length,
+          0,
+        );
+        setNetworkMessage(
+          `${result.groups?.length || 0} grup hazır · ${matched} kişi eşleşti. Yeterli uygun kişi bulunamayanlar havuzda bekliyor; yeni eşleşmeler otomatik devam edecek.`,
+        );
+      }
+    } catch (error) {
+      if (requestId === eventToolsRequestIdRef.current)
+        setNetworkMessage(
+          `${error instanceof Error ? error.message : "Eşleşmeler hazırlanamadı."} Mevcut gruplar korundu; düğmeye tekrar basarak devam edebilirsin.`,
+        );
+    } finally {
+      setMatchLaunching(false);
+    }
   };
 
   const seedEventNetwork = async () => {
@@ -1840,6 +1885,9 @@ function AdminPage() {
                   selection={selectedToolsEventSelection}
                   registrations={eventRegistrations}
                   database={eventDatabase}
+                  matching={matchLaunch}
+                  launching={matchLaunching}
+                  launchMatches={launchEventMatches}
                   message={networkMessage}
                   refresh={async () => {
                     await loadEventNetwork(password, selectedToolsEventSlug);
@@ -2951,6 +2999,9 @@ function EventNetworkAdmin({
   selection,
   registrations,
   database,
+  matching,
+  launching,
+  launchMatches,
   message,
   refresh,
   seedSamples,
@@ -2960,6 +3011,9 @@ function EventNetworkAdmin({
   selection: EventSelection;
   registrations: EventNetworkRegistration[];
   database: EventDatabaseInfo | null;
+  matching: MatchLaunchProgress | null;
+  launching: boolean;
+  launchMatches: () => Promise<void>;
   message: string;
   refresh: () => Promise<void>;
   seedSamples: () => Promise<void>;
@@ -3012,6 +3066,42 @@ function EventNetworkAdmin({
             <RefreshCcw size={14} /> yenile
           </button>
         </div>
+      </div>
+      <div className="border-b border-border bg-primary/10 p-5">
+        <h3 className="font-black">Eşleştirme kontrolü</h3>
+        <p className="mt-1 text-sm text-foreground/70">
+          {matching?.status === "waiting"
+            ? `${registrations.length} kayıt var. Sen başlatana kadar yeni grup kurulmaz.`
+            : matching?.status === "running"
+              ? `Katılımcılar eşleştiriliyor: ${matching.processed} / ${matching.total}`
+              : "Eşleştirme açık. Mevcut gruplar korunur; boşta kalanlar havuzdan eşleşir."}
+        </p>
+        <button
+          type="button"
+          disabled={launching || !matching || registrations.length === 0}
+          onClick={() => void launchMatches()}
+          className="mt-3 rounded-full bg-primary px-6 py-3 font-black text-primary-foreground disabled:opacity-50"
+        >
+          {launching
+            ? "Eşleşmeler hazırlanıyor…"
+            : matching?.status === "running"
+              ? "Eşleştirmeye devam et"
+              : matching?.status === "open"
+                ? "Boştakileri eşleştir"
+                : "Herkes geldi · eşleştir"}
+        </button>
+        {matching?.status === "running" && (
+          <progress
+            className="mt-3 block w-full accent-primary"
+            aria-label="Eşleştirme ilerlemesi"
+            value={matching.processed}
+            max={Math.max(1, matching.total)}
+          />
+        )}
+        <p className="mt-2 text-xs text-foreground/55">
+          Etkinlik zamanlayıcısından bağımsızdır. İşlem yarıda kalırsa aynı düğmeden devam
+          edebilirsin.
+        </p>
       </div>
       <div className="grid gap-3 border-b border-border bg-muted/35 p-5 md:grid-cols-3">
         <DatabaseBadge

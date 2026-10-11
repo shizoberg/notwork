@@ -155,6 +155,46 @@ try {
     "",
     404,
   );
+  // Everyone is registered, but no public request may start a group before the admin.
+  const waitingMatches = await Promise.all(registrations.map((_, i) => callMatch(i, "match")));
+  assert.ok(
+    waitingMatches.every((result) => result.data.waitingReason === "admin" && !result.data.group),
+  );
+  const admin = (await sandbox.load("event-network-admin")).default;
+  await request(admin, { action: "startMatching", event: eventId }, "", 401);
+  await request(admin, { action: "processMatching", event: eventId }, "", 401);
+  const matchingStore = await sandbox.load("_event-network-store");
+  const context = await sandbox.load("_event-product-context");
+  const asEvent = (callback) => context.runWithEventRequestContext(eventId, "matchlab", callback);
+  let job = await asEvent(() => matchingStore.startMatchLaunch(store));
+  assert.equal(job.participantIds.length, 100);
+  job = await asEvent(() => matchingStore.processMatchLaunch(store));
+  assert.equal(job.cursor, 6);
+  const resumedJob = await asEvent(() => matchingStore.startMatchLaunch(store));
+  assert.equal(resumedJob.runId, job.runId, "Restarting the admin runner resumes the same job");
+  assert.equal(resumedJob.cursor, 6);
+  const beforeConcurrent = await store.get(`${prefix}/room-index-v2.json`);
+  const existingIds = Object.keys(beforeConcurrent.groups);
+  await Promise.all(
+    Array.from({ length: 3 }, () => asEvent(() => matchingStore.processMatchLaunch(store))),
+  );
+  job = await asEvent(() => matchingStore.getMatchLaunchState(store));
+  while (job.status === "running")
+    job = await asEvent(() => matchingStore.processMatchLaunch(store));
+  assert.equal(job.status, "open");
+  assert.equal(job.cursor, 100);
+  const completedRooms = await store.get(`${prefix}/room-index-v2.json`);
+  assert.equal(Object.keys(completedRooms.members).length, 99);
+  assert.ok(
+    existingIds.every((id) => completedRooms.groups[id]),
+    "Resuming never replaces an existing group",
+  );
+  report.manualLaunch = {
+    waitingBeforeAdmin: true,
+    processed: job.cursor,
+    resume: true,
+    concurrentAdminSafe: true,
+  };
   const initialMatches = await Promise.all(registrations.map((_, i) => callMatch(i, "match")));
   assert.ok(
     initialMatches
@@ -199,7 +239,10 @@ try {
     0,
     "Active group polls must not scan the participant pool",
   );
-  assert.ok(report.activeGroupPoll.reads <= 15, "Active group polling reads stay bounded");
+  assert.ok(
+    report.activeGroupPoll.reads <= 15,
+    `Active group polling reads stay bounded: ${JSON.stringify(report.activeGroupPoll)}`,
+  );
   await callMatch(ai, "chatSend", {
     groupId: a.id,
     message: "Yalnızca bu grubun mesajı",

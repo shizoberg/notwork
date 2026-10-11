@@ -138,6 +138,7 @@ type RegistrationDraft = {
 const registrationDraftMaxAge = 7 * 24 * 60 * 60 * 1_000;
 
 function LinksPage() {
+  const [matchWaitingReason, setMatchWaitingReason] = useState<"admin" | "matching" | undefined>();
   const preview = useEventPreview();
   const [previewReady, setPreviewReady] = useState(false);
   const [activeEvent, setActiveEvent] = useState<NotworkEvent | null>(null);
@@ -629,14 +630,36 @@ function LinksPage() {
     if (preview || !hasRegistration || !activeEvent?.products.matchlab.enabled) return;
     const accessToken = localStorage.getItem(tokenStorageKey);
     if (!accessToken) return;
-    // Spread a crowd's first match requests; the Match page can still load immediately.
-    const timer = window.setTimeout(() => {
-      void getEventNetworkMatch(accessToken, eventSelection).catch(() => {
-        // Match retries normally when the participant opens the app.
-      });
-    }, 3_000 + Math.floor(Math.random() * 10_000));
-    return () => window.clearTimeout(timer);
-  }, [activeEvent?.products.matchlab.enabled, eventSelection, hasRegistration, preview, tokenStorageKey]);
+    let cancelled = false;
+    let timer: number;
+    const checkMatch = async () => {
+      if (cancelled) return;
+      let ready = false;
+      try {
+        if (document.visibilityState === "visible") {
+          const result = await getEventNetworkMatch(accessToken, eventSelection);
+          ready = result.status === "ready" || result.status === "paused";
+          if (!cancelled)
+            setMatchWaitingReason("waitingReason" in result ? result.waitingReason : undefined);
+        }
+      } catch {
+        /* A temporary network error keeps the participant registered. */
+      }
+      if (!cancelled && !ready)
+        timer = window.setTimeout(checkMatch, 20_000 + Math.floor(Math.random() * 10_000));
+    };
+    timer = window.setTimeout(checkMatch, 3_000 + Math.floor(Math.random() * 10_000));
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [
+    activeEvent?.products.matchlab.enabled,
+    eventSelection,
+    hasRegistration,
+    preview,
+    tokenStorageKey,
+  ]);
 
   return (
     <div
@@ -667,11 +690,23 @@ function LinksPage() {
                 <div className="entry-welcome-heading">
                   <h1>{activeEvent?.entry.appsTitle || "Şimdi notwork zamanı"}</h1>
                   <div className="entry-welcome-mascot">
-                    <span>Hoş geldin{profileCard?.firstName ? ` ${profileCard.firstName}` : ""} 👋</span>
+                    <span>
+                      Hoş geldin{profileCard?.firstName ? ` ${profileCard.firstName}` : ""} 👋
+                    </span>
                     <img src="/brand/notwork-match-waiting-mascot.png" alt="Notwork maskotu" />
                   </div>
                 </div>
                 <p>{activeEvent?.entry.appsSubtitle || "Akışa göre uygulamanı seç"}</p>
+                {matchWaitingReason && (
+                  <p
+                    className="mt-3 rounded-2xl bg-primary/10 px-4 py-3 text-sm text-primary-deep"
+                    role="status"
+                  >
+                    {matchWaitingReason === "admin"
+                      ? "Kaydın tamam. Eşleşmeler etkinlik ekibi başlattığında hazırlanacak."
+                      : "Eşleşmeler hazırlanıyor. Grubunu notwork match içinde görebilirsin."}
+                  </p>
+                )}
               </>
             )}
           </header>
@@ -744,33 +779,35 @@ function LinksPage() {
               )}
               <div className="entry-flow-summary">
                 <span>Bu akşamın akışı</span>
-                <p>Uygulamalar arasında dilediğin zaman geçebilirsin. Güncel yönlendirmeleri bildirimlerden takip et.</p>
+                <p>
+                  Uygulamalar arasında dilediğin zaman geçebilirsin. Güncel yönlendirmeleri
+                  bildirimlerden takip et.
+                </p>
               </div>
               <section className="entry-app-flow">
-                {activeEventLinks.map(
-                  ({ title, description, href, icon: Icon }, index) => (
-                    <a
-                      key={title}
-                      href={preview && href.startsWith("/")
+                {activeEventLinks.map(({ title, description, href, icon: Icon }, index) => (
+                  <a
+                    key={title}
+                    href={
+                      preview && href.startsWith("/")
                         ? `${href}${href.includes("?") ? "&" : "?"}preview=event`
-                        : href}
-                      className="entry-app-step group"
-                    >
-                      <span className="entry-app-index">{String(index + 1).padStart(2, "0")}</span>
-                      <span className="entry-app-icon">
-                        <Icon size={23} strokeWidth={1.7} />
-                      </span>
-                      <span className="entry-app-copy">
-                        <strong>{title}</strong>
-                        <small>{description}</small>
-                      </span>
-                      <span className="entry-app-action">
-                        Başla{" "}
-                        <ArrowRight size={15} />
-                      </span>
-                    </a>
-                  ),
-                )}
+                        : href
+                    }
+                    className="entry-app-step group"
+                  >
+                    <span className="entry-app-index">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="entry-app-icon">
+                      <Icon size={23} strokeWidth={1.7} />
+                    </span>
+                    <span className="entry-app-copy">
+                      <strong>{title}</strong>
+                      <small>{description}</small>
+                    </span>
+                    <span className="entry-app-action">
+                      Başla <ArrowRight size={15} />
+                    </span>
+                  </a>
+                ))}
               </section>
 
               <section className="mx-auto mt-7 grid max-w-xl gap-3">

@@ -58,6 +58,7 @@ function AugustMatchPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "empty" | "paused">("idle");
   const [message, setMessage] = useState("");
   const [waitingCount, setWaitingCount] = useState(1);
+  const [waitingReason, setWaitingReason] = useState<"admin" | "matching" | undefined>();
   const [isCompleting, setIsCompleting] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -91,31 +92,35 @@ function AugustMatchPage() {
     [group],
   );
 
-  const loadMatch = useCallback(async (nextToken: string, silent = false) => {
-    if (!nextToken) return;
-    if (preview && new URLSearchParams(window.location.search).get("demo") === "waiting") {
-      setStatus("empty");
-      return;
-    }
-    if (!silent) {
-      setStatus("loading");
-      setMessage("");
-    }
-    try {
-      const result = await getEventNetworkMatch(nextToken, eventSelection);
-      setWaitingCount("waitingCount" in result ? result.waitingCount || 1 : 1);
-      setPresence(result.presence);
-      setRegistration(result.registration);
-      setGroup(result.group);
-      setStatus(result.status === "ready" ? "ready" : result.status);
-      return result;
-    } catch (error) {
-      if (!silent) {
-        setMessage(error instanceof Error ? error.message : "Eşleşme alınamadı.");
-        setStatus("idle");
+  const loadMatch = useCallback(
+    async (nextToken: string, silent = false) => {
+      if (!nextToken) return;
+      if (preview && new URLSearchParams(window.location.search).get("demo") === "waiting") {
+        setStatus("empty");
+        return;
       }
-    }
-  }, [eventSelection, preview]);
+      if (!silent) {
+        setStatus("loading");
+        setMessage("");
+      }
+      try {
+        const result = await getEventNetworkMatch(nextToken, eventSelection);
+        setWaitingCount("waitingCount" in result ? result.waitingCount || 1 : 1);
+        setWaitingReason("waitingReason" in result ? result.waitingReason : undefined);
+        setPresence(result.presence);
+        setRegistration(result.registration);
+        setGroup(result.group);
+        setStatus(result.status === "ready" ? "ready" : result.status);
+        return result;
+      } catch (error) {
+        if (!silent) {
+          setMessage(error instanceof Error ? error.message : "Eşleşme alınamadı.");
+          setStatus("idle");
+        }
+      }
+    },
+    [eventSelection, preview],
+  );
 
   useEffect(() => {
     if (preview === null) return;
@@ -362,8 +367,20 @@ function AugustMatchPage() {
               ) : null}
               {status === "empty" ? (
                 <EmptyState
-                  title="Grubun için katılımcılar bekleniyor"
-                  text={`Şu an havuzda sen dahil ${waitingCount} uygun kişi var. Üçlü grup için en az 3 kişi gerekiyor. Biraz bekle; yeni kişiler geldiğinde eşleşmen otomatik açılacak. İstersen sonra tekrar deneyebilirsin.`}
+                  title={
+                    waitingReason === "admin"
+                      ? "Kaydın tamam, birlikte başlayacağız"
+                      : waitingReason === "matching"
+                        ? "Eşleşmeler hazırlanıyor"
+                        : "Grubun için katılımcılar bekleniyor"
+                  }
+                  text={
+                    waitingReason === "admin"
+                      ? "Etkinlik ekibi eşleştirmeyi başlattığında grubun burada görünecek. Tekrar kayıt olmana gerek yok."
+                      : waitingReason === "matching"
+                        ? "Katılımcılar gruplara yerleştiriliyor. Grubun hazır olduğunda burada görünecek."
+                        : `Şu an havuzda sen dahil ${waitingCount} uygun kişi var. Üçlü grup için en az 3 kişi gerekiyor. Biraz bekle; yeni kişiler geldiğinde eşleşmen otomatik açılacak. İstersen sonra tekrar deneyebilirsin.`
+                  }
                 />
               ) : null}
               {message ? (
@@ -403,7 +420,9 @@ function AugustMatchPage() {
                         <div className="five-code-brand" aria-label="notwork">
                           notwork
                         </div>
-                        <div className={`five-code-number${group.groupName.length > 18 ? " is-long" : ""}`}>
+                        <div
+                          className={`five-code-number${group.groupName.length > 18 ? " is-long" : ""}`}
+                        >
                           {group.groupName}
                         </div>
                       </DialogContent>

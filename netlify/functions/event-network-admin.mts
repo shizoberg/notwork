@@ -3,6 +3,9 @@ import { readFile } from "node:fs/promises";
 import type { Config, Context } from "@netlify/functions";
 import {
   getEventNetworkDatasetInfo,
+  getMatchLaunchState,
+  startMatchLaunch,
+  processMatchLaunch,
   getEventNetworkStore,
   getNextMatchGroup,
   listActiveMatchGroups,
@@ -38,6 +41,25 @@ export default async (request: Request, _context: Context) => {
       "matchlab",
       async () => {
         const store = getEventNetworkStore();
+        if (input.action === "startMatching" || input.action === "processMatching") {
+          if (!eventIdentifier) return new Response("Etkinlik gerekli", { status: 400 });
+          const matching =
+            input.action === "startMatching"
+              ? await startMatchLaunch(store)
+              : await processMatchLaunch(store);
+          return Response.json(
+            {
+              matching: {
+                status: matching.status,
+                total: matching.participantIds.length,
+                processed: matching.cursor,
+              },
+            },
+            {
+              headers: { "cache-control": "no-store, private" },
+            },
+          );
+        }
         if (input.action === "repairCodes") {
           if (!eventIdentifier) return new Response("Etkinlik gerekli", { status: 400 });
           return Response.json(await repairParticipantCodes(store), {
@@ -65,9 +87,15 @@ export default async (request: Request, _context: Context) => {
           }
         }
         const registrations = await listRegistrations(store);
+        const matching = await getMatchLaunchState(store);
         return Response.json(
           {
             registrations,
+            matching: {
+              status: matching.status,
+              total: matching.participantIds.length,
+              processed: matching.cursor,
+            },
             groups: await listActiveMatchGroups(store, registrations),
             database: getEventNetworkDatasetInfo(),
           },

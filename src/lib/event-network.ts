@@ -93,7 +93,14 @@ export type EventNetworkMatchGroup = {
   generatedAt: string;
 };
 
+export type MatchLaunchProgress = {
+  status: "waiting" | "running" | "open";
+  total: number;
+  processed: number;
+};
+
 export type EventNetworkAdminPayload = {
+  matching?: MatchLaunchProgress;
   registrations: EventNetworkRegistration[];
   groups?: Array<{
     id: string;
