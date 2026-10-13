@@ -1,4 +1,4 @@
-const WHATSAPP_CHANNEL_URL = "https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE";
+export const WHATSAPP_CHANNEL_URL = "https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE";
 
 export function WhatsAppChannelCta() {
   return (

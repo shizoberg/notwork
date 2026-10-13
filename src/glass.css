@@ -2365,6 +2365,18 @@
   max-width: 320px;
   margin: 20px auto 0;
 }
+.hero-upcoming .hero-upcoming-links {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 440px;
+  margin-top: 10px;
+}
+.hero-upcoming .hero-event-link {
+  min-height: 125px;
+  padding: 15px 25px 36px 15px !important;
+}
+.hero-upcoming .hero-event-name { font-size: 22px; }
+.hero-upcoming .hero-event-subtitle { font-size: 10px; }
+.hero-upcoming .hero-event-ticket { right: 10px; width: 15px; }
 .hero-event-link {
   position: relative;
   text-align: left;

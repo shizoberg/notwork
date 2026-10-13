@@ -154,13 +154,14 @@ function RootComponent() {
   const hideWhatsAppChannel = isEventExperiencePath(pathname);
   const publicPage = !pathname.startsWith("/admin");
   const eventApp = isEventAppPath(pathname);
+  const demo = pathname === "/demo";
 
   return (
     <QueryClientProvider client={queryClient}>
       <AnalyticsTracker />
       <MetaPixelTracker />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <div className={publicPage ? "glass-site" : undefined}>
+      <div className={publicPage ? (demo ? "glass-site demo-site" : "glass-site") : undefined}>
         {eventApp ? (
           <EventExperienceShell>
             <Outlet />
@@ -168,8 +169,8 @@ function RootComponent() {
         ) : (
           <Outlet />
         )}
-        {publicPage && !eventApp && <MobileDock />}
-        {!hideWhatsAppChannel && <WhatsAppChannelCta />}
+        {publicPage && !eventApp && !demo && <MobileDock />}
+        {!hideWhatsAppChannel && !demo && <WhatsAppChannelCta />}
       </div>
       <CookieConsent />
     </QueryClientProvider>

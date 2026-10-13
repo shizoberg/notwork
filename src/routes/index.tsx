@@ -1,4 +1,4 @@
-import { Ticket } from "lucide-react";
+import { Ticket, MessageCircle } from "lucide-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import gallery2 from "@/assets/gallery/notwork-2.jpg";
@@ -15,6 +15,7 @@ import { InterviewReels } from "@/components/InterviewReels";
 import { SiteNav, SiteFooter } from "@/components/SiteNav";
 import { averageRating, listEventReviews, type EventReview } from "@/lib/event-reviews";
 import { createSeo } from "@/lib/seo";
+import { WHATSAPP_CHANNEL_URL } from "@/components/WhatsAppChannelCta";
 
 export const Route = createFileRoute("/")({
   head: () =>
@@ -101,6 +102,16 @@ function Landing() {
 }
 
 const pastEvents = [
+  {
+    id: "11-ekim-2026",
+    date: "11 Ekim 2026",
+    location: "Rene Lokal",
+    title: "notwork Sahne",
+    text: "Başarısızlık hikâyeleri, interaktif WordCloud ve notwork match ile yeni bağlantılar kurduğumuz sahne buluşması.",
+    tags: ["notwork match", "WordCloud", "Networking"],
+    href: "/11-ekim",
+    accent: "from-[#071416] via-[#6b304e] to-[#d8c6ff]",
+  },
   {
     id: "17-eylul-2026",
     date: "17 Eylül 2026",
@@ -242,7 +253,9 @@ function Hero() {
     <section className="relative">
       <div className="mx-auto max-w-5xl px-4 pb-8 pt-5 text-center sm:px-5 sm:pb-10 sm:pt-10">
         <p className="hero-dates">
-          <span className="hero-date-pulse">11 Ekim</span>
+          <span className="hero-date-pulse">22 Kasım</span>
+          <span aria-hidden="true">·</span>
+          <span className="hero-date-pulse">10 Aralık</span>
         </p>
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
 
@@ -259,20 +272,49 @@ function Hero() {
         <p className="hero-description">
           Network etkinlikleri ve çözümleri üreten networking platformu.
         </p>
-        <div className="hero-event-links">
-          <Link
-            to="/11-ekim"
-            data-analytics="ticket_click"
-            data-analytics-label="11 Ekim ana sayfa etkinlik CTA"
-            className="hero-event-link"
+        <section className="hero-upcoming" aria-label="Sonraki etkinlikler">
+          <p className="mt-6 text-xs text-muted-foreground">Sonraki buluşmalar</p>
+          <div className="hero-event-links hero-upcoming-links">
+            {["22 Kasım", "10 Aralık"].map((date) => (
+              <a
+                key={date}
+                href={WHATSAPP_CHANNEL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-analytics="click"
+                data-analytics-label={`${date} bilet duyurusu WhatsApp`}
+                aria-label={`${date} bilet duyuruları için WhatsApp grubuna katıl`}
+                className="hero-event-link"
+              >
+                <span className="hero-event-date">2026 / YAKINDA</span>
+                <span className="hero-event-name">{date}</span>
+                <span className="hero-event-subtitle">Yeni bir notwork buluşması</span>
+                <img
+                  src="/brand/notwork-logo.png"
+                  alt=""
+                  className="notwork-logo hero-event-logo"
+                />
+                <Ticket
+                  className="hero-event-ticket"
+                  size={18}
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+              </a>
+            ))}
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">Biletleri yakında duyuracağız.</p>
+          <a
+            href={WHATSAPP_CHANNEL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-analytics="click"
+            data-analytics-label="Sonraki etkinlikler WhatsApp duyuru grubu"
+            className="mt-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-3 text-sm font-semibold text-foreground"
           >
-            <span className="hero-event-date">11 EKİM</span>
-            <span className="hero-event-name">Sahne</span>
-            <span className="hero-event-subtitle">Başarısızlık hikayeleri ve networking</span>
-            <img src="/brand/notwork-logo.png" alt="" className="notwork-logo hero-event-logo" />
-            <Ticket className="hero-event-ticket" size={18} strokeWidth={1.5} aria-hidden="true" />
-          </Link>
-        </div>
+            <MessageCircle size={17} aria-hidden="true" /> WhatsApp grubuna katıl
+          </a>
+        </section>
       </div>
     </section>
   );
