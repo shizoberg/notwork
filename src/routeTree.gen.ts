@@ -26,6 +26,7 @@ import { Route as FiveRouteImport } from './routes/five'
 import { Route as EtkinliklerRouteImport } from './routes/etkinlikler'
 import { Route as EtkinlikDegerlendirmeRouteImport } from './routes/etkinlik-degerlendirme'
 import { Route as DuyurularRouteImport } from './routes/duyurular'
+import { Route as Demo2RouteImport } from './routes/demo2'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as CreativeRouteImport } from './routes/creative'
 import { Route as CommunityRouteImport } from './routes/community'
@@ -130,6 +131,11 @@ const EtkinlikDegerlendirmeRoute = EtkinlikDegerlendirmeRouteImport.update({
 const DuyurularRoute = DuyurularRouteImport.update({
   id: '/duyurular',
   path: '/duyurular',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Demo2Route = Demo2RouteImport.update({
+  id: '/demo2',
+  path: '/demo2',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoRoute = DemoRouteImport.update({
@@ -248,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/community': typeof CommunityRoute
   '/creative': typeof CreativeRoute
   '/demo': typeof DemoRoute
+  '/demo2': typeof Demo2Route
   '/duyurular': typeof DuyurularRoute
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/community': typeof CommunityRoute
   '/creative': typeof CreativeRoute
   '/demo': typeof DemoRoute
+  '/demo2': typeof Demo2Route
   '/duyurular': typeof DuyurularRoute
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
@@ -327,6 +335,7 @@ export interface FileRoutesById {
   '/community': typeof CommunityRoute
   '/creative': typeof CreativeRoute
   '/demo': typeof DemoRoute
+  '/demo2': typeof Demo2Route
   '/duyurular': typeof DuyurularRoute
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
@@ -368,6 +377,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/creative'
     | '/demo'
+    | '/demo2'
     | '/duyurular'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/creative'
     | '/demo'
+    | '/demo2'
     | '/duyurular'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
@@ -446,6 +457,7 @@ export interface FileRouteTypes {
     | '/community'
     | '/creative'
     | '/demo'
+    | '/demo2'
     | '/duyurular'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
@@ -486,6 +498,7 @@ export interface RootRouteChildren {
   CommunityRoute: typeof CommunityRoute
   CreativeRoute: typeof CreativeRoute
   DemoRoute: typeof DemoRoute
+  Demo2Route: typeof Demo2Route
   DuyurularRoute: typeof DuyurularRoute
   EtkinlikDegerlendirmeRoute: typeof EtkinlikDegerlendirmeRoute
   EtkinliklerRoute: typeof EtkinliklerRoute
@@ -630,6 +643,13 @@ declare module '@tanstack/react-router' {
       path: '/duyurular'
       fullPath: '/duyurular'
       preLoaderRoute: typeof DuyurularRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo2': {
+      id: '/demo2'
+      path: '/demo2'
+      fullPath: '/demo2'
+      preLoaderRoute: typeof Demo2RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo': {
@@ -790,6 +810,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommunityRoute: CommunityRoute,
   CreativeRoute: CreativeRoute,
   DemoRoute: DemoRoute,
+  Demo2Route: Demo2Route,
   DuyurularRoute: DuyurularRoute,
   EtkinlikDegerlendirmeRoute: EtkinlikDegerlendirmeRoute,
   EtkinliklerRoute: EtkinliklerRoute,
