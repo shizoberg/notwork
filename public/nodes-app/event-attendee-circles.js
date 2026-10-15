@@ -1,0 +1,3 @@
+/* Avatar-circle entry opens the complete attendee list. */
+const beforeAttendeeCirclesLobby=lobby;lobby=function(){return beforeAttendeeCirclesLobby().replace(/<button class="event-members-button"[\s\S]*?<\/button>/,`<button class="event-members-circles" data-ui="event-members" aria-label="24 kayıtlı kişiyi listele"><span class="attendee-circle-heading"><strong>Kayıtlı kişiler</strong><span>24 kişi ${icon('chevron')}</span></span><span class="attendee-circle-preview">${eventAttendees.slice(0,5).map(id=>node(id)).join('')}<span class="attendee-more">+19</span></span><span class="attendee-circle-helper">Kişileri görmek için dokun</span></button>`)};
+render();

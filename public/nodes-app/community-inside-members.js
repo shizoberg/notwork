@@ -1,0 +1,4 @@
+/* Member circles belong to the opened community page, not the directory card. */
+const beforeInsideMembersCard=categorizedCard;categorizedCard=function(s){return beforeInsideMembersCard(s).replace(/<div class="community-horizontal-members">[\s\S]*?<\/div><\/div>/,'')};
+const beforeInsideMembersPage=spacePage;spacePage=function(id){let html=beforeInsideMembersPage(id);if(!experience.members.has(id))return html;const s=verticalSpaces.find(s=>s.id===id),ids=spacePreviewMembers[id]||[];if(!s)return html;const circles=`<div class="community-inside-members"><div class="community-avatar-circles">${ids.map(person=>node(person)).join('')}<span class="community-more-members">+${Math.max(0,Number(s.count.replace('.',''))-ids.length)}</span></div></div>`;return html.replace('<section class="section">',circles+'<section class="section">')};
+render();

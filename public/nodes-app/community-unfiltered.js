@@ -1,0 +1,3 @@
+/* Direct horizontal cards without a category selector. */
+community=function(){return `<div class="community-carousel unfiltered-community" id="community-carousel" aria-label="Topluluk, coworking ve fuar alanları">${spaceTypes.map((s,i)=>`<article class="community-slide ${i===communityCarousel.index?'current':''}" data-slide="${i}">${i===0?communityCover():`<div class="space-type-cover ${s.id}">${nodeTexture()}<span>${s.mark}</span></div>`}<div class="community-slide-body"><span class="caption">${s.kind}</span><h1>${s.name}</h1><p class="subtitle">${s.description}</p><p class="tiny">${s.count} · Üyelere özel</p><button class="primary" data-community="${s.id}">İnsanları keşfet ${icon('arrow')}</button></div></article>`).join('')}</div>`};
+render();

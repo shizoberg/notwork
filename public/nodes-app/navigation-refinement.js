@@ -1,0 +1,13 @@
+/* Global event entry and connected-circle identity. */
+paths.nodes='<path d="M6 16 12 6l7 11M6 16h13"/><circle cx="12" cy="6" r="3"/><circle cx="6" cy="16" r="3"/><circle cx="19" cy="17" r="3"/>';
+paths.plus='<path d="M12 5v14M5 12h14"/>';
+toolbar=function(){return `<div class="header-right"><button class="icon-button event-add" data-ui="join-event" aria-label="Etkinliğe katıl">${icon('plus')}</button><button class="icon-button" data-ui="inbox" aria-label="Mesajlar">${icon('chat')}</button><button class="icon-button" data-ui="notices" aria-label="Bildirimler">${icon('bell')}</button></div>`};
+const beforeEventProfile=profile;profile=function(){return beforeEventProfile().replace(/<section class="card-section card-event">[\s\S]*?<\/section>/,'')};
+const beforeUploadControl=uploadControl;uploadControl=function(kind,label){return beforeUploadControl(kind,label).replace(icon(kind==='photo'?'profile':'nodes'),icon('nodes'))};
+function openEventEntry(){if(state.phase!=='join'){sheet('Etkinliğin',`<div class="event-entry-mark">${icon('nodes')}</div><h2>Notwork Buluşması</h2><p class="subtitle">Kolektif House · İstanbul</p><button class="primary" data-ui="resume-from-plus">Etkinliğe dön ${icon('arrow')}</button>`);return}sheet('Etkinliğe katıl',`<div class="event-entry-mark">${icon('nodes')}</div>${eventEntry()}`)}
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!['join-event','resume-from-plus'].includes(b.dataset.ui))return;e.preventDefault();e.stopImmediatePropagation();if(b.dataset.ui==='join-event')openEventEntry();else{close();navigate('match')}},true);
+document.addEventListener('submit',e=>{if(e.target.id!=='join-form'||overlay.hidden)return;e.preventDefault();e.stopImmediatePropagation();const v=document.querySelector('#event-code').value.trim();if(!/^(NTW2026|https:\/\/notwork\.me\/join\/NTW2026)$/i.test(v)){const err=document.querySelector('#join-error');err.hidden=false;err.textContent='Tanıtım için NTW2026 kodunu kullan.';return}close();phase('lobby');toast('Notwork Buluşması’na katıldın.')},true);
+const baseWaiting=waiting;waiting=function(){return baseWaiting().replace('<div class="orbit">','<div class="orbit"><div class="orbit-links">'+icon('nodes')+'</div>')};
+const baseGroup=group;group=function(){return baseGroup().replace('<div class="group-intro">',`<div class="group-intro"><div class="match-identity">${icon('nodes')}<span>Tanışma</span></div>`)};
+const baseComplete=complete;complete=function(){return baseComplete().replace('<div class="check-circle">'+icon('check')+'</div>','<div class="check-circle completed-nodes">'+icon('nodes')+'</div>')};
+render();

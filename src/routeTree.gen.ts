@@ -15,6 +15,7 @@ import { Route as SponsorRouteImport } from './routes/sponsor'
 import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as NtwRouteImport } from './routes/ntw'
 import { Route as NotworkNedirRouteImport } from './routes/notwork-nedir'
+import { Route as NodesRouteImport } from './routes/nodes'
 import { Route as NetworkingRouteImport } from './routes/networking'
 import { Route as NetworkStartupRouteImport } from './routes/network-startup'
 import { Route as MerchRouteImport } from './routes/merch'
@@ -76,6 +77,11 @@ const NtwRoute = NtwRouteImport.update({
 const NotworkNedirRoute = NotworkNedirRouteImport.update({
   id: '/notwork-nedir',
   path: '/notwork-nedir',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NodesRoute = NodesRouteImport.update({
+  id: '/nodes',
+  path: '/nodes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NetworkingRoute = NetworkingRouteImport.update({
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/merch': typeof MerchRoute
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
+  '/nodes': typeof NodesRoute
   '/notwork-nedir': typeof NotworkNedirRoute
   '/ntw': typeof NtwRoute
   '/profil': typeof ProfilRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/merch': typeof MerchRoute
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
+  '/nodes': typeof NodesRoute
   '/notwork-nedir': typeof NotworkNedirRoute
   '/ntw': typeof NtwRoute
   '/profil': typeof ProfilRoute
@@ -347,6 +355,7 @@ export interface FileRoutesById {
   '/merch': typeof MerchRoute
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
+  '/nodes': typeof NodesRoute
   '/notwork-nedir': typeof NotworkNedirRoute
   '/ntw': typeof NtwRoute
   '/profil': typeof ProfilRoute
@@ -389,6 +398,7 @@ export interface FileRouteTypes {
     | '/merch'
     | '/network-startup'
     | '/networking'
+    | '/nodes'
     | '/notwork-nedir'
     | '/ntw'
     | '/profil'
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/merch'
     | '/network-startup'
     | '/networking'
+    | '/nodes'
     | '/notwork-nedir'
     | '/ntw'
     | '/profil'
@@ -469,6 +480,7 @@ export interface FileRouteTypes {
     | '/merch'
     | '/network-startup'
     | '/networking'
+    | '/nodes'
     | '/notwork-nedir'
     | '/ntw'
     | '/profil'
@@ -510,6 +522,7 @@ export interface RootRouteChildren {
   MerchRoute: typeof MerchRoute
   NetworkStartupRoute: typeof NetworkStartupRoute
   NetworkingRoute: typeof NetworkingRoute
+  NodesRoute: typeof NodesRoute
   NotworkNedirRoute: typeof NotworkNedirRoute
   NtwRoute: typeof NtwRoute
   ProfilRoute: typeof ProfilRoute
@@ -566,6 +579,13 @@ declare module '@tanstack/react-router' {
       path: '/notwork-nedir'
       fullPath: '/notwork-nedir'
       preLoaderRoute: typeof NotworkNedirRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nodes': {
+      id: '/nodes'
+      path: '/nodes'
+      fullPath: '/nodes'
+      preLoaderRoute: typeof NodesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/networking': {
@@ -822,6 +842,7 @@ const rootRouteChildren: RootRouteChildren = {
   MerchRoute: MerchRoute,
   NetworkStartupRoute: NetworkStartupRoute,
   NetworkingRoute: NetworkingRoute,
+  NodesRoute: NodesRoute,
   NotworkNedirRoute: NotworkNedirRoute,
   NtwRoute: NtwRoute,
   ProfilRoute: ProfilRoute,

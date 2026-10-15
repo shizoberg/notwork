@@ -1,0 +1,3 @@
+/* Nonmembers see a member preview; approved members see the directory. */
+const beforeMembershipPreviewPage=spacePage;spacePage=function(id){let html=beforeMembershipPreviewPage(id).replace(/<div class="community-inside-members">[\s\S]*?<\/div><\/div>/,'');if(experience.members.has(id))return html;const s=verticalSpaces.find(s=>s.id===id);if(!s)return html;const ids=spacePreviewMembers[id]||[];return html+`<section class="section nonmember-preview"><h2>Üyeler</h2><div class="community-avatar-circles">${ids.map(person=>node(person)).join('')}<span class="community-more-members">+${Math.max(0,Number(s.count.replace('.',''))-ids.length)}</span></div><p class="subtitle">Üye listesine katılım isteğin onaylandığında erişebilirsin.</p></section>`};
+render();
