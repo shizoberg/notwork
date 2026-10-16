@@ -14,7 +14,13 @@ export const eventConfig: EventProductConfig = {
   date: "10 Aralık 2026",
   day: "Perşembe",
   ticketUrl: "https://www.biletimgo.com/etkinlik/notwork-fast-hizli-networking-eventi-32802",
-  gallery: previousFast.gallery.map((item) => ({
+  gallery: previousFast.gallery.map((item, index) => index === 1 ? {
+    src: "/events/17-eylul/notwork-fast-akis.jpg",
+    alt: "notwork Fast etkinlik akışı: Match ile tanış, Five ile çözüm üret, DJ ve networking ile bağlantılarını derinleştir",
+    label: "akış",
+    hideCaption: true,
+    position: "center",
+  } : ({
     ...item,
     alt: item.alt.replaceAll("17 Eylül", "10 Aralık"),
     subtitle: item.subtitle?.replaceAll("17 eylül", "10 aralık"),
