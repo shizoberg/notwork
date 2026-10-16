@@ -125,6 +125,8 @@ type AnalyticsDailySummary = {
     september17?: number;
     october9?: number;
     october11?: number;
+    november22?: number;
+    december10?: number;
   };
   pageTimeTotal: number;
   pageTimeCount: number;
@@ -273,6 +275,8 @@ const adminTabs: Array<{ id: AdminTab; label: string; description: string }> = [
 const adminUiVersion = "Admin v3 · etkinlik platformu";
 
 const eventPageAnalyticsOptions = [
+  { path: "/22-kasim", label: "22 Kasım · Sahne" },
+  { path: "/10-aralik", label: "10 Aralık · Fast" },
   { path: "/17-eylul", label: "17 Eylül · Fast" },
   { path: "/11-ekim", label: "11 Ekim · Sahne" },
   { path: "/21agustos", label: "21 Ağustos · Rene Lokal" },
@@ -470,7 +474,7 @@ function AdminPage() {
   const [eventDataProduct, setEventDataProduct] = useState<EventProductKey>("matchlab");
   const [eventToolsLoading, setEventToolsLoading] = useState(false);
   const [selectedToolsEventSlug, setSelectedToolsEventSlug] = useState("21-agustos-2026");
-  const [selectedEventAnalyticsPath, setSelectedEventAnalyticsPath] = useState("/17-eylul");
+  const [selectedEventAnalyticsPath, setSelectedEventAnalyticsPath] = useState("/22-kasim");
   const [selectedHeatmapPath, setSelectedHeatmapPath] = useState("/");
   const [selectedHeatmapDevice, setSelectedHeatmapDevice] = useState<HeatmapDevice>("mobile");
   const backfillRunningRef = useRef(false);
@@ -1459,14 +1463,14 @@ function AdminPage() {
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <Metric
               icon={Ticket}
-              label="17 Eylül etkinlik tıklaması"
-              value={report.ticketClicksByEvent.september17}
+              label="22 Kasım · Sahne bilet tıklaması"
+              value={report.ticketClicksByEvent.november22}
               highlight
             />
             <Metric
               icon={Ticket}
-              label="11 Ekim etkinlik tıklaması"
-              value={report.ticketClicksByEvent.october11}
+              label="10 Aralık · Fast bilet tıklaması"
+              value={report.ticketClicksByEvent.december10}
               highlight
             />
           </div>
@@ -1475,6 +1479,16 @@ function AdminPage() {
               Geçmiş etkinlik verileri
             </summary>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <Metric
+                icon={Ticket}
+                label="17 Eylül bilet tıklaması"
+                value={report.ticketClicksByEvent.september17}
+              />
+              <Metric
+                icon={Ticket}
+                label="11 Ekim bilet tıklaması"
+                value={report.ticketClicksByEvent.october11}
+              />
               <Metric
                 icon={Ticket}
                 label="14 Temmuz bilet tıklaması"
@@ -4706,11 +4720,13 @@ function buildReport(
       july14: totals.july14 + summary.ticketClicksByEvent.july14,
       august21: totals.august21 + summary.ticketClicksByEvent.august21,
       september17: totals.september17 + (summary.ticketClicksByEvent.september17 || 0),
+      november22: totals.november22 + (summary.ticketClicksByEvent.november22 || 0),
+      december10: totals.december10 + (summary.ticketClicksByEvent.december10 || 0),
       october11:
         totals.october11 +
         (summary.ticketClicksByEvent.october11 ?? summary.ticketClicksByEvent.october9 ?? 0),
     }),
-    { july14: 0, august21: 0, september17: 0, october11: 0 },
+    { july14: 0, august21: 0, september17: 0, october11: 0, november22: 0, december10: 0 },
   );
   const pageTimeTotal = summaries.reduce((total, summary) => total + summary.pageTimeTotal, 0);
   const pageTimeCount = summaries.reduce((total, summary) => total + summary.pageTimeCount, 0);

@@ -5,7 +5,7 @@ import { EventProductPage, type EventProductConfig } from "@/components/EventPro
 import { createSeo } from "@/lib/seo";
 import { createEventStructuredData } from "@/lib/structured-data";
 
-const eventConfig: EventProductConfig = {
+export const eventConfig: EventProductConfig = {
   trackingId: "notwork-chill-chat-2026-09-17",
   trackingName: "notwork Fast",
   eventLabel: "yeni etkinlik",

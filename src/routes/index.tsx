@@ -275,20 +275,26 @@ function Hero() {
         <section className="hero-upcoming" aria-label="Sonraki etkinlikler">
           <p className="mt-6 text-xs text-muted-foreground">Sonraki buluşmalar</p>
           <div className="hero-event-links hero-upcoming-links">
-            {["22 Kasım", "10 Aralık"].map((date) => (
-              <a
-                key={date}
-                href={WHATSAPP_CHANNEL_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+            {[
+              {
+                date: "22 Kasım",
+                name: "Sahne",
+                subtitle: "Başarısızlık hikâyeleri ve networking",
+                to: "/22-kasim",
+              },
+              { date: "10 Aralık", name: "Fast", subtitle: "Hızlı networking", to: "/10-aralik" },
+            ].map(({ date, name, subtitle, to }) => (
+              <Link
+                key={to}
+                to={to}
                 data-analytics="click"
-                data-analytics-label={`${date} bilet duyurusu WhatsApp`}
-                aria-label={`${date} bilet duyuruları için WhatsApp grubuna katıl`}
+                data-analytics-label={`${date} ${name} etkinlik sayfası`}
+                aria-label={`${date} notwork ${name} bilet ve detaylar`}
                 className="hero-event-link"
               >
-                <span className="hero-event-date">2026 / YAKINDA</span>
-                <span className="hero-event-name">{date}</span>
-                <span className="hero-event-subtitle">Yeni bir notwork buluşması</span>
+                <span className="hero-event-date">{date.toLocaleUpperCase("tr-TR")} / 2026</span>
+                <span className="hero-event-name">{name}</span>
+                <span className="hero-event-subtitle">{subtitle}</span>
                 <img
                   src="/brand/notwork-logo.png"
                   alt=""
@@ -300,10 +306,10 @@ function Hero() {
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
-              </a>
+              </Link>
             ))}
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">Biletleri yakında duyuracağız.</p>
+          <p className="mt-4 text-sm text-muted-foreground">Biletler satışta.</p>
           <a
             href={WHATSAPP_CHANNEL_URL}
             target="_blank"
@@ -325,7 +331,7 @@ function Nedir() {
   const slides = [
     {
       name: "sahne",
-      href: "/11-ekim" as const,
+      href: "/22-kasim" as const,
       items: [
         {
           n: "01",
@@ -347,7 +353,7 @@ function Nedir() {
     },
     {
       name: "fast",
-      href: "/17-eylul" as const,
+      href: "/10-aralik" as const,
       items: [
         {
           n: "01",

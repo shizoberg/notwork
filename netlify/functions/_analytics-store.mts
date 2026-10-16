@@ -44,6 +44,8 @@ export type DailyAnalyticsSummary = {
     august21: number;
     september17: number;
     october11: number;
+    november22: number;
+    december10: number;
   };
   pageTimeTotal: number;
   pageTimeCount: number;
@@ -82,10 +84,7 @@ function heatmapDevice(value: string): HeatmapDevice {
   return heatmapDevices.includes(value as HeatmapDevice) ? (value as HeatmapDevice) : "desktop";
 }
 
-function addHeatmapClick(
-  heatmaps: Record<string, PageHeatmap>,
-  event: StoredAnalyticsEvent,
-) {
+function addHeatmapClick(heatmaps: Record<string, PageHeatmap>, event: StoredAnalyticsEvent) {
   if (
     !Number.isFinite(event.heatX) ||
     !Number.isFinite(event.heatY) ||
@@ -147,6 +146,24 @@ function isOctober11Ticket(event: StoredAnalyticsEvent) {
     event.target.includes("/11-ekim") ||
     event.target.includes("/9-ekim") ||
     event.target.includes("notwork-basarisizlik-hikayeleri-network-event-30395")
+  );
+}
+
+function isNovember22Ticket(event: StoredAnalyticsEvent) {
+  return (
+    event.path.includes("/22-kasim") ||
+    event.target.includes("/22-kasim") ||
+    event.target.includes("network-etkinligi-32801") ||
+    event.label.includes("22 Kasım")
+  );
+}
+
+function isDecember10Ticket(event: StoredAnalyticsEvent) {
+  return (
+    event.path.includes("/10-aralik") ||
+    event.target.includes("/10-aralik") ||
+    event.target.includes("networking-eventi-32802") ||
+    event.label.includes("10 Aralık")
   );
 }
 
@@ -215,6 +232,8 @@ export function summarizeEvents(
   let august21 = 0;
   let september17 = 0;
   let october11 = 0;
+  let november22 = 0;
+  let december10 = 0;
   let pageTimeTotal = 0;
   let pageTimeCount = 0;
 
@@ -272,6 +291,8 @@ export function summarizeEvents(
       if (isAugust21Ticket(event)) august21 += 1;
       if (isSeptember17Ticket(event)) september17 += 1;
       if (isOctober11Ticket(event)) october11 += 1;
+      if (isNovember22Ticket(event)) november22 += 1;
+      if (isDecember10Ticket(event)) december10 += 1;
     }
   }
 
@@ -283,7 +304,7 @@ export function summarizeEvents(
     skipped,
     counts,
     sessionIds: [...sessionIds],
-    ticketClicksByEvent: { july14, august21, september17, october11 },
+    ticketClicksByEvent: { july14, august21, september17, october11, november22, december10 },
     pageTimeTotal,
     pageTimeCount,
     topPages,

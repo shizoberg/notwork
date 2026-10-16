@@ -36,11 +36,13 @@ import { Route as AnketRouteImport } from './routes/anket'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AcikRizaRouteImport } from './routes/acik-riza'
 import { Route as R9EkimRouteImport } from './routes/9-ekim'
+import { Route as R22KasimRouteImport } from './routes/22-kasim'
 import { Route as R21agustosRouteImport } from './routes/21agustos'
 import { Route as R17EylulRouteImport } from './routes/17-eylul'
 import { Route as R14temmuznetworkingRouteImport } from './routes/14temmuznetworking'
 import { Route as R14temmuzRouteImport } from './routes/14temmuz'
 import { Route as R11EkimRouteImport } from './routes/11-ekim'
+import { Route as R10AralikRouteImport } from './routes/10-aralik'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as FiveLiveRouteImport } from './routes/five_.live'
@@ -184,6 +186,11 @@ const R9EkimRoute = R9EkimRouteImport.update({
   path: '/9-ekim',
   getParentRoute: () => rootRouteImport,
 } as any)
+const R22KasimRoute = R22KasimRouteImport.update({
+  id: '/22-kasim',
+  path: '/22-kasim',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const R21agustosRoute = R21agustosRouteImport.update({
   id: '/21agustos',
   path: '/21agustos',
@@ -207,6 +214,11 @@ const R14temmuzRoute = R14temmuzRouteImport.update({
 const R11EkimRoute = R11EkimRouteImport.update({
   id: '/11-ekim',
   path: '/11-ekim',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const R10AralikRoute = R10AralikRouteImport.update({
+  id: '/10-aralik',
+  path: '/10-aralik',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -247,11 +259,13 @@ const R21AgustosEslesmeRoute = R21AgustosEslesmeRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/10-aralik': typeof R10AralikRoute
   '/11-ekim': typeof R11EkimRoute
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
   '/17-eylul': typeof R17EylulRoute
   '/21agustos': typeof R21agustosRoute
+  '/22-kasim': typeof R22KasimRoute
   '/9-ekim': typeof R9EkimRoute
   '/acik-riza': typeof AcikRizaRoute
   '/admin': typeof AdminRoute
@@ -288,11 +302,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/10-aralik': typeof R10AralikRoute
   '/11-ekim': typeof R11EkimRoute
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
   '/17-eylul': typeof R17EylulRoute
   '/21agustos': typeof R21agustosRoute
+  '/22-kasim': typeof R22KasimRoute
   '/9-ekim': typeof R9EkimRoute
   '/acik-riza': typeof AcikRizaRoute
   '/admin': typeof AdminRoute
@@ -330,11 +346,13 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/10-aralik': typeof R10AralikRoute
   '/11-ekim': typeof R11EkimRoute
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
   '/17-eylul': typeof R17EylulRoute
   '/21agustos': typeof R21agustosRoute
+  '/22-kasim': typeof R22KasimRoute
   '/9-ekim': typeof R9EkimRoute
   '/acik-riza': typeof AcikRizaRoute
   '/admin': typeof AdminRoute
@@ -373,11 +391,13 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/10-aralik'
     | '/11-ekim'
     | '/14temmuz'
     | '/14temmuznetworking'
     | '/17-eylul'
     | '/21agustos'
+    | '/22-kasim'
     | '/9-ekim'
     | '/acik-riza'
     | '/admin'
@@ -414,11 +434,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/10-aralik'
     | '/11-ekim'
     | '/14temmuz'
     | '/14temmuznetworking'
     | '/17-eylul'
     | '/21agustos'
+    | '/22-kasim'
     | '/9-ekim'
     | '/acik-riza'
     | '/admin'
@@ -455,11 +477,13 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/10-aralik'
     | '/11-ekim'
     | '/14temmuz'
     | '/14temmuznetworking'
     | '/17-eylul'
     | '/21agustos'
+    | '/22-kasim'
     | '/9-ekim'
     | '/acik-riza'
     | '/admin'
@@ -497,11 +521,13 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  R10AralikRoute: typeof R10AralikRoute
   R11EkimRoute: typeof R11EkimRoute
   R14temmuzRoute: typeof R14temmuzRoute
   R14temmuznetworkingRoute: typeof R14temmuznetworkingRoute
   R17EylulRoute: typeof R17EylulRoute
   R21agustosRoute: typeof R21agustosRoute
+  R22KasimRoute: typeof R22KasimRoute
   R9EkimRoute: typeof R9EkimRoute
   AcikRizaRoute: typeof AcikRizaRoute
   AdminRoute: typeof AdminRoute
@@ -728,6 +754,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof R9EkimRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/22-kasim': {
+      id: '/22-kasim'
+      path: '/22-kasim'
+      fullPath: '/22-kasim'
+      preLoaderRoute: typeof R22KasimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/21agustos': {
       id: '/21agustos'
       path: '/21agustos'
@@ -761,6 +794,13 @@ declare module '@tanstack/react-router' {
       path: '/11-ekim'
       fullPath: '/11-ekim'
       preLoaderRoute: typeof R11EkimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/10-aralik': {
+      id: '/10-aralik'
+      path: '/10-aralik'
+      fullPath: '/10-aralik'
+      preLoaderRoute: typeof R10AralikRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -817,11 +857,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  R10AralikRoute: R10AralikRoute,
   R11EkimRoute: R11EkimRoute,
   R14temmuzRoute: R14temmuzRoute,
   R14temmuznetworkingRoute: R14temmuznetworkingRoute,
   R17EylulRoute: R17EylulRoute,
   R21agustosRoute: R21agustosRoute,
+  R22KasimRoute: R22KasimRoute,
   R9EkimRoute: R9EkimRoute,
   AcikRizaRoute: AcikRizaRoute,
   AdminRoute: AdminRoute,

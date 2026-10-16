@@ -8,7 +8,8 @@ export function MobileDock() {
       to: "/etkinlikler",
       label: "Etkinlikler",
       icon: CalendarDays,
-      active: pathname === "/" || /etkinlikler|eylul|ekim|agustos|temmuz/.test(pathname),
+      active:
+        pathname === "/" || /etkinlikler|eylul|ekim|kasim|aralik|agustos|temmuz/.test(pathname),
     },
     {
       to: "/startup",
