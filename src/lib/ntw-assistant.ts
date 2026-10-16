@@ -200,22 +200,6 @@ const answers: NtwAssistantAnswer[] = [
     ],
   },
   {
-    id: "startup",
-    answer:
-      "Kendi işini veya startup projesini geliştirenler projelerini notwork’e anlatabilir. Formda proje, ekip, aşama ve ihtiyaçlarını paylaşabilirsin; başvurular ekip tarafından incelenir ve uygun projelerle online görüşme planlanır.",
-    cta: "startup projemi anlat",
-    href: "/startup",
-    keywords: [
-      "startup",
-      "girisimin var",
-      "projemi anlat",
-      "kendi isimi kur",
-      "yatirimci",
-      "proje gelistir",
-      "pazarlama destegi",
-    ],
-  },
-  {
     id: "reviews",
     answer:
       "Katıldığın notwork etkinliğini seçip 5 yıldız üzerinden puanlayabilir, yorumunu yazabilir ve isteğe bağlı fotoğraf ekleyebilirsin. Ekibe özel not alanı yalnızca notwork ekibine iletilir.",

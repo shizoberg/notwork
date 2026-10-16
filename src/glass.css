@@ -2820,7 +2820,7 @@
   .mobile-glass-dock {
     position: fixed;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     z-index: 45;
     bottom: calc(16px + env(safe-area-inset-bottom));
     left: 50%;
@@ -2862,7 +2862,7 @@
     left: 7px;
     top: 7px;
     bottom: 7px;
-    width: calc((100% - 14px) / 5);
+    width: calc((100% - 14px) / 3);
     border-radius: 24px;
     background: linear-gradient(145deg, #c7e7ecdd, #ffffffb8);
     box-shadow:

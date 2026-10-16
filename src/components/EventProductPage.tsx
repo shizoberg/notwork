@@ -59,6 +59,7 @@ export type EventProductConfig = {
   imageSubtitle: string;
   titleLines: string[];
   description: string;
+  descriptionContent?: ReactNode;
   date: string;
   day: string;
   time: string;
@@ -332,7 +333,7 @@ function PurchasePanel({
         </div>
         <div className="flex flex-nowrap items-center gap-1.5 overflow-hidden">
           <span className="whitespace-nowrap rounded-full bg-foreground px-2 py-1 text-[8px] font-black uppercase tracking-[0.04em] text-background sm:px-2.5 sm:text-[9px] sm:tracking-[0.12em]">
-            social networking experience
+            networking experience
           </span>
           <span className="whitespace-nowrap rounded-full bg-[#d8c6ff] px-2 py-1 text-[8px] font-black uppercase tracking-[0.04em] text-[#392263] sm:px-2.5 sm:text-[9px] sm:tracking-[0.12em]">
             {config.capacityLabel || "limited capacity"}
@@ -353,7 +354,7 @@ function PurchasePanel({
           ))}
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-lg">
-          {config.description}
+          {config.descriptionContent || config.description}
         </p>
 
         <div id="biletler" className="mt-4 scroll-mt-24 sm:mt-7">

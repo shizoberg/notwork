@@ -11,11 +11,15 @@ export const eventConfig: EventProductConfig = {
   date: "22 Kasım 2026",
   day: "Pazar",
   time: "20.00",
-  ticketGift: undefined,
+  ticketGift: "İki kişilik bilet alanlara anahtarlık veya sticker paketi hediye.",
+  description: "Başarısızlık hikâyeleri ve mobil uygulama destekli networking eşleştirme sistemi.",
+  descriptionContent: <><strong className="font-semibold text-foreground">Başarısızlık hikâyeleri ve networking.</strong> Mobil uygulamamızdaki <strong className="font-semibold text-foreground">eşleştirme sistemi</strong> ile ilgi alanlarına ve beklentilerine uygun kişilerle tanış.</>,
+  flowTitleLines: ["notwork akış"],
   ticketUrl:
     "https://www.biletimgo.com/etkinlik/notwork-sahne-basarisizlik-hikyeleri-network-etkinligi-32801",
   gallery: previousSahne.gallery.map((item) => ({
     ...item,
+    hideSubtitle: item.hideCaption ? item.hideSubtitle : false,
     alt: item.alt.replaceAll("11 Ekim", "22 Kasım"),
     subtitle: item.subtitle?.replaceAll("11 ekim", "22 kasım"),
   })),

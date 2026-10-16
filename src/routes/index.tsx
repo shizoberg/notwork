@@ -377,58 +377,7 @@ function Nedir() {
         },
       ],
     },
-    {
-      name: "startup",
-      href: "/startup" as const,
-      items: [
-        {
-          n: "01",
-          t: "Kurucular aynı masada",
-          d: "Girişimciler ve startup ekipleri gerçek ihtiyaçları üzerinden tanışır.",
-        },
-        {
-          n: "02",
-          t: "Problemini açıkça anlat",
-          d: "Ürün, büyüme, ekip ve yatırım gündemini doğru insanlarla konuş.",
-        },
-        {
-          n: "03",
-          t: "Doğru yetenekle eşleş",
-          d: "Aradığın uzmanı, kurucu ortağı veya iş birliğini daha kolay bul.",
-        },
-        {
-          n: "04",
-          t: "Bir sonraki adımı çıkar",
-          d: "Sohbeti somut bir bağlantıya, fikre veya aksiyona dönüştür.",
-        },
-      ],
-    },
-    {
-      name: "creative",
-      href: "/creative" as const,
-      items: [
-        {
-          n: "01",
-          t: "Her event bir objektif",
-          d: "Her buluşma tek bir yaratıcı tema ve bakış açısı etrafında şekillenir.",
-        },
-        {
-          n: "02",
-          t: "Yaratıcılar bir arada",
-          d: "Sanatçılar, içerik üreticileri ve yaratıcı ekipler aynı ortamda buluşur.",
-        },
-        {
-          n: "03",
-          t: "Üretimini görünür kıl",
-          d: "İşini, fikrini ve yaratıcı sürecini seni anlayan insanlarla paylaş.",
-        },
-        {
-          n: "04",
-          t: "Yeni ekipler kur",
-          d: "Yeni projeler, ortak üretimler ve yaratıcı iş birlikleri için bağlan.",
-        },
-      ],
-    },
+
   ];
   const activeEvent = slides[activeSlide];
 
