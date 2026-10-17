@@ -30,7 +30,8 @@ if(page==='home'){
  const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
  const smooth=v=>{v=clamp(v);return v*v*(3-2*v)};
  const mix=(a,b,t)=>a+(b-a)*t;
- const photos=['ece.jpg','bora.jpg','selin.jpg'].map(src=>{const img=new Image();img.src=src;return img});
+ const photoSources=['ece.jpg','bora.jpg','selin.jpg',...Array.from({length:11},(_,i)=>`people/person-${String(i+1).padStart(2,'0')}.jpg`)];
+ const photos=photoSources.map(src=>{const img=new Image();img.src=src;return img});
  let w=0,h=0,target=0,current=0,raf=0,last=0,visible=true;
  function measure(){const r=stage.getBoundingClientRect();w=r.width;h=r.height;const dpr=Math.min(devicePixelRatio||1,2.5);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);update();wake()}
  function update(){const r=story.getBoundingClientRect();target=clamp(-r.top/Math.max(1,story.offsetHeight-sticky.clientHeight));visible=r.bottom>0&&r.top<innerHeight;if(visible)wake()}
@@ -41,7 +42,7 @@ if(page==='home'){
  }
  function sphere(x,y,r,alpha=1){ctx.save();ctx.globalAlpha=alpha;const g=ctx.createRadialGradient(x-r*.35,y-r*.45,r*.03,x,y,r);g.addColorStop(0,'#526d7e');g.addColorStop(.5,'#293e4b');g.addColorStop(1,'#15232d');ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();ctx.strokeStyle='rgba(181,211,229,.65)';ctx.lineWidth=1;ctx.stroke();ctx.restore()}
  const panelHtml=[
- [2,`<div class="feature-profile"><img class="feature-portrait" src="ece.jpg" alt="Örnek profil"><div><h3>Ece</h3><p>Ürün tasarımcısı · İstanbul</p></div></div><div class="feature-tags"><span>Ürün tasarımı</span><span>UX araştırması</span></div><div class="feature-row"><small>ARADIĞIM</small><p>Bir fikri birlikte geliştirecek teknik ekip.</p></div><div class="feature-row"><small>SUNABİLECEĞİM</small><p>Ürün stratejisi ve kullanıcı deneyimi.</p></div><div class="feature-row compact"><small>DENEYİM · PORTFOLYO</small><p>Deneyimleri ve çalışmaları keşfet ↗</p></div>`],
+ [2,`<div class="feature-profile"><img class="feature-portrait" src="people/person-09.jpg" alt="Örnek profil"><div><h3>Ada</h3><p>Endüstriyel tasarımcı · İzmir</p></div></div><div class="feature-tags"><span>Ürün tasarımı</span><span>UX araştırması</span></div><div class="feature-row"><small>ARADIĞIM</small><p>Bir fikri birlikte geliştirecek teknik ekip.</p></div><div class="feature-row"><small>SUNABİLECEĞİM</small><p>Ürün stratejisi ve kullanıcı deneyimi.</p></div><div class="feature-row compact"><small>DENEYİM · PORTFOLYO</small><p>Deneyimleri ve çalışmaları keşfet ↗</p></div>`],
  [3,`<div class="feature-top"><span class="mark"></span><span>Match</span></div><h3>Grubunuz hazır.</h3><p class="feature-muted">Bir ihtiyaç. Bir katkı. Yeni bir fikir.</p><div class="match-people"><div><img src="ece.jpg" alt=""><span>Ece<small>Tasarım</small></span></div><div><img src="bora.jpg" alt=""><span>Bora<small>Yazılım</small></span></div><div><img src="selin.jpg" alt=""><span>Selin<small>İş geliştirme</small></span></div></div><div class="feature-meeting"><small>BULUŞMA NOKTANIZ</small><strong>Masa 03</strong><span>Üç kişilik tanışma</span></div>`],
  [4,`<div class="feature-cover"><span class="mark"></span><span>Birlikte Üretenler</span></div><div class="feature-status">✓ Onaylı üyelik</div><h3>Çevrende kimler var?</h3><div class="feature-tags"><span>Üyeler</span><span>Buluşmalar</span><span>Üyeliğim</span></div><div class="community-person"><img src="bora.jpg" alt=""><span>Bora<small>Yazılım · Yeni fikirlere açık</small></span></div><div class="feature-row compact"><small>TOPLULUĞA ÖZEL İLERLEME</small><p>Katkı geçmişin ve üyelik seviyen</p></div>`],
  [5,`<div class="feature-top"><span class="mark"></span><span>Masa 03 · Grup sohbeti</span></div><div class="feature-chat"><div><small>Ece</small>Tanıştığımıza sevindim. Fikri biraz daha konuşalım mı?</div><div class="outgoing">Olur, ilk adımı birlikte belirleyelim.</div><div><small>Bora</small>Bir sonraki buluşmada devam edebiliriz.</div></div><div class="feature-composer">Bir mesaj yaz… <span>↑</span></div><p class="feature-muted">Etkinlik · Grup · Birebir</p>`],
@@ -52,10 +53,14 @@ if(page==='home'){
  const panels=panelHtml.map(([step,content])=>{const el=document.createElement('div');el.className='node-feature-panel';el.dataset.step=step;el.innerHTML=content+'<div class="feature-demo-note">Konsept gösterim · Örnek veriler · Bazı ekranlar geliştirme aşamasında</div>';stage.append(el);return el});
  const worldCaption=document.createElement('div');worldCaption.className='node-world-caption';stage.append(worldCaption);
  const worlds=[
-  {name:'Coworking',detail:'Aynı alan. Birbirini tamamlayan insanlar.',color:[151,177,195],members:['Tasarım','Yazılım','İş geliştirme'],x:-.25,y:-.23},
-  {name:'Teknopark',detail:'Fikirler, uzmanlıklar ve yeni iş birlikleri.',color:[171,185,155],members:['Girişimci','Ar-Ge','Mentor','Yatırım'],x:.25,y:-.23},
-  {name:'Fuar',detail:'İhtiyaçlar ve çözümler aynı yerde.',color:[193,169,151],members:['Üretici','Alıcı','Uzman','İş ortağı'],x:.25,y:.23},
-  {name:'Kampüs',detail:'Ortak meraklar. Yeni tanışmalar.',color:[175,165,192],members:['Tasarım','Teknoloji','Girişimcilik'],x:-.25,y:.23}
+  {name:'Coworking',detail:'Tasarım, kod ve büyüme aynı alanda.',color:[151,177,195],x:-.25,y:-.23,
+   members:[{name:'Ece',skill:'Ürün tasarımı',photo:0,at:[0,-.54]},{name:'Bora',skill:'Mobil yazılım',photo:1,at:[-.43,.25]},{name:'Selin',skill:'İş geliştirme',photo:2,at:[.43,.25]}],edges:[[0,1],[1,2],[2,0]]},
+  {name:'Teknopark',detail:'Araştırmadan ürüne, farklı uzmanlıklar.',color:[171,185,155],x:.25,y:-.23,
+   members:[{name:'Deniz',skill:'Yapay zekâ',photo:3,at:[-.4,-.42]},{name:'Duru',skill:'Robotik',photo:4,at:[.4,-.42]},{name:'İpek',skill:'Biyoteknoloji',photo:5,at:[-.4,.25]},{name:'Ekin',skill:'Ürün stratejisi',photo:6,at:[.4,.25]}],edges:[[0,1],[1,3],[3,2],[2,0],[0,3]]},
+  {name:'Fuar',detail:'Üretim, satın alma ve ihracat buluşuyor.',color:[193,169,151],x:.25,y:.23,
+   members:[{name:'Derya',skill:'Üretim',photo:7,at:[-.43,-.3]},{name:'Emre',skill:'Satın alma',photo:8,at:[.33,-.49]},{name:'Aslı',skill:'İhracat',photo:9,at:[.43,.24]},{name:'Mert',skill:'Tedarik zinciri',photo:10,at:[-.33,.3]}],edges:[[0,1],[1,2],[2,3],[0,2]]},
+  {name:'Kampüs',detail:'Farklı bölümler, ortak meraklar.',color:[175,165,192],x:-.25,y:.23,
+   members:[{name:'Ada',skill:'Endüstriyel tasarım',photo:11,at:[0,-.54]},{name:'Ege',skill:'Oyun geliştirme',photo:12,at:[-.43,.25]},{name:'Lale',skill:'Sosyal girişim',photo:13,at:[.43,.25]}],edges:[[0,1],[0,2]]}
  ];
  const cameraKeys=[{p:0,x:0,y:0,z:1},{p:.06,x:0,y:0,z:1},{p:.19,x:-.25,y:-.23,z:4.4},{p:.27,x:-.25,y:-.23,z:4.4},{p:.345,x:0,y:-.23,z:1.6},{p:.43,x:.25,y:-.23,z:4.4},{p:.51,x:.25,y:-.23,z:4.4},{p:.585,x:.25,y:0,z:1.6},{p:.67,x:.25,y:.23,z:4.4},{p:.75,x:.25,y:.23,z:4.4},{p:.825,x:0,y:.23,z:1.6},{p:.91,x:-.25,y:.23,z:4.4},{p:.94,x:-.25,y:.23,z:4.4},{p:1,x:-.25,y:.1544,z:12}];
  function camera(p){let i=0;while(i<cameraKeys.length-2&&p>cameraKeys[i+1].p)i++;const a=cameraKeys[i],b=cameraKeys[i+1],t=smooth((p-a.p)/(b.p-a.p));return{x:mix(a.x,b.x,t),y:mix(a.y,b.y,t),z:mix(a.z,b.z,t)}}
@@ -66,7 +71,7 @@ if(page==='home'){
   const selected=p<.31?0:p<.55?1:p<.79?2:3;
   const inside=smooth((cam.z-1.8)/1.8);
   const captionKey=p<.09||p>.985?'overview':String(selected);
-  if(worldCaption.dataset.world!==captionKey){worldCaption.dataset.world=captionKey;worldCaption.innerHTML=p<.09||p>.985?'<b>Her node, farklı bir alan.</b><span>İçini keşfetmek için kaydır.</span>':`<b><i style="background:rgb(${worlds[selected].color.join(',')})"></i>${worlds[selected].name}</b><span>${worlds[selected].detail}</span>`;}
+  if(worldCaption.dataset.world!==captionKey){worldCaption.dataset.world=captionKey;worldCaption.innerHTML=p<.09||p>.985?'<b>Her node, farklı bir alan.</b><span>Farklı insanlar, farklı birikimler. Keşfetmek için kaydır.</span>':`<b><i style="background:rgb(${worlds[selected].color.join(',')})"></i>${worlds[selected].name}</b><span>${worlds[selected].detail} · Örnek profiller</span>`;}
   // The camera travels through the same world coordinates. No scene swaps or bitmap enlargement.
   ctx.save();ctx.lineWidth=.7;ctx.strokeStyle='rgba(150,177,193,.16)';
   for(let i=0;i<worlds.length;i++){const a=project(worlds[i].x,worlds[i].y),b=project(worlds[(i+1)%4].x,worlds[(i+1)%4].y);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}
@@ -81,21 +86,26 @@ if(page==='home'){
    const nameAlpha=1-smooth((cam.z-1.45)/1.2);
    if(nameAlpha>.01){ctx.save();ctx.globalAlpha=nameAlpha;ctx.font='500 12px -apple-system,BlinkMacSystemFont,Arial';ctx.textAlign='center';ctx.fillStyle=`rgb(${c})`;ctx.fillText(world.name,pos.x,pos.y+r+21);ctx.restore()}
    // Each location has its own group topology and people inside its boundary.
-   const count=world.members.length,people=[];
-   for(let j=0;j<count;j++){
-    const angle=-Math.PI/2+j*Math.PI*2/count+wi*.22;
-    const distance=base*.54;
-    const point=project(world.x+Math.cos(angle)*distance/size,world.y+Math.sin(angle)*distance/size);
-    people.push(point);
-   }
+   const people=world.members.map(member=>project(world.x+member.at[0]*base/size,world.y+member.at[1]*base/size));
    ctx.save();ctx.strokeStyle=`rgba(${c},${mix(.2,.4,proximity)})`;ctx.lineWidth=.8;
-   people.forEach((point,j)=>{const next=people[(j+1)%count];ctx.beginPath();ctx.moveTo(point.x,point.y);ctx.lineTo(next.x,next.y);ctx.stroke()});ctx.restore();
+   world.edges.forEach(([a,b])=>{ctx.beginPath();ctx.moveTo(people[a].x,people[a].y);ctx.lineTo(people[b].x,people[b].y);ctx.stroke()});ctx.restore();
    people.forEach((point,j)=>{
-    const radius=base*.145*cam.z,img=photos[(j+wi)%photos.length];
+    const member=world.members[j],radius=Math.min(base*.145*cam.z,w<500?27:38),img=photos[member.photo];
     ctx.save();ctx.beginPath();ctx.arc(point.x,point.y,radius,0,Math.PI*2);ctx.fillStyle='#202c34';ctx.fill();ctx.clip();
     if(img.complete&&img.naturalWidth){const d=Math.min(img.naturalWidth,img.naturalHeight);ctx.globalAlpha=mix(.4,1,proximity);ctx.drawImage(img,(img.naturalWidth-d)/2,(img.naturalHeight-d)/2,d,d,point.x-radius,point.y-radius,radius*2,radius*2)}ctx.restore();
     ctx.beginPath();ctx.arc(point.x,point.y,radius,0,Math.PI*2);ctx.strokeStyle=`rgba(${c},.7)`;ctx.lineWidth=.8;ctx.stroke();
-    if(proximity>.1){ctx.save();ctx.globalAlpha=proximity;ctx.textAlign='center';ctx.font='400 12px -apple-system,BlinkMacSystemFont,Arial';ctx.fillStyle='#b6c4ce';ctx.fillText(world.members[j],point.x,point.y+radius+18);ctx.restore()}
+    if(proximity>.1){
+     ctx.save();ctx.globalAlpha=proximity;ctx.textAlign='center';
+     const small=w<500,font=small?10:11;
+     ctx.font=`400 ${font}px -apple-system,BlinkMacSystemFont,Arial`;
+     const labelWidth=Math.min(w-32,Math.max(86,ctx.measureText(member.skill).width+24));
+     const lx=clamp(point.x,labelWidth/2+8,w-labelWidth/2-8),ly=Math.min(point.y+radius+7,h-87);
+     ctx.fillStyle='rgba(13,17,21,.94)';ctx.beginPath();ctx.roundRect(lx-labelWidth/2,ly,labelWidth,43,10);ctx.fill();
+     ctx.strokeStyle=`rgba(${c},.22)`;ctx.lineWidth=.7;ctx.stroke();
+     ctx.font=`500 ${small?12:13}px -apple-system,BlinkMacSystemFont,Arial`;ctx.fillStyle='#e0e7ec';ctx.fillText(member.name,lx,ly+16);
+     ctx.font=`400 ${font}px -apple-system,BlinkMacSystemFont,Arial`;ctx.fillStyle=`rgb(${c})`;ctx.fillText(member.skill,lx,ly+33);
+     ctx.restore();
+    }
    });
    const center=project(world.x,world.y);
    ctx.save();ctx.strokeStyle=`rgba(${c},.7)`;ctx.lineWidth=.8;
