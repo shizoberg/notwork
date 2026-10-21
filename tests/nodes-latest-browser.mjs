@@ -10,7 +10,12 @@ await page.addInitScript(()=>{try{localStorage.setItem('notwork-cookie-consent-v
 try{
  await page.goto(`${process.env.DEMO_TEST_URL||'http://127.0.0.1:5200'}/nodes`);
  const f=page.frameLocator('iframe');
- await f.locator('[data-ui="setup-start"]').click();
+ await f.locator('[data-registration-start]').click();
+ await f.locator('#registration-email').fill('demo@example.com');
+ await f.locator('#registration-password').fill('DemoOnly123!');
+ await f.locator('#registration-phone').fill('+905550000000');
+ await f.locator('input[name="notice"]').check();
+ await f.locator('#registration-contact-form button.primary').click();
  await f.locator('#setup-name').fill('Demo Deniz');
  assert.equal(await f.locator('.setup-preview-person').count(),1);
  assert.equal(await f.locator('.setup-preview-person img').count(),0);
