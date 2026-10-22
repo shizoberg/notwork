@@ -23,28 +23,6 @@
 /* One navigation row. Editorial surfaces belong only to the product library. */
 :root{--header-height:44px}
 .site-header{border-bottom:1px solid #ffffff0c}
-.knowledge-page{background:#fafaf9;color:#202324;--line:#dedfdd;--muted:#61696e}
-.knowledge-page .site-header{background:rgba(250,250,249,.94);border-color:#dedfdd}
-.knowledge-page .site-header .brand,.knowledge-page .nav-trigger,.knowledge-page .global-link{color:#353a3d}
-.knowledge-page .site-header .brand .mark{border-color:#303b42}
-.knowledge-page .site-header .brand .mark:after{border-color:#52636d}
-.knowledge-page .nav-trigger:hover,.knowledge-page .global-link:hover{color:#000}
-.knowledge-page .nav-flyout{background:#f4f5f3;border-color:#dedfdd;box-shadow:0 24px 40px #18222a0b}
-.knowledge-page .flyout-primary a{color:#232b30}.knowledge-page .flyout-secondary a{color:#58656d}
-.knowledge-page .knowledge-hero h1,.knowledge-page .docs-article h1,.knowledge-page .release-article h1{color:#202629}
-.knowledge-page .knowledge-hero h1 span{color:#707d84}
-.knowledge-page .knowledge-hero>p,.knowledge-page .update-body p,.knowledge-page .docs-card p,.knowledge-page .docs-start p,.knowledge-page .article-lead,.knowledge-page .docs-article section p,.knowledge-page .release-article section p,.knowledge-page .release-article li{color:#5b676e}
-.knowledge-page .update-body h2,.knowledge-page .docs-card h2,.knowledge-page .docs-start h2,.knowledge-page .knowledge-bottom h2,.knowledge-page .docs-article h2,.knowledge-page .release-article h2{color:#26343b}
-.knowledge-page .knowledge-search{background:#fff;border-color:#d2d8da}.knowledge-page .knowledge-search input{color:#27343b}
-.knowledge-page .update-filters button{color:#5a6870}.knowledge-page .update-filters button[aria-pressed=true]{background:#e4eaed;color:#233c4a}
-.knowledge-page .docs-start,.knowledge-page .article-callout{background:#eff2f2;border-color:#d8e0e3}
-.knowledge-page .article-callout>span{color:#314f60}.knowledge-page .article-callout p{color:#576d79!important}
-.knowledge-page .knowledge-text-link,.knowledge-page .article-toc a,.knowledge-page .knowledge-back,.knowledge-page .article-next strong,.knowledge-page .article-callout a{color:#37647d}
-.knowledge-page .article-toc{border-color:#d6dfe3}.knowledge-page .docs-group a{color:#596a74}.knowledge-page .docs-group a[aria-current=page]{color:#254e67;background:#e6ecef}
-.knowledge-page .docs-root{color:#263f4e}.knowledge-page .release-byline strong{color:#344d5b}
-.knowledge-page .site-footer{background:#f0f1ef;color:#536068;border-top:1px solid #dedfdd}.knowledge-page .site-footer .brand,.knowledge-page .footer-columns h2{color:#26333a}.knowledge-page .footer-columns a{color:#5d6c74}
-@media(max-width:900px){:root{--header-height:44px}.knowledge-page .site-header .navlinks{background:#fafaf9}.knowledge-page .nav-flyout{background:transparent;box-shadow:none}}
-@media(max-width:620px){:root{--header-height:44px}}
 /* Original Nodes navigation, with a direct documentation link. */
 :root{--header-height:80px}
 .legacy-header .nav{height:80px;max-width:1200px;margin:auto;padding:0 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
@@ -52,7 +30,7 @@
 .legacy-header .navlinks>a{white-space:nowrap;min-height:44px}
 .legacy-header .navcta{background:#d3e0e7;color:#19242b;padding:0 18px;border-radius:24px}
 .legacy-header .menu{display:none;background:none;border:1px solid #ffffff26;border-radius:20px;color:inherit;font-size:12px;padding:0 16px;min-height:40px;min-width:64px}
-.knowledge-page .legacy-header .menu{border-color:#ccd4d8;color:#263b48}
+
 @media(max-width:1050px){.legacy-header .navlinks{gap:16px;font-size:11px}}
-@media(max-width:900px){.legacy-header .menu{display:block;margin-left:auto}.legacy-header .navlinks{display:none;position:absolute;top:80px;left:0;right:0;background:#141719;padding:16px 24px 24px;flex-direction:column;align-items:stretch;gap:4px;border-bottom:1px solid #ffffff17;overflow:auto;max-height:calc(100svh - 80px)}.legacy-header .navlinks.open{display:flex;height:auto;max-height:calc(100svh - 80px)}.legacy-header .navlinks>a{font-size:15px;padding:10px 12px;min-height:48px}.legacy-header .navlinks>a[aria-current=page]{color:#a8c6d6}.legacy-header .navcta{justify-content:center;margin-top:12px}.knowledge-page .legacy-header .navlinks{background:#fafaf9}.knowledge-page .legacy-header .navlinks>a{color:#344a58}.knowledge-page .legacy-header .navlinks>a[aria-current=page]{color:#1e597b}}
+@media(max-width:900px){.legacy-header .menu{display:block;margin-left:auto}.legacy-header .navlinks{display:none;position:absolute;top:80px;left:0;right:0;background:#141719;padding:16px 24px 24px;flex-direction:column;align-items:stretch;gap:4px;border-bottom:1px solid #ffffff17;overflow:auto;max-height:calc(100svh - 80px)}.legacy-header .navlinks.open{display:flex;height:auto;max-height:calc(100svh - 80px)}.legacy-header .navlinks>a{font-size:15px;padding:10px 12px;min-height:48px}.legacy-header .navlinks>a[aria-current=page]{color:#a8c6d6}.legacy-header .navcta{justify-content:center;margin-top:12px}}
 @media(max-width:620px){:root{--header-height:68px}.legacy-header .nav{height:68px;padding:0 20px}.legacy-header .navlinks{top:68px;padding:12px 20px 20px;max-height:calc(100svh - 68px)}.legacy-header .navlinks.open{max-height:calc(100svh - 68px)}}
