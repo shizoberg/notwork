@@ -20,3 +20,28 @@
 @media(prefers-reduced-motion:reduce){.site-header *,.docs-card{transition:none!important}}
 
 @media(max-width:900px){.site-header .navlinks.open{height:calc(100svh - 44px);max-height:calc(100svh - 44px);box-sizing:border-box;}}
+/* One navigation row. Editorial surfaces belong only to the product library. */
+:root{--header-height:44px}
+.site-header{border-bottom:1px solid #ffffff0c}
+.knowledge-page{background:#fafaf9;color:#202324;--line:#dedfdd;--muted:#61696e}
+.knowledge-page .site-header{background:rgba(250,250,249,.94);border-color:#dedfdd}
+.knowledge-page .site-header .brand,.knowledge-page .nav-trigger,.knowledge-page .global-link{color:#353a3d}
+.knowledge-page .site-header .brand .mark{border-color:#303b42}
+.knowledge-page .site-header .brand .mark:after{border-color:#52636d}
+.knowledge-page .nav-trigger:hover,.knowledge-page .global-link:hover{color:#000}
+.knowledge-page .nav-flyout{background:#f4f5f3;border-color:#dedfdd;box-shadow:0 24px 40px #18222a0b}
+.knowledge-page .flyout-primary a{color:#232b30}.knowledge-page .flyout-secondary a{color:#58656d}
+.knowledge-page .knowledge-hero h1,.knowledge-page .docs-article h1,.knowledge-page .release-article h1{color:#202629}
+.knowledge-page .knowledge-hero h1 span{color:#707d84}
+.knowledge-page .knowledge-hero>p,.knowledge-page .update-body p,.knowledge-page .docs-card p,.knowledge-page .docs-start p,.knowledge-page .article-lead,.knowledge-page .docs-article section p,.knowledge-page .release-article section p,.knowledge-page .release-article li{color:#5b676e}
+.knowledge-page .update-body h2,.knowledge-page .docs-card h2,.knowledge-page .docs-start h2,.knowledge-page .knowledge-bottom h2,.knowledge-page .docs-article h2,.knowledge-page .release-article h2{color:#26343b}
+.knowledge-page .knowledge-search{background:#fff;border-color:#d2d8da}.knowledge-page .knowledge-search input{color:#27343b}
+.knowledge-page .update-filters button{color:#5a6870}.knowledge-page .update-filters button[aria-pressed=true]{background:#e4eaed;color:#233c4a}
+.knowledge-page .docs-start,.knowledge-page .article-callout{background:#eff2f2;border-color:#d8e0e3}
+.knowledge-page .article-callout>span{color:#314f60}.knowledge-page .article-callout p{color:#576d79!important}
+.knowledge-page .knowledge-text-link,.knowledge-page .article-toc a,.knowledge-page .knowledge-back,.knowledge-page .article-next strong,.knowledge-page .article-callout a{color:#37647d}
+.knowledge-page .article-toc{border-color:#d6dfe3}.knowledge-page .docs-group a{color:#596a74}.knowledge-page .docs-group a[aria-current=page]{color:#254e67;background:#e6ecef}
+.knowledge-page .docs-root{color:#263f4e}.knowledge-page .release-byline strong{color:#344d5b}
+.knowledge-page .site-footer{background:#f0f1ef;color:#536068;border-top:1px solid #dedfdd}.knowledge-page .site-footer .brand,.knowledge-page .footer-columns h2{color:#26333a}.knowledge-page .footer-columns a{color:#5d6c74}
+@media(max-width:900px){:root{--header-height:44px}.knowledge-page .site-header .navlinks{background:#fafaf9}.knowledge-page .nav-flyout{background:transparent;box-shadow:none}}
+@media(max-width:620px){:root{--header-height:44px}}
