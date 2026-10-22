@@ -2,18 +2,15 @@
   command = "npm run build"
   publish = "dist"
 
-# Unlisted Nodes preview: crawlers must be allowed to read the noindex rule.
-[[headers]]
-  for = "/nodes2"
-  [headers.values]
-    X-Robots-Tag = "noindex, nofollow"
-
-[[headers]]
-  for = "/nodes2/*"
-  [headers.values]
-    X-Robots-Tag = "noindex, nofollow"
-
+# Nodes moved to its own domain. Keep deep links and avoid duplicate copies.
 [[redirects]]
   from = "/nodes2"
-  to = "/nodes2/"
+  to = "https://nodes-app.com/"
   status = 301
+  force = true
+
+[[redirects]]
+  from = "/nodes2/*"
+  to = "https://nodes-app.com/:splat"
+  status = 301
+  force = true
