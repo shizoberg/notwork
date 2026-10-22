@@ -45,3 +45,14 @@
 .knowledge-page .site-footer{background:#f0f1ef;color:#536068;border-top:1px solid #dedfdd}.knowledge-page .site-footer .brand,.knowledge-page .footer-columns h2{color:#26333a}.knowledge-page .footer-columns a{color:#5d6c74}
 @media(max-width:900px){:root{--header-height:44px}.knowledge-page .site-header .navlinks{background:#fafaf9}.knowledge-page .nav-flyout{background:transparent;box-shadow:none}}
 @media(max-width:620px){:root{--header-height:44px}}
+/* Original Nodes navigation, with a direct documentation link. */
+:root{--header-height:80px}
+.legacy-header .nav{height:80px;max-width:1200px;margin:auto;padding:0 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.legacy-header .navlinks{position:static;display:flex;align-items:center;flex-direction:row;gap:24px;font-size:12px}
+.legacy-header .navlinks>a{white-space:nowrap;min-height:44px}
+.legacy-header .navcta{background:#d3e0e7;color:#19242b;padding:0 18px;border-radius:24px}
+.legacy-header .menu{display:none;background:none;border:1px solid #ffffff26;border-radius:20px;color:inherit;font-size:12px;padding:0 16px;min-height:40px;min-width:64px}
+.knowledge-page .legacy-header .menu{border-color:#ccd4d8;color:#263b48}
+@media(max-width:1050px){.legacy-header .navlinks{gap:16px;font-size:11px}}
+@media(max-width:900px){.legacy-header .menu{display:block;margin-left:auto}.legacy-header .navlinks{display:none;position:absolute;top:80px;left:0;right:0;background:#141719;padding:16px 24px 24px;flex-direction:column;align-items:stretch;gap:4px;border-bottom:1px solid #ffffff17;overflow:auto;max-height:calc(100svh - 80px)}.legacy-header .navlinks.open{display:flex;height:auto;max-height:calc(100svh - 80px)}.legacy-header .navlinks>a{font-size:15px;padding:10px 12px;min-height:48px}.legacy-header .navlinks>a[aria-current=page]{color:#a8c6d6}.legacy-header .navcta{justify-content:center;margin-top:12px}.knowledge-page .legacy-header .navlinks{background:#fafaf9}.knowledge-page .legacy-header .navlinks>a{color:#344a58}.knowledge-page .legacy-header .navlinks>a[aria-current=page]{color:#1e597b}}
+@media(max-width:620px){:root{--header-height:68px}.legacy-header .nav{height:68px;padding:0 20px}.legacy-header .navlinks{top:68px;padding:12px 20px 20px;max-height:calc(100svh - 68px)}.legacy-header .navlinks.open{max-height:calc(100svh - 68px)}}
