@@ -373,7 +373,7 @@ function PurchasePanel({
             </span>
           ))}
         </h1>
-        {config.titleSubtitle ? <p className="mt-2 text-sm font-semibold tracking-wide text-primary-deep sm:text-base">{config.titleSubtitle}</p> : null}
+        {config.titleSubtitle ? <p className="mt-0.5 text-sm font-light tracking-normal text-muted-foreground sm:mt-1 sm:text-base">{config.titleSubtitle}</p> : null}
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-lg">
           {config.descriptionContent || config.description}
         </p>
