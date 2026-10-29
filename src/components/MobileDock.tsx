@@ -34,7 +34,7 @@ export function MobileDock() {
         return (
           <Link key={item.to} to={item.to} aria-current={item.active ? "page" : undefined}>
             {Icon ? (
-              <Icon size={22} strokeWidth={1.65} aria-hidden="true" />
+              <Icon size={18} strokeWidth={1.65} aria-hidden="true" />
             ) : (
               <span className="dock-ntw">ntw</span>
             )}
