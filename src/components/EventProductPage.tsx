@@ -690,10 +690,10 @@ function FloatingTicketCta({
   onTicketRedirect: () => void;
 }) {
   const className =
-    "fixed bottom-3 left-1/2 z-40 inline-flex min-h-12 -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#071416]/94 px-4 py-3 text-sm font-black text-white shadow-[0_18px_55px_rgba(5,22,24,0.3)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-primary-deep sm:bottom-6 sm:min-h-14 sm:px-5";
+    "fixed bottom-3 left-1/2 z-40 inline-flex min-h-11 -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/20 bg-[#071416]/94 px-3 py-2 text-xs font-bold text-white shadow-[0_18px_55px_rgba(5,22,24,0.3)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-primary-deep sm:bottom-5 sm:min-h-12 sm:px-4";
   const content = (
     <>
-      <Ticket size={17} /> Bilet al
+      <Ticket size={15} /> Bilet al
       <span className="rounded-full bg-white/12 px-2 py-1 text-[10px] text-white/75">
         {selectedOption.price} TL
       </span>
