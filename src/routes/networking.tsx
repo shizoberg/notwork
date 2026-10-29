@@ -577,35 +577,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
   }, []);
 
   const canViewContacts = Boolean(memberProfile?.verifiedMember || directoryPreview);
-  const previewMembers = useMemo(() => {
-    const previewSource: Member[] = members.length
-      ? members.slice(0, 18)
-      : Array.from({ length: 12 }, (_, index) => ({
-          id: `sample-${index}`,
-          username: `sample-${index}`,
-          name: "notwork üyesi",
-          title: ["tasarım", "yazılım", "topluluk", "pazarlama"][index % 4],
-          skills: [],
-          createdAt: 0,
-        }));
-    return previewSource.map((member, index) => {
-      const group = getRoleGroup(member);
-      return {
-        ...member,
-        id: `preview-${index}`,
-        username: `preview-${index}`,
-        name: "notwork üyesi",
-        title: group.keywords[0] || "networking",
-        skills: [],
-        email: undefined,
-        instagram: undefined,
-        linkedin: undefined,
-        motivation: undefined,
-        contact: undefined,
-        photoUrl: undefined,
-      } satisfies Member;
-    });
-  }, [members]);
+
 
   const set =
     (key: keyof typeof form) =>
@@ -903,54 +875,6 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
             </div>
           </section>
         )}
-
-        {!profileLoading && !memberProfile && !directoryPreview ? (
-          <section className="mx-auto max-w-6xl px-5 pb-6">
-            <div className="network-preview">
-              <div className="network-preview-copy">
-                <span className="tool-eyebrow">notwork üyeleri</span>
-                <h2>Topluluktan bir önizleme</h2>
-                <p>
-                  Aşağıdan tüm profilleri, alanları ve deneyimleri kayıt olmadan keşfedebilirsin.
-                  Paylaşılmış iletişim yolları yalnızca doğrulanmış NTW üyelerine açıktır.
-                </p>
-              </div>
-              <div className="network-preview-profiles" aria-label="Anonim üye profilleri">
-                {previewMembers.slice(0, 6).map((member, index) => (
-                  <article key={member.id} className={index < 2 ? "is-featured" : ""}>
-                    <div className="network-preview-avatar" aria-hidden="true">
-                      {String(index + 1).padStart(2, "0")}
-                    </div>
-                    <div className="min-w-0">
-                      <strong>notwork üyesi</strong>
-                      <span>{member.title}</span>
-                    </div>
-                    {index < 2 && <BadgeCheck aria-label="Doğrulanmış NTW üyesi" />}
-                  </article>
-                ))}
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        {!profileLoading && !memberProfile && !directoryPreview && networkEntry === "choose" ? (
-          <section className="mx-auto max-w-6xl px-5 pb-10">
-            <div className="network-entry">
-              <span className="tool-eyebrow">notwork network</span>
-              <h2>Sistemde kayıtlı mısın?</h2>
-              <p>
-                Etkinliğe katıldıysan mevcut profilinle gir. İlk kez geliyorsan kısa kaydını
-                oluştur.
-              </p>
-              <div className="network-entry-actions">
-                <Link to="/profil">Evet · giriş yap</Link>
-                <Link to="/profil" search={{ mode: "register" }}>
-                  Hayır · kayıt ol
-                </Link>
-              </div>
-            </div>
-          </section>
-        ) : null}
 
         {!profileLoading && !memberProfile && !directoryPreview && networkEntry === "new" ? (
           <section className="mx-auto max-w-6xl px-5 pb-10">
