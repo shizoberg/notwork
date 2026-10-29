@@ -79,6 +79,22 @@ try {
         window.__metaCalls.some((x) => x[1] === "ViewContent" && x[2]?.content_ids?.[0] === id),
       c.id,
     );
+    await page.getByText("social networking event", { exact: true }).waitFor();
+    // Exercise horizontal swipes and ensure vertical scrolling never changes slides.
+    const hero = page.locator('[style*="touch-action"]');
+    const imageSrc = () => hero.locator('img').first().getAttribute('src');
+    const original = await imageSrc();
+    const swipe = async (dx, dy) => hero.evaluate((el, delta) => {
+      const touch = (x,y) => new Touch({identifier:1,target:el,clientX:x,clientY:y});
+      el.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,touches:[touch(250,200)]}));
+      el.dispatchEvent(new TouchEvent('touchend',{bubbles:true,changedTouches:[touch(250+delta[0],200+delta[1])]}));
+    }, [dx,dy]);
+    await swipe(5,120);
+    assert.equal(await imageSrc(), original);
+    await swipe(-150,5);
+    await page.waitForFunction(src => document.querySelector('[style*="touch-action"] img')?.getAttribute('src') !== src, original);
+    await swipe(150,5);
+    await page.waitForFunction(src => document.querySelector('[style*="touch-action"] img')?.getAttribute('src') === src, original);
     await page.getByRole("button", { name: /İki kişilik/ }).click();
     await page.locator(`#primary-ticket-cta[data-meta-ticket-price="${c.duo}"]`).waitFor();
     const [popup] = await Promise.all([page.waitForEvent("popup"), primary.click()]);

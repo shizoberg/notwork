@@ -6,6 +6,8 @@ import { eventConfig as previousSahne } from "./9-ekim";
 
 export const eventConfig: EventProductConfig = {
   ...previousSahne,
+  titleSubtitle: "social networking event",
+  tickets: previousSahne.tickets.map((ticket) => ticket.id === "single" ? { ...ticket, note: "Gerçek hikâyeleri dinle, mobil eşleştirme ile yeni insanlarla tanış." } : ticket),
   trackingId: "notwork-sahne-2026-11-22",
   imageSubtitle: "22 kasım · 20.00 · rene lokal",
   date: "22 Kasım 2026",

@@ -11,7 +11,7 @@ import {
   Ticket,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 
@@ -58,6 +58,7 @@ export type EventProductConfig = {
   imageTitle: string;
   imageSubtitle: string;
   titleLines: string[];
+  titleSubtitle?: string;
   description: string;
   descriptionContent?: ReactNode;
   date: string;
@@ -182,12 +183,31 @@ function EventGallery({
   onSelect: (index: number) => void;
   onMove: (direction: number) => void;
 }) {
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
   const image = gallery[activeImage];
   if (!image) return null;
 
   return (
     <div className="min-w-0">
-      <div className="relative overflow-hidden rounded-[1.55rem] border border-white/80 bg-[#0a1618] shadow-[0_22px_64px_rgba(15,45,50,0.16)] sm:rounded-[2.5rem] sm:shadow-[0_30px_90px_rgba(15,45,50,0.18)]">
+      <div className="relative overflow-hidden rounded-[1.55rem] border border-white/80 bg-[#0a1618] shadow-[0_22px_64px_rgba(15,45,50,0.16)] sm:rounded-[2.5rem] sm:shadow-[0_30px_90px_rgba(15,45,50,0.18)]"
+        style={{ touchAction: "pan-y pinch-zoom" }}
+        onTouchStart={(event) => {
+          const target = event.target as HTMLElement;
+          if (event.touches.length !== 1 || target.closest("button, video[controls]")) { touchStart.current = null; return; }
+          const touch = event.touches[0];
+          touchStart.current = { x: touch.clientX, y: touch.clientY };
+        }}
+        onTouchEnd={(event) => {
+          const start = touchStart.current;
+          touchStart.current = null;
+          if (!start || !event.changedTouches[0]) return;
+          const touch = event.changedTouches[0];
+          const dx = touch.clientX - start.x;
+          const dy = touch.clientY - start.y;
+          if (Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.3) onMove(dx < 0 ? 1 : -1);
+        }}
+        onTouchCancel={() => { touchStart.current = null; }}
+      >
         <div className="aspect-[4/5] max-h-[760px] w-full sm:aspect-[5/6] lg:aspect-[4/5]">
           {image.mediaType === "video" ? (
             <video
@@ -353,6 +373,7 @@ function PurchasePanel({
             </span>
           ))}
         </h1>
+        {config.titleSubtitle ? <p className="mt-2 text-sm font-semibold tracking-wide text-primary-deep sm:text-base">{config.titleSubtitle}</p> : null}
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-lg">
           {config.descriptionContent || config.description}
         </p>

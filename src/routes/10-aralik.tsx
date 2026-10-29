@@ -6,6 +6,8 @@ import { eventConfig as previousFast } from "./17-eylul";
 
 export const eventConfig: EventProductConfig = {
   ...previousFast,
+  titleSubtitle: "social networking event",
+  tickets: previousFast.tickets.map((ticket) => ticket.id === "single" ? { ...ticket, note: "Match ile tanış, Five’da çözüm üret, DJ eşliğinde bağlantılarını güçlendir." } : ticket),
   trackingId: "notwork-fast-2026-12-10",
   eventLabel: "fast",
   imageSubtitle: "10 aralık · 20.00 · köşk alsancak",
