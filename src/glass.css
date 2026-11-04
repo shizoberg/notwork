@@ -6010,3 +6010,27 @@ html[data-notwork-entry-ready="true"] .event-entry-dock {
     animation: none;
   }
 }
+
+/* Let a single upcoming event use the full row instead of an empty second column. */
+.hero-upcoming .hero-upcoming-links:has(> .hero-event-link:only-child) {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (max-width: 639px) {
+  .hero-upcoming .hero-upcoming-links:has(> .hero-event-link:only-child) {
+    max-width: 100%;
+  }
+  .hero-upcoming .hero-event-link:only-child {
+    min-height: 158px;
+    padding: 20px 48px 42px 20px !important;
+  }
+  .hero-upcoming .hero-event-link:only-child .hero-event-name {
+    font-size: 30px !important;
+  }
+  .hero-upcoming .hero-event-link:only-child .hero-event-date {
+    font-size: 11px;
+  }
+  .hero-upcoming .hero-event-link:only-child .hero-event-subtitle {
+    max-width: calc(100% - 20px);
+    font-size: 12px;
+  }
+}
