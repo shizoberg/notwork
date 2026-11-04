@@ -254,8 +254,6 @@ function Hero() {
       <div className="mx-auto max-w-5xl px-4 pb-8 pt-5 text-center sm:px-5 sm:pb-10 sm:pt-10">
         <p className="hero-dates">
           <span className="hero-date-pulse">22 Kasım</span>
-          <span aria-hidden="true">·</span>
-          <span className="hero-date-pulse">10 Aralık</span>
         </p>
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
 
@@ -282,7 +280,6 @@ function Hero() {
                 subtitle: "Başarısızlık hikâyeleri ve networking",
                 to: "/22-kasim",
               },
-              { date: "10 Aralık", name: "Fast", subtitle: "Hızlı networking", to: "/10-aralik" },
             ].map(({ date, name, subtitle, to }) => (
               <Link
                 key={to}
@@ -353,7 +350,7 @@ function Nedir() {
     },
     {
       name: "fast",
-      href: "/10-aralik" as const,
+      href: "/etkinlikler" as const,
       items: [
         {
           n: "01",

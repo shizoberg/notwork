@@ -64,21 +64,6 @@ const catalogEvents: EventCatalogItem[] = [
     image: "/community/8.jpg",
     imagePosition: "center 38%",
   },
-  {
-    id: "10-aralik-2026",
-    dateIso: "2026-12-10",
-    date: "10 Aralık 2026",
-    year: "2026",
-    venue: "Köşk Alsancak",
-    title: "notwork Fast",
-    summary: "notwork match, Five ve DJ eşliğinde hızlı networking.",
-    participants: "Biletler satışta",
-    tags: ["Köşk Alsancak", "notwork match", "ntw.five", "DJ"],
-    href: "/10-aralik",
-    accent: "from-[#071416] via-[#245f66] to-[#d8c6ff]",
-    image: "/community/17.jpg",
-    imagePosition: "center 42%",
-  },
 
   {
     id: "11-ekim-2026",
@@ -236,7 +221,7 @@ const catalogEvents: EventCatalogItem[] = [
   },
 ];
 
-const upcomingEventIds = new Set(["22-kasim-2026", "10-aralik-2026"]);
+const upcomingEventIds = new Set(["22-kasim-2026"]);
 
 function EventsCatalogPage() {
   const [activeFilter, setActiveFilter] = useState("Tümü");

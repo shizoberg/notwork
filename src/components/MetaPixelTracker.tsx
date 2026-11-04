@@ -40,11 +40,6 @@ const eventPageContent: Record<
     contentName: "notwork Sahne · 22 Kasım 2026",
     value: 600,
   },
-  "/10-aralik": {
-    contentId: "notwork-fast-2026-12-10",
-    contentName: "notwork Fast · 10 Aralık 2026",
-    value: 450,
-  },
   "/14temmuz": {
     contentId: "notwork-14-temmuz",
     contentName: "notwork · 14 Temmuz 2026",

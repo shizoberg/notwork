@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { EventProductPage, type EventProductConfig } from "@/components/EventProductPage";
-import { createSeo } from "@/lib/seo";
-import { createEventStructuredData } from "@/lib/structured-data";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { type EventProductConfig } from "@/components/EventProductPage";
+import { createNoIndexSeo } from "@/lib/seo";
+import { SiteNav, SiteFooter } from "@/components/SiteNav";
 import { eventConfig as previousFast } from "./17-eylul";
 
 export const eventConfig: EventProductConfig = {
@@ -37,26 +37,21 @@ export const eventConfig: EventProductConfig = {
 };
 
 export const Route = createFileRoute("/10-aralik")({
-  head: () =>
-    createSeo({
-      title: "10 Aralık notwork Fast | Hızlı Networking Etkinliği",
-      description:
-        "10 Aralık 2026 saat 20.00’da Köşk Alsancak’ta notwork match, Five, DJ ve serbest networking. Yeni insanlarla tanış, biletini al.",
-      path: "/10-aralik",
-      type: "article",
-      structuredData: createEventStructuredData({
-        name: "notwork Fast",
-        description: "notwork match, Five ve DJ eşliğinde hızlı networking etkinliği.",
-        path: "/10-aralik",
-        startDate: "2026-12-10T20:00:00+03:00",
-        endDate: "2026-12-10T23:30:00+03:00",
-        venueName: "Köşk Alsancak",
-        addressLocality: "Konak",
-        images: ["/community/17.jpg", "/community/23.jpg"],
-        ticketUrl: eventConfig.ticketUrl!,
-        lowPrice: 450,
-        highPrice: 800,
-      }),
-    }),
-  component: () => <EventProductPage config={eventConfig} />,
+  head: () => createNoIndexSeo({
+    title: "notwork Fast · Arşiv",
+    description: "10 Aralık etkinlik sayfası arşive alınmıştır. Güncel etkinliklerimizi keşfet.",
+    path: "/10-aralik",
+  }),
+  component: () => (
+    <div className="min-h-screen bg-background">
+      <SiteNav />
+      <main className="mx-auto max-w-2xl px-6 py-20 text-center">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">Arşiv</p>
+        <h1 className="mt-4 font-brand text-5xl">notwork fast</h1>
+        <p className="mt-5 text-muted-foreground">10 Aralık etkinlik sayfası arşive alındı. Bu sayfadan bilet satışı yapılmıyor.</p>
+        <Link to="/etkinlikler" className="mt-8 inline-flex rounded-full bg-primary px-6 py-3 font-semibold">Güncel etkinlikler</Link>
+      </main>
+      <SiteFooter />
+    </div>
+  ),
 });

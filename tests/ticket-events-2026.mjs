@@ -67,7 +67,7 @@ try {
   const page = await context.newPage();
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  for (const c of cases) {
+  for (const c of cases.filter(c => c.path !== "/10-aralik")) {
     await page.goto(base + c.path);
     const primary = page.locator("#primary-ticket-cta");
     await primary.waitFor();
@@ -142,16 +142,21 @@ try {
       animations: "disabled",
     });
   }
+  await page.goto(base + "/10-aralik");
+  await page.getByText("10 Aralık etkinlik sayfası arşive alındı.", {exact:false}).waitFor();
+  assert.equal(await page.locator('a[href*="biletimgo.com"]').count(),0);
+  assert.equal(await page.locator('#primary-ticket-cta').count(),0);
+  assert.match(await page.locator('meta[name="robots"]').getAttribute('content'),/noindex/);
   await page.goto(base + "/");
   await page.locator('.hero-upcoming a[href="/22-kasim"]').waitFor();
   assert.equal(await page.locator('.hero-upcoming a[href="/22-kasim"]').count(), 1);
-  assert.equal(await page.locator('.hero-upcoming a[href="/10-aralik"]').count(), 1);
+  assert.equal(await page.locator('.hero-upcoming a[href="/10-aralik"]').count(), 0);
   await page.goto(base + "/etkinlikler");
   await page.waitForFunction(() => window.__metaCalls.some((x) => x[1] === "PageView"));
   await page.getByRole("button", { name: "Yaklaşan", exact: true }).click();
   await page.locator('button[aria-pressed="true"]').filter({ hasText: "Yaklaşan" }).waitFor();
   assert.equal(await page.locator('main a[href="/22-kasim"]').count(), 1);
-  assert.equal(await page.locator('main a[href="/10-aralik"]').count(), 1);
+  assert.equal(await page.locator('main a[href="/10-aralik"]').count(), 0);
   assert.equal(await page.locator('main a[href="/11-ekim"]').count(), 0);
   const noConsent = await browser.newContext({ viewport: { width: 390, height: 844 } });
   await noConsent.addInitScript(() => {
