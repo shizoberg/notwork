@@ -297,12 +297,10 @@ function Hero() {
                   alt=""
                   className="notwork-logo hero-event-logo"
                 />
-                <Ticket
-                  className="hero-event-ticket"
-                  size={18}
-                  strokeWidth={1.5}
-                  aria-hidden="true"
-                />
+                <span className="hero-event-buy">
+                  <Ticket size={15} strokeWidth={1.7} aria-hidden="true" />
+                  Bilet al
+                </span>
               </Link>
             ))}
           </div>

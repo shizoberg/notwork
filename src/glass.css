@@ -6034,3 +6034,20 @@ html[data-notwork-entry-ready="true"] .event-entry-dock {
     font-size: 12px;
   }
 }
+
+.hero-event-buy {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #183d4a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.hero-event-link:hover .hero-event-buy { background: #285d6c; }
