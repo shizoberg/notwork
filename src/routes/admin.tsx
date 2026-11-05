@@ -276,7 +276,7 @@ const adminUiVersion = "Admin v3 · etkinlik platformu";
 
 const eventPageAnalyticsOptions = [
   { path: "/22-kasim", label: "22 Kasım · Sahne" },
-  { path: "/10-aralik", label: "10 Aralık · Fast" },
+  { path: "/19-aralik", label: "19 Aralık · Fast" },
   { path: "/17-eylul", label: "17 Eylül · Fast" },
   { path: "/11-ekim", label: "11 Ekim · Sahne" },
   { path: "/21agustos", label: "21 Ağustos · Rene Lokal" },
@@ -1469,7 +1469,7 @@ function AdminPage() {
             />
             <Metric
               icon={Ticket}
-              label="10 Aralık · Fast bilet tıklaması"
+              label="Aralık · Fast bilet tıklaması"
               value={report.ticketClicksByEvent.december10}
               highlight
             />

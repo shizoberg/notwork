@@ -68,7 +68,7 @@ const catalogEvents: EventCatalogItem[] = [
   {
     id: "19-aralik-2026", dateIso: "2026-12-19", date: "19 Aralık 2026 · 20.30", year: "2026",
     venue: "Folkart Time Sosyal Sahne", title: "notwork Fast",
-    summary: "Yeni insanlarla tanış, networking deneyimine katıl.", participants: "Detaylar yakında",
+    summary: "Match, Five ve DJ ile hızlı networking.", participants: "Biletler satışta",
     tags: ["Folkart Time Sosyal Sahne", "Networking"], href: "/19-aralik",
     accent: "from-[#071416] via-[#245f66] to-[#d8c6ff]", image: "/community/17.jpg",
   },

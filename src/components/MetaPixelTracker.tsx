@@ -35,6 +35,11 @@ const eventPageContent: Record<
     value?: number;
   }
 > = {
+  "/19-aralik": {
+    contentId: "notwork-fast-2026-12-19",
+    contentName: "notwork Fast · 19 Aralık 2026",
+    value: 450,
+  },
   "/22-kasim": {
     contentId: "notwork-sahne-2026-11-22",
     contentName: "notwork Sahne · 22 Kasım 2026",

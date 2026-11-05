@@ -160,6 +160,9 @@ function isNovember22Ticket(event: StoredAnalyticsEvent) {
 
 function isDecember10Ticket(event: StoredAnalyticsEvent) {
   return (
+    event.path.includes("/19-aralik") ||
+    event.target.includes("/19-aralik") ||
+    event.label.includes("19 Aralık") ||
     event.path.includes("/10-aralik") ||
     event.target.includes("/10-aralik") ||
     event.target.includes("networking-eventi-32802") ||

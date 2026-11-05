@@ -143,10 +143,13 @@ try {
     });
   }
   await page.goto(base + "/10-aralik");
-  await page.getByText("Folkart Time Sosyal Sahne", {exact:true}).waitFor();
+  await page.getByText("Folkart Time Sosyal Sahne", {exact:false}).first().waitFor();
   assert.ok(page.url().includes("/19-aralik"));
-  assert.equal(await page.locator('a[href*="biletimgo.com"]').count(),0);
-  assert.equal(await page.locator('#primary-ticket-cta').count(),0);
+  await page.locator('#primary-ticket-cta').waitFor();
+  assert.equal(await page.locator('#primary-ticket-cta').getAttribute('data-meta-content-id'),'notwork-fast-2026-12-19');
+  assert.equal(await page.locator('#primary-ticket-cta').getAttribute('href'),cases[1].url);
+  await page.getByText("19 Aralık 2026",{exact:false}).first().waitFor();
+  await page.getByText("20.30",{exact:false}).first().waitFor();
 
   for (const path of ["/11-ekim", "/17-eylul", "/21agustos", "/14temmuz"]) {
     await page.goto(base + path);
