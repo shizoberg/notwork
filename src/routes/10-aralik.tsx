@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { redirect, createFileRoute } from "@tanstack/react-router";
 import { type EventProductConfig } from "@/components/EventProductPage";
 import { createNoIndexSeo } from "@/lib/seo";
 import { SiteNav, SiteFooter } from "@/components/SiteNav";
@@ -37,21 +37,5 @@ export const eventConfig: EventProductConfig = {
 };
 
 export const Route = createFileRoute("/10-aralik")({
-  head: () => createNoIndexSeo({
-    title: "notwork Fast · Arşiv",
-    description: "10 Aralık etkinlik sayfası arşive alınmıştır. Güncel etkinliklerimizi keşfet.",
-    path: "/10-aralik",
-  }),
-  component: () => (
-    <div className="min-h-screen bg-background">
-      <SiteNav />
-      <main className="mx-auto max-w-2xl px-6 py-20 text-center">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">Arşiv</p>
-        <h1 className="mt-4 font-brand text-5xl">notwork fast</h1>
-        <p className="mt-5 text-muted-foreground">10 Aralık etkinlik sayfası arşive alındı. Bu sayfadan bilet satışı yapılmıyor.</p>
-        <Link to="/etkinlikler" className="mt-8 inline-flex rounded-full bg-primary px-6 py-3 font-semibold">Güncel etkinlikler</Link>
-      </main>
-      <SiteFooter />
-    </div>
-  ),
+  beforeLoad: () => { throw redirect({ to: "/19-aralik", replace: true }); },
 });

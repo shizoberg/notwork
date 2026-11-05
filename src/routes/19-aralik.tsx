@@ -1,0 +1,7 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { createSeo } from "@/lib/seo";
+export const Route = createFileRoute("/19-aralik")({
+  head: () => createSeo({title:"19 Aralık notwork Fast | Folkart Time Sosyal Sahne",description:"19 Aralık 2026 saat 20.30 · Folkart Time Sosyal Sahne. notwork Fast ile yeni bağlantılar.",path:"/19-aralik"}),
+  component: () => <div className="min-h-screen bg-background"><SiteNav/><main className="mx-auto max-w-3xl px-5 py-12 sm:py-20"><p className="text-xs uppercase tracking-widest text-primary-deep">19 Aralık 2026 · 20.30</p><h1 className="mt-4 font-brand text-6xl">notwork fast</h1><p className="mt-2 font-light text-muted-foreground">social networking event</p><p className="mt-6 text-xl font-semibold">Folkart Time Sosyal Sahne</p><p className="mt-4 text-muted-foreground">Yeni insanlarla tanış, bağlantılarını büyüt. Etkinlik ve bilet detaylarını yakında paylaşacağız.</p><img src="/community/17.jpg" alt="notwork topluluğundan bir kare" className="my-7 max-h-96 w-full rounded-3xl object-cover"/><a href="https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE" target="_blank" rel="noreferrer" className="inline-flex rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background">WhatsApp’tan haberdar ol</a><Link to="/etkinlikler" className="ml-5 inline-flex py-3 text-sm">Etkinlikler</Link></main><SiteFooter/></div>,
+});

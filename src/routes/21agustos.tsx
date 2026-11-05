@@ -1,3 +1,4 @@
+import { PastEventPage } from "@/components/PastEventPage";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { InterviewReels } from "@/components/InterviewReels";
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/21agustos")({
       keywords: ["21 Ağustos notwork", "Bornova networking", "Rene Lokal etkinlik"],
       type: "article",
     }),
-  component: AugustTwentyFirst,
+  component: () => <PastEventPage title="notwork" date="21 Ağustos 2026" venue="House of Rene Lokal" photos={["/community/25.jpg", "/community/26.jpg", "/community/27.jpg", "/community/8.jpg", "/community/14.jpg", "/community/2.jpg", "/community/6.jpg", "/community/19.jpg", "/community/20.jpg"]} />,
 });
 
 const sections = [

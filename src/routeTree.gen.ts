@@ -38,6 +38,7 @@ import { Route as AcikRizaRouteImport } from './routes/acik-riza'
 import { Route as R9EkimRouteImport } from './routes/9-ekim'
 import { Route as R22KasimRouteImport } from './routes/22-kasim'
 import { Route as R21agustosRouteImport } from './routes/21agustos'
+import { Route as R19AralikRouteImport } from './routes/19-aralik'
 import { Route as R17EylulRouteImport } from './routes/17-eylul'
 import { Route as R14temmuznetworkingRouteImport } from './routes/14temmuznetworking'
 import { Route as R14temmuzRouteImport } from './routes/14temmuz'
@@ -196,6 +197,11 @@ const R21agustosRoute = R21agustosRouteImport.update({
   path: '/21agustos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const R19AralikRoute = R19AralikRouteImport.update({
+  id: '/19-aralik',
+  path: '/19-aralik',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const R17EylulRoute = R17EylulRouteImport.update({
   id: '/17-eylul',
   path: '/17-eylul',
@@ -264,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
   '/17-eylul': typeof R17EylulRoute
+  '/19-aralik': typeof R19AralikRoute
   '/21agustos': typeof R21agustosRoute
   '/22-kasim': typeof R22KasimRoute
   '/9-ekim': typeof R9EkimRoute
@@ -307,6 +314,7 @@ export interface FileRoutesByTo {
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
   '/17-eylul': typeof R17EylulRoute
+  '/19-aralik': typeof R19AralikRoute
   '/21agustos': typeof R21agustosRoute
   '/22-kasim': typeof R22KasimRoute
   '/9-ekim': typeof R9EkimRoute
@@ -351,6 +359,7 @@ export interface FileRoutesById {
   '/14temmuz': typeof R14temmuzRoute
   '/14temmuznetworking': typeof R14temmuznetworkingRoute
   '/17-eylul': typeof R17EylulRoute
+  '/19-aralik': typeof R19AralikRoute
   '/21agustos': typeof R21agustosRoute
   '/22-kasim': typeof R22KasimRoute
   '/9-ekim': typeof R9EkimRoute
@@ -396,6 +405,7 @@ export interface FileRouteTypes {
     | '/14temmuz'
     | '/14temmuznetworking'
     | '/17-eylul'
+    | '/19-aralik'
     | '/21agustos'
     | '/22-kasim'
     | '/9-ekim'
@@ -439,6 +449,7 @@ export interface FileRouteTypes {
     | '/14temmuz'
     | '/14temmuznetworking'
     | '/17-eylul'
+    | '/19-aralik'
     | '/21agustos'
     | '/22-kasim'
     | '/9-ekim'
@@ -482,6 +493,7 @@ export interface FileRouteTypes {
     | '/14temmuz'
     | '/14temmuznetworking'
     | '/17-eylul'
+    | '/19-aralik'
     | '/21agustos'
     | '/22-kasim'
     | '/9-ekim'
@@ -526,6 +538,7 @@ export interface RootRouteChildren {
   R14temmuzRoute: typeof R14temmuzRoute
   R14temmuznetworkingRoute: typeof R14temmuznetworkingRoute
   R17EylulRoute: typeof R17EylulRoute
+  R19AralikRoute: typeof R19AralikRoute
   R21agustosRoute: typeof R21agustosRoute
   R22KasimRoute: typeof R22KasimRoute
   R9EkimRoute: typeof R9EkimRoute
@@ -768,6 +781,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof R21agustosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/19-aralik': {
+      id: '/19-aralik'
+      path: '/19-aralik'
+      fullPath: '/19-aralik'
+      preLoaderRoute: typeof R19AralikRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/17-eylul': {
       id: '/17-eylul'
       path: '/17-eylul'
@@ -862,6 +882,7 @@ const rootRouteChildren: RootRouteChildren = {
   R14temmuzRoute: R14temmuzRoute,
   R14temmuznetworkingRoute: R14temmuznetworkingRoute,
   R17EylulRoute: R17EylulRoute,
+  R19AralikRoute: R19AralikRoute,
   R21agustosRoute: R21agustosRoute,
   R22KasimRoute: R22KasimRoute,
   R9EkimRoute: R9EkimRoute,

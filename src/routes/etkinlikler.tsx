@@ -66,6 +66,13 @@ const catalogEvents: EventCatalogItem[] = [
   },
 
   {
+    id: "19-aralik-2026", dateIso: "2026-12-19", date: "19 Aralık 2026 · 20.30", year: "2026",
+    venue: "Folkart Time Sosyal Sahne", title: "notwork Fast",
+    summary: "Yeni insanlarla tanış, networking deneyimine katıl.", participants: "Detaylar yakında",
+    tags: ["Folkart Time Sosyal Sahne", "Networking"], href: "/19-aralik",
+    accent: "from-[#071416] via-[#245f66] to-[#d8c6ff]", image: "/community/17.jpg",
+  },
+  {
     id: "11-ekim-2026",
     dateIso: "2026-10-11",
     date: "11 Ekim 2026",
@@ -221,7 +228,7 @@ const catalogEvents: EventCatalogItem[] = [
   },
 ];
 
-const upcomingEventIds = new Set(["22-kasim-2026"]);
+const upcomingEventIds = new Set(["22-kasim-2026", "19-aralik-2026"]);
 
 function EventsCatalogPage() {
   const [activeFilter, setActiveFilter] = useState("Tümü");

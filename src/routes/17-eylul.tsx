@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Clock3, Music2, UsersRound } from "lucide-react";
 
-import { EventProductPage, type EventProductConfig } from "@/components/EventProductPage";
+import { type EventProductConfig } from "@/components/EventProductPage";
+import { PastEventPage } from "@/components/PastEventPage";
 import { createSeo } from "@/lib/seo";
-import { createEventStructuredData } from "@/lib/structured-data";
 
 export const eventConfig: EventProductConfig = {
   trackingId: "notwork-chill-chat-2026-09-17",
@@ -144,7 +144,7 @@ export const Route = createFileRoute("/17-eylul")({
     createSeo({
       title: "17 Eylül notwork Fast | İzmir Networking Etkinliği",
       description:
-        "17 Eylül’de Köşk Alsancak’ta ntw.match.lab, ntw.five, DJ ve gerçek networking deneyimini bir araya getiren notwork Fast etkinliğine katıl.",
+        "17 Eylül’de Köşk Alsancak’ta ntw.match.lab, ntw.five, DJ ve gerçek networking deneyimini bir araya getiren notwork Fast gecesinden fotoğraflar ve topluluk bağlantıları.",
       path: "/17-eylul",
       keywords: [
         "17 Eylül İzmir etkinlik",
@@ -153,37 +153,7 @@ export const Route = createFileRoute("/17-eylul")({
         "İzmir network club",
       ],
       type: "article",
-      structuredData: createEventStructuredData({
-        name: "notwork Fast",
-        description:
-          "ntw.match.lab, ntw.five, DJ ve gerçek networking deneyimini bir araya getiren notwork Fast etkinliği.",
-        path: "/17-eylul",
-        startDate: "2026-09-17T20:00:00+03:00",
-        endDate: "2026-09-17T23:59:00+03:00",
-        venueName: "Köşk Alsancak",
-        addressLocality: "Konak",
-        images: ["/notwork-social.png", "/community/17.jpg", "/community/23.jpg"],
-        ticketUrl: eventConfig.ticketUrl || "https://notwork.me/17-eylul",
-        lowPrice: 450,
-        highPrice: 800,
-        videos: [
-          {
-            name: "Alsancak Köşk etkinlik mekânı",
-            description: "17 Eylül notwork Fast etkinlik mekânının kısa videosu.",
-            contentUrl: "/events/17-eylul/alsancak-kosk.mp4",
-            thumbnailUrl: "/events/17-eylul/alsancak-kosk-poster.jpg",
-            uploadDate: "2026-08-27",
-          },
-          {
-            name: "notwork Fast community röportajı",
-            description:
-              "notwork community katılımcısının etkinlik deneyimini anlattığı kısa röportaj.",
-            contentUrl: "/events/17-eylul/chill-chat-roportaj.mp4",
-            thumbnailUrl: "/events/17-eylul/chill-chat-roportaj-poster.jpg",
-            uploadDate: "2026-08-28",
-          },
-        ],
-      }),
+
     }),
-  component: () => <EventProductPage config={eventConfig} />,
+  component: () => <PastEventPage title="notwork fast" date="17 Eylül 2026" venue="Köşk Alsancak" photos={[...eventConfig.communityGallery, "/community/17.jpg", "/community/23.jpg", "/community/2.jpg", "/community/6.jpg", "/community/19.jpg", "/community/25.jpg"].filter((src,i,all)=>all.indexOf(src)===i)} />,
 });
