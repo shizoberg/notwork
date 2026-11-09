@@ -1,12 +1,7 @@
 import { createHash } from "node:crypto";
-
-const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
-// Four readable characters give 1,048,576 combinations. The store still
-// reserves the result atomically, so a rare collision advances to the next one.
+const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+// One letter + three digits. Candidates are atomically reserved per event.
 export function participantDisplayCode(participantId: string, attempt = 0) {
-  const digest = createHash("sha256").update(`${participantId}:${attempt}`).digest();
-  let code = "";
-  for (let index = 0; index < 4; index += 1) code += alphabet[digest[index] % alphabet.length];
-  return code;
+  const d = createHash("sha256").update(`${participantId}:${attempt}`).digest();
+  return letters[d[0] % letters.length] + String(d.readUInt32BE(1) % 1000).padStart(3, "0");
 }

@@ -15,7 +15,7 @@ test("short personal code candidates are readable and collision retries stay uni
     throw new Error("code space exhausted");
   });
   assert.equal(new Set(codes).size, ids.length);
-  assert.ok(codes.every((code) => /^[A-HJ-NP-Z2-9]{4}$/.test(code)));
+  assert.ok(codes.every((code) => /^[A-HJ-NP-Z][0-9]{3}$/.test(code)));
   assert.equal(participantDisplayCode(ids[0]), codes[0]);
   assert.notEqual(participantDisplayCode(ids[0], 1), codes[0]);
 });

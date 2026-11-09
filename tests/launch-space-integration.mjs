@@ -64,6 +64,17 @@ try {
     }
   }
   assert.equal(matched, 99);
+  assert.ok(participants.every((p) => /^[A-HJ-NP-Z][0-9]{3}$/.test(p.participant.publicCode)));
+  for (const group of groups.values())
+    assert.equal(group.members.filter((m) => m.isPhotoOwner).length, 1);
+  const originalIds = [...groups.keys()].sort();
+  for (let retry = 0; retry < 3; retry++) {
+    await call(admin, { action: "startMatching", password });
+    await call(admin, { action: "processMatching", password });
+    const stable = await call(admin, { action: "list", password });
+    assert.deepEqual(stable.data.groups.map((g) => g.id).sort(), originalIds);
+  }
+
   assert.equal(groups.size, 33);
   const grouped = [...groups.values()];
   assert.equal(new Set(grouped.flatMap((g) => g.members.map((m) => m.participantId))).size, 99);
@@ -162,6 +173,54 @@ try {
   await registry.updateEvent(event.id, { products: { matchlab: { dataMode: "demo" } } });
   r = await call(poll, { action: "admin", password });
   assert.equal(r.data.total, 100);
+  // Code repair preserves session identities and already formed groups.
+  await context.runWithEventRequestContext(event.slug, "matchlab", async () => {
+    const store = network.getEventNetworkStore();
+    const prefix = network.getEventNetworkDatasetInfo().keyPrefix;
+    const row = await network.getRegistrationByToken(store, member.accessToken);
+    row.participant.publicCode = "OLD-LONG-CODE";
+    for (const key of [
+      `${prefix}/participants/${row.participant.id}.json`,
+      `${prefix}/profiles/${encodeURIComponent(row.profile.emailNormalized)}.json`,
+    ])
+      await store.setJSON(key, row);
+    const result = await network.repairParticipantCodes(store);
+    assert.equal(result.repaired, 1);
+    const repaired = await network.getRegistrationByToken(store, member.accessToken);
+    assert.equal(repaired.participant.id, row.participant.id);
+    assert.match(repaired.participant.publicCode, /^[A-HJ-NP-Z][0-9]{3}$/);
+    assert.equal(repaired.participant.accessTokenHash, row.participant.accessTokenHash);
+    assert.equal((await network.getNextMatchGroup(store, member.accessToken)).group.id, g.id);
+    const codes = (await network.listRegistrations(store)).map((r) => r.participant.publicCode);
+    assert.equal(new Set(codes).size, 100);
+  });
+  // Directory: event members only, contact/session fields never leave the server.
+  r = await call(handler, { action: "people", accessToken: member.accessToken });
+  assert.equal(r.data.people.length, 100);
+  assert.equal(JSON.stringify(r.data).includes("demo-0@"), false);
+  assert.equal(JSON.stringify(r.data).includes("accessToken"), false);
+  assert.ok((await call(handler, { action: "people" })).status >= 400);
+  assert.ok(
+    (await call(handler, { action: "people", event: other.slug, accessToken: member.accessToken }))
+      .status >= 400,
+  );
+  r = await call(handler, {
+    action: "introduce",
+    accessToken: member.accessToken,
+    targetId: outsider.participant.id,
+  });
+  assert.equal(r.data.people.find((p) => p.id === outsider.participant.id).sent, true);
+  r = await call(handler, {
+    action: "introduce",
+    accessToken: outsider.accessToken,
+    targetId: member.participant.id,
+  });
+  const mutual = r.data.people.find((p) => p.id === member.participant.id);
+  assert.equal(mutual.sent && mutual.received, true);
+  assert.equal(
+    (await call(handler, { action: "match", accessToken: member.accessToken })).data.group.id,
+    g.id,
+  );
   // Rematching releases only this room; another room's chat/assignment remains unchanged.
   const otherGroup = grouped.find((x) => x.id !== g.id);
   const otherMember = participants.find(
@@ -173,6 +232,29 @@ try {
     groupId: g.id,
   });
   assert.equal(r.status, 200);
+  assert.equal(r.data.released, false);
+  const vote = (p) =>
+    call(handler, { action: "rotateMatch", accessToken: p.accessToken, groupId: g.id });
+  r = await vote(member);
+  assert.equal(r.data.approvedCount, 1);
+  assert.equal(r.data.released, false);
+  const peers = g.members
+    .filter((m) => m.participantId !== member.participant.id)
+    .map((m) => participants.find((p) => p.participant.id === m.participantId));
+  r = await vote(peers[0]);
+  assert.equal(r.data.released, false);
+  assert.equal(r.data.approvedCount, 2);
+  assert.equal(
+    (await call(handler, { action: "match", accessToken: member.accessToken })).data.group.id,
+    g.id,
+  );
+  r = await vote(peers[1]);
+  assert.equal(r.data.released, true);
+  assert.equal(r.data.approvedCount, 3);
+  assert.ok(
+    (await call(handler, { action: "chatRead", accessToken: member.accessToken, groupId: g.id }))
+      .status >= 400,
+  );
   r = await call(handler, { action: "match", accessToken: otherMember.accessToken });
   assert.equal(r.data.group.id, otherGroup.id);
   await registry.updateEvent(event.id, {

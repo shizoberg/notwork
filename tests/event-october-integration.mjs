@@ -125,7 +125,7 @@ try {
     }),
   );
   assert.equal(new Set(registrations.map((row) => row.participant.publicCode)).size, 100);
-  assert.ok(registrations.every((row) => /^[A-HJ-NP-Z2-9]{4}$/.test(row.participant.publicCode)));
+  assert.ok(registrations.every((row) => /^[A-HJ-NP-Z][0-9]{3}$/.test(row.participant.publicCode)));
   const callMatch = (i, action, input = {}, expected = 200) =>
     request(
       network,
@@ -266,6 +266,11 @@ try {
       }),
     ),
   );
+  // Photo submission records the owner's vote; the other two must also approve.
+  for (const group of groups) {
+    for (const id of group.participantIds.filter((id) => id !== group.photoOwnerParticipantId))
+      await callMatch(indexById.get(id), "rotateMatch", { groupId: group.id });
+  }
   assert.equal(Object.keys((await store.get(`${prefix}/room-index-v2.json`)).members).length, 0);
   await Promise.all(registrations.map((_, i) => callMatch(i, "match")));
   await callMatch(
@@ -286,7 +291,9 @@ try {
   await callMatch(rotationBIndex, "chatRead", { groupId: rotationA.id }, 400);
   await callMatch(rotationBIndex, "rotateMatch", { groupId: rotationA.id }, 400);
   const switched = await callMatch(rotationAIndex, "rotateMatch", { groupId: rotationA.id });
-  assert.equal(switched.data.released, true);
+  assert.equal(switched.data.released, false);
+  for (const id of rotationA.participantIds.slice(1))
+    await callMatch(indexById.get(id), "rotateMatch", { groupId: rotationA.id });
   const afterFirstRotation = await store.get(`${prefix}/room-index-v2.json`);
   assert.ok(rotationA.participantIds.every((id) => !afterFirstRotation.members[id]));
   assert.ok(
@@ -304,7 +311,8 @@ try {
     400,
   );
   assert.equal((await callMatch(rotationAIndex, "match")).data.status, "empty");
-  await callMatch(rotationBIndex, "rotateMatch", { groupId: rotationB.id });
+  for (const id of rotationB.participantIds)
+    await callMatch(indexById.get(id), "rotateMatch", { groupId: rotationB.id });
   const newGroup = (await callMatch(rotationAIndex, "match")).data.group;
   assert.ok(newGroup && newGroup.id !== rotationA.id);
   assert.ok(

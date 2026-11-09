@@ -242,9 +242,11 @@ function AugustMatchPage() {
       setGroup(null);
       const nextMatch = await loadMatch(token);
       setMessage(
-        nextMatch?.group
-          ? "Yeni grubun hazır. Tanışma zamanı."
-          : "Bekleme havuzundasın. Yeni kişiler katılınca eşleşmen otomatik açılacak.",
+        nextMatch?.group?.id === currentGroupId
+          ? "Onayın alındı. Yeni eşleşme için tüm grup üyeleri onaylamalı."
+          : nextMatch?.group
+            ? "Yeni grubun hazır. Tanışma zamanı."
+            : "Bekleme havuzundasın. Yeni kişiler katılınca eşleşmen otomatik açılacak.",
       );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Yeni eşleşme başlatılamadı.");
@@ -272,6 +274,7 @@ function AugustMatchPage() {
     setIsCompleting(true);
     setMessage("");
     try {
+      const previousGroupId = group?.id;
       const result = await completeEventNetworkMatchWithReview(token, {
         groupId: group?.id,
         rating,
@@ -289,9 +292,11 @@ function AugustMatchPage() {
       }
       if (nextMatch)
         setMessage(
-          nextMatch.group
-            ? "Yeni grubun hazır. Tanışma zamanı."
-            : "Yeni bağlantıların için uygun kişiler bekleniyor.",
+          nextMatch.group?.id === previousGroupId
+            ? "Onayın alındı. Yeni eşleşme için grubundaki herkesin onayı bekleniyor."
+            : nextMatch.group
+              ? "Yeni grubun hazır. Tanışma zamanı."
+              : "Yeni bağlantıların için uygun kişiler bekleniyor.",
         );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Grup tamamlanamadı.");

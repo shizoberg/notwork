@@ -40,7 +40,7 @@ export default async (request: Request, _context: Context) => {
     if (scoped && !(await hasLaunchSession(request, eventIdentifier)))
       return new Response("Yetkisiz erişim", { status: 401 });
     if (scoped) {
-      if (!["list", "startMatching", "processMatching"].includes(input.action || "list"))
+      if (!["list", "startMatching", "processMatching", "repairCodes"].includes(input.action || "list"))
         return new Response("Bu işlem için yetkin yok", { status: 403 });
       input.mode = undefined;
     }

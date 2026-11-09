@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  Camera,
   MessageCircle,
   Network,
   Radio,
@@ -25,6 +26,7 @@ import { getMyMemberProfile, loginMember } from "@/lib/member-profile-api";
 import type { EventNetworkRegistration, EventNetworkMatchGroup } from "@/lib/event-network";
 import { novemberEventSlug, pollRequest, type PollPayload } from "@/lib/event-poll";
 import "@/launch-space.css";
+import { LaunchSpaceArea } from "@/components/launch-space/LaunchSpaceArea";
 
 export const Route = createFileRoute("/launch-space")({
   head: () =>
@@ -217,6 +219,7 @@ function LaunchSpace() {
     const r = await getEventNetworkMatch(token, selection);
     if (!alive.current) return;
     setGroup(r.group || null);
+    setRegistration(r.registration);
     setWaiting(
       r.status === "ready"
         ? ""
@@ -292,8 +295,6 @@ function LaunchSpace() {
     setError("");
     try {
       await rotateEventNetworkMatch(token, group.id, selection);
-      setGroup(null);
-      setMessages([]);
       await loadMatch();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Yeni eşleşme alınamadı");
@@ -311,7 +312,7 @@ function LaunchSpace() {
             nodes<small>by notwork</small>
           </span>
         </a>
-        <span className="ls-demo">{mode || "demo"} · launch space</span>
+        <span className="ls-demo">launchspace</span>
       </header>
       <main className="ls-main">
         {contextError ? (
@@ -565,71 +566,68 @@ function LaunchSpace() {
                 <p className="ls-eyebrow">
                   HOŞ GELDİN, {registration.profile.firstName.toLocaleUpperCase("tr-TR")}
                 </p>
-                <h1>
-                  Şimdi
-                  <br />
-                  <span>notwork zamanı.</span>
-                </h1>
-                <div className="ls-person">
-                  <div className="ls-avatar">{registration.profile.firstName[0]}</div>
-                  <div>
-                    <strong>
-                      {registration.profile.firstName} {registration.profile.lastName}
-                    </strong>
-                    <p>{registration.intro}</p>
+                <LaunchSpaceArea token={token} goal={registration.needs}>
+                  <div className="ls-person">
+                    <div className="ls-avatar">{registration.profile.firstName[0]}</div>
+                    <div>
+                      <strong>
+                        {registration.profile.firstName} {registration.profile.lastName}
+                      </strong>
+                      <p>{registration.intro}</p>
+                    </div>
+                    <span className="ls-code">{registration.participant.publicCode}</span>
                   </div>
-                  <span className="ls-code">{registration.participant.publicCode}</span>
-                </div>
-                <button
-                  className="ls-results-link"
-                  onClick={() => {
-                    setTab("poll");
-                    setShowResults(true);
-                  }}
-                >
-                  <Radio size={17} />
-                  notwork anket sonuçları
-                  <ArrowRight size={16} />
-                </button>
-                <p className="ls-section-label">BU BULUŞMADAKİ DENEYİMLERİN</p>
-                <div className="ls-apps">
                   <button
+                    className="ls-results-link"
                     onClick={() => {
-                      setError("");
-                      setTab("match");
-                    }}
-                  >
-                    <span className="ls-app-icon">
-                      <Network />
-                    </span>
-                    <small>01 · TANIŞ</small>
-                    <h2>notwork match</h2>
-                    <p>
-                      Yeni bir gruba katıl.
-                      <br />
-                      Sohbeti birlikte başlat.
-                    </p>
-                    <ArrowRight />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setError("");
                       setTab("poll");
+                      setShowResults(true);
                     }}
                   >
-                    <span className="ls-app-icon ls-lilac">
-                      <Radio />
-                    </span>
-                    <small>02 · PAYLAŞ</small>
-                    <h2>notwork anket</h2>
-                    <p>
-                      Beş soruda senin sesin.
-                      <br />
-                      Bir sahnede topluluğun sesi.
-                    </p>
-                    <ArrowRight />
+                    <Radio size={17} />
+                    notwork anket sonuçları
+                    <ArrowRight size={16} />
                   </button>
-                </div>
+                  <p className="ls-section-label">BU BULUŞMADAKİ DENEYİMLERİN</p>
+                  <div className="ls-apps">
+                    <button
+                      onClick={() => {
+                        setError("");
+                        setTab("match");
+                      }}
+                    >
+                      <span className="ls-app-icon">
+                        <Network />
+                      </span>
+                      <small>01 · TANIŞ</small>
+                      <h2>notwork match</h2>
+                      <p>
+                        Yeni bir gruba katıl.
+                        <br />
+                        Sohbeti birlikte başlat.
+                      </p>
+                      <ArrowRight />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setError("");
+                        setTab("poll");
+                      }}
+                    >
+                      <span className="ls-app-icon ls-lilac">
+                        <Radio />
+                      </span>
+                      <small>02 · PAYLAŞ</small>
+                      <h2>notwork anket</h2>
+                      <p>
+                        Beş soruda senin sesin.
+                        <br />
+                        Bir sahnede topluluğun sesi.
+                      </p>
+                      <ArrowRight />
+                    </button>
+                  </div>
+                </LaunchSpaceArea>
               </section>
             ) : tab === "match" ? (
               <section className="ls-enter">
@@ -674,10 +672,25 @@ function LaunchSpace() {
                             {m.isCurrentUser ? " · sen" : ""}
                           </strong>
                           <small>{m.publicCode}</small>
+                          {m.isPhotoOwner ? (
+                            <span className="ls-photo-badge">
+                              <Camera size={12} />
+                              Fotoğrafçı
+                            </span>
+                          ) : null}
                         </div>
                       ))}
                     </div>
                     <p className="ls-muted">{group.aiAnalysis || group.reason}</p>
+                    <p className="ls-photo-assignment">
+                      <Camera size={17} />
+                      <span>
+                        Grup fotoğrafçınız:{" "}
+                        <strong>
+                          {group.members.find((m) => m.isPhotoOwner)?.name || "Belirleniyor"}
+                        </strong>
+                      </span>
+                    </p>
                     <section className="ls-chat">
                       <h2>
                         <MessageCircle size={18} />
@@ -733,12 +746,27 @@ function LaunchSpace() {
                       <p className="ls-eyebrow">SOHBETİ BAŞLAT</p>
                       <p>{group.conversationPrompt}</p>
                     </div>
+                    <p className="ls-caption">
+                      Yeni eşleşme: {(group.rematchApprovedParticipantIds || []).length}/
+                      {group.members.length} onay. Grubunuz herkes onayladığında dağılır.
+                    </p>
                     <button
                       className="ls-secondary ls-full"
-                      disabled={busy}
+                      disabled={
+                        busy ||
+                        (group.rematchApprovedParticipantIds || []).includes(
+                          registration.participant.id,
+                        )
+                      }
                       onClick={() => void rotate()}
                     >
-                      {busy ? "Yeni bağlantılar aranıyor…" : "Yeni eşleşme iste"}
+                      {busy
+                        ? "Onayın kaydediliyor…"
+                        : (group.rematchApprovedParticipantIds || []).includes(
+                              registration.participant.id,
+                            )
+                          ? "Onayladın · diğer üyeler bekleniyor"
+                          : "Yeni eşleşmeyi onayla"}
                       <ArrowRight size={17} />
                     </button>
                   </>

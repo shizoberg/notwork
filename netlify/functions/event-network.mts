@@ -2,6 +2,7 @@ import type { Config, Context } from "@netlify/functions";
 import { readFile } from "node:fs/promises";
 import {
   clean,
+  launchSpacePeople,
   eventChat,
   completeActiveMatchByToken,
   getEventNetworkDatasetInfo,
@@ -136,6 +137,25 @@ export default async (request: Request, _context: Context) => {
         const registration = await getRegistrationByToken(store, clean(input.accessToken, 100));
         if (!registration) return new Response("Kayıt bulunamadı", { status: 404 });
         return json(registration);
+      }
+
+      if (action === "people" || action === "introduce") {
+        if (database.eventSlug !== "14-kasim-2026")
+          return new Response("Bu alan etkinliğe özel", { status: 403 });
+        if (
+          action === "introduce" &&
+          !clean((input as NetworkInput & { targetId?: string }).targetId, 100)
+        )
+          return new Response("Kişi seçmelisin", { status: 400 });
+        return json(
+          await launchSpacePeople(
+            store,
+            clean(input.accessToken, 100),
+            action === "introduce"
+              ? clean((input as NetworkInput & { targetId?: string }).targetId, 100)
+              : undefined,
+          ),
+        );
       }
 
       if (action === "presence") {

@@ -90,6 +90,7 @@ export type EventNetworkMatchGroup = {
   conversationPrompt: string;
   conversationPrompts?: string[];
   photoOwnerParticipantId?: string;
+  rematchApprovedParticipantIds?: string[];
   generatedAt: string;
 };
 
