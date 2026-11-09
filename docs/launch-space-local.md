@@ -36,7 +36,7 @@ Yerel örnek admin/profil parolası: `LaunchSpaceDemo2026!`. Bu üretim parolas�
 - Merkezi mimari değişmez: network ve yeni poll modülü `event-network` store'unda `events/{eventId}/{demo|live}/matchlab/…` prefix'i altında. Anket key'i `/poll/state.json`; başka event ve live/demo alanına taşmaz.
 - Kişi bazında ballot, küçük/kapalı bir state dokümanında tutulur; sahne başına tek state okuması vardır. En çok 2.000 ballot ve tam 5 soru / soru başına 2–8 seçenek sınırı uygulanır.
 - Match ve anket atomik state güncellemeleri üretimde Netlify PostgreSQL `ntw_atomic_state` satır kilidini gerektirir. Yerel test versiyonlu CAS kullanır. Canlıya geçmeden bu bağlantı, oturum ve gerçek yük ayrıca doğrulanmalı; yalnız kredi miktarı süreklilik garantisi değildir.
-- 14 Kasım demo registration API'si localhost/yerel dev dışından yazmayı reddeder; frontend de remote demo kayıt akışını kapatır. Demo yanlışlıkla deploy edilirse genel üye havuzuna test profili yazılmaz.
+- 14 Kasım demo registration API’si genel üye aktivasyonu ve pazarlama kaydı oluşturmaz; demo kayıtları etkinlik alanında kalır.
 - Yerel runner yalnız 127.0.0.1'e bind olur; backend tanımadığı `/api/` isteklerini üretime forward etmez. Projeden alınan test verileri veya anahtarlar fixture'a konulmaz.
 
 ## Kontroller
@@ -55,3 +55,7 @@ npm run build
 ## Yayın durumu
 
 Bu istek yerel tasarım/test isteğidir. Canlıya dağıtım yapılmaz. Etkinlik kaydı yerel admin registry'sinde oluşturulur; aynı API sözleşmesi sonraki onaylı geçişte gerçek merkezi registry'ye uygulanabilir. Sorular taslaktır; admin üzerinden yanıt başlamadan düzenlenebilir. Mevcut linkler değişmez.
+
+## 9 Kasım — çevrimiçi demo yayını
+
+Kullanıcının canlıya alma isteğiyle `/launch-space`, `/launch-space-kontrol` ve `/launch-space-sahne` demo namespace ile yayınlanır. 14 Kasım demo kayıtlarında merkezi üyelik aktivasyonu, pazarlama kaydı ve AI izinleri sunucuda kapalıdır. Katılımcı tokenları yalnızca bu etkinliğe aittir. Çevrimiçi admin mevcut site admin şifresini kullanır; yerel örnek admin şifresi üretimde geçerli değildir. Mevcut gerçek Notwork profiliyle giriş kendi oturumunu kullanabilir; demo katılımı genel üyeliği değiştirmez. Demo kullanıcı kayıtları Nodes hesabı oluşturmaz. Yerel çalıştırma ve test komutları korunur.

@@ -85,9 +85,7 @@ export default async (request: Request, _context: Context) => {
     const eventIdentifier = eventIdentifierFromRequest(request, input);
     return await runWithEventRequestContext(eventIdentifier, "matchlab", async () => {
       const database = getEventNetworkDatasetInfo();
-      if (database.eventSlug === "14-kasim-2026" && database.mode === "demo" && !isLocalRequest(request)) {
-        return new Response("Launch Space demo kayıtları yalnızca yerel test sunucusunda kullanılabilir", { status: 403 });
-      }
+      const launchDemo = database.eventSlug === "14-kasim-2026" && database.mode === "demo";
       const action = clean(input.action, 30);
       const store = getEventNetworkStore();
       // Matching/chat authenticate with the event token; only registration/resume need the profile cookie.
@@ -108,8 +106,17 @@ export default async (request: Request, _context: Context) => {
         const registration = await registerNetworkProfile(store, {
           ...input,
           memberUsername: memberSession?.profile.username || input.memberUsername,
+          ...(launchDemo
+            ? {
+                marketingPreferenceVersion: undefined,
+                marketingOptIn: false,
+                generalNetworkOptIn: false,
+                aiAnalysisConsent: false,
+                modelImprovementConsent: false,
+              }
+            : {}),
         });
-        const membership = await activateEventAttendeeMember(registration);
+        const membership = launchDemo ? undefined : await activateEventAttendeeMember(registration);
         return json({ ...registration, membership }, { status: 201 });
       }
 

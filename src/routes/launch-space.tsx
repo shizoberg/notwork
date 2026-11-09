@@ -107,13 +107,6 @@ function LaunchSpace() {
       try {
         const context = await getPublicEventContext(selection);
         if (!alive.current) return;
-        if (
-          context.event.products.matchlab.dataMode === "demo" &&
-          !["127.0.0.1", "localhost"].includes(location.hostname)
-        )
-          throw Error(
-            "Bu demo yalnızca yerel test sunucusunda açık. Canlı katılımcı kaydı henüz başlatılmadı.",
-          );
         setEventTitle(context.event.shortTitle);
         setMode(context.event.products.matchlab.dataMode);
         const saved = localStorage.getItem(tokenKey);
@@ -362,7 +355,7 @@ function LaunchSpace() {
                   Notwork profilim var · giriş yap
                 </button>
                 <p className="ls-caption">
-                  Yerel demo · yalnızca örnek bilgiler kullan.
+                  Demo · yalnızca örnek bilgiler kullan.
                   <br />
                   Bu akış Nodes hesabı oluşturmaz.
                 </p>
