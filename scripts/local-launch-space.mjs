@@ -106,6 +106,96 @@ for (const [i, p] of demoPeople.entries()) {
   );
   if (!r.ok) throw Error(await r.text());
 }
+if (process.argv.includes("--populate")) {
+  const first = [
+    "Ada",
+    "Ege",
+    "Elif",
+    "Deniz",
+    "Can",
+    "Selin",
+    "Bora",
+    "Duru",
+    "Ekin",
+    "Arda",
+    "İpek",
+    "Mert",
+    "Defne",
+    "Ozan",
+    "Aslı",
+    "Kerem",
+    "Yağmur",
+    "Sarp",
+    "Cem",
+    "Nil",
+  ];
+  const last = ["Yıldız", "Deniz", "Kaya", "Güneş", "Aydın"];
+  let rows = await ctx.runWithEventRequestContext(novemberEventSlug, "matchlab", () =>
+    network.listRegistrations(network.getEventNetworkStore()),
+  );
+  for (let i = rows.length; i < 100; i++) {
+    await ctx.runWithEventRequestContext(novemberEventSlug, "matchlab", () =>
+      network.registerNetworkProfile(network.getEventNetworkStore(), {
+        firstName: first[i % 20],
+        lastName: last[Math.floor(i / 20) % 5],
+        email: `launch-demo-${i}@demo.example.org`,
+        attendedEvent: novemberEventSlug,
+        offers: [["tasarım", "yazılım", "pazarlama", "girişimcilik", "içerik"][i % 5]],
+        intro: "Yeni bağlantılarla birlikte üretmek isteyen örnek katılımcı.",
+        offersDetail: "Deneyimimi ve fikirlerimi paylaşabilirim.",
+        needs: "Farklı alanlardan proje ortaklarıyla tanışmak",
+        needTag: "networking",
+        eventConsent: true,
+      }),
+    );
+  }
+  const call = async (name, input) => {
+    const r = await handlers[name](
+      new Request(origin + "/api/local", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ event: novemberEventSlug, password, ...input }),
+      }),
+      {},
+    );
+    if (!r.ok) throw Error(await r.text());
+    return r.json();
+  };
+  let poll = await call("event-poll", { action: "admin" });
+  if (poll.total === 0)
+    poll = await call("event-poll", {
+      action: "configure",
+      revision: poll.config.revision,
+      questions: poll.config.questions.map((q) => ({ ...q, options: q.options.slice(0, 5) })),
+    });
+  poll = await call("event-poll", { action: "open", revision: poll.config.revision, isOpen: true });
+  rows = await ctx.runWithEventRequestContext(novemberEventSlug, "matchlab", () =>
+    network.listRegistrations(network.getEventNetworkStore()),
+  );
+  for (const [i, row] of rows.entries()) {
+    const r = await ctx.runWithEventRequestContext(novemberEventSlug, "matchlab", () =>
+      network.resumeNetworkProfile(
+        network.getEventNetworkStore(),
+        row.profile.email,
+        row.profile.username,
+      ),
+    );
+    await call("event-poll", {
+      action: "submit",
+      accessToken: r.accessToken,
+      questionVersion: poll.config.questionVersion,
+      answers: poll.config.questions.map((q, j) => q.options[(i * 7 + j * 3) % q.options.length]),
+    });
+  }
+  poll = await call("event-poll", { action: "admin" });
+  await call("event-poll", { action: "publish", revision: poll.config.revision, questionIndex: 0 });
+  let match = await call("event-network-admin", { action: "startMatching" });
+  while (match.matching.status === "running")
+    match = await call("event-network-admin", { action: "processMatching" });
+  console.log(
+    `Demo ready: ${rows.length} named participants; ${poll.total} ballots; Match open; poll open; question 1 on stage.`,
+  );
+}
 const routes = {
   "/api/events/context": "event-registry",
   "/api/admin/events": "event-registry-admin",

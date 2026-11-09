@@ -565,6 +565,9 @@ function LaunchSpace() {
               <span>{eventTitle}</span>
               <span>14 Kasım · 18.00</span>
             </div>
+            <p className="ls-schedule">
+              18.00 · Etkinlik başlangıcı <span>19.00 · Sunumlar</span>
+            </p>
             {tab === "home" ? (
               <section className="ls-enter">
                 <p className="ls-eyebrow">

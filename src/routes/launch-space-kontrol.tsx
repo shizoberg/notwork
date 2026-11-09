@@ -73,7 +73,7 @@ function Control() {
         ) : (
           <>
             <div className="ls-panel">
-              <p className="ls-eyebrow">14 KASIM · 18.00 · DEMO</p>
+              <p className="ls-eyebrow">14 KASIM · 18.00 ETKİNLİK · 19.00 SUNUMLAR · DEMO</p>
               <h2>{count} katılımcı</h2>
               <div className="ls-actions">
                 <button

@@ -14,6 +14,7 @@ export const Route = createFileRoute("/launch-space-sahne")({
   component: PollStage,
 });
 function PollStage() {
+  const [cloud, setCloud] = useState(true);
   const [data, setData] = useState<PollPayload | null>(null),
     [error, setError] = useState("");
   useEffect(() => {
@@ -46,6 +47,9 @@ function PollStage() {
           <NodeMark />
           notwork anket
         </span>
+        <button className="ls-secondary" onClick={() => setCloud((c) => !c)}>
+          {cloud ? "Dağılımı göster" : "Kelime bulutu"}
+        </button>
         <span className="ls-demo">{data?.database.mode || "demo"}</span>
         <button
           className="ls-secondary"
@@ -64,39 +68,56 @@ function PollStage() {
           <section className="ls-enter" key={data.published.question.id}>
             <p className="ls-eyebrow">TOPLULUĞUN SESİ · {data.published.total} YANIT</p>
             <h1 style={{ fontSize: "clamp(32px,4.6vw,74px)" }}>{data.published.question.title}</h1>
-            <div style={{ display: "grid", gap: 20, marginTop: 40 }}>
-              {data.published.counts.map((c) => (
-                <div key={c.label}>
-                  <div
+            {cloud ? (
+              <div className="ls-wordcloud">
+                {data.published.counts.map((c, i) => (
+                  <span
+                    key={c.label}
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: "clamp(18px,2.2vw,32px)",
-                      gap: 16,
+                      fontSize: `clamp(23px,${2.2 + (data.total ? (c.count / data.total) * 9 : 0)}vw,84px)`,
+                      color: ["#9bc8dc", "#d8c6ff", "#c9e5d9", "#e8d1b5", "#f1eff6"][i % 5],
                     }}
                   >
-                    <span>{c.label}</span>
-                    <strong>
-                      {data.total ? Math.round((c.count / data.total) * 100) : 0}%{" "}
-                      <small style={{ fontSize: 13, color: "#a6a8af" }}>({c.count})</small>
-                    </strong>
-                  </div>
-                  <div
-                    style={{ height: 12, background: "#242b34", borderRadius: 20, marginTop: 9 }}
-                  >
+                    {c.label}
+                    <small>{c.count}</small>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: 20, marginTop: 40 }}>
+                {data.published.counts.map((c) => (
+                  <div key={c.label}>
                     <div
                       style={{
-                        height: "100%",
-                        width: `${data.total ? (c.count / data.total) * 100 : 0}%`,
-                        background: "linear-gradient(90deg,#367781,#bce2f2)",
-                        borderRadius: 20,
-                        transition: "width .7s ease",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        fontSize: "clamp(18px,2.2vw,32px)",
+                        gap: 16,
                       }}
-                    />
+                    >
+                      <span>{c.label}</span>
+                      <strong>
+                        {data.total ? Math.round((c.count / data.total) * 100) : 0}%{" "}
+                        <small style={{ fontSize: 13, color: "#a6a8af" }}>({c.count})</small>
+                      </strong>
+                    </div>
+                    <div
+                      style={{ height: 12, background: "#242b34", borderRadius: 20, marginTop: 9 }}
+                    >
+                      <div
+                        style={{
+                          height: "100%",
+                          width: `${data.total ? (c.count / data.total) * 100 : 0}%`,
+                          background: "linear-gradient(90deg,#367781,#bce2f2)",
+                          borderRadius: 20,
+                          transition: "width .7s ease",
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
             <p className="ls-caption" style={{ marginTop: 34 }}>
               Yalnızca toplu sonuçlar gösterilir · isimler ve kişisel yanıtlar sahnede paylaşılmaz.
             </p>
