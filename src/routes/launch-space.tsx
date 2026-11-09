@@ -100,6 +100,7 @@ function LaunchSpace() {
   const [poll, setPoll] = useState<PollPayload | null>(null),
     [answers, setAnswers] = useState<string[]>([]),
     [question, setQuestion] = useState(0);
+  const [showResults, setShowResults] = useState(false);
   const alive = useRef(true);
   useEffect(() => {
     alive.current = true;
@@ -554,13 +555,11 @@ function LaunchSpace() {
           </>
         ) : (
           <>
-            <div className="ls-eventline">
-              <span>{eventTitle}</span>
-              <span>14 Kasım · 18.00</span>
+            <div className="ls-flowbar" aria-label="Etkinlik akışı">
+              <span>18.00 · Başlangıç</span>
+              <i />
+              <span>19.00 · Sunumlar</span>
             </div>
-            <p className="ls-schedule">
-              18.00 · Etkinlik başlangıcı <span>19.00 · Sunumlar</span>
-            </p>
             {tab === "home" ? (
               <section className="ls-enter">
                 <p className="ls-eyebrow">
@@ -581,6 +580,17 @@ function LaunchSpace() {
                   </div>
                   <span className="ls-code">{registration.participant.publicCode}</span>
                 </div>
+                <button
+                  className="ls-results-link"
+                  onClick={() => {
+                    setTab("poll");
+                    setShowResults(true);
+                  }}
+                >
+                  <Radio size={17} />
+                  notwork anket sonuçları
+                  <ArrowRight size={16} />
+                </button>
                 <p className="ls-section-label">BU BULUŞMADAKİ DENEYİMLERİN</p>
                 <div className="ls-apps">
                   <button
@@ -736,9 +746,19 @@ function LaunchSpace() {
               </section>
             ) : (
               <section className="ls-enter">
+                <div className="ls-poll-switch">
+                  <button aria-pressed={!showResults} onClick={() => setShowResults(false)}>
+                    Anket
+                  </button>
+                  <button aria-pressed={showResults} onClick={() => setShowResults(true)}>
+                    Canlı sonuçlar
+                  </button>
+                </div>
                 <p className="ls-eyebrow">NOTWORK ANKET</p>
                 {!poll ? (
                   <p role="status">Anket yükleniyor…</p>
+                ) : showResults ? (
+                  <PublishedResults poll={poll} />
                 ) : poll.submitted ? (
                   <div className="ls-center">
                     <div className="ls-success">
@@ -750,8 +770,11 @@ function LaunchSpace() {
                       topluluğa karıştı.
                     </h1>
                     <p className="ls-muted">
-                      Beş yanıtın kaydedildi. Yayınlanan sonuçları sahneden takip edebilirsin.
+                      Beş yanıtın kaydedildi. Topluluğun yanıtlarını buradan takip edebilirsin.
                     </p>
+                    <button onClick={() => setShowResults(true)} className="ls-primary">
+                      Sonuçları gör
+                    </button>
                     <button onClick={() => setTab("home")} className="ls-secondary">
                       Deneyimlere dön
                     </button>
@@ -890,5 +913,45 @@ function LaunchSpace() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+function PublishedResults({ poll }: { poll: PollPayload }) {
+  const result = poll.published;
+  if (!result)
+    return (
+      <div className="ls-center">
+        <Radio size={40} />
+        <h2>Sonuçlar birazdan burada.</h2>
+        <p className="ls-muted">Organizatörün yayınladığı soru burada da görünecek.</p>
+      </div>
+    );
+  return (
+    <section className="ls-mobile-results">
+      <p className="ls-caption">CANLI · {result.total} YANIT</p>
+      <h2>{result.question.title}</h2>
+      <div className="ls-result-bars">
+        {result.counts.map((c, i) => {
+          const percent = result.total ? (c.count / result.total) * 100 : 0;
+          return (
+            <div className="ls-result-bar" key={c.label}>
+              <div
+                className={`ls-result-fill ls-result-color-${i % 5}`}
+                style={{ width: `${percent}%` }}
+              />
+              <span className="ls-result-name">{c.label}</span>
+              <span className="ls-result-value">
+                <strong>
+                  {Math.round(percent)}
+                  <small>%</small>
+                </strong>
+                <span>{c.count} oy</span>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="ls-caption">Yalnızca toplu sonuçlar · otomatik güncellenir.</p>
+    </section>
   );
 }

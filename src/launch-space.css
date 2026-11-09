@@ -989,3 +989,75 @@
     transition: none;
   }
 }
+.ls-flowbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  font-size: 11px;
+  color: #a6a8af;
+  border-bottom: 1px solid #292c32;
+  padding: 5px 0 17px;
+  margin-bottom: 26px;
+}
+.ls-flowbar i {
+  height: 3px;
+  width: 3px;
+  border-radius: 50%;
+  background: #70818e;
+}
+.ls-results-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #bdddea;
+  background: #1b2b36;
+  border: 1px solid #365063;
+  border-radius: 14px;
+  padding: 13px 16px;
+  width: 100%;
+  text-align: left;
+  margin-top: 18px;
+}
+.ls-results-link svg:last-child {
+  margin-left: auto;
+}
+.ls-poll-switch {
+  display: flex;
+  gap: 6px;
+  background: #181b20;
+  border: 1px solid #35373c;
+  border-radius: 14px;
+  padding: 5px;
+}
+.ls-poll-switch button {
+  flex: 1;
+  background: transparent;
+  color: #a6a8af;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px;
+}
+.ls-poll-switch button[aria-pressed="true"] {
+  background: #2c4252;
+  color: #edf7fc;
+}
+.ls-mobile-results h2 {
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 18px 0;
+}
+.ls-mobile-results .ls-result-name {
+  font-size: 20px;
+}
+.ls-mobile-results .ls-result-value strong {
+  font-size: 29px;
+}
+.ls-mobile-results .ls-result-value {
+  min-width: 62px;
+}
+.ls-mobile-results .ls-result-bar {
+  padding: 15px 16px;
+  min-height: 78px;
+  gap: 12px;
+}
