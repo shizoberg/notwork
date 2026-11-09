@@ -36,6 +36,7 @@ import { Route as CreativeRouteImport } from './routes/creative'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CerezPolitikasiRouteImport } from './routes/cerez-politikasi'
 import { Route as AnketRouteImport } from './routes/anket'
+import { Route as AdminlaunchRouteImport } from './routes/adminlaunch'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AcikRizaRouteImport } from './routes/acik-riza'
 import { Route as R9EkimRouteImport } from './routes/9-ekim'
@@ -190,6 +191,11 @@ const AnketRoute = AnketRouteImport.update({
   path: '/anket',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminlaunchRoute = AdminlaunchRouteImport.update({
+  id: '/adminlaunch',
+  path: '/adminlaunch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -294,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/9-ekim': typeof R9EkimRoute
   '/acik-riza': typeof AcikRizaRoute
   '/admin': typeof AdminRoute
+  '/adminlaunch': typeof AdminlaunchRoute
   '/anket': typeof AnketRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
@@ -341,6 +348,7 @@ export interface FileRoutesByTo {
   '/9-ekim': typeof R9EkimRoute
   '/acik-riza': typeof AcikRizaRoute
   '/admin': typeof AdminRoute
+  '/adminlaunch': typeof AdminlaunchRoute
   '/anket': typeof AnketRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
@@ -389,6 +397,7 @@ export interface FileRoutesById {
   '/9-ekim': typeof R9EkimRoute
   '/acik-riza': typeof AcikRizaRoute
   '/admin': typeof AdminRoute
+  '/adminlaunch': typeof AdminlaunchRoute
   '/anket': typeof AnketRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
@@ -438,6 +447,7 @@ export interface FileRouteTypes {
     | '/9-ekim'
     | '/acik-riza'
     | '/admin'
+    | '/adminlaunch'
     | '/anket'
     | '/cerez-politikasi'
     | '/community'
@@ -485,6 +495,7 @@ export interface FileRouteTypes {
     | '/9-ekim'
     | '/acik-riza'
     | '/admin'
+    | '/adminlaunch'
     | '/anket'
     | '/cerez-politikasi'
     | '/community'
@@ -532,6 +543,7 @@ export interface FileRouteTypes {
     | '/9-ekim'
     | '/acik-riza'
     | '/admin'
+    | '/adminlaunch'
     | '/anket'
     | '/cerez-politikasi'
     | '/community'
@@ -580,6 +592,7 @@ export interface RootRouteChildren {
   R9EkimRoute: typeof R9EkimRoute
   AcikRizaRoute: typeof AcikRizaRoute
   AdminRoute: typeof AdminRoute
+  AdminlaunchRoute: typeof AdminlaunchRoute
   AnketRoute: typeof AnketRoute
   CerezPolitikasiRoute: typeof CerezPolitikasiRoute
   CommunityRoute: typeof CommunityRoute
@@ -806,6 +819,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnketRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/adminlaunch': {
+      id: '/adminlaunch'
+      path: '/adminlaunch'
+      fullPath: '/adminlaunch'
+      preLoaderRoute: typeof AdminlaunchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -948,6 +968,7 @@ const rootRouteChildren: RootRouteChildren = {
   R9EkimRoute: R9EkimRoute,
   AcikRizaRoute: AcikRizaRoute,
   AdminRoute: AdminRoute,
+  AdminlaunchRoute: AdminlaunchRoute,
   AnketRoute: AnketRoute,
   CerezPolitikasiRoute: CerezPolitikasiRoute,
   CommunityRoute: CommunityRoute,

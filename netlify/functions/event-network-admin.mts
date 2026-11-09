@@ -1,3 +1,4 @@
+import { hasLaunchSession } from "./_launch-admin-auth.mjs";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import type { Config, Context } from "@netlify/functions";
@@ -34,8 +35,15 @@ export default async (request: Request, _context: Context) => {
 
   try {
     const input = (await request.json()) as NetworkAdminInput;
-    if (!validPassword(input.password)) return new Response("Yetkisiz erişim", { status: 401 });
     const eventIdentifier = eventIdentifierFromRequest(request, input);
+    const scoped = !validPassword(input.password);
+    if (scoped && !(await hasLaunchSession(request, eventIdentifier)))
+      return new Response("Yetkisiz erişim", { status: 401 });
+    if (scoped) {
+      if (!["list", "startMatching", "processMatching"].includes(input.action || "list"))
+        return new Response("Bu işlem için yetkin yok", { status: 403 });
+      input.mode = undefined;
+    }
     return runWithEventRequestContext(
       eventIdentifier,
       "matchlab",

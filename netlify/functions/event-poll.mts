@@ -1,3 +1,4 @@
+import { hasLaunchSession } from "./_launch-admin-auth.mjs";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import type { Config } from "@netlify/functions";
@@ -67,7 +68,8 @@ export default async (request: Request) => {
     if (!event) return new Response("Etkinlik gerekli", { status: 400 });
     const action = input.action || "status";
     const admin = ["admin", "configure", "open", "publish", "reset"].includes(action);
-    if (admin && !isAdmin(input.password)) return new Response("Yetkisiz erişim", { status: 401 });
+    if (admin && !isAdmin(input.password) && !(await hasLaunchSession(request, event)))
+      return new Response("Yetkisiz erişim", { status: 401 });
     return await runWithEventRequestContext(
       event,
       "matchlab",
