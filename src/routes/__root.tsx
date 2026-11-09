@@ -154,7 +154,13 @@ function RootComponent() {
   const hideWhatsAppChannel = isEventExperiencePath(pathname);
   const publicPage = !pathname.startsWith("/admin");
   const eventApp = isEventAppPath(pathname);
-  const demo = pathname === "/demo" || pathname === "/demo2" || pathname === "/nodes" || pathname.startsWith("/launch-space") || pathname === "/adminlaunch";
+  const demo =
+    pathname === "/demo" ||
+    pathname === "/demo2" ||
+    pathname === "/nodes" ||
+    pathname.startsWith("/launch-space") ||
+    pathname === "/adminlaunch" ||
+    pathname === "/adminalaunch";
 
   return (
     <QueryClientProvider client={queryClient}>

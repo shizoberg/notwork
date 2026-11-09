@@ -12,9 +12,9 @@ export const Route = createFileRoute("/adminlaunch")({
       description: "Yerel etkinlik kontrolü",
       path: "/adminlaunch",
     }),
-  component: Control,
+  component: LaunchAdminPanel,
 });
-function Control() {
+export function LaunchAdminPanel() {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
   const [password, setPassword] = useState(""),
