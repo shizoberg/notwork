@@ -173,6 +173,15 @@ try {
   await registry.updateEvent(event.id, { products: { matchlab: { dataMode: "demo" } } });
   r = await call(poll, { action: "admin", password });
   assert.equal(r.data.total, 100);
+  const deniedReset = await handler(
+    new Request("https://notwork.me/api/event-products/network", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ event: event.slug, action: "seedSamples" }),
+    }),
+    {},
+  );
+  assert.equal(deniedReset.status, 403);
   // Code repair preserves session identities and already formed groups.
   await context.runWithEventRequestContext(event.slug, "matchlab", async () => {
     const store = network.getEventNetworkStore();

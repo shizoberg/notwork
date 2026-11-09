@@ -198,6 +198,9 @@ export default async (request: Request, _context: Context) => {
       }
 
       if (action === "seedSamples") {
+        // Public demo access must never authorize resetting the hosted event dataset.
+        if (database.eventSlug === "14-kasim-2026" && !isLocalRequest(request))
+          return new Response("Canlı etkinlik demosu buradan sıfırlanamaz", { status: 403 });
         if (!isDemoSeedAllowed(request))
           return new Response("Demo seed şu anda kapalı", { status: 403 });
         if (getEventNetworkDatasetInfo().mode !== "demo")
