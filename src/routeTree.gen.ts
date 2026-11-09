@@ -22,6 +22,9 @@ import { Route as MerchRouteImport } from './routes/merch'
 import { Route as MatchLabRouteImport } from './routes/match-lab'
 import { Route as LinklerRouteImport } from './routes/linkler'
 import { Route as LegacyRouteImport } from './routes/legacy'
+import { Route as LaunchSpaceSahneRouteImport } from './routes/launch-space-sahne'
+import { Route as LaunchSpaceKontrolRouteImport } from './routes/launch-space-kontrol'
+import { Route as LaunchSpaceRouteImport } from './routes/launch-space'
 import { Route as KvkkRouteImport } from './routes/kvkk'
 import { Route as FiveRouteImport } from './routes/five'
 import { Route as EtkinliklerRouteImport } from './routes/etkinlikler'
@@ -115,6 +118,21 @@ const LinklerRoute = LinklerRouteImport.update({
 const LegacyRoute = LegacyRouteImport.update({
   id: '/legacy',
   path: '/legacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LaunchSpaceSahneRoute = LaunchSpaceSahneRouteImport.update({
+  id: '/launch-space-sahne',
+  path: '/launch-space-sahne',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LaunchSpaceKontrolRoute = LaunchSpaceKontrolRouteImport.update({
+  id: '/launch-space-kontrol',
+  path: '/launch-space-kontrol',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LaunchSpaceRoute = LaunchSpaceRouteImport.update({
+  id: '/launch-space',
+  path: '/launch-space',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KvkkRoute = KvkkRouteImport.update({
@@ -287,6 +305,9 @@ export interface FileRoutesByFullPath {
   '/etkinlikler': typeof EtkinliklerRoute
   '/five': typeof FiveRoute
   '/kvkk': typeof KvkkRoute
+  '/launch-space': typeof LaunchSpaceRoute
+  '/launch-space-kontrol': typeof LaunchSpaceKontrolRoute
+  '/launch-space-sahne': typeof LaunchSpaceSahneRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
   '/match-lab': typeof MatchLabRoute
@@ -331,6 +352,9 @@ export interface FileRoutesByTo {
   '/etkinlikler': typeof EtkinliklerRoute
   '/five': typeof FiveRoute
   '/kvkk': typeof KvkkRoute
+  '/launch-space': typeof LaunchSpaceRoute
+  '/launch-space-kontrol': typeof LaunchSpaceKontrolRoute
+  '/launch-space-sahne': typeof LaunchSpaceSahneRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
   '/match-lab': typeof MatchLabRoute
@@ -376,6 +400,9 @@ export interface FileRoutesById {
   '/etkinlikler': typeof EtkinliklerRoute
   '/five': typeof FiveRoute
   '/kvkk': typeof KvkkRoute
+  '/launch-space': typeof LaunchSpaceRoute
+  '/launch-space-kontrol': typeof LaunchSpaceKontrolRoute
+  '/launch-space-sahne': typeof LaunchSpaceSahneRoute
   '/legacy': typeof LegacyRoute
   '/linkler': typeof LinklerRoute
   '/match-lab': typeof MatchLabRoute
@@ -422,6 +449,9 @@ export interface FileRouteTypes {
     | '/etkinlikler'
     | '/five'
     | '/kvkk'
+    | '/launch-space'
+    | '/launch-space-kontrol'
+    | '/launch-space-sahne'
     | '/legacy'
     | '/linkler'
     | '/match-lab'
@@ -466,6 +496,9 @@ export interface FileRouteTypes {
     | '/etkinlikler'
     | '/five'
     | '/kvkk'
+    | '/launch-space'
+    | '/launch-space-kontrol'
+    | '/launch-space-sahne'
     | '/legacy'
     | '/linkler'
     | '/match-lab'
@@ -510,6 +543,9 @@ export interface FileRouteTypes {
     | '/etkinlikler'
     | '/five'
     | '/kvkk'
+    | '/launch-space'
+    | '/launch-space-kontrol'
+    | '/launch-space-sahne'
     | '/legacy'
     | '/linkler'
     | '/match-lab'
@@ -555,6 +591,9 @@ export interface RootRouteChildren {
   EtkinliklerRoute: typeof EtkinliklerRoute
   FiveRoute: typeof FiveRoute
   KvkkRoute: typeof KvkkRoute
+  LaunchSpaceRoute: typeof LaunchSpaceRoute
+  LaunchSpaceKontrolRoute: typeof LaunchSpaceKontrolRoute
+  LaunchSpaceSahneRoute: typeof LaunchSpaceSahneRoute
   LegacyRoute: typeof LegacyRoute
   LinklerRoute: typeof LinklerRoute
   MatchLabRoute: typeof MatchLabRoute
@@ -667,6 +706,27 @@ declare module '@tanstack/react-router' {
       path: '/legacy'
       fullPath: '/legacy'
       preLoaderRoute: typeof LegacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/launch-space-sahne': {
+      id: '/launch-space-sahne'
+      path: '/launch-space-sahne'
+      fullPath: '/launch-space-sahne'
+      preLoaderRoute: typeof LaunchSpaceSahneRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/launch-space-kontrol': {
+      id: '/launch-space-kontrol'
+      path: '/launch-space-kontrol'
+      fullPath: '/launch-space-kontrol'
+      preLoaderRoute: typeof LaunchSpaceKontrolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/launch-space': {
+      id: '/launch-space'
+      path: '/launch-space'
+      fullPath: '/launch-space'
+      preLoaderRoute: typeof LaunchSpaceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kvkk': {
@@ -899,6 +959,9 @@ const rootRouteChildren: RootRouteChildren = {
   EtkinliklerRoute: EtkinliklerRoute,
   FiveRoute: FiveRoute,
   KvkkRoute: KvkkRoute,
+  LaunchSpaceRoute: LaunchSpaceRoute,
+  LaunchSpaceKontrolRoute: LaunchSpaceKontrolRoute,
+  LaunchSpaceSahneRoute: LaunchSpaceSahneRoute,
   LegacyRoute: LegacyRoute,
   LinklerRoute: LinklerRoute,
   MatchLabRoute: MatchLabRoute,

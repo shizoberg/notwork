@@ -84,6 +84,10 @@ export default async (request: Request, _context: Context) => {
     const input = (await request.json()) as NetworkInput;
     const eventIdentifier = eventIdentifierFromRequest(request, input);
     return await runWithEventRequestContext(eventIdentifier, "matchlab", async () => {
+      const database = getEventNetworkDatasetInfo();
+      if (database.eventSlug === "14-kasim-2026" && database.mode === "demo" && !isLocalRequest(request)) {
+        return new Response("Launch Space demo kayıtları yalnızca yerel test sunucusunda kullanılabilir", { status: 403 });
+      }
       const action = clean(input.action, 30);
       const store = getEventNetworkStore();
       // Matching/chat authenticate with the event token; only registration/resume need the profile cookie.

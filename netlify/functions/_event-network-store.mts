@@ -1154,7 +1154,7 @@ export type MatchLaunchState = {
 function initialMatchLaunch(): MatchLaunchState {
   const dataset = getEventNetworkDatasetInfo();
   return {
-    status: dataset.eventId === "evt_9_ekim_2026" && dataset.mode === "live" ? "waiting" : "open",
+    status: ((dataset.eventId === "evt_9_ekim_2026" && dataset.mode === "live") || dataset.eventSlug === "14-kasim-2026") ? "waiting" : "open",
     participantIds: [],
     cursor: 0,
     runId: "",

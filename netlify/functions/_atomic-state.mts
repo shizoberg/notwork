@@ -1,5 +1,5 @@
 function requireDatabase(key: string) {
-  if (!key.includes("evt_9_ekim_2026") && !key.startsWith("runs/")) return false;
+  if (!key.includes("evt_9_ekim_2026") && !key.includes("/matchlab/") && !key.startsWith("runs/")) return false;
   if (process.env.NETLIFY_DB_URL) return true;
   if (process.env.NETLIFY || process.env.CONTEXT)
     throw new Error("Etkinlik veri tabanı bağlı değil. Eşleşme güvenli biçimde durduruldu.");

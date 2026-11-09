@@ -1,3 +1,4 @@
+import { EventPollAdmin } from "@/components/EventPollAdmin";
 import type { MatchLaunchProgress } from "@/lib/event-network";
 import { AnnouncementAdmin } from "@/components/AnnouncementAdmin";
 import { EventFlowAdmin } from "@/components/EventFlowAdmin";
@@ -1172,6 +1173,9 @@ function AdminPage() {
           </div>
         ) : null}
 
+        {activeAdminTab === "events" && selectedToolsEvent?.slug === "14-kasim-2026" ? (
+          <><div className="mt-5 flex gap-3"><a href="/launch-space" target="_blank" rel="noreferrer" className="rounded-full border px-4 py-2 text-sm">Launch Space demosunu aç ↗</a><a href="/launch-space-kontrol" target="_blank" rel="noreferrer" className="rounded-full border px-4 py-2 text-sm">Eşleştirme kontrolü ↗</a></div><EventPollAdmin event={selectedToolsEvent.slug} password={password}/></>
+        ) : null}
         {activeAdminTab === "events" ? (
           <nav
             aria-label="Etkinlik bölümleri"
@@ -1334,12 +1338,12 @@ function AdminPage() {
               </label>
               {eventSection !== "test" ? (
                 <a
-                  href={withEventSelection("/linkler", selectedToolsEventSelection)}
+                  href={selectedToolsEvent?.slug === "14-kasim-2026" ? "/launch-space" : withEventSelection("/linkler", selectedToolsEventSelection)}
                   target="_blank"
                   rel="noreferrer"
                   className="rounded-full border border-primary/30 bg-background px-4 py-2 text-sm font-bold"
                 >
-                  Linkler girişini aç
+                  {selectedToolsEvent?.slug === "14-kasim-2026" ? "Launch Space girişini aç" : "Linkler girişini aç"}
                 </a>
               ) : null}
               {eventSection === "data" ? (

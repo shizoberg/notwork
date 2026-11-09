@@ -38,9 +38,18 @@ export function getStore({ name }) {
     async delete(key) {
       rows.delete(key);
     },
-    async list({ prefix = "" } = {}) {
+    async list({ prefix = "", directories = false } = {}) {
       metrics.lists++;
       return {
+        directories: directories
+          ? [
+              ...new Set(
+                [...rows.keys()]
+                  .filter((key) => key.startsWith(prefix) && key.slice(prefix.length).includes("/"))
+                  .map((key) => prefix + key.slice(prefix.length).split("/")[0] + "/"),
+              ),
+            ]
+          : [],
         blobs: [...rows.keys()].filter((key) => key.startsWith(prefix)).map((key) => ({ key })),
       };
     },
