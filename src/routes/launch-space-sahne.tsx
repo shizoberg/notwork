@@ -14,7 +14,7 @@ export const Route = createFileRoute("/launch-space-sahne")({
   component: PollStage,
 });
 function PollStage() {
-  const [cloud, setCloud] = useState(true);
+  const [cloud, setCloud] = useState(false);
   const [data, setData] = useState<PollPayload | null>(null),
     [error, setError] = useState("");
   useEffect(() => {
@@ -47,7 +47,7 @@ function PollStage() {
           <NodeMark />
           notwork anket
         </span>
-        <button className="ls-secondary" onClick={() => setCloud((c) => !c)}>
+        <button className="ls-secondary ls-view-switch" onClick={() => setCloud((c) => !c)}>
           {cloud ? "Dağılımı göster" : "Kelime bulutu"}
         </button>
         <span className="ls-demo">{data?.database.mode || "demo"}</span>
@@ -61,13 +61,13 @@ function PollStage() {
           Tam ekran
         </button>
       </header>
-      <main style={{ maxWidth: 1200, margin: "auto", padding: "4vh 5vw" }}>
+      <main className="ls-stage-main">
         {error ? (
           <p role="alert">{error}</p>
         ) : data?.published ? (
           <section className="ls-enter" key={data.published.question.id}>
             <p className="ls-eyebrow">TOPLULUĞUN SESİ · {data.published.total} YANIT</p>
-            <h1 style={{ fontSize: "clamp(32px,4.6vw,74px)" }}>{data.published.question.title}</h1>
+            <h1 className="ls-stage-title">{data.published.question.title}</h1>
             {cloud ? (
               <div className="ls-wordcloud">
                 {data.published.counts.map((c, i) => (
@@ -84,41 +84,41 @@ function PollStage() {
                 ))}
               </div>
             ) : (
-              <div style={{ display: "grid", gap: 20, marginTop: 40 }}>
-                {data.published.counts.map((c) => (
-                  <div key={c.label}>
+              <div className="ls-result-bars" aria-label="Canlı anket sonuçları">
+                {data.published.counts.map((c, index) => {
+                  const percent = data.published!.total
+                    ? (c.count / data.published!.total) * 100
+                    : 0;
+                  return (
                     <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        fontSize: "clamp(18px,2.2vw,32px)",
-                        gap: 16,
-                      }}
-                    >
-                      <span>{c.label}</span>
-                      <strong>
-                        {data.total ? Math.round((c.count / data.total) * 100) : 0}%{" "}
-                        <small style={{ fontSize: 13, color: "#a6a8af" }}>({c.count})</small>
-                      </strong>
-                    </div>
-                    <div
-                      style={{ height: 12, background: "#242b34", borderRadius: 20, marginTop: 9 }}
+                      className="ls-result-bar"
+                      key={c.label}
+                      role="meter"
+                      aria-label={c.label}
+                      aria-valuenow={c.count}
+                      aria-valuemin={0}
+                      aria-valuemax={Math.max(1, data.published!.total)}
+                      aria-valuetext={`${c.count} oy, yüzde ${Math.round(percent)}`}
                     >
                       <div
-                        style={{
-                          height: "100%",
-                          width: `${data.total ? (c.count / data.total) * 100 : 0}%`,
-                          background: "linear-gradient(90deg,#367781,#bce2f2)",
-                          borderRadius: 20,
-                          transition: "width .7s ease",
-                        }}
+                        className={`ls-result-fill ls-result-color-${index % 5}`}
+                        style={{ width: `${percent}%` }}
+                        aria-hidden="true"
                       />
+                      <span className="ls-result-name">{c.label}</span>
+                      <span className="ls-result-value">
+                        <strong>
+                          {Math.round(percent)}
+                          <small>%</small>
+                        </strong>
+                        <span>{c.count} oy</span>
+                      </span>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
-            <p className="ls-caption" style={{ marginTop: 34 }}>
+            <p className="ls-caption ls-stage-footnote">
               Yalnızca toplu sonuçlar gösterilir · isimler ve kişisel yanıtlar sahnede paylaşılmaz.
             </p>
           </section>

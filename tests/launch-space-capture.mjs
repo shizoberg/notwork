@@ -129,6 +129,7 @@ try {
     poll = await api({ action: "publish", revision: poll.config.revision, questionIndex: i });
     await stage.goto(base + "/launch-space-sahne");
     await stage.getByText(poll.config.questions[i].title, { exact: true }).waitFor();
+    await stage.getByRole("button", { name: "Kelime bulutu", exact: true }).click();
     await shot(stage, `14-${i + 1}-sahne-kelime-bulutu`);
     if (i === 0) {
       await stage.getByRole("button", { name: "Dağılımı göster" }).click();
