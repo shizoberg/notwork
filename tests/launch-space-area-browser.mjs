@@ -19,7 +19,7 @@ try {
   await page.locator(".ls-people-card").first().waitFor();
   assert.equal(await page.locator(".ls-demo").innerText(), "launchspace");
   const count = await page.locator(".ls-people-card").count();
-  assert.ok(count >= 6);
+  assert.equal(count, 10);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   await page.locator(".ls-space-cover").evaluate(async (el) => {
     await Promise.all(
@@ -32,6 +32,9 @@ try {
   await page.screenshot({ path: "/tmp/launch-space-area-mobile.png" });
   await page.locator(".ls-directory-heading").scrollIntoViewIfNeeded();
   await page.screenshot({ path: "/tmp/launch-space-people-mobile.png" });
+  await page.locator(".ls-people-more").scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => document.querySelectorAll(".ls-people-card").length === 20);
+  assert.equal(await page.locator(".ls-people-card").count(), 20);
   await page.getByLabel("Katılımcı ara").fill("Ada");
   assert.ok((await page.locator(".ls-people-card").count()) < count);
   await page.locator(".ls-people-card").first().click();

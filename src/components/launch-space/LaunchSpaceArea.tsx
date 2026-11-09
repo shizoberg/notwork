@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowRight, Check, Search, Users, X } from "lucide-react";
 import { novemberEventSlug } from "@/lib/event-poll";
 
@@ -25,6 +25,8 @@ export function LaunchSpaceArea({
 }) {
   const [people, setPeople] = useState<Person[]>([]);
   const [query, setQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(10);
+  const moreRef = useRef<HTMLButtonElement>(null);
   const [selected, setSelected] = useState<Person | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -91,6 +93,21 @@ export function LaunchSpaceArea({
       .toLocaleLowerCase("tr-TR")
       .includes(query.toLocaleLowerCase("tr-TR")),
   );
+  useEffect(() => {
+    const marker = moreRef.current;
+    if (!marker || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          observer.disconnect();
+          setVisibleCount((count) => Math.min(count + 10, filtered.length));
+        }
+      },
+      { rootMargin: "0px 0px 100px 0px" },
+    );
+    observer.observe(marker);
+    return () => observer.disconnect();
+  }, [visibleCount, filtered.length, query]);
   const incoming = people.filter((p) => p.received && !p.sent);
   return (
     <div className="ls-space-area">
@@ -162,7 +179,10 @@ export function LaunchSpaceArea({
           aria-label="Katılımcı ara"
           placeholder="İsim, alan veya aradığın bağlantı"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setVisibleCount(10);
+          }}
         />
       </label>
       {error && (
@@ -176,34 +196,54 @@ export function LaunchSpaceArea({
         </p>
       ) : (
         <div className="ls-people-grid">
-          {filtered.map((p) => (
-            <button className="ls-people-card" key={p.id} onClick={() => setSelected(p)}>
+          {filtered.slice(0, visibleCount).map((p) => (
+            <button
+              className="ls-people-card"
+              key={p.id}
+              onClick={() => setSelected(p)}
+              aria-label={`${p.name}${p.isSelf ? " · sen" : ""} · profili aç`}
+            >
               <span className="ls-people-avatar">
                 {p.name
                   .split(" ")
+                  .filter(Boolean)
                   .map((n) => n[0])
                   .slice(0, 2)
-                  .join("")}
+                  .join("")
+                  .toLocaleUpperCase("tr-TR")}
               </span>
               <strong>
                 {p.name}
                 {p.isSelf ? " · sen" : ""}
               </strong>
               <small>{p.offers.join(" · ") || "Katılımcı"}</small>
-              <p>{p.intro || "Birlikte tanışmaya hazır."}</p>
-              <span className="ls-person-status">
-                {p.sent && p.received
-                  ? "Tanışma karşılıklı ✓"
-                  : p.received
-                    ? "Seninle tanışmak istiyor"
-                    : p.sent
-                      ? "Tanışma isteğin iletildi"
-                      : "Profili keşfet →"}
-              </span>
+              {(p.sent || p.received) && (
+                <span className="ls-person-status">
+                  {p.sent && p.received
+                    ? "Tanışma karşılıklı ✓"
+                    : p.received
+                      ? "Seninle tanışmak istiyor"
+                      : p.sent
+                        ? "Tanışma isteğin iletildi"
+                        : ""}
+                </span>
+              )}
             </button>
           ))}
         </div>
       )}
+      {visibleCount < filtered.length && (
+        <button
+          ref={moreRef}
+          className="ls-people-more"
+          onClick={() => setVisibleCount((count) => Math.min(count + 10, filtered.length))}
+        >
+          {Math.min(10, filtered.length - visibleCount)} kişi daha göster
+        </button>
+      )}
+      <p className="ls-caption" aria-live="polite">
+        {Math.min(visibleCount, filtered.length)} / {filtered.length} kişi
+      </p>
       {!loading && filtered.length === 0 && (
         <p className="ls-muted">Bu aramada kimseyi bulamadık.</p>
       )}

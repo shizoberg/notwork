@@ -1225,17 +1225,44 @@
 }
 .ls-people-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 22px 12px;
 }
 .ls-people-card {
   min-width: 0;
-  text-align: left;
-  border: 1px solid #30353a;
-  border-radius: 20px;
-  padding: 18px;
-  background: #191d20;
+  text-align: center;
+  border: 0;
+  border-radius: 16px;
+  padding: 6px 2px;
+  background: transparent;
   color: var(--ls-ink);
+  cursor: pointer;
+}
+.ls-people-card .ls-people-avatar {
+  width: 78px;
+  height: 78px;
+  margin: 0 auto 10px;
+  border: 1px solid #7596a94d;
+  box-shadow: inset 0 0 20px #9bc8dc08;
+  font-size: 23px;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+.ls-people-card:hover .ls-people-avatar,
+.ls-people-card:focus-visible .ls-people-avatar {
+  transform: translateY(-3px);
+  border-color: var(--ls-blue);
+}
+.ls-people-more {
+  display: block;
+  margin: 24px auto 0;
+  padding: 10px 18px;
+  border: 1px solid var(--ls-line);
+  border-radius: 30px;
+  background: transparent;
+  color: var(--ls-blue);
+  font-size: 12px;
   cursor: pointer;
 }
 .ls-people-avatar {
@@ -1251,7 +1278,7 @@
 }
 .ls-people-card strong {
   display: block;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   overflow-wrap: anywhere;
 }
@@ -1260,16 +1287,6 @@
   font-size: 10px;
   display: block;
   margin-top: 5px;
-}
-.ls-people-card p {
-  color: #a6adb3;
-  font-size: 12px;
-  line-height: 1.6;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  min-height: 38px;
 }
 .ls-person-status {
   color: #b8c8cf;
@@ -1341,11 +1358,15 @@
 }
 @media (max-width: 600px) {
   .ls-people-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px 10px;
   }
   .ls-people-card {
-    padding: 14px;
+    padding: 4px 0;
+  }
+  .ls-people-card .ls-people-avatar {
+    width: clamp(62px, 18vw, 78px);
+    height: clamp(62px, 18vw, 78px);
   }
   .ls-space-cover {
     height: 210px;
