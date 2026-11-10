@@ -8,7 +8,7 @@ export const Route = createFileRoute("/cerez-politikasi")({
     createSeo({
       title: "Çerez Politikası | notwork İzmir",
       description:
-        "notwork İzmir web sitesinde kullanılan zorunlu, analitik ve pazarlama çerezleri ile Meta Pixel ve tercih yönetimi hakkında bilgi.",
+        "notwork İzmir web sitesinde kullanılan zorunlu, analitik ve pazarlama çerezleri ile Meta Pixel, OpenAI Measurement Pixel ve tercih yönetimi hakkında bilgi.",
       path: "/cerez-politikasi",
       keywords: ["notwork çerez politikası", "notwork gizlilik"],
     }),
@@ -26,7 +26,7 @@ const cookieTypes = [
   },
   {
     title: "Pazarlama çerezleri",
-    text: "Meta Pixel gibi araçlarla etkinlik ve bilet ilgisini ölçmek, reklam performansını anlamak ve daha doğru kampanya optimizasyonu yapmak için kullanılır. Yalnızca onayınızla çalışır.",
+    text: "Meta Pixel ve OpenAI Measurement Pixel araçlarıyla etkinlik ve bilet ilgisini ölçmek, reklam performansını anlamak ve daha doğru kampanya optimizasyonu yapmak için kullanılır. Yalnızca onayınızla çalışır. OpenAI Pixel, reklam yönlendirmesini hatırlayan __oppref (30 gün) ve tarayıcı referansı __obref (365 gün) çerezlerini kullanabilir. Tercihinizi geri aldığınızda gelecekteki ölçümler durdurulur. Bilet butonu tıklaması satın alma olarak kaydedilmez.",
   },
   {
     title: "Üçüncü taraf içerikler",
@@ -92,7 +92,7 @@ function CookiePolicyPage() {
               çalışmayabilir.
             </p>
             <p className="mt-3">
-              <strong className="text-foreground">Son güncelleme:</strong> 27 Ağustos 2026.
+              <strong className="text-foreground">Son güncelleme:</strong> 10 Kasım 2026.
             </p>
           </div>
         </section>

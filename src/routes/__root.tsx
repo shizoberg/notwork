@@ -16,6 +16,7 @@ import { MobileDock } from "../components/MobileDock";
 import { EventExperienceShell, isEventAppPath } from "../components/EventExperienceShell";
 import { AnalyticsTracker } from "../components/AnalyticsTracker";
 import { CookieConsent } from "../components/CookieConsent";
+import { OpenAIAdsPixelTracker } from "../components/OpenAIAdsPixelTracker";
 import { MetaPixelTracker } from "../components/MetaPixelTracker";
 import { WhatsAppChannelCta } from "../components/WhatsAppChannelCta";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -166,6 +167,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AnalyticsTracker />
       <MetaPixelTracker />
+      <OpenAIAdsPixelTracker />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <div className={publicPage ? (demo ? "glass-site demo-site" : "glass-site") : undefined}>
         {eventApp ? (
