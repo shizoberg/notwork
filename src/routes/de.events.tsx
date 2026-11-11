@@ -1,0 +1,8 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { GermanyEvents, germanySeo } from "@/components/germany/GermanySite";
+
+export const Route = createFileRoute("/de/events")({
+  head: () =>
+    germanySeo("/de/events", "Events in Deutschland", "Kommende notwork Events in Deutschland."),
+  component: GermanyEvents,
+});

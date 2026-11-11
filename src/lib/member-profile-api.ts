@@ -1,3 +1,4 @@
+import type { MemberCountry } from "./member-country";
 import type {
   NotworkMemberConnection,
   NotworkMemberProfile,
@@ -18,9 +19,10 @@ function announceMemberSessionChange(loggedIn: boolean) {
 export type EditableMemberProfile = Pick<
   NotworkMemberProfile,
   "headline" | "bio" | "skills" | "experiences" | "links" | "publicProfileEnabled"
-> & { phone: string };
+> & { phone: string; country?: MemberCountry | null };
 
 export type MemberRegistrationInput = {
+  country?: MemberCountry;
   name: string;
   email: string;
   password: string;

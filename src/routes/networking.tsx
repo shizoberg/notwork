@@ -1,3 +1,4 @@
+import { CountryTag } from "@/components/CountryTag";
 import { AnnouncementConsent } from "@/components/AnnouncementConsent";
 import { promptForAnnouncements } from "@/lib/announcement-prompt";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -577,7 +578,6 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
   }, []);
 
   const canViewContacts = Boolean(memberProfile?.verifiedMember || directoryPreview);
-
 
   const set =
     (key: keyof typeof form) =>
@@ -1284,7 +1284,10 @@ function MemberDirectoryCard({
             {verified ? <BadgeCheck aria-hidden="true" /> : <span aria-hidden="true" />}
             {verified ? "Doğrulanmış NTW üyesi" : "Topluluk profili · doğrulanmadı"}
           </div>
-          <h3>{member.name}</h3>
+          <div className="network-profile-name-row">
+            <h3>{member.name}</h3>
+            <CountryTag country={member.country} />
+          </div>
           <p>{member.title}</p>
           {member.username && <span className="network-profile-handle">@{member.username}</span>}
         </div>
@@ -1884,7 +1887,7 @@ function MemberDetailModal({
                     kişi kartı
                   </div>
                   <h2 className="mt-3 break-words text-3xl font-black tracking-[-0.04em] sm:text-4xl">
-                    {member.name}
+                    {member.name} <CountryTag country={member.country} />
                   </h2>
                   <p className="mt-2 text-sm font-semibold text-foreground/60">{member.title}</p>
                   {member.username && (

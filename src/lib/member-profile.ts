@@ -1,3 +1,5 @@
+import type { MemberCountry } from "./member-country";
+
 export type NotworkMemberBadge = {
   code: "verified-event-member";
   label: "Doğrulanmış Notwork Üyesi";
@@ -52,6 +54,7 @@ export type NotworkMemberProfile = {
   email: string;
   phone?: string;
   name: string;
+  country?: MemberCountry;
   headline: string;
   bio: string;
   photoUrl: string;
@@ -92,6 +95,7 @@ export type PublicNotworkMemberProfile = Pick<
   NotworkMemberProfile,
   | "username"
   | "name"
+  | "country"
   | "headline"
   | "bio"
   | "photoUrl"

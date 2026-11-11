@@ -1,6 +1,9 @@
+import { memberCountry, type MemberCountry } from "./member-country";
+
 export type Member = {
   id: string;
   name: string;
+  country?: MemberCountry;
   title: string;
   skills: string[];
   email?: string;
@@ -29,6 +32,7 @@ export async function listMembers(): Promise<Member[]> {
     .map((row, index) => ({
       id: String(row.id || "").trim() || `sheet-row-${index}`,
       name: String(row.name || "").trim(),
+      country: memberCountry(row.country),
       title: String(row.title || "").trim(),
       skills: parseSkills(String(row.skills || "")),
       email: String(row.email || "").trim() || undefined,

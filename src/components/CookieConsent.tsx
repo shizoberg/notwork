@@ -9,7 +9,7 @@ import {
   type CookieConsentStatus,
 } from "@/lib/cookie-consent";
 
-export function CookieConsent() {
+export function CookieConsent({ german = false }: { german?: boolean }) {
   const [status, setStatus] = useState<CookieConsentStatus | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -40,22 +40,24 @@ export function CookieConsent() {
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary-deep">
             <span className="h-2 w-2 rounded-full bg-primary" />
-            KVKK ve çerez tercihleri
+            {german ? "Datenschutz und Cookies" : "KVKK ve çerez tercihleri"}
           </div>
           <h2 className="mt-3 text-lg font-black tracking-tight sm:text-xl">
-            Deneyimi iyileştirmek için çerez kullanıyoruz.
+            {german
+              ? "Wir verwenden Cookies, um die Website zu verbessern."
+              : "Deneyimi iyileştirmek için çerez kullanıyoruz."}
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            Zorunlu çerezler siteyi çalıştırır. Onay verirseniz analiz ve pazarlama çerezleriyle
-            ziyaret, buton tıklaması ve etkinlik ilgisi gibi verileri ölçeriz. Tercihinizi her
-            zaman footer’dan değiştirebilirsiniz.
+            {german
+              ? "Notwendige Cookies ermöglichen den Betrieb der Website. Mit deiner Zustimmung nutzen wir außerdem Analyse- und Marketing-Cookies. Du kannst deine Auswahl jederzeit unten auf der Seite ändern."
+              : "Zorunlu çerezler siteyi çalıştırır. Onay verirseniz analiz ve pazarlama çerezleriyle ziyaret, buton tıklaması ve etkinlik ilgisi gibi verileri ölçeriz. Tercihinizi her zaman footer’dan değiştirebilirsiniz."}
           </p>
           <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold text-primary-deep">
             <Link to="/cerez-politikasi" className="hover:underline">
-              Çerez Politikası
+              {german ? "Cookie-Richtlinie (Türkisch)" : "Çerez Politikası"}
             </Link>
             <Link to="/kvkk" className="hover:underline">
-              KVKK Aydınlatma Metni
+              {german ? "Datenschutzhinweise (Türkisch)" : "KVKK Aydınlatma Metni"}
             </Link>
           </div>
         </div>
@@ -65,20 +67,26 @@ export function CookieConsent() {
             onClick={() => setCookieConsent("accepted")}
             className="rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
           >
-            Kabul et
+            {german ? "Alle akzeptieren" : "Kabul et"}
           </button>
           <button
             type="button"
             onClick={() => setCookieConsent("necessary")}
             className="rounded-full border border-border bg-background px-5 py-3 text-sm font-bold text-foreground transition hover:bg-muted"
           >
-            Sadece zorunlu
+            {german ? "Nur notwendige Cookies" : "Sadece zorunlu"}
           </button>
         </div>
       </div>
       {status ? (
         <p className="mt-3 text-[11px] text-muted-foreground">
-          Mevcut tercih: {status === "accepted" ? "Tüm çerezler kabul edildi" : "Sadece zorunlu"}
+          {german
+            ? status === "accepted"
+              ? "Alle Cookies akzeptiert"
+              : "Nur notwendige Cookies"
+            : status === "accepted"
+              ? "Tüm çerezler kabul edildi"
+              : "Sadece zorunlu"}
         </p>
       ) : null}
     </div>

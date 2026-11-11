@@ -1,3 +1,5 @@
+import { CountryTag } from "@/components/CountryTag";
+import { memberCountry } from "@/lib/member-country";
 import { AnnouncementConsent } from "@/components/AnnouncementConsent";
 import { promptForAnnouncements } from "@/lib/announcement-prompt";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -152,6 +154,7 @@ function externalUrl(value: string, prefix = "") {
 function profileDraft(profile: NotworkMemberProfile): EditableMemberProfile {
   return {
     headline: profile.headline || "",
+    country: profile.country,
     bio: profile.bio || "",
     skills: [...profile.skills.slice(0, 5)],
     experiences: profile.experiences.slice(0, 3).map((item) => ({ ...item })),
@@ -388,6 +391,7 @@ function RegisterPanel({
   onBack: () => void;
   onRegistered: (profile: NotworkMemberProfile) => void;
 }) {
+  const [country, setCountry] = useState<"DE" | "TR" | undefined>();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -439,6 +443,7 @@ function RegisterPanel({
     try {
       const result = await registerMember({
         name,
+        country,
         email,
         password,
         attendedEventClaim,
@@ -593,6 +598,17 @@ function RegisterPanel({
           </Field>
         ) : null}
 
+        <Field label="Profilde gösterilecek ülke">
+          <select
+            className="profile-input"
+            value={country || ""}
+            onChange={(e) => setCountry(memberCountry(e.target.value))}
+          >
+            <option value="">Belirtmek istemiyorum</option>
+            <option value="TR">🇹🇷 Türkiye</option>
+            <option value="DE">🇩🇪 Almanya</option>
+          </select>
+        </Field>
         <RegistrationQuestion
           label="Kendini tanıt *"
           value={introduction}
@@ -973,7 +989,7 @@ function ProfileEditor({
               {profile.badge?.label || "Notwork Üyesi"}
             </div>
             <h1 className="mt-2 truncate font-display text-3xl font-black tracking-[-0.05em] sm:text-5xl">
-              {profile.name}
+              {profile.name} <CountryTag country={profile.country} />
             </h1>
             <p className="mt-1 text-xs font-bold text-muted-foreground">@{profile.username}</p>
           </div>
@@ -1181,6 +1197,19 @@ function ProfileEditor({
           icon={<FileText className="h-5 w-5" strokeWidth={1.8} />}
           title="Kendini anlat"
         >
+          <Field label="Profilde gösterilecek ülke">
+            <select
+              className="profile-input"
+              value={draft.country || ""}
+              onChange={(e) =>
+                setDraft({ ...draft, country: memberCountry(e.target.value) ?? null })
+              }
+            >
+              <option value="">Belirtmek istemiyorum</option>
+              <option value="TR">🇹🇷 Türkiye</option>
+              <option value="DE">🇩🇪 Almanya</option>
+            </select>
+          </Field>
           <Field label="Profil başlığı" hint={`${draft.headline.length}/120`}>
             <input
               maxLength={120}

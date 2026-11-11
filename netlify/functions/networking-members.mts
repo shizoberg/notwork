@@ -1,3 +1,4 @@
+import { memberCountry, type MemberCountry } from "../../src/lib/member-country.ts";
 import { recordMarketingPreference } from "./_announcements.mjs";
 import { getStore } from "@netlify/blobs";
 import type { Config, Context } from "@netlify/functions";
@@ -10,6 +11,7 @@ import {
 } from "./_member-profile-store.mjs";
 
 type MemberRow = {
+  country?: MemberCountry;
   id: string;
   name: string;
   title: string;
@@ -25,6 +27,7 @@ type MemberRow = {
 };
 
 type MemberInput = {
+  country?: unknown;
   id?: string;
   name?: string;
   title?: string;
@@ -85,6 +88,7 @@ function normalizeMember(input: MemberInput, fallback?: Partial<MemberRow>): Mem
   return {
     id: clean(input.id, 80) || fallback?.id || crypto.randomUUID(),
     name: clean(input.name, 80) || fallback?.name || "",
+    country: memberCountry("country" in input ? input.country : fallback?.country),
     title: clean(input.title, 80) || fallback?.title || "",
     skills: serializeSkills(input.skills) || fallback?.skills || "",
     email: clean(input.email, 120) || fallback?.email || "",

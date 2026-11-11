@@ -42,6 +42,47 @@ const desktopMenuLinks = [
   { to: "/merch", label: "Merch", icon: ShoppingBag },
 ] as const;
 
+export const desktopGlassStyle = {
+  backdropFilter: "blur(24px) saturate(165%)",
+  WebkitBackdropFilter: "blur(24px) saturate(165%)",
+};
+
+export function RegionSwitch({
+  german = false,
+  className = "",
+}: {
+  german?: boolean;
+  className?: string;
+}) {
+  const { pathname } = useLocation();
+  const germany =
+    pathname === "/etkinlikler"
+      ? "/de/events"
+      : pathname === "/networking"
+        ? "/de/networking"
+        : pathname === "/profil"
+          ? "/de/profil"
+          : "/de";
+  const turkey =
+    pathname === "/de/events"
+      ? "/etkinlikler"
+      : pathname === "/de/networking"
+        ? "/networking"
+        : pathname === "/de/profil"
+          ? "/profil"
+          : "/";
+  return (
+    <a
+      href={german ? turkey : germany}
+      className={`site-region-switch ${className}`}
+      lang={german ? "tr" : "de"}
+      aria-label={german ? "Notwork Türkiye · Türkçe" : "Notwork Deutschland · Deutsch"}
+    >
+      {german ? "🇹🇷 TR" : "🇩🇪 DE"}
+    </a>
+  );
+}
+
 export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
   const location = useLocation();
   const [memberLoggedIn, setMemberLoggedIn] = useState<boolean | null>(null);
@@ -75,7 +116,10 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
 
   return (
     <header className="site-header-shell sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-md">
-      <div className="desktop-site-header mx-auto hidden max-w-6xl items-center sm:flex">
+      <div
+        className="desktop-site-header mx-auto hidden max-w-6xl items-center sm:flex"
+        style={desktopGlassStyle}
+      >
         <Link to="/" className="desktop-site-brand" aria-label="notwork ana sayfa">
           <img
             src="/brand/notwork-logo.png"
@@ -137,6 +181,7 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
         </nav>
 
         <div className="desktop-site-actions">
+          <RegionSwitch />
           {memberLoggedIn === false ? (
             <Link to="/profil" search={{ mode: "register" }} className="desktop-site-join">
               notwork ol
@@ -145,10 +190,13 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
           <ProfileLink className="desktop-profile-button" />
         </div>
       </div>
-      <div className="mx-auto grid h-16 grid-cols-[72px_1fr_72px] items-center px-3 sm:hidden">
+      <div className="mx-auto grid h-16 grid-cols-[100px_1fr_100px] items-center px-3 sm:hidden">
         <MobileSiteMenu />
         <BrandLink className="justify-self-center" />
-        <ProfileLink className="justify-self-end" />
+        <div className="site-mobile-actions">
+          <RegionSwitch />
+          <ProfileLink />
+        </div>
       </div>
     </header>
   );

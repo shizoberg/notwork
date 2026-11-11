@@ -136,8 +136,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   return (
-    <html lang="tr">
+    <html lang={pathname === "/de" || pathname.startsWith("/de/") ? "de" : "tr"}>
       <head>
         <HeadContent />
       </head>
@@ -152,7 +153,8 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const hideWhatsAppChannel = isEventExperiencePath(pathname);
+  const german = pathname === "/de" || pathname.startsWith("/de/");
+  const hideWhatsAppChannel = german || isEventExperiencePath(pathname);
   const publicPage = !pathname.startsWith("/admin");
   const eventApp = isEventAppPath(pathname);
   const demo =
@@ -180,7 +182,7 @@ function RootComponent() {
         {publicPage && !eventApp && !demo && <MobileDock />}
         {!hideWhatsAppChannel && !demo && <WhatsAppChannelCta />}
       </div>
-      <CookieConsent />
+      <CookieConsent german={german} />
     </QueryClientProvider>
   );
 }

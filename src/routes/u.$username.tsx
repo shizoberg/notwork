@@ -1,3 +1,4 @@
+import { CountryTag } from "@/components/CountryTag";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   BadgeCheck,
@@ -156,7 +157,7 @@ function PublicMemberProfilePage() {
                       </div>
                     ) : null}
                     <h1 className="mt-2 font-display text-3xl font-black tracking-[-0.05em] sm:text-5xl">
-                      {profile.name}
+                      {profile.name} <CountryTag country={profile.country} />
                     </h1>
                     <p className="mt-1 text-xs font-bold text-muted-foreground">
                       @{profile.username}

@@ -32,6 +32,7 @@ import { Route as EtkinlikDegerlendirmeRouteImport } from './routes/etkinlik-deg
 import { Route as DuyurularRouteImport } from './routes/duyurular'
 import { Route as Demo2RouteImport } from './routes/demo2'
 import { Route as DemoRouteImport } from './routes/demo'
+import { Route as DeRouteImport } from './routes/de'
 import { Route as CreativeRouteImport } from './routes/creative'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CerezPolitikasiRouteImport } from './routes/cerez-politikasi'
@@ -50,12 +51,17 @@ import { Route as R14temmuzRouteImport } from './routes/14temmuz'
 import { Route as R11EkimRouteImport } from './routes/11-ekim'
 import { Route as R10AralikRouteImport } from './routes/10-aralik'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DeIndexRouteImport } from './routes/de.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as FiveLiveRouteImport } from './routes/five_.live'
+import { Route as DeProfilRouteImport } from './routes/de.profil'
+import { Route as DeNetworkingRouteImport } from './routes/de.networking'
+import { Route as DeEventsRouteImport } from './routes/de.events'
 import { Route as R21AgustosWordcloudRouteImport } from './routes/21-agustos.wordcloud'
 import { Route as R21AgustosSonuclarRouteImport } from './routes/21-agustos.sonuclar'
 import { Route as R21AgustosNetworkRouteImport } from './routes/21-agustos.network'
 import { Route as R21AgustosEslesmeRouteImport } from './routes/21-agustos.eslesme'
+import { Route as DeUUsernameRouteImport } from './routes/de.u.$username'
 
 const SunumYukleRoute = SunumYukleRouteImport.update({
   id: '/sunum-yukle',
@@ -172,6 +178,11 @@ const DemoRoute = DemoRouteImport.update({
   path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DeRoute = DeRouteImport.update({
+  id: '/de',
+  path: '/de',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CreativeRoute = CreativeRouteImport.update({
   id: '/creative',
   path: '/creative',
@@ -262,6 +273,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DeIndexRoute = DeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DeRoute,
+} as any)
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
@@ -271,6 +287,21 @@ const FiveLiveRoute = FiveLiveRouteImport.update({
   id: '/five_/live',
   path: '/five/live',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DeProfilRoute = DeProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
+  getParentRoute: () => DeRoute,
+} as any)
+const DeNetworkingRoute = DeNetworkingRouteImport.update({
+  id: '/networking',
+  path: '/networking',
+  getParentRoute: () => DeRoute,
+} as any)
+const DeEventsRoute = DeEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => DeRoute,
 } as any)
 const R21AgustosWordcloudRoute = R21AgustosWordcloudRouteImport.update({
   id: '/21-agustos/wordcloud',
@@ -292,6 +323,11 @@ const R21AgustosEslesmeRoute = R21AgustosEslesmeRouteImport.update({
   path: '/21-agustos/eslesme',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DeUUsernameRoute = DeUUsernameRouteImport.update({
+  id: '/u/$username',
+  path: '/u/$username',
+  getParentRoute: () => DeRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -312,6 +348,7 @@ export interface FileRoutesByFullPath {
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
   '/creative': typeof CreativeRoute
+  '/de': typeof DeRouteWithChildren
   '/demo': typeof DemoRoute
   '/demo2': typeof Demo2Route
   '/duyurular': typeof DuyurularRoute
@@ -339,8 +376,13 @@ export interface FileRoutesByFullPath {
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
+  '/de/events': typeof DeEventsRoute
+  '/de/networking': typeof DeNetworkingRoute
+  '/de/profil': typeof DeProfilRoute
   '/five/live': typeof FiveLiveRoute
   '/u/$username': typeof UUsernameRoute
+  '/de/': typeof DeIndexRoute
+  '/de/u/$username': typeof DeUUsernameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -388,8 +430,13 @@ export interface FileRoutesByTo {
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
+  '/de/events': typeof DeEventsRoute
+  '/de/networking': typeof DeNetworkingRoute
+  '/de/profil': typeof DeProfilRoute
   '/five/live': typeof FiveLiveRoute
   '/u/$username': typeof UUsernameRoute
+  '/de': typeof DeIndexRoute
+  '/de/u/$username': typeof DeUUsernameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -411,6 +458,7 @@ export interface FileRoutesById {
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
   '/creative': typeof CreativeRoute
+  '/de': typeof DeRouteWithChildren
   '/demo': typeof DemoRoute
   '/demo2': typeof Demo2Route
   '/duyurular': typeof DuyurularRoute
@@ -438,8 +486,13 @@ export interface FileRoutesById {
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
+  '/de/events': typeof DeEventsRoute
+  '/de/networking': typeof DeNetworkingRoute
+  '/de/profil': typeof DeProfilRoute
   '/five_/live': typeof FiveLiveRoute
   '/u/$username': typeof UUsernameRoute
+  '/de/': typeof DeIndexRoute
+  '/de/u/$username': typeof DeUUsernameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -462,6 +515,7 @@ export interface FileRouteTypes {
     | '/cerez-politikasi'
     | '/community'
     | '/creative'
+    | '/de'
     | '/demo'
     | '/demo2'
     | '/duyurular'
@@ -489,8 +543,13 @@ export interface FileRouteTypes {
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
+    | '/de/events'
+    | '/de/networking'
+    | '/de/profil'
     | '/five/live'
     | '/u/$username'
+    | '/de/'
+    | '/de/u/$username'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -538,8 +597,13 @@ export interface FileRouteTypes {
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
+    | '/de/events'
+    | '/de/networking'
+    | '/de/profil'
     | '/five/live'
     | '/u/$username'
+    | '/de'
+    | '/de/u/$username'
   id:
     | '__root__'
     | '/'
@@ -560,6 +624,7 @@ export interface FileRouteTypes {
     | '/cerez-politikasi'
     | '/community'
     | '/creative'
+    | '/de'
     | '/demo'
     | '/demo2'
     | '/duyurular'
@@ -587,8 +652,13 @@ export interface FileRouteTypes {
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
+    | '/de/events'
+    | '/de/networking'
+    | '/de/profil'
     | '/five_/live'
     | '/u/$username'
+    | '/de/'
+    | '/de/u/$username'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -610,6 +680,7 @@ export interface RootRouteChildren {
   CerezPolitikasiRoute: typeof CerezPolitikasiRoute
   CommunityRoute: typeof CommunityRoute
   CreativeRoute: typeof CreativeRoute
+  DeRoute: typeof DeRouteWithChildren
   DemoRoute: typeof DemoRoute
   Demo2Route: typeof Demo2Route
   DuyurularRoute: typeof DuyurularRoute
@@ -804,6 +875,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/de': {
+      id: '/de'
+      path: '/de'
+      fullPath: '/de'
+      preLoaderRoute: typeof DeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/creative': {
       id: '/creative'
       path: '/creative'
@@ -930,6 +1008,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/de/': {
+      id: '/de/'
+      path: '/'
+      fullPath: '/de/'
+      preLoaderRoute: typeof DeIndexRouteImport
+      parentRoute: typeof DeRoute
+    }
     '/u/$username': {
       id: '/u/$username'
       path: '/u/$username'
@@ -943,6 +1028,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/five/live'
       preLoaderRoute: typeof FiveLiveRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/de/profil': {
+      id: '/de/profil'
+      path: '/profil'
+      fullPath: '/de/profil'
+      preLoaderRoute: typeof DeProfilRouteImport
+      parentRoute: typeof DeRoute
+    }
+    '/de/networking': {
+      id: '/de/networking'
+      path: '/networking'
+      fullPath: '/de/networking'
+      preLoaderRoute: typeof DeNetworkingRouteImport
+      parentRoute: typeof DeRoute
+    }
+    '/de/events': {
+      id: '/de/events'
+      path: '/events'
+      fullPath: '/de/events'
+      preLoaderRoute: typeof DeEventsRouteImport
+      parentRoute: typeof DeRoute
     }
     '/21-agustos/wordcloud': {
       id: '/21-agustos/wordcloud'
@@ -972,8 +1078,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof R21AgustosEslesmeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/de/u/$username': {
+      id: '/de/u/$username'
+      path: '/u/$username'
+      fullPath: '/de/u/$username'
+      preLoaderRoute: typeof DeUUsernameRouteImport
+      parentRoute: typeof DeRoute
+    }
   }
 }
+
+interface DeRouteChildren {
+  DeEventsRoute: typeof DeEventsRoute
+  DeNetworkingRoute: typeof DeNetworkingRoute
+  DeProfilRoute: typeof DeProfilRoute
+  DeIndexRoute: typeof DeIndexRoute
+  DeUUsernameRoute: typeof DeUUsernameRoute
+}
+
+const DeRouteChildren: DeRouteChildren = {
+  DeEventsRoute: DeEventsRoute,
+  DeNetworkingRoute: DeNetworkingRoute,
+  DeProfilRoute: DeProfilRoute,
+  DeIndexRoute: DeIndexRoute,
+  DeUUsernameRoute: DeUUsernameRoute,
+}
+
+const DeRouteWithChildren = DeRoute._addFileChildren(DeRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -994,6 +1125,7 @@ const rootRouteChildren: RootRouteChildren = {
   CerezPolitikasiRoute: CerezPolitikasiRoute,
   CommunityRoute: CommunityRoute,
   CreativeRoute: CreativeRoute,
+  DeRoute: DeRouteWithChildren,
   DemoRoute: DemoRoute,
   Demo2Route: Demo2Route,
   DuyurularRoute: DuyurularRoute,

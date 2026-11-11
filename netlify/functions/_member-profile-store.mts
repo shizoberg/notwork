@@ -1,3 +1,4 @@
+import { memberCountry, type MemberCountry } from "../../src/lib/member-country.ts";
 import { recordMarketingPreference } from "./_announcements.mjs";
 import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
@@ -35,6 +36,7 @@ const demoEventNetworkDataset = "21agustos-demo";
 const liveEventNetworkDataset = "21agustoscanli";
 
 type NetworkMemberRow = {
+  country?: MemberCountry;
   id: string;
   name: string;
   title: string;
@@ -98,6 +100,7 @@ type CompletedEventMatch = {
 };
 
 export type StoredMemberProfile = {
+  country?: MemberCountry;
   id: string;
   memberId: string;
   username: string;
@@ -267,6 +270,7 @@ function shareableProfile(profile: StoredMemberProfile) {
   return {
     username: profile.username,
     name: profile.name,
+    country: profile.country,
     headline: profile.headline,
     bio: profile.bio,
     photoUrl: profile.photoUrl
@@ -557,6 +561,7 @@ export async function syncVerifiedEventMembers(store = getMemberProfileStore()) 
       email,
       phone: existing?.phone || clean(member.contact, 80),
       name: clean(member.name, 100),
+      country: existing?.country ?? memberCountry(member.country),
       headline: existing?.headline || clean(member.title, 120),
       bio: existing?.bio || clean(member.motivation, 240),
       photoUrl: existing?.photoUrl || "",
@@ -629,6 +634,7 @@ async function verifyPassword(password: string, credential?: StoredCredential) {
 }
 
 type NewMemberRegistration = {
+  country?: unknown;
   name?: string;
   email?: string;
   password?: string;
@@ -751,6 +757,7 @@ export async function registerMemberProfile(
     email,
     phone,
     name,
+    country: memberCountry(input.country),
     headline: introduction.slice(0, 120),
     bio: introduction.slice(0, 320),
     photoUrl: `/api/member-profile?photo=${encodeURIComponent(profileId)}&v=${Date.now()}`,
@@ -787,6 +794,7 @@ export async function registerMemberProfile(
   const directoryMember: NetworkMemberRow = {
     id: memberId,
     name,
+    country: memberCountry(input.country),
     title: introduction.slice(0, 80),
     skills: canHelpWith.slice(0, 240),
     email,
@@ -886,6 +894,7 @@ export async function activateEventAttendeeMember(
     email,
     phone: existing?.phone || "",
     name: existing?.name || name,
+    country: existing?.country,
     headline:
       existing?.headline || intro.slice(0, 120) || `${needTag || "networking"} · etkinlik üyesi`,
     bio: existing?.bio || intro.slice(0, 320),
@@ -1271,6 +1280,7 @@ export async function changeMemberPassword(
 }
 
 type EditableProfileInput = {
+  country?: unknown;
   headline?: string;
   bio?: string;
   skills?: unknown;
@@ -1324,6 +1334,7 @@ export async function updateMemberProfile(
   const updatedAt = new Date().toISOString();
   const profile: StoredMemberProfile = {
     ...session.profile,
+    country: input.country === undefined ? session.profile.country : memberCountry(input.country),
     headline: clean(input.headline, 120),
     bio: clean(input.bio, 320),
     skills: normalizeSkills(input.skills),
@@ -1343,6 +1354,7 @@ export async function updateMemberProfile(
   if (member && member.email.trim().toLowerCase() === profile.email.trim().toLowerCase()) {
     await memberStore.setJSON(key, {
       ...member,
+      country: profile.country,
       title: profile.headline.slice(0, 80),
       motivation: profile.bio.slice(0, 180),
       skills: profile.skills.join(", "),
@@ -1439,6 +1451,7 @@ async function networkingDirectoryProfile(profile: StoredMemberProfile) {
   return {
     username: member.username,
     name: member.name,
+    country: profile.country ?? memberCountry(member.country),
     headline: member.title,
     bio: member.motivation,
     photoUrl: "",
@@ -1614,6 +1627,7 @@ export async function moderateMemberProfile(
     const member: NetworkMemberRow = {
       id: profile.memberId,
       name: profile.name,
+      country: profile.country,
       title: profile.registration.introduction.slice(0, 80),
       skills: profile.registration.canHelpWith.slice(0, 240),
       email: profile.email,
@@ -1746,11 +1760,21 @@ export async function createAdminMemberProfile(
   };
 }
 
-export async function syncMemberEventCode(username: string, email: string, eventId: string, code: string) {
+export async function syncMemberEventCode(
+  username: string,
+  email: string,
+  eventId: string,
+  code: string,
+) {
   const store = getMemberProfileStore();
   const key = profileKey(username);
-  const current = await store.get(key, { type: "json", consistency: "strong" }) as StoredMemberProfile | null;
+  const current = (await store.get(key, {
+    type: "json",
+    consistency: "strong",
+  })) as StoredMemberProfile | null;
   if (!current || current.email !== email) return;
-  current.eventCodes = (current.eventCodes || []).map((row) => row.eventId === eventId ? { ...row, code } : row);
+  current.eventCodes = (current.eventCodes || []).map((row) =>
+    row.eventId === eventId ? { ...row, code } : row,
+  );
   await store.setJSON(key, current);
 }

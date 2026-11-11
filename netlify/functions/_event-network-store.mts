@@ -64,6 +64,7 @@ type EventNetworkRegistration = {
 };
 
 type NetworkMemberRow = {
+  country?: "TR" | "DE";
   id: string;
   name: string;
   title: string;
@@ -385,6 +386,7 @@ async function upsertGeneralNetworkingMember(registration: EventNetworkRegistrat
   const member: NetworkMemberRow = {
     id: existing?.id || registration.profile.id,
     name: displayName(registration),
+    country: existing?.country,
     title: registration.needTag
       ? `${eventLabel} katılımcısı · ${registration.needTag}`
       : `${eventLabel} notwork katılımcısı`,

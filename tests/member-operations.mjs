@@ -11,6 +11,10 @@ try {
   await fs.mkdir(path.join(temp, "data"));
   await fs.writeFile(path.join(temp, "data/networking-seed.json"), "[]");
   await fs.copyFile(new URL('./helpers/memory-blobs.mjs', import.meta.url), path.join(temp, 'functions/mock.mjs'));
+  const countryModule = await fs.readFile(new URL("../src/lib/member-country.ts", import.meta.url), "utf8");
+  await fs.writeFile(path.join(temp, "functions/member-country.mjs"), ts.transpileModule(countryModule, {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+  }).outputText);
   for (const file of [
     "_test-members",
     "_atomic-state",
@@ -35,7 +39,8 @@ try {
   ]) {
     const source = (
       await fs.readFile(new URL(`../netlify/functions/${file}.mts`, import.meta.url), "utf8")
-    ).replaceAll('"@netlify/blobs"', '"./mock.mjs"');
+    ).replaceAll('"@netlify/blobs"', '"./mock.mjs"')
+      .replace('"../../src/lib/member-country.ts"', '"./member-country.mjs"');
     const compiled = ts.transpileModule(source, {
       compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
     });
@@ -84,11 +89,15 @@ try {
   await members.changeMemberPassword(login.token, "Replacement-password-123!");
   const updated = await members.updateMemberProfile(login.token, {
     headline: "New headline",
+    country: "DE",
     bio: "Updated biography",
     links: { website: "https://updated.org" },
     publicProfileEnabled: true,
   });
   assert.equal(updated.bio, "Updated biography");
+  assert.equal(updated.country, "DE");
+  assert.equal((await sourceStore.get("members/example-member.json")).country, "DE");
+  assert.equal((await members.getPublicMemberProfile("example-member")).profile.country, "DE");
   assert.equal((await sourceStore.get("members/example-member.json")).title, "New headline");
   assert.equal(updated.links.website, "https://updated.org");
   await sourceStore.setJSON("members/real-tester.json", {
