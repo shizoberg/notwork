@@ -5,6 +5,7 @@ process.env.MEMBER_PROFILE_STORE = "launch-test-profiles";
 process.env.MEMBER_SOURCE_STORE = "launch-test-members";
 const password = "LaunchSpaceTest2026!";
 const sandbox = await functionSandbox({ adminPassword: password });
+const originalFetch = globalThis.fetch;
 try {
   const registry = await sandbox.load("_event-registry-store");
   const context = await sandbox.load("_event-product-context");
@@ -44,15 +45,26 @@ try {
       needTag: "networking",
       attendedEvent: event.slug,
       eventConsent: true,
+      aiAnalysisConsent: i >= 94,
     });
     assert.equal(r.status, 201, r.data);
     participants.push(r.data);
   }
   let r = await call(handler, { action: "match", accessToken: participants[0].accessToken });
   assert.equal(r.data.waitingReason, "admin");
+  process.env.OPENAI_API_KEY = "local-test-placeholder";
+  process.env.NTW_AI_ENABLED = "true";
+  let aiCalls = 0;
+  globalThis.fetch = async (url, options) => {
+    assert.equal(url, "https://api.openai.com/v1/responses");
+    assert.equal(JSON.parse(options.body).text.format.name, "ntw_match_ranking");
+    aiCalls++;
+    return Response.json({ error: { code: "credit_balance_exhausted" } }, { status: 429 });
+  };
   let launch = await call(admin, { action: "startMatching", password });
   while (launch.data.matching.status === "running")
     launch = await call(admin, { action: "processMatching", password });
+  assert.equal(aiCalls, 1, "Launchspace tries the API once and then falls back on quota failure");
   const groups = new Map();
   let matched = 0;
   for (const p of participants) {
@@ -278,5 +290,6 @@ try {
     "PASS: real handlers, 100 participants → 33 disjoint groups + 1 waiting; admin launch; session recovery; private chat; 100 concurrent ballots; idempotency; stage publication; auth; event/demo/live isolation; rematch isolation. No production data/AI.",
   );
 } finally {
+  globalThis.fetch = originalFetch;
   await sandbox.cleanup();
 }

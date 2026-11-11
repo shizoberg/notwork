@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { functionSandbox } from "./helpers/function-sandbox.mjs";
 process.env.LAUNCH_ADMIN_USERNAME = "launch-test";
@@ -38,6 +39,25 @@ try {
   const cookie = r.headers.get("set-cookie").split(";")[0];
   assert.match(r.headers.get("set-cookie"), /HttpOnly/);
   assert.match(r.headers.get("set-cookie"), /Secure/);
+  const logo = await readFile(new URL("../public/launchspace/logo.jpg", import.meta.url));
+  const assetUrl = "https://notwork.test/api/launch-admin?asset=upload";
+  const upload = (body, session = "") =>
+    login(
+      new Request(assetUrl, {
+        method: "POST",
+        headers: { cookie: session },
+        body,
+      }),
+      {},
+    );
+  assert.equal((await upload(logo)).status, 401);
+  assert.equal((await upload("<svg/>", cookie)).status, 400);
+  const uploaded = await upload(logo, cookie);
+  assert.equal(uploaded.status, 200);
+  const { url } = await uploaded.json();
+  const asset = await login(new Request("https://notwork.test" + url), {});
+  assert.equal(asset.headers.get("content-type"), "image/jpeg");
+  assert.deepEqual(Buffer.from(await asset.arrayBuffer()), logo);
   async function readFlow() {
     const response = await login(new Request("https://notwork.test/api/launch-admin"), {});
     assert.equal(response.status, 200);
@@ -45,6 +65,8 @@ try {
   }
   const flow = await readFlow();
   assert.equal(flow.revision, 0);
+  flow.logo = url;
+  flow.organizerName = "launchspace networking party";
   flow.schedule.push({ time: "20:00", label: "Networking" });
   flow.questions[0].options = ["Tasarım", "Teknoloji"];
   flow.apps.reverse();
@@ -111,6 +133,12 @@ try {
   assert.equal(r.status, 400);
   r = await call(poll, { action: "admin", event: other.id }, cookie);
   assert.equal(r.status, 401);
+  r = await call(net, { action: "matchOverview", event: event.id }, cookie);
+  assert.equal(r.status, 200);
+  const overview = await r.json();
+  assert.equal(overview.registrations, undefined);
+  assert.equal(overview.registeredCount, 0);
+  assert.equal((await call(net, { action: "matchOverview", event: other.id }, cookie)).status, 401);
   r = await call(net, { action: "list", event: event.id }, cookie);
   assert.equal(r.status, 200);
   r = await call(net, { action: "list", event: other.id }, cookie);

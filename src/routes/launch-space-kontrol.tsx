@@ -8,7 +8,7 @@ import "@/launch-space.css";
 export const Route = createFileRoute("/launch-space-kontrol")({
   head: () =>
     createNoIndexSeo({
-      title: "launch space · organizatör",
+      title: "launchspace · organizatör",
       description: "Yerel etkinlik kontrolü",
       path: "/launch-space-kontrol",
     }),
@@ -41,7 +41,7 @@ function Control() {
       <header className="ls-header">
         <span className="ls-brand">
           <NodeMark />
-          launch space
+          launchspace
         </span>
         <span className="ls-demo">ORGANİZATÖR</span>
       </header>

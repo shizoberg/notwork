@@ -164,6 +164,7 @@ export type NetworkAdminInput = {
   password?: string;
   action?:
     | "list"
+    | "matchOverview"
     | "resetDemo"
     | "repairCodes"
     | "seedSamples"
@@ -1204,10 +1205,16 @@ export async function processMatchLaunch(store: ReturnType<typeof getEventNetwor
   const presenceMap = await getPresenceMap(store, rows);
   const eligibleIds = new Set(job.participantIds);
   const end = Math.min(job.cursor + 6, job.participantIds.length);
+  const batch = {
+    rows,
+    presenceMap,
+    eligibleIds,
+    aiRemaining: getEventNetworkDatasetInfo().eventSlug === "14-kasim-2026" ? 1 : 0,
+  };
   for (let index = job.cursor; index < end; index++) {
     const current = participants.get(job.participantIds[index]);
     if (current?.participant.status === "registered") {
-      await matchRegistration(store, current, { rows, presenceMap, eligibleIds });
+      await matchRegistration(store, current, batch);
     }
   }
   return atomicState(
@@ -1259,6 +1266,7 @@ async function matchRegistration(
     rows: EventNetworkRegistration[];
     presenceMap: Map<string, EventNetworkPresence>;
     eligibleIds: Set<string>;
+    aiRemaining: number;
   },
 ) {
   // Most polling requests already belong to a group. Read only that group,
@@ -1295,6 +1303,7 @@ async function matchRegistration(
     .filter((row) => !cursor.seen.has(row.participant.id))
     .filter((row) => (presenceMap.get(row.participant.id) || "open") !== "paused");
   let waitingCount = 1;
+  let triedAi = false;
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const roomIndex = await readAtomicState(
       store,
@@ -1331,9 +1340,8 @@ async function matchRegistration(
       nextRound,
     );
     let selected = deterministicSelected;
-    // During the initial crowd surge, keep room creation independent of API latency.
-    // The deterministic scorer still handles every candidate; AI analysis runs after claim.
-    if (!batch && current.aiConsent?.analysis && rows.length <= 6) {
+    const aiAllowed = batch ? batch.aiRemaining > 0 : rows.length <= 6;
+    if (!triedAi && aiAllowed && current.aiConsent?.analysis) {
       const aiShortlist = availableCandidates
         .filter((candidate) => candidate.aiConsent?.analysis)
         .map((row) => ({
@@ -1349,17 +1357,19 @@ async function matchRegistration(
         })
         .slice(0, 8);
       if (aiShortlist.length >= 2) {
+        triedAi = true;
+        if (batch) batch.aiRemaining--;
         const aiIds = await rerankMatchCandidates(
           getNetworkPrefix(),
           current,
           aiShortlist.map((candidate) => candidate.row),
-          2,
+          groupSize - 1,
         );
         if (aiIds) {
           const aiSelected = aiIds
             .map((id) => aiShortlist.find((candidate) => candidate.row.participant.id === id))
             .filter(Boolean) as typeof aiShortlist;
-          if (aiSelected.length === 2) selected = aiSelected;
+          if (aiSelected.length === groupSize - 1) selected = aiSelected;
         }
       }
     }

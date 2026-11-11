@@ -33,7 +33,7 @@ import { LaunchSpaceArea } from "@/components/launch-space/LaunchSpaceArea";
 export const Route = createFileRoute("/launch-space")({
   head: () =>
     createNoIndexSeo({
-      title: "launch space · nodes by notwork",
+      title: "launchspace · nodes by notwork",
       description: "14 Kasım etkinlik deneyimi · yerel test",
       path: "/launch-space",
     }),
@@ -76,6 +76,7 @@ function LaunchSpace() {
     field: "networking",
   });
   const [consent, setConsent] = useState(false),
+    [aiConsent, setAiConsent] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [complete, setComplete] = useState(false);
@@ -172,7 +173,7 @@ function LaunchSpace() {
           needTag: "networking",
           attendedEvent: novemberEventSlug,
           eventConsent: consent,
-          aiAnalysisConsent: false,
+          aiAnalysisConsent: aiConsent,
           modelImprovementConsent: false,
           generalNetworkOptIn: false,
           marketingOptIn: false,
@@ -327,7 +328,7 @@ function LaunchSpace() {
           <>
             {step === -1 && !login ? (
               <section className="ls-enter">
-                <LaunchEventHeader schedule={flow.schedule} />
+                <LaunchEventHeader flow={flow} />
                 <div className="ls-panel ls-node-entry">
                   <p className="ls-eyebrow">Etkinlik amacı</p>
                   <p className="ls-muted ls-flow-copy">{flow.welcomeText}</p>
@@ -539,11 +540,18 @@ function LaunchSpace() {
                           </a>
                         </span>
                       </label>
-                      <p className="ls-caption">
-                        Ankette sahneye yalnızca toplu sonuçlar çıkar.
-                        <br />
-                        Bu demoda yapay zekâya veri gönderilmez.
-                      </p>
+                      <label className="ls-check">
+                        <input
+                          type="checkbox"
+                          checked={aiConsent}
+                          onChange={(e) => setAiConsent(e.target.checked)}
+                        />
+                        <span>
+                          İsteğe bağlı · ihtiyaç ve katkı yanıtlarım eşleşme için OpenAI ile
+                          değerlendirilebilir.
+                        </span>
+                      </label>
+                      <p className="ls-caption">Ankette sahneye yalnızca toplu sonuçlar çıkar.</p>
                     </>
                   )}
                   <button className="ls-primary" disabled={busy}>
@@ -593,7 +601,7 @@ function LaunchSpace() {
                     }}
                   >
                     <Radio size={17} />
-                    notwork anket sonuçları
+                    Oylama sonuçları
                     <ArrowRight size={16} />
                   </button>
                   <p className="ls-section-label">BU BULUŞMADAKİ DENEYİMLERİN</p>
@@ -612,7 +620,7 @@ function LaunchSpace() {
                         <small>
                           0{index + 1} · {app === "match" ? "TANIŞ" : "PAYLAŞ"}
                         </small>
-                        <h2>{app === "match" ? "notwork match" : "notwork anket"}</h2>
+                        <h2>{app === "match" ? "notwork match" : "Sunum oylaması"}</h2>
                         <p>
                           {app === "match"
                             ? "Yeni bir gruba katıl ve sohbeti başlat."
@@ -777,7 +785,7 @@ function LaunchSpace() {
                     Canlı sonuçlar
                   </button>
                 </div>
-                <p className="ls-eyebrow">NOTWORK ANKET</p>
+                <p className="ls-eyebrow">{flow.organizerName}</p>
                 {!poll ? (
                   <p role="status">Anket yükleniyor…</p>
                 ) : showResults ? (

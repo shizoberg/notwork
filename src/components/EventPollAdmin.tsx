@@ -10,10 +10,12 @@ export function EventPollAdmin({
   event,
   password,
   nodes = false,
+  organizerName = "launchspace",
 }: {
   event: string;
   password: string;
   nodes?: boolean;
+  organizerName?: string;
 }) {
   const [questions, setQuestions] = useState<PollQuestion[] | null>(null);
   const [baseRevision, setBaseRevision] = useState(0);
@@ -75,7 +77,7 @@ export function EventPollAdmin({
       <section className="ls-panel ls-nodes-poll" aria-label="Anket yönetimi">
         <div className="ls-nodes-section-head">
           <div>
-            <p className="ls-eyebrow">node.games</p>
+            <p className="ls-eyebrow">{organizerName}</p>
             <h2>Sunum oylaması</h2>
           </div>
           <a
@@ -300,7 +302,9 @@ export function EventPollAdmin({
             ETKİNLİĞE ÖZEL ·{" "}
             {data?.config.questions.length ?? (event === novemberEventSlug ? 1 : 5)} SORU
           </p>
-          <h2 className="mt-1 text-2xl font-semibold">notwork anket</h2>
+          <h2 className="mt-1 text-2xl font-semibold">
+            {event === novemberEventSlug ? organizerName : "notwork anket"}
+          </h2>
         </div>
         <a
           className="rounded-full border px-4 py-2 text-sm"

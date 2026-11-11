@@ -112,7 +112,6 @@ export default async (request: Request, _context: Context) => {
                 marketingPreferenceVersion: undefined,
                 marketingOptIn: false,
                 generalNetworkOptIn: false,
-                aiAnalysisConsent: false,
                 modelImprovementConsent: false,
               }
             : {}),

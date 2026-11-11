@@ -1480,3 +1480,110 @@
     text-align: center;
   }
 }
+
+.launch-space .ls-main-wide {
+  max-width: 1120px;
+}
+.launch-space .ls-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(225px, 0.8fr) minmax(0, 1.25fr);
+  align-items: start;
+  gap: 24px;
+}
+.launch-space .ls-editor-preview {
+  position: sticky;
+  top: 80px;
+  border: 1px solid #35373c;
+  border-radius: 24px;
+  background: #101215;
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
+.launch-space .ls-preview-steps {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-block: 10px 16px;
+}
+.launch-space .ls-preview-steps button {
+  border: 1px solid #35373c;
+  border-radius: 20px;
+  padding: 6px 10px;
+  font-size: 11px;
+}
+.launch-space .ls-preview-steps button[aria-pressed="true"] {
+  background: #24333c;
+  color: #e5f3f8;
+}
+.launch-space .ls-preview-cover {
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: 12px;
+}
+.launch-space .ls-preview-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-block: 10px;
+}
+.launch-space .ls-preview-brand img,
+.launch-space .ls-stage-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+.launch-space .ls-preview-choice {
+  display: block;
+  padding: 9px 12px;
+  margin-block: 6px;
+  border: 1px solid #35373c;
+  border-radius: 12px;
+  font-size: 13px;
+}
+.launch-space .ls-preview-textarea {
+  min-height: 70px;
+  color: #a6a8af;
+}
+.launch-space .ls-preview-next {
+  background: #24333c;
+}
+.launch-space .ls-brand-edit input {
+  max-width: 100%;
+}
+.launch-space .ls-live-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 12px;
+}
+.launch-space .ls-live-groups article {
+  border: 1px solid #35373c;
+  border-radius: 16px;
+  padding: 14px;
+}
+.launch-space .ls-live-groups article > span {
+  display: block;
+}
+.launch-space .ls-live-groups ul {
+  padding-inline-start: 16px;
+  margin-block: 8px 0;
+}
+.launch-space .ls-event-cover img {
+  object-fit: contain;
+}
+.launch-space .ls-event-cover {
+  height: clamp(180px, 50vw, 340px);
+}
+.launch-space .ls-event-identity .ls-space-logo img {
+  width: 100%;
+  border-radius: 16px;
+}
+@media (max-width: 680px) {
+  .launch-space .ls-editor-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .launch-space .ls-editor-preview {
+    position: static;
+  }
+}

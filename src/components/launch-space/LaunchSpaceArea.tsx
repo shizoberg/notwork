@@ -115,7 +115,7 @@ export function LaunchSpaceArea({
   const incoming = people.filter((p) => p.received && !p.sent);
   return (
     <div className="ls-space-area">
-      <LaunchEventHeader schedule={flow.schedule} />
+      <LaunchEventHeader flow={flow} />
       <details className="ls-panel ls-area-info">
         <summary>Etkinlik bilgileri</summary>
         <p className="ls-muted ls-flow-copy">{flow.welcomeText}</p>

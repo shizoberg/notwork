@@ -4,8 +4,8 @@ import { LaunchAdminPanel } from "./adminlaunch";
 export const Route = createFileRoute("/adminalaunch")({
   head: () =>
     createNoIndexSeo({
-      title: "Launch Space · yönetici girişi",
-      description: "Yalnızca Launch Space etkinlik yönetimi",
+      title: "launchspace · yönetici girişi",
+      description: "Yalnızca launchspace etkinlik yönetimi",
       path: "/adminalaunch",
     }),
   component: LaunchAdminPanel,

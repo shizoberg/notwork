@@ -40,7 +40,11 @@ export default async (request: Request, _context: Context) => {
     if (scoped && !(await hasLaunchSession(request, eventIdentifier)))
       return new Response("Yetkisiz erişim", { status: 401 });
     if (scoped) {
-      if (!["list", "startMatching", "processMatching", "repairCodes"].includes(input.action || "list"))
+      if (
+        !["list", "matchOverview", "startMatching", "processMatching", "repairCodes"].includes(
+          input.action || "list",
+        )
+      )
         return new Response("Bu işlem için yetkin yok", { status: 403 });
       input.mode = undefined;
     }
@@ -98,7 +102,13 @@ export default async (request: Request, _context: Context) => {
         const matching = await getMatchLaunchState(store);
         return Response.json(
           {
-            registrations,
+            ...(input.action === "matchOverview"
+              ? {
+                  registeredCount: registrations.filter(
+                    (row) => row.participant.status === "registered",
+                  ).length,
+                }
+              : { registrations }),
             matching: {
               status: matching.status,
               total: matching.participantIds.length,

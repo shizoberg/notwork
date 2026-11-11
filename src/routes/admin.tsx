@@ -1174,7 +1174,7 @@ function AdminPage() {
         ) : null}
 
         {activeAdminTab === "events" && selectedToolsEvent?.slug === "14-kasim-2026" ? (
-          <><div className="mt-5 flex gap-3"><a href="/launch-space" target="_blank" rel="noreferrer" className="rounded-full border px-4 py-2 text-sm">Launch Space demosunu aç ↗</a><a href="/launch-space-kontrol" target="_blank" rel="noreferrer" className="rounded-full border px-4 py-2 text-sm">Eşleştirme kontrolü ↗</a></div><EventPollAdmin event={selectedToolsEvent.slug} password={password}/></>
+          <><div className="mt-5 flex gap-3"><a href="/launch-space" target="_blank" rel="noreferrer" className="rounded-full border px-4 py-2 text-sm">launchspace demosunu aç ↗</a><a href="/launch-space-kontrol" target="_blank" rel="noreferrer" className="rounded-full border px-4 py-2 text-sm">Eşleştirme kontrolü ↗</a></div><EventPollAdmin event={selectedToolsEvent.slug} password={password}/></>
         ) : null}
         {activeAdminTab === "events" ? (
           <nav
@@ -1343,7 +1343,7 @@ function AdminPage() {
                   rel="noreferrer"
                   className="rounded-full border border-primary/30 bg-background px-4 py-2 text-sm font-bold"
                 >
-                  {selectedToolsEvent?.slug === "14-kasim-2026" ? "Launch Space girişini aç" : "Linkler girişini aç"}
+                  {selectedToolsEvent?.slug === "14-kasim-2026" ? "launchspace girişini aç" : "Linkler girişini aç"}
                 </a>
               ) : null}
               {eventSection === "data" ? (

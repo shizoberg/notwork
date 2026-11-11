@@ -12,13 +12,21 @@ import "@/launch-space.css";
 export const Route = createFileRoute("/adminlaunch")({
   head: () =>
     createNoIndexSeo({
-      title: "launch space · organizatör",
+      title: "launchspace · organizatör",
       description: "Yerel etkinlik kontrolü",
       path: "/adminlaunch",
     }),
   component: LaunchAdminPanel,
 });
+type MatchOverview = {
+  registeredCount: number;
+  matching: { status: "waiting" | "running" | "open"; total: number; processed: number };
+  groups: { id: string; groupName: string; round: number; memberNames: string[] }[];
+};
+
 export function LaunchAdminPanel() {
+  const [overview, setOverview] = useState<MatchOverview>();
+  const [matchError, setMatchError] = useState("");
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
   const [password, setPassword] = useState(""),
@@ -77,17 +85,46 @@ export function LaunchAdminPanel() {
       .then(setFlow)
       .catch(() => {});
   }
+  useEffect(() => {
+    if (!active || section !== "match") return;
+    let current = true;
+    let pending = false;
+    const refresh = async () => {
+      if (document.hidden || pending) return;
+      pending = true;
+      try {
+        const result = await request("matchOverview");
+        if (current) {
+          setOverview(result);
+          setMatchError("");
+        }
+      } catch {
+        if (current) setMatchError("Grup listesi yenilenemedi. Tekrar denenecek.");
+      } finally {
+        pending = false;
+      }
+    };
+    void refresh();
+    const timer = setInterval(refresh, 5000);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      current = false;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [active, section]);
+
   return (
     <div className="launch-space">
       <header className="ls-header">
         <span className="ls-brand">
           <NodeMark />
-          launch space
+          {flow.organizerName}
         </span>
         <span className="ls-demo">ORGANİZATÖR</span>
       </header>
-      <main className="ls-main">
-        <LaunchEventHeader schedule={flow.schedule} />
+      <main className={`ls-main ${active && section === "flow" ? "ls-main-wide" : ""}`}>
+        <LaunchEventHeader flow={flow} />
         {!active ? (
           <form
             onSubmit={(e) => {
@@ -190,13 +227,25 @@ export function LaunchAdminPanel() {
               <div className="ls-panel">
                 <p className="ls-eyebrow">node.games</p>
                 <h2>notwork match</h2>
-                <p className="ls-caption">{count} kayıtlı katılımcı</p>
+                <p className="ls-caption">
+                  {overview?.registeredCount ?? count} kayıtlı katılımcı ·{" "}
+                  {overview?.groups.length ?? 0} aktif grup
+                </p>
+                {overview?.matching.status === "running" && (
+                  <p className="ls-caption" role="status">
+                    {overview.matching.processed} / {overview.matching.total} katılımcı işlendi
+                  </p>
+                )}
                 <div className="ls-actions">
                   <button
                     className="ls-secondary"
-                    onClick={() => void load().catch((e) => setError(e.message))}
+                    onClick={() =>
+                      void request("matchOverview")
+                        .then(setOverview)
+                        .catch((e) => setError(e.message))
+                    }
                   >
-                    Katılımcıları yenile
+                    Grupları yenile
                   </button>
                   <button
                     disabled={busy}
@@ -206,9 +255,13 @@ export function LaunchAdminPanel() {
                       setError("");
                       try {
                         let r = await request("startMatching");
-                        while (r.matching.status === "running")
+                        while (r.matching.status === "running") {
                           r = await request("processMatching");
-                        await load();
+                          await request("matchOverview")
+                            .then(setOverview)
+                            .catch(() => {});
+                        }
+                        setOverview(await request("matchOverview"));
                       } catch (e) {
                         setError(e instanceof Error ? e.message : "Eşleşme başlatılamadı");
                       } finally {
@@ -222,10 +275,42 @@ export function LaunchAdminPanel() {
                 <p className="ls-caption">
                   Aktif eşleşmeler korunur. Yeni katılımcılar ortak havuza katılır.
                 </p>
+                {matchError && (
+                  <p className="ls-caption" role="status">
+                    {matchError}
+                  </p>
+                )}
+                <h3>Aktif gruplar</h3>
+                {!overview ? (
+                  <p className="ls-caption">Gruplar yükleniyor…</p>
+                ) : overview.groups.length === 0 ? (
+                  <p className="ls-caption">Henüz aktif grup yok.</p>
+                ) : (
+                  <div className="ls-live-groups">
+                    {overview.groups.map((group) => (
+                      <article key={group.id}>
+                        <strong>{group.groupName}</strong>
+                        <span className="ls-caption">{group.round}. tur</span>
+                        <ul>
+                          {group.memberNames.map((name, index) => (
+                            <li key={index}>{name}</li>
+                          ))}
+                        </ul>
+                      </article>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             {section === "flow" && <LaunchFlowAdmin onSaved={setFlow} />}
-            {section === "poll" && <EventPollAdmin event={novemberEventSlug} password="" nodes />}
+            {section === "poll" && (
+              <EventPollAdmin
+                event={novemberEventSlug}
+                password=""
+                nodes
+                organizerName={flow.organizerName}
+              />
+            )}
           </>
         )}
         {active ? (

@@ -2,50 +2,65 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { createNoIndexSeo } from "@/lib/seo";
 import { pollRequest, novemberEventSlug, type PollPayload } from "@/lib/event-poll";
+import { defaultLaunchFlow, getLaunchFlow } from "@/lib/launch-flow";
 import { NodeMark } from "./launch-space";
 import "@/launch-space.css";
 export const Route = createFileRoute("/launch-space-sahne")({
   head: () =>
     createNoIndexSeo({
-      title: "notwork anket · sahne",
+      title: "launchspace · sahne",
       description: "Topluluğun sesi",
       path: "/launch-space-sahne",
     }),
   component: PollStage,
 });
 function PollStage() {
+  const [brand, setBrand] = useState(defaultLaunchFlow);
+  const [launchStage, setLaunchStage] = useState(true);
   const [cloud, setCloud] = useState(false);
   const [data, setData] = useState<PollPayload | null>(null),
     [error, setError] = useState("");
   useEffect(() => {
     let current = true;
     const event = new URLSearchParams(location.search).get("event") || novemberEventSlug;
-    const refresh = () => {
-      if (!document.hidden)
-        void pollRequest(event, { action: "stage" })
-          .then((r) => {
-            if (current) {
-              setData(r);
-              setError("");
-            }
-          })
-          .catch((e) => {
-            if (current) setError(e.message);
-          });
-    };
-    refresh();
-    const timer = setInterval(refresh, 5000);
+    setLaunchStage(event === novemberEventSlug);
+    if (event === novemberEventSlug)
+      void getLaunchFlow()
+        .then((flow) => {
+          if (current) setBrand(flow);
+        })
+        .catch(() => {});
+    let pending = false;
+    async function refresh() {
+      if (document.hidden || pending) return;
+      pending = true;
+      try {
+        const result = await pollRequest(event, { action: "stage" });
+        if (current) {
+          setData(result);
+          setError("");
+        }
+      } catch (error) {
+        if (current) setError(error instanceof Error ? error.message : "Sonuçlar yüklenemedi.");
+      } finally {
+        pending = false;
+      }
+    }
+    void refresh();
+    const timer = setInterval(refresh, 3000);
+    document.addEventListener("visibilitychange", refresh);
     return () => {
       current = false;
       clearInterval(timer);
+      document.removeEventListener("visibilitychange", refresh);
     };
   }, []);
   return (
     <div className="launch-space ls-stage">
       <header className="ls-header">
         <span className="ls-brand">
-          <NodeMark />
-          notwork anket
+          {launchStage ? <img className="ls-stage-logo" src={brand.logo} alt="" /> : <NodeMark />}
+          {launchStage ? brand.organizerName : "notwork anket"}
         </span>
         <button className="ls-secondary ls-view-switch" onClick={() => setCloud((c) => !c)}>
           {cloud ? "Dağılımı göster" : "Kelime bulutu"}
@@ -62,9 +77,12 @@ function PollStage() {
         </button>
       </header>
       <main className="ls-stage-main">
-        {error ? (
-          <p role="alert">{error}</p>
-        ) : data?.published ? (
+        {error && (
+          <p role="status" className="ls-caption">
+            {data ? "Bağlantı yeniden deneniyor…" : error}
+          </p>
+        )}
+        {data?.published ? (
           <section className="ls-enter" key={data.published.question.id}>
             <p className="ls-eyebrow">TOPLULUĞUN SESİ · {data.published.total} YANIT</p>
             <h1 className="ls-stage-title">{data.published.question.title}</h1>

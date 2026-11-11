@@ -226,7 +226,9 @@ export async function rerankMatchCandidates(
     2000,
   );
   const validIds = new Set(shortlist.map((row) => row.participant.id));
-  const selected = [...new Set(result?.participantIds || [])].filter((id) => validIds.has(id));
+  const selected = [
+    ...new Set(Array.isArray(result?.participantIds) ? result.participantIds : []),
+  ].filter((id) => validIds.has(id));
   return selected.length === desiredCount ? selected : null;
 }
 

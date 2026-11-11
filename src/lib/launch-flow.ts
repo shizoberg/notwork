@@ -2,6 +2,9 @@ export const launchQuestionKeys = ["intro", "offersDetail", "needs"] as const;
 export type LaunchApp = "match" | "poll";
 export type LaunchFlow = {
   revision: number;
+  organizerName: string;
+  logo: string;
+  cover: string;
   welcomeTitle: string;
   welcomeText: string;
   registerLabel: string;
@@ -17,6 +20,9 @@ export type LaunchFlow = {
 
 export const defaultLaunchFlow: LaunchFlow = {
   revision: 0,
+  organizerName: "launchspace",
+  logo: "/launchspace/logo.jpg",
+  cover: "/launchspace/cover.jpg",
   welcomeTitle: "Etkinliğe katıl",
   welcomeText: "Yeni insanlarla tanış, firma sunumlarını izle ve favori sunumuna oy ver.",
   registerLabel: "Etkinliğe kayıt ol",
@@ -60,6 +66,9 @@ export const defaultLaunchFlow: LaunchFlow = {
   ],
 };
 
+export const launchImageLimit = 2_000_000;
+export const launchAssetPattern = /^[a-f0-9-]{36}\.(?:jpg|png|webp)$/;
+
 export function validateLaunchFlow(value: LaunchFlow): LaunchFlow {
   function line(value: unknown, limit: number, optional = false) {
     if (typeof value !== "string" || value.trim().length > limit || (!optional && !value.trim()))
@@ -88,8 +97,22 @@ export function validateLaunchFlow(value: LaunchFlow): LaunchFlow {
     !value.apps.includes("poll")
   )
     throw Error("Akış, soru veya uygulama sırası geçersiz.");
+  function image(path: string | undefined, key: "logo" | "cover") {
+    const fallback = defaultLaunchFlow[key];
+    if (!path || path === fallback) return fallback;
+    const prefix = "/api/launch-admin?asset=";
+    if (!path.startsWith(prefix) || !launchAssetPattern.test(path.slice(prefix.length)))
+      throw Error("Geçersiz görsel. Dosyayı yeniden yükle.");
+    return path;
+  }
   return {
     revision: value.revision,
+    organizerName: line(value.organizerName ?? defaultLaunchFlow.organizerName, 60).replace(
+      /launch\s+space/gi,
+      "launchspace",
+    ),
+    logo: image(value.logo, "logo"),
+    cover: image(value.cover, "cover"),
     welcomeTitle: line(value.welcomeTitle, 100),
     welcomeText: line(value.welcomeText, 240),
     registerLabel: line(value.registerLabel, 48),
@@ -118,5 +141,5 @@ export function validateLaunchFlow(value: LaunchFlow): LaunchFlow {
 export async function getLaunchFlow(): Promise<LaunchFlow> {
   const response = await fetch("/api/launch-admin", { cache: "no-store" });
   if (!response.ok) throw Error("Etkinlik akışı yüklenemedi.");
-  return response.json();
+  return { ...defaultLaunchFlow, ...(await response.json()) };
 }
