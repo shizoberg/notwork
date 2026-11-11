@@ -1,3 +1,4 @@
+import { defaultLaunchFlow, getLaunchFlow, launchQuestionKeys } from "@/lib/launch-flow";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -40,26 +41,6 @@ export const Route = createFileRoute("/launch-space")({
 const selection = { event: novemberEventSlug };
 const tokenKey = getEventNetworkTokenStorageKey(selection);
 type Tab = "home" | "match" | "poll";
-const fields = [
-  {
-    key: "intro",
-    title: "Biraz senden bahsedelim.",
-    label: "Kendini nasıl tanıtırsın?",
-    placeholder: "Neyle uğraşıyorsun, seni ne heyecanlandırıyor?",
-  },
-  {
-    key: "offersDetail",
-    title: "Paylaştıkça çoğalır.",
-    label: "İnsanlara ne katabilirsin?",
-    placeholder: "Deneyimin, bildiklerin, birlikte yapabileceklerin…",
-  },
-  {
-    key: "needs",
-    title: "Yeni ihtimallere açıl.",
-    label: "Bu buluşmada ne arıyorsun?",
-    placeholder: "Tanışmak istediğin insanlar ve aradığın destek…",
-  },
-] as const;
 export function NodeMark() {
   return (
     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -70,6 +51,8 @@ export function NodeMark() {
   );
 }
 function LaunchSpace() {
+  const [flow, setFlow] = useState(defaultLaunchFlow);
+
   const [ready, setReady] = useState(false),
     [contextError, setContextError] = useState("");
   const [eventTitle, setEventTitle] = useState("14 Kasım · notwork"),
@@ -81,6 +64,8 @@ function LaunchSpace() {
     [login, setLogin] = useState(false),
     [identity, setIdentity] = useState(""),
     [password, setPassword] = useState("");
+  const activeQuestion = flow.questions[step - 1];
+  const activeKey = launchQuestionKeys[step - 1];
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -108,8 +93,12 @@ function LaunchSpace() {
     alive.current = true;
     void (async () => {
       try {
-        const context = await getPublicEventContext(selection);
+        const [context, savedFlow] = await Promise.all([
+          getPublicEventContext(selection),
+          getLaunchFlow().catch(() => defaultLaunchFlow),
+        ]);
         if (!alive.current) return;
+        setFlow(savedFlow);
         setEventTitle(context.event.shortTitle);
         setMode(context.event.products.matchlab.dataMode);
         const saved = localStorage.getItem(tokenKey);
@@ -174,7 +163,7 @@ function LaunchSpace() {
       const r = await registerEventNetwork(
         {
           ...form,
-          offers: [form.field || "networking"],
+          offers: [flow.categories.includes(form.field) ? form.field : flow.categories[0]],
           needTag: "networking",
           attendedEvent: novemberEventSlug,
           eventConsent: consent,
@@ -339,22 +328,14 @@ function LaunchSpace() {
                   <i />
                   <i />
                 </div>
-                <p className="ls-eyebrow">14 KASIM · 18.00</p>
-                <h1>
-                  Bir tanışma.
-                  <br />
-                  <span>Yeni ihtimaller.</span>
-                </h1>
-                <p className="ls-muted">
-                  Kendini tanıt. Doğru insanlarla buluş.
-                  <br />
-                  Topluluğun sesine katıl.
-                </p>
+                <p className="ls-eyebrow">14 KASIM · {flow.schedule[0].time.replace(":", ".")}</p>
+                <h1 className="ls-flow-copy">{flow.welcomeTitle}</h1>
+                <p className="ls-muted ls-flow-copy">{flow.welcomeText}</p>
                 <button className="ls-primary" onClick={() => setStep(0)}>
-                  Etkinlik profilimi oluştur <ArrowRight size={18} />
+                  {flow.registerLabel} <ArrowRight size={18} />
                 </button>
                 <button className="ls-ghost" onClick={() => setLogin(true)}>
-                  Notwork profilim var · giriş yap
+                  {flow.loginLabel}
                 </button>
                 <p className="ls-caption">
                   Demo · yalnızca örnek bilgiler kullan.
@@ -467,49 +448,61 @@ function LaunchSpace() {
                         />
                       </label>
                     </>
-                  ) : step < 4 ? (
+                  ) : activeQuestion ? (
                     <>
                       <p className="ls-eyebrow">{step} / 3 · SENİ TANIYALIM</p>
-                      <h1>{fields[step - 1].title}</h1>
-                      <label>
-                        {fields[step - 1].label}
-                        <textarea
-                          autoFocus
-                          required
-                          maxLength={2000}
-                          placeholder={fields[step - 1].placeholder}
-                          value={form[fields[step - 1].key]}
-                          onChange={(e) =>
-                            setForm({ ...form, [fields[step - 1].key]: e.target.value })
-                          }
-                        />
-                      </label>
-                      {step === 2 ? (
+                      <h1>{activeQuestion.title}</h1>
+                      {activeQuestion.options.length ? (
+                        <fieldset className="ls-flow-options">
+                          <legend>{activeQuestion.label}</legend>
+                          {activeQuestion.options.map((option) => (
+                            <label className="ls-check" key={option}>
+                              <input
+                                type="radio"
+                                required
+                                name={activeKey}
+                                checked={form[activeKey] === option}
+                                onChange={() => setForm({ ...form, [activeKey]: option })}
+                              />
+                              <span>{option}</span>
+                            </label>
+                          ))}
+                        </fieldset>
+                      ) : (
                         <label>
-                          Katkı alanın
+                          {activeQuestion.label}
+                          <textarea
+                            autoFocus
+                            required
+                            maxLength={2000}
+                            placeholder={activeQuestion.placeholder}
+                            value={form[activeKey]}
+                            onChange={(e) => setForm({ ...form, [activeKey]: e.target.value })}
+                          />
+                        </label>
+                      )}
+                      {step === 2 && (
+                        <label>
+                          {flow.categoryLabel}
                           <select
-                            value={form.field || "networking"}
+                            value={
+                              flow.categories.includes(form.field) ? form.field : flow.categories[0]
+                            }
                             onChange={(e) => setForm({ ...form, field: e.target.value })}
                           >
-                            {[
-                              "networking",
-                              "teknoloji",
-                              "tasarım",
-                              "pazarlama",
-                              "girişimcilik",
-                              "içerik",
-                              "araştırma",
-                            ].map((f) => (
-                              <option key={f} value={f}>
-                                {f}
+                            {flow.categories.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
                               </option>
                             ))}
                           </select>
                         </label>
-                      ) : null}
-                      <p className="ls-caption">
-                        Kendi kelimelerin yeterli. Kısa veya uzun yazabilirsin.
-                      </p>
+                      )}
+                      {!activeQuestion.options.length && (
+                        <p className="ls-caption">
+                          Kendi kelimelerin yeterli. Kısa veya uzun yazabilirsin.
+                        </p>
+                      )}
                     </>
                   ) : (
                     <>
@@ -547,7 +540,11 @@ function LaunchSpace() {
                     </>
                   )}
                   <button className="ls-primary" disabled={busy}>
-                    {busy ? "Profilin hazırlanıyor…" : step === 4 ? "Kaydı tamamla" : "Devam et"}
+                    {busy
+                      ? "Profilin hazırlanıyor…"
+                      : step === 4
+                        ? flow.finishLabel
+                        : flow.nextLabel}
                     <ArrowRight size={18} />
                   </button>
                 </form>
@@ -557,9 +554,11 @@ function LaunchSpace() {
         ) : (
           <>
             <div className="ls-flowbar" aria-label="Etkinlik akışı">
-              <span>18.00 · Başlangıç</span>
-              <i />
-              <span>19.00 · Sunumlar</span>
+              {flow.schedule.map(({ time, label }, index) => (
+                <span key={index}>
+                  {time.replace(":", ".")} · {label}
+                </span>
+              ))}
             </div>
             {tab === "home" ? (
               <section className="ls-enter">
@@ -590,42 +589,29 @@ function LaunchSpace() {
                   </button>
                   <p className="ls-section-label">BU BULUŞMADAKİ DENEYİMLERİN</p>
                   <div className="ls-apps">
-                    <button
-                      onClick={() => {
-                        setError("");
-                        setTab("match");
-                      }}
-                    >
-                      <span className="ls-app-icon">
-                        <Network />
-                      </span>
-                      <small>01 · TANIŞ</small>
-                      <h2>notwork match</h2>
-                      <p>
-                        Yeni bir gruba katıl.
-                        <br />
-                        Sohbeti birlikte başlat.
-                      </p>
-                      <ArrowRight />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setError("");
-                        setTab("poll");
-                      }}
-                    >
-                      <span className="ls-app-icon ls-lilac">
-                        <Radio />
-                      </span>
-                      <small>02 · PAYLAŞ</small>
-                      <h2>notwork anket</h2>
-                      <p>
-                        Beş soruda senin sesin.
-                        <br />
-                        Bir sahnede topluluğun sesi.
-                      </p>
-                      <ArrowRight />
-                    </button>
+                    {flow.apps.map((app, index) => (
+                      <button
+                        key={app}
+                        onClick={() => {
+                          setError("");
+                          setTab(app);
+                        }}
+                      >
+                        <span className={app === "match" ? "ls-app-icon" : "ls-app-icon ls-lilac"}>
+                          {app === "match" ? <Network /> : <Radio />}
+                        </span>
+                        <small>
+                          0{index + 1} · {app === "match" ? "TANIŞ" : "PAYLAŞ"}
+                        </small>
+                        <h2>{app === "match" ? "notwork match" : "notwork anket"}</h2>
+                        <p>
+                          {app === "match"
+                            ? "Yeni bir gruba katıl ve sohbeti başlat."
+                            : "Beş soruda topluluğun sesine katıl."}
+                        </p>
+                        <ArrowRight />
+                      </button>
+                    ))}
                   </div>
                 </LaunchSpaceArea>
               </section>
@@ -893,8 +879,11 @@ function LaunchSpace() {
               {(
                 [
                   { id: "home", label: "Alanım", icon: UserRound },
-                  { id: "match", label: "Match", icon: Network },
-                  { id: "poll", label: "Anket", icon: Radio },
+                  ...flow.apps.map((id) => ({
+                    id,
+                    label: id === "match" ? "Match" : "Anket",
+                    icon: id === "match" ? Network : Radio,
+                  })),
                 ] as const
               ).map(({ id, label, icon: Icon }) => (
                 <button

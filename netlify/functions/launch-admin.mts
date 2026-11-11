@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import type { Config, Context } from "@netlify/functions";
 import { getEvent } from "./_event-registry-store.mjs";
-import { atomicState } from "./_atomic-state.mjs";
+import { defaultLaunchFlow, validateLaunchFlow } from "../../src/lib/launch-flow.ts";
+import { atomicState, readAtomicState } from "./_atomic-state.mjs";
 import {
   launchCredentials,
   launchSession,
@@ -11,16 +12,64 @@ import {
   launchAdminSlug,
 } from "./_launch-admin-auth.mjs";
 export default async (request: Request, context: Context) => {
-  if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  if (request.method !== "POST" && request.method !== "GET")
+    return new Response("Method not allowed", { status: 405 });
   const origin = request.headers.get("origin");
   if (origin && origin !== new URL(request.url).origin)
     return new Response("Geçersiz kaynak", { status: 403 });
   const raw = await request.text();
-  if (raw.length > 2000) return new Response("İstek çok büyük", { status: 413 });
+  if (raw.length > 24000) return new Response("İstek çok büyük", { status: 413 });
   const secure = new URL(request.url).protocol === "https:" ? "; Secure" : "";
   const headers = { "cache-control": "no-store, private" };
   try {
+    if (request.method === "GET") {
+      const event = await getEvent(launchAdminSlug);
+      if (!event) return new Response("Etkinlik hazırlanıyor", { status: 503 });
+      const store = getStore({ name: "event-network", consistency: "strong" });
+      return Response.json(
+        await readAtomicState(
+          store,
+          `events/${event.id}/launch-flow.json`,
+          () => defaultLaunchFlow,
+        ),
+        { headers },
+      );
+    }
     const input = JSON.parse(raw);
+    if (input.action !== "saveFlow" && raw.length > 2000)
+      return new Response("İstek çok büyük", { status: 413 });
+    if (input.action === "saveFlow") {
+      if (!(await hasLaunchSession(request, launchAdminSlug)))
+        return new Response("Yönetici oturumu gerekli", { status: 401, headers });
+      const event = await getEvent(launchAdminSlug);
+      if (!event) return new Response("Etkinlik bulunamadı", { status: 404, headers });
+      let flow;
+      try {
+        flow = validateLaunchFlow(input.flow);
+      } catch (error) {
+        return new Response(error instanceof Error ? error.message : "Akış geçersiz", {
+          status: 400,
+          headers,
+        });
+      }
+      const store = getStore({ name: "event-network", consistency: "strong" });
+      const saved = await atomicState(
+        store,
+        `events/${event.id}/launch-flow.json`,
+        () => structuredClone(defaultLaunchFlow),
+        (current) => {
+          if (current.revision !== flow.revision) return null;
+          Object.assign(current, flow, { revision: flow.revision + 1 });
+          return current;
+        },
+      );
+      if (!saved)
+        return new Response("Akış başka bir oturumda değişti. Yenileyip tekrar dene.", {
+          status: 409,
+          headers,
+        });
+      return Response.json(saved, { headers });
+    }
     if (input.action === "logout")
       return Response.json(
         { ok: true },

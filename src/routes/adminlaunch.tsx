@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { LaunchFlowAdmin } from "@/components/LaunchFlowAdmin";
 import { EventPollAdmin } from "@/components/EventPollAdmin";
 import { createNoIndexSeo } from "@/lib/seo";
 import { novemberEventSlug } from "@/lib/event-poll";
@@ -114,7 +115,7 @@ export function LaunchAdminPanel() {
         ) : (
           <>
             <div className="ls-panel">
-              <p className="ls-eyebrow">14 KASIM · 18.00 ETKİNLİK · 19.00 SUNUMLAR · DEMO</p>
+              <p className="ls-eyebrow">14 KASIM · LAUNCH SPACE</p>
               <h2>{count} katılımcı</h2>
               <div className="ls-actions">
                 <button
@@ -175,6 +176,7 @@ export function LaunchAdminPanel() {
                   ))}
               </div>
             </details>
+            <LaunchFlowAdmin />
             <EventPollAdmin event={novemberEventSlug} password="" />
           </>
         )}

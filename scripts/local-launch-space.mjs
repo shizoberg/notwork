@@ -11,6 +11,9 @@ process.env.MEMBER_PROFILE_STORE = "launch-space-local-profiles";
 process.env.MEMBER_SOURCE_STORE = "launch-space-local-members";
 const password = "LaunchSpaceDemo2026!";
 process.env.ADMIN_PASSWORD_HASH = createHash("sha256").update(password).digest("hex");
+process.env.LAUNCH_ADMIN_USERNAME = "launchspace";
+process.env.LAUNCH_ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
+process.env.LAUNCH_ADMIN_SECRET = "local-launch-space-admin-session-only";
 const port = Number(process.env.LAUNCH_SPACE_PORT || 5211);
 const upstream = process.env.LAUNCH_SPACE_VITE || "http://127.0.0.1:5210";
 if (!["127.0.0.1", "localhost"].includes(new URL(upstream).hostname))
@@ -35,6 +38,7 @@ for (const name of [
   "event-network-admin",
   "member-profile",
   "event-poll",
+  "launch-admin",
   "analytics-admin",
   "event-flow",
   "event-flow-admin",
@@ -197,6 +201,7 @@ if (process.argv.includes("--populate")) {
   );
 }
 const routes = {
+  "/api/launch-admin": "launch-admin",
   "/api/events/context": "event-registry",
   "/api/admin/events": "event-registry-admin",
   "/api/event-products/network": "event-network",

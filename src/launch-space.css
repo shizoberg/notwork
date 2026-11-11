@@ -243,7 +243,8 @@
   color: #c7cbd3;
   margin: 22px 0;
 }
-.launch-space input:not([type="checkbox"]),
+.launch-space input:not([type="checkbox"]):not([type="radio"]),
+.launch-space select,
 .launch-space textarea {
   background: #15171c;
   color: #f5f5f4;
@@ -1000,12 +1001,6 @@
   padding: 5px 0 17px;
   margin-bottom: 26px;
 }
-.ls-flowbar i {
-  height: 3px;
-  width: 3px;
-  border-radius: 50%;
-  background: #70818e;
-}
 .ls-results-link {
   display: flex;
   align-items: center;
@@ -1373,5 +1368,94 @@
   }
   .ls-profile-sheet {
     padding: 24px;
+  }
+}
+
+.launch-space .ls-flow-copy {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.launch-space .ls-flowbar {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+.launch-space .ls-flowbar span + span::before {
+  content: "·";
+  margin-inline-end: 8px;
+}
+.launch-space .ls-flow-editor {
+  margin-block: 20px;
+}
+.launch-space .ls-flow-editor > a {
+  color: #9bc8dc;
+}
+.launch-space .ls-flow-steps {
+  padding-inline-start: 22px;
+  color: #b5bec6;
+  line-height: 1.7;
+}
+.launch-space .ls-flow-editor fieldset,
+.launch-space .ls-flow-options {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-inline-size: 0;
+}
+.launch-space .ls-flow-editor details {
+  border-top: 1px solid #35373c;
+  padding-block: 14px;
+}
+.launch-space .ls-flow-editor summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.launch-space .ls-flow-editor label {
+  display: grid;
+  gap: 6px;
+  margin-block: 12px;
+}
+.launch-space .ls-flow-editor textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+.launch-space .ls-flow-question {
+  border-top: 1px solid #35373c;
+  margin-top: 14px;
+  padding-top: 12px;
+}
+.launch-space .ls-flow-row {
+  display: grid;
+  grid-template-columns: 115px minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+.launch-space .ls-flow-row button {
+  margin-bottom: 12px;
+}
+.launch-space .ls-flow-options legend {
+  margin-bottom: 10px;
+}
+.launch-space .ls-flow-options .ls-check {
+  border: 1px solid #35373c;
+  border-radius: 14px;
+  padding: 12px;
+  margin: 8px 0;
+  cursor: pointer;
+  align-items: center;
+}
+.launch-space .ls-flow-options .ls-check input {
+  margin-top: 0;
+}
+.launch-space .ls-flow-options label:has(input:checked) {
+  border-color: #9bc8dc;
+  background: #1b2730;
+}
+@media (max-width: 520px) {
+  .launch-space .ls-flow-row {
+    grid-template-columns: 100px minmax(0, 1fr);
+  }
+  .launch-space .ls-flow-row button {
+    grid-column: 1 / -1;
+    justify-self: start;
   }
 }
