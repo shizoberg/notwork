@@ -136,6 +136,7 @@ export type NetworkInput = {
   event?: string;
   eventId?: string;
   eventSlug?: string;
+  datasetId?: string;
   accessToken?: string;
   presence?: EventNetworkPresence;
   firstName?: string;
@@ -173,6 +174,7 @@ export type NetworkAdminInput = {
   event?: string;
   eventId?: string;
   eventSlug?: string;
+  datasetId?: string;
   mode?: "demo" | "live";
 };
 
@@ -224,8 +226,9 @@ export function getEventNetworkDatasetInfo() {
       storeName,
       eventId: context.eventId,
       eventSlug: context.eventSlug,
-      datasetCode: `${context.eventSlug}-${context.mode}`,
-      activeDatabaseCode: `${context.eventSlug}-${context.mode}`,
+      datasetId: context.datasetId,
+      datasetCode: context.datasetId || `${context.eventSlug}-${context.mode}`,
+      activeDatabaseCode: context.datasetId || `${context.eventSlug}-${context.mode}`,
       demoDatabaseCode: `${context.eventSlug}-demo`,
       liveDatabaseCode: `${context.eventSlug}-live`,
       keyPrefix: context.keyPrefix,
@@ -571,11 +574,18 @@ async function saveMatchLabReview(
     consentAt: now,
     createdAt: now,
   };
-  const reviewStore = getEventReviewStore();
   const reviewKey = createHash("sha256")
     .update(`${input.groupId}:${registration.participant.id}`)
     .digest("hex");
-  await reviewStore.setJSON(`reviews/${reviewEventId}/match-${reviewKey}.json`, review, {
+  if (eventContext?.datasetId && !eventContext.datasetId.startsWith("legacy-")) {
+    await getEventNetworkStore().setJSON(
+      `${eventContext.keyPrefix}/reviews/${reviewKey}.json`,
+      review,
+      { onlyIfNew: true },
+    );
+    return;
+  }
+  await getEventReviewStore().setJSON(`reviews/${reviewEventId}/match-${reviewKey}.json`, review, {
     onlyIfNew: true,
   });
 }

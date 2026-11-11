@@ -7,16 +7,20 @@ import type {
   NotworkEvent,
 } from "../../src/lib/event-registry.ts";
 import { createEventProductNamespace } from "../../src/lib/event-registry.ts";
+import { getLaunchDatasets, launchDatasetPrefix } from "./_launch-datasets.mjs";
+import type { LaunchDataset } from "../../src/lib/launch-dataset.ts";
 import { getEvent, getPrimaryEventId } from "./_event-registry-store.mjs";
 
 type EventRequestContext = {
   event: NotworkEvent;
   requestedProduct: EventProductKey;
   modeOverride?: EventDataMode;
+  launchDataset?: LaunchDataset;
 };
 
 export type EventProductRuntimeContext = EventProductNamespace & {
   event: NotworkEvent;
+  datasetId?: string;
   label: string;
   state: NotworkEvent["products"][EventProductKey]["state"];
   enabled: boolean;
@@ -69,6 +73,10 @@ export async function resolveEventRequestContext(
     event,
     requestedProduct: product,
     modeOverride: options.modeOverride,
+    launchDataset:
+      event.slug === "14-kasim-2026" && product === "matchlab" && !options.modeOverride
+        ? (await getLaunchDatasets(event)).active
+        : undefined,
   } satisfies EventRequestContext;
 }
 
@@ -93,12 +101,20 @@ export function getEventProductRuntimeContext(
   const context = requestContext.getStore();
   if (!context) return null;
   const config = context.event.products[product];
+  const launchDataset = product === "matchlab" ? context.launchDataset : undefined;
   const mode =
-    context.requestedProduct === product && context.modeOverride
+    launchDataset?.mode ??
+    (context.requestedProduct === product && context.modeOverride
       ? context.modeOverride
-      : config.dataMode;
+      : config.dataMode);
   return {
     ...createEventProductNamespace(context.event, product, mode),
+    ...(launchDataset
+      ? {
+          keyPrefix: launchDatasetPrefix(context.event, launchDataset),
+          datasetId: launchDataset.id,
+        }
+      : {}),
     event: context.event,
     label: config.label,
     state: config.state,

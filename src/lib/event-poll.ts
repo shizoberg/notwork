@@ -1,3 +1,5 @@
+import type { LaunchAnnouncement } from "./launch-dataset";
+
 export type PollQuestion = { id: string; title: string; options: string[] };
 export type PollConfig = {
   revision: number;
@@ -98,13 +100,16 @@ export type PollResult = {
   total: number;
   counts: { label: string; count: number }[];
 };
+export type ArchivedPoll = { id: string; title: string; total: number; results: PollResult[] };
 export type PollPayload = {
+  announcement?: LaunchAnnouncement | null;
+  previousPolls?: ArchivedPoll[];
   config: PollConfig;
   submitted?: boolean;
   total: number;
   results?: PollResult[];
   published?: PollResult | null;
-  database: { eventId: string; mode: string; keyPrefix: string };
+  database: { eventId: string; mode: string; keyPrefix: string; datasetId?: string };
 };
 export async function pollRequest(
   event: string,

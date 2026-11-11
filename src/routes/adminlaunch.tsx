@@ -1,6 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { BarChart3, CalendarDays, Network, SlidersHorizontal } from "lucide-react";
+import {
+  BarChart3,
+  CalendarDays,
+  Database,
+  Megaphone,
+  Network,
+  SlidersHorizontal,
+} from "lucide-react";
+import { LaunchAnnouncementAdmin } from "@/components/launch-space/LaunchAnnouncementAdmin";
+import { LaunchDatasetAdmin } from "@/components/launch-space/LaunchDatasetAdmin";
 import { LaunchEventHeader } from "@/components/launch-space/LaunchEventHeader";
 import { defaultLaunchFlow, getLaunchFlow } from "@/lib/launch-flow";
 import { LaunchFlowAdmin } from "@/components/LaunchFlowAdmin";
@@ -25,6 +34,7 @@ type MatchOverview = {
 };
 
 export function LaunchAdminPanel() {
+  const [datasetId, setDatasetId] = useState<string>();
   const [overview, setOverview] = useState<MatchOverview>();
   const [matchError, setMatchError] = useState("");
   const [hydrated, setHydrated] = useState(false);
@@ -38,7 +48,12 @@ export function LaunchAdminPanel() {
     const r = await fetch("/api/admin/event-products/network", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action, event: novemberEventSlug, password }),
+      body: JSON.stringify({
+        action,
+        event: novemberEventSlug,
+        password,
+        datasetId: ["startMatching", "processMatching"].includes(action) ? datasetId : undefined,
+      }),
     });
     if (!r.ok) throw Error(await r.text());
     return r.json();
@@ -51,7 +66,9 @@ export function LaunchAdminPanel() {
       offersDetail: string;
     }>
   >([]);
-  const [section, setSection] = useState<"event" | "flow" | "match" | "poll">("event");
+  const [section, setSection] = useState<
+    "event" | "flow" | "match" | "poll" | "database" | "announcement"
+  >("event");
   const [flow, setFlow] = useState(defaultLaunchFlow);
   const [query, setQuery] = useState("");
   const [username, setUsername] = useState("");
@@ -78,6 +95,7 @@ export function LaunchAdminPanel() {
   }
   async function load() {
     const r = await request("list");
+    setDatasetId(r.database.datasetId);
     setCount(r.registrations.length);
     setParticipants(r.registrations);
     setActive(true);
@@ -96,6 +114,7 @@ export function LaunchAdminPanel() {
         const result = await request("matchOverview");
         if (current) {
           setOverview(result);
+          if (result.database.datasetId) setDatasetId(result.database.datasetId);
           setMatchError("");
         }
       } catch {
@@ -167,6 +186,8 @@ export function LaunchAdminPanel() {
                   ["flow", "Kayıt ve akış", SlidersHorizontal],
                   ["match", "Match", Network],
                   ["poll", "Anket", BarChart3],
+                  ["database", "Database", Database],
+                  ["announcement", "Duyuru", Megaphone],
                 ] as const
               ).map(([id, label, Icon]) => (
                 <button
@@ -238,16 +259,6 @@ export function LaunchAdminPanel() {
                 )}
                 <div className="ls-actions">
                   <button
-                    className="ls-secondary"
-                    onClick={() =>
-                      void request("matchOverview")
-                        .then(setOverview)
-                        .catch((e) => setError(e.message))
-                    }
-                  >
-                    Grupları yenile
-                  </button>
-                  <button
                     disabled={busy}
                     className="ls-primary"
                     onClick={async () => {
@@ -302,9 +313,23 @@ export function LaunchAdminPanel() {
                 )}
               </div>
             )}
+            {section === "announcement" && <LaunchAnnouncementAdmin key={datasetId} />}
+            {section === "database" && (
+              <LaunchDatasetAdmin
+                switchingDisabled={busy}
+                onActiveChanged={(dataset) => {
+                  setOverview(undefined);
+                  setDatasetId(dataset.id);
+                  setCount(0);
+                  setParticipants([]);
+                  void load().catch((e) => setError(e.message));
+                }}
+              />
+            )}
             {section === "flow" && <LaunchFlowAdmin onSaved={setFlow} />}
             {section === "poll" && (
               <EventPollAdmin
+                key={datasetId}
                 event={novemberEventSlug}
                 password=""
                 nodes

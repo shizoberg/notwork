@@ -90,6 +90,7 @@ export type EventRegistryPayload = {
 };
 
 export type EventSelection = {
+  datasetId?: string;
   event?: string;
   eventId?: string;
   eventSlug?: string;
@@ -173,7 +174,13 @@ export function withEventSelectionInput<T extends Record<string, unknown>>(
   selection: EventSelection = {},
 ) {
   const identifier = eventSelectionIdentifier(selection);
-  return identifier ? { ...input, event: identifier } : input;
+  return identifier
+    ? {
+        ...input,
+        event: identifier,
+        ...(selection.datasetId ? { datasetId: selection.datasetId } : {}),
+      }
+    : input;
 }
 
 export async function getPublicEventContext(selection: EventSelection = {}) {

@@ -63,6 +63,30 @@ try {
     assert.equal(response.status, 200);
     return response.json();
   }
+  assert.equal((await call(login, { action: "listDatasets" })).status, 401);
+  assert.equal(
+    (await call(login, { action: "createDataset", name: "Prova", mode: "demo" })).status,
+    401,
+  );
+  const datasetResponse = await call(
+    login,
+    { action: "createDataset", name: "Prova", mode: "demo" },
+    cookie,
+  );
+  assert.equal(datasetResponse.status, 200);
+  const datasets = await datasetResponse.json();
+  assert.equal(datasets.active.id, "legacy-demo");
+  assert.equal(datasets.datasets.at(-1).name, "Prova");
+  const selectedDataset = await call(
+    login,
+    { action: "activateDataset", id: datasets.datasets.at(-1).id },
+    cookie,
+  );
+  assert.equal((await selectedDataset.json()).active.name, "Prova");
+  assert.equal(
+    (await call(login, { action: "activateDataset", id: "legacy-demo" }, cookie)).status,
+    200,
+  );
   const flow = await readFlow();
   assert.equal(flow.revision, 0);
   flow.logo = url;

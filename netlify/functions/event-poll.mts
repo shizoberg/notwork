@@ -1,5 +1,5 @@
 import { hasLaunchSession } from "./_launch-admin-auth.mjs";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import type { Config } from "@netlify/functions";
 import { atomicState, readAtomicState } from "./_atomic-state.mjs";
@@ -8,6 +8,8 @@ import {
   runWithEventRequestContext,
   getEventProductRuntimeContext,
 } from "./_event-product-context.mjs";
+import { launchPollKey } from "./_launch-datasets.mjs";
+import type { LaunchAnnouncement } from "../../src/lib/launch-dataset.ts";
 import { getEventNetworkStore, getRegistrationByToken } from "./_event-network-store.mjs";
 import {
   defaultPollQuestions,
@@ -17,7 +19,25 @@ import {
   type PollQuestion,
 } from "../../src/lib/event-poll.ts";
 
-type State = { config: PollConfig; ballots: Record<string, string[]> };
+type Vote = { config: PollConfig; ballots: Record<string, string[]> };
+type State = Vote & {
+  announcement?: LaunchAnnouncement;
+  previousPolls?: (Vote & { id: string })[];
+};
+const adminActions = ["admin", "configure", "open", "publish", "reset", "newPoll", "announce"];
+const mutations = ["configure", "open", "publish", "reset", "submit", "newPoll", "announce"];
+
+function resultsFor(vote: Vote) {
+  const answers = Object.values(vote.ballots);
+  return vote.config.questions.map((question, index) => ({
+    question,
+    total: answers.length,
+    counts: question.options.map((label) => ({
+      label,
+      count: answers.filter((ballot) => ballot[index] === label).length,
+    })),
+  }));
+}
 const initial = (launch: boolean): State => ({
   config: {
     revision: 1,
@@ -70,7 +90,7 @@ export default async (request: Request) => {
     const event = eventIdentifierFromRequest(request, input);
     if (!event) return new Response("Etkinlik gerekli", { status: 400 });
     const action = input.action || "status";
-    const admin = ["admin", "configure", "open", "publish", "reset"].includes(action);
+    const admin = adminActions.includes(action);
     if (admin && !isAdmin(input.password) && !(await hasLaunchSession(request, event)))
       return new Response("Yetkisiz erişim", { status: 401 });
     return await runWithEventRequestContext(
@@ -78,6 +98,8 @@ export default async (request: Request) => {
       "matchlab",
       async () => {
         const context = getEventProductRuntimeContext("matchlab")!;
+        if (input.datasetId && input.datasetId !== context.datasetId)
+          return new Response("Veri seti değişti. Sayfayı yenile.", { status: 409 });
         if (
           action === "submit" &&
           (!context.event.entry.isOpen || ["completed", "archived"].includes(context.event.status))
@@ -85,7 +107,13 @@ export default async (request: Request) => {
           return new Response("Bu etkinlikte yanıt alımı kapalı", { status: 403 });
         const store = getStore({ name: "event-network", consistency: "strong" });
         const launch = context.event.slug === novemberEventSlug;
-        const key = `${context.keyPrefix}/poll/${launch ? "company-vote" : "state"}.json`;
+        if (["newPoll", "announce"].includes(action) && !launch)
+          return new Response("Bu işlem yalnızca launchspace için kullanılabilir.", {
+            status: 400,
+          });
+        const key = launch
+          ? launchPollKey(context.keyPrefix)
+          : `${context.keyPrefix}/poll/state.json`;
         const initialState = () => initial(launch);
         let participantId = "";
         if (input.accessToken) {
@@ -99,21 +127,21 @@ export default async (request: Request) => {
         }
         if (action === "submit" && !participantId)
           return new Response("Önce etkinliğe giriş yap", { status: 401 });
-        if (
-          !["status", "stage", "submit", "admin", "configure", "open", "publish", "reset"].includes(
-            action,
-          )
-        )
+        if (!["status", "stage", "submit", ...adminActions].includes(action))
           return new Response("Geçersiz işlem", { status: 400 });
-        if (["configure", "open", "publish", "reset", "submit"].includes(action)) {
+        if (mutations.includes(action)) {
           await atomicState<State, void>(store, key, initialState, (state) => {
-            if (action !== "submit" && input.revision !== state.config.revision)
+            if (
+              action !== "submit" &&
+              action !== "announce" &&
+              input.revision !== state.config.revision
+            )
               throw Error("Anket değişti, yenile ve tekrar dene");
             if (action === "submit") {
-              if (state.ballots[participantId]) return;
-              if (!state.config.isOpen) throw Error("Anket henüz açık değil");
               if (input.questionVersion !== (state.config.questionVersion || 1))
                 throw Error("Anket soruları güncellendi, soruları yenile");
+              if (state.ballots[participantId]) return;
+              if (!state.config.isOpen) throw Error("Anket henüz açık değil");
               if (
                 !Array.isArray(input.answers) ||
                 input.answers.length !== state.config.questions.length ||
@@ -126,6 +154,41 @@ export default async (request: Request) => {
               if (Object.keys(state.ballots).length >= 2000) throw Error("Anket kapasitesi doldu");
               state.ballots[participantId] = input.answers;
             } else {
+              if (action === "announce") {
+                if (typeof input.text !== "string" || input.text.trim().length > 300)
+                  throw Error("Duyuru en fazla 300 karakter olabilir.");
+                const text = input.text.trim();
+                if (text)
+                  state.announcement = {
+                    id: randomUUID(),
+                    text,
+                    publishedAt: new Date().toISOString(),
+                  };
+                else delete state.announcement;
+                return;
+              }
+              if (action === "newPoll") {
+                const next = questions(input.questions, true);
+                const archive = state.previousPolls ?? [];
+                if (archive.length >= 20)
+                  throw Error("Bu veri setinde 20 önceki oylama saklanabilir.");
+                state.previousPolls = [
+                  ...archive,
+                  {
+                    id: randomUUID(),
+                    config: { ...state.config, isOpen: false },
+                    ballots: state.ballots,
+                  },
+                ];
+                state.ballots = {};
+                state.config = {
+                  ...state.config,
+                  isOpen: true,
+                  publishedQuestion: null,
+                  questionVersion: (state.config.questionVersion || 1) + 1,
+                  questions: next,
+                };
+              }
               if (action === "configure") {
                 if (Object.keys(state.ballots).length)
                   throw Error("Cevaplar geldikten sonra sorular değiştirilemez");
@@ -158,15 +221,7 @@ export default async (request: Request) => {
         const state = await readAtomicState<State>(store, key, initialState);
         state.config.questionVersion ||= 1;
         const total = Object.keys(state.ballots).length;
-        const results = state.config.questions.map((question, index) => ({
-          question,
-          total,
-          counts: question.options.map((label) => ({
-            label,
-            count: Object.values(state.ballots).filter((answers) => answers[index] === label)
-              .length,
-          })),
-        }));
+        const results = resultsFor(state);
         const published =
           state.config.publishedQuestion === null ? null : results[state.config.publishedQuestion];
         return Response.json(
@@ -175,9 +230,21 @@ export default async (request: Request) => {
             total,
             ...(participantId ? { submitted: Boolean(state.ballots[participantId]) } : {}),
             ...(admin ? { results } : { published }),
+            ...(admin && launch
+              ? {
+                  announcement: state.announcement ?? null,
+                  previousPolls: (state.previousPolls ?? []).map((vote) => ({
+                    id: vote.id,
+                    title: vote.config.questions[0].title,
+                    total: Object.keys(vote.ballots).length,
+                    results: resultsFor(vote),
+                  })),
+                }
+              : {}),
             database: {
               eventId: context.eventId,
               mode: context.mode,
+              datasetId: context.datasetId,
               keyPrefix: `${context.keyPrefix}/poll`,
             },
           },

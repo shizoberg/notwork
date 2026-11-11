@@ -195,8 +195,16 @@ export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => v
                 </label>
                 {(["logo", "cover"] as const).map((key) => (
                   <div key={key} className="ls-brand-edit">
+                    <img
+                      src={flow[key]}
+                      alt={
+                        key === "logo"
+                          ? "Profil fotoğrafı önizlemesi"
+                          : "Kapak fotoğrafı önizlemesi"
+                      }
+                    />
                     <label>
-                      {key === "logo" ? "Logo" : "Kapak"}
+                      {key === "logo" ? "Profil fotoğrafı / logo" : "Kapak fotoğrafı"}
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"

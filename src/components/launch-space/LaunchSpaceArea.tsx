@@ -20,11 +20,13 @@ export function LaunchSpaceArea({
   token,
   goal,
   flow,
+  datasetId,
   children,
 }: {
   token: string;
   goal: string;
   flow: LaunchFlow;
+  datasetId?: string;
   children?: ReactNode;
 }) {
   const [people, setPeople] = useState<Person[]>([]);
@@ -42,6 +44,7 @@ export function LaunchSpaceArea({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         event: novemberEventSlug,
+        datasetId,
         action: targetId ? "introduce" : "people",
         accessToken: token,
         targetId,

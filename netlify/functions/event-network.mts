@@ -86,7 +86,14 @@ export default async (request: Request, _context: Context) => {
     const eventIdentifier = eventIdentifierFromRequest(request, input);
     return await runWithEventRequestContext(eventIdentifier, "matchlab", async () => {
       const database = getEventNetworkDatasetInfo();
+      if (input.datasetId && input.datasetId !== database.datasetId)
+        return new Response("Veri seti değişti. Sayfayı yenile.", { status: 409 });
       const launchDemo = database.eventSlug === "14-kasim-2026" && database.mode === "demo";
+      const launchOnly =
+        launchDemo ||
+        (database.eventSlug === "14-kasim-2026" &&
+          database.datasetId &&
+          !database.datasetId.startsWith("legacy-"));
       const action = clean(input.action, 30);
       const store = getEventNetworkStore();
       // Matching/chat authenticate with the event token; only registration/resume need the profile cookie.
@@ -107,7 +114,7 @@ export default async (request: Request, _context: Context) => {
         const registration = await registerNetworkProfile(store, {
           ...input,
           memberUsername: memberSession?.profile.username || input.memberUsername,
-          ...(launchDemo
+          ...(launchOnly
             ? {
                 marketingPreferenceVersion: undefined,
                 marketingOptIn: false,
@@ -116,7 +123,7 @@ export default async (request: Request, _context: Context) => {
               }
             : {}),
         });
-        const membership = launchDemo ? undefined : await activateEventAttendeeMember(registration);
+        const membership = launchOnly ? undefined : await activateEventAttendeeMember(registration);
         return json({ ...registration, membership }, { status: 201 });
       }
 

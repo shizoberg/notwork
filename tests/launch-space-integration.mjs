@@ -286,8 +286,84 @@ try {
   r = await call(poll, { action: "stage" });
   assert.equal(r.status, 200);
   assert.equal(r.data.published.total, 100);
+  const datasets = await sandbox.load("_launch-datasets");
+  const current = await registry.getEvent(event.id);
+  const original = await datasets.getLaunchDatasets(current);
+  assert.equal(original.active.id, "legacy-demo");
+  const created = await datasets.changeLaunchDataset(current, {
+    action: "createDataset",
+    name: "Etkinlik",
+    mode: "live",
+    activate: true,
+  });
+  const fresh = created.active;
+  assert.equal(fresh.name, "Etkinlik");
+  assert.equal(fresh.mode, "live");
+  assert.equal(
+    (await call(admin, { action: "processMatching", password, datasetId: original.active.id }))
+      .status,
+    409,
+  );
+  const overview = await call(admin, { action: "matchOverview", password });
+  assert.equal(overview.data.registeredCount, 0);
+  assert.equal(overview.data.groups.length, 0);
+  assert.equal(overview.data.matching.status, "waiting");
+  let stage = await call(poll, { action: "stage" });
+  assert.equal(stage.data.database.datasetId, fresh.id);
+  assert.equal(stage.data.total, 0);
+  assert.equal(stage.data.published, null);
+  assert.equal(stage.data.config.isOpen, false);
+  assert.deepEqual(stage.data.config.questions, state.config.questions);
+  await datasets.changeLaunchDataset(current, {
+    action: "activateDataset",
+    id: original.active.id,
+  });
+  stage = await call(poll, { action: "stage" });
+  assert.equal(stage.data.published.total, 100);
+  assert.ok((await call(admin, { action: "matchOverview", password })).data.groups.length > 0);
+  const activePoll = await call(poll, { action: "admin", password });
+  const nextQuestion = { title: "Yeni sunum oylaması", options: ["A", "B"] };
+  assert.equal((await call(poll, { action: "newPoll", questions: [nextQuestion] })).status, 401);
+  const newPoll = await call(poll, {
+    action: "newPoll",
+    password,
+    revision: activePoll.data.config.revision,
+    datasetId: original.active.id,
+    questions: [nextQuestion],
+  });
+  assert.equal(newPoll.status, 200);
+  assert.equal(newPoll.data.total, 0);
+  assert.equal(newPoll.data.config.isOpen, true);
+  assert.equal(newPoll.data.previousPolls[0].total, 100);
+  const staleVote = await call(poll, {
+    action: "submit",
+    datasetId: original.active.id,
+    accessToken: member.accessToken,
+    questionVersion: activePoll.data.config.questionVersion,
+    answers,
+  });
+  assert.equal(staleVote.status, 400);
+  const sent = await call(poll, {
+    action: "announce",
+    password,
+    datasetId: original.active.id,
+    text: "Sunumlar başlıyor.",
+  });
+  assert.equal(sent.status, 200);
+  const bulletin = await datasets.getLaunchBulletin(current, original.active);
+  assert.equal(bulletin.announcement.text, "Sunumlar başlıyor.");
+  assert.equal(bulletin.vote.title, nextQuestion.title);
+  const blankBulletin = await datasets.getLaunchBulletin(current, fresh);
+  assert.equal(blankBulletin.announcement, null);
+  assert.equal(blankBulletin.vote, null);
+  assert.equal(
+    (await call(poll, { action: "announce", password, datasetId: original.active.id, text: "" }))
+      .status,
+    200,
+  );
+  assert.equal((await datasets.getLaunchBulletin(current, original.active)).announcement, null);
   console.log(
-    "PASS: real handlers, 100 participants → 33 disjoint groups + 1 waiting; admin launch; session recovery; private chat; 100 concurrent ballots; idempotency; stage publication; auth; event/demo/live isolation; rematch isolation. No production data/AI.",
+    "PASS: real handlers, 100 participants → 33 disjoint groups + 1 waiting; admin launch; session recovery; private chat; 100 concurrent ballots; idempotency; stage publication; auth; event/demo/live isolation; rematch and dataset switch isolation; new vote and announcement bulletin. No production data/AI.",
   );
 } finally {
   globalThis.fetch = originalFetch;

@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import type { Config, Context } from "@netlify/functions";
+import { changeLaunchDataset, getLaunchBulletin, getLaunchDatasets } from "./_launch-datasets.mjs";
 import { getEvent } from "./_event-registry-store.mjs";
 import {
   defaultLaunchFlow,
@@ -72,6 +73,11 @@ export default async (request: Request, context: Context) => {
     if (request.method === "GET") {
       const event = await getEvent(launchAdminSlug);
       if (!event) return new Response("Etkinlik hazırlanıyor", { status: 503 });
+      if (params.get("dataset") === "active") {
+        const { active } = await getLaunchDatasets(event);
+        const bulletin = await getLaunchBulletin(event, active);
+        return Response.json({ ...active, bulletin }, { headers });
+      }
       const store = getStore({ name: "event-network", consistency: "strong" });
       return Response.json(
         {
@@ -90,6 +96,25 @@ export default async (request: Request, context: Context) => {
     const input = JSON.parse(raw);
     if (input.action !== "saveFlow" && raw.length > 2000)
       return new Response("İstek çok büyük", { status: 413 });
+    if (["listDatasets", "createDataset", "activateDataset"].includes(input.action)) {
+      if (!(await hasLaunchSession(request, launchAdminSlug)))
+        return new Response("Yönetici oturumu gerekli", { status: 401, headers });
+      const event = await getEvent(launchAdminSlug);
+      if (!event) return new Response("Etkinlik bulunamadı", { status: 404, headers });
+      try {
+        return Response.json(
+          input.action === "listDatasets"
+            ? await getLaunchDatasets(event)
+            : await changeLaunchDataset(event, input),
+          { headers },
+        );
+      } catch (error) {
+        return new Response(
+          error instanceof Error ? error.message : "Veri seti işlemi tamamlanamadı",
+          { status: 400, headers },
+        );
+      }
+    }
     if (input.action === "saveFlow") {
       if (!(await hasLaunchSession(request, launchAdminSlug)))
         return new Response("Yönetici oturumu gerekli", { status: 401, headers });

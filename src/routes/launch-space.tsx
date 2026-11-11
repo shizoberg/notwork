@@ -1,3 +1,4 @@
+import { fetchActiveLaunchDataset, type ActiveLaunchDataset } from "@/lib/launch-dataset";
 import { defaultLaunchFlow, getLaunchFlow, launchQuestionKeys } from "@/lib/launch-flow";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
@@ -14,7 +15,6 @@ import {
   UserRound,
 } from "lucide-react";
 import { createNoIndexSeo } from "@/lib/seo";
-import { getPublicEventContext } from "@/lib/event-registry";
 import {
   getEventNetworkMe,
   getEventNetworkMatch,
@@ -39,8 +39,12 @@ export const Route = createFileRoute("/launch-space")({
     }),
   component: LaunchSpace,
 });
-const selection = { event: novemberEventSlug };
-const tokenKey = getEventNetworkTokenStorageKey(selection);
+const eventSelection = { event: novemberEventSlug };
+const legacyTokenKey = getEventNetworkTokenStorageKey(eventSelection);
+const keySuffix = (datasetId?: string) =>
+  datasetId && datasetId !== "legacy-demo" ? `:${datasetId}` : "";
+const tokenKeyFor = (datasetId?: string) => legacyTokenKey + keySuffix(datasetId);
+const draftKeyFor = (datasetId?: string) => "launch-space:draft" + keySuffix(datasetId);
 type Tab = "home" | "match" | "poll";
 export function NodeMark() {
   return (
@@ -56,7 +60,9 @@ function LaunchSpace() {
 
   const [ready, setReady] = useState(false),
     [contextError, setContextError] = useState("");
-  const [mode, setMode] = useState("");
+  const [dataset, setDataset] = useState<ActiveLaunchDataset>();
+  const selection = { ...eventSelection, datasetId: dataset?.id };
+  const mode = dataset?.mode;
   const [registration, setRegistration] = useState<EventNetworkRegistration | null>(null),
     [token, setToken] = useState("");
   const [step, setStep] = useState(-1),
@@ -100,15 +106,16 @@ function LaunchSpace() {
     alive.current = true;
     void (async () => {
       try {
-        const [context, savedFlow] = await Promise.all([
-          getPublicEventContext(selection),
+        const [savedFlow, currentDataset] = await Promise.all([
           getLaunchFlow().catch(() => defaultLaunchFlow),
+          fetchActiveLaunchDataset(),
         ]);
         if (!alive.current) return;
         setFlow(savedFlow);
-        setMode(context.event.products.matchlab.dataMode);
-        const saved = localStorage.getItem(tokenKey);
-        const draft = localStorage.getItem("launch-space:draft");
+        setDataset(currentDataset);
+        const currentSelection = { ...eventSelection, datasetId: currentDataset.id };
+        const saved = localStorage.getItem(tokenKeyFor(currentDataset.id));
+        const draft = localStorage.getItem(draftKeyFor(currentDataset.id));
         if (draft) {
           try {
             setForm((f) => ({ ...f, ...JSON.parse(draft) }));
@@ -118,12 +125,12 @@ function LaunchSpace() {
         }
         if (saved) {
           try {
-            const r = await getEventNetworkMe(saved, selection);
+            const r = await getEventNetworkMe(saved, currentSelection);
             if (!alive.current) return;
             setRegistration(r);
             setToken(saved);
           } catch (e) {
-            setError("Önceki demo oturumuna ulaşılamadı. Tekrar giriş yapabilirsin.");
+            setError("Önceki etkinlik oturumuna ulaşılamadı. Tekrar giriş yapabilirsin.");
           }
         } else {
           try {
@@ -132,8 +139,8 @@ function LaunchSpace() {
               const [firstName, ...last] = profile.name.split(" ");
               setForm((f) => ({ ...f, firstName, lastName: last.join(" "), email: profile.email }));
               try {
-                const r = await resumeEventNetwork(selection);
-                if (r.accessToken && alive.current) accept(r);
+                const r = await resumeEventNetwork(currentSelection);
+                if (r.accessToken && alive.current) accept(r, currentDataset.id);
               } catch {
                 setStep(1);
               }
@@ -152,12 +159,41 @@ function LaunchSpace() {
     };
   }, []);
   useEffect(() => {
-    if (ready && !registration) localStorage.setItem("launch-space:draft", JSON.stringify(form));
-  }, [form, ready, registration]);
-  function accept(r: EventNetworkRegistration) {
+    if (ready && !registration)
+      localStorage.setItem(draftKeyFor(dataset?.id), JSON.stringify(form));
+  }, [form, ready, registration, dataset?.id]);
+
+  useEffect(() => {
+    if (!dataset) return;
+    let current = true;
+    let pending = false;
+    const check = async () => {
+      if (document.hidden || pending) return;
+      pending = true;
+      try {
+        const active = await fetchActiveLaunchDataset();
+        if (!current) return;
+        if (active.id !== dataset.id) location.reload();
+        else setDataset(active);
+      } catch {
+        // Keep the current session during temporary network interruptions.
+      } finally {
+        pending = false;
+      }
+    };
+    const timer = setInterval(check, 12000 + Math.round(Math.random() * 6000));
+    document.addEventListener("visibilitychange", check);
+    return () => {
+      current = false;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", check);
+    };
+  }, [dataset?.id]);
+
+  function accept(r: EventNetworkRegistration, id = dataset?.id) {
     if (!r.accessToken) throw Error("Oturum anahtarı alınamadı");
-    localStorage.setItem(tokenKey, r.accessToken);
-    localStorage.removeItem("launch-space:draft");
+    localStorage.setItem(tokenKeyFor(id), r.accessToken);
+    localStorage.removeItem(draftKeyFor(id));
     setToken(r.accessToken);
     setRegistration(r);
     setStep(-1);
@@ -259,7 +295,13 @@ function LaunchSpace() {
     const r = await fetch("/api/event-products/network", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ event: novemberEventSlug, action, accessToken: token, ...rest }),
+      body: JSON.stringify({
+        event: novemberEventSlug,
+        datasetId: dataset?.id,
+        action,
+        accessToken: token,
+        ...rest,
+      }),
     });
     if (!r.ok) throw Error(await r.text());
     return r.json();
@@ -269,7 +311,7 @@ function LaunchSpace() {
     let current = true;
     const refresh = () => {
       if (!document.hidden)
-        void pollRequest(novemberEventSlug, { accessToken: token })
+        void pollRequest(novemberEventSlug, { accessToken: token, datasetId: dataset?.id })
           .then((r) => {
             if (current) setPoll(r);
           })
@@ -297,6 +339,9 @@ function LaunchSpace() {
       setBusy(false);
     }
   }
+  const announcement = dataset?.bulletin?.announcement;
+  const voteNotice = dataset?.bulletin?.vote;
+  const hasCurrentVote = poll?.submitted && poll.config.questionVersion === voteNotice?.version;
   const progress = Math.max(0, Math.round(((step + 1) / 5) * 100));
   return (
     <div className="launch-space">
@@ -310,6 +355,37 @@ function LaunchSpace() {
         <span className="ls-demo">launchspace</span>
       </header>
       <main className="ls-main">
+        {(announcement || (voteNotice && !hasCurrentVote && tab !== "poll")) && (
+          <div className="ls-bulletins" aria-live="polite">
+            {announcement && (
+              <section className="ls-bulletin">
+                <strong>Duyuru</strong>
+                <p className="ls-flow-copy">{announcement.text}</p>
+              </section>
+            )}
+            {voteNotice && !hasCurrentVote && tab !== "poll" && (
+              <section className="ls-bulletin">
+                <strong>Oylama açık</strong>
+                <p>{voteNotice.title}</p>
+                {registration ? (
+                  <button
+                    className="ls-secondary"
+                    onClick={() => {
+                      setTab("poll");
+                      setShowResults(false);
+                    }}
+                  >
+                    Oy kullan <ArrowRight size={15} />
+                  </button>
+                ) : (
+                  <small className="ls-caption">
+                    Etkinliğe giriş yaptıktan sonra oy verebilirsin.
+                  </small>
+                )}
+              </section>
+            )}
+          </div>
+        )}
         {contextError ? (
           <div className="ls-panel">
             <h1>Demo hazırlanıyor.</h1>
@@ -582,7 +658,12 @@ function LaunchSpace() {
                 <p className="ls-eyebrow">
                   HOŞ GELDİN, {registration.profile.firstName.toLocaleUpperCase("tr-TR")}
                 </p>
-                <LaunchSpaceArea token={token} goal={registration.needs} flow={flow}>
+                <LaunchSpaceArea
+                  token={token}
+                  goal={registration.needs}
+                  flow={flow}
+                  datasetId={dataset?.id}
+                >
                   <div className="ls-person">
                     <div className="ls-avatar">{registration.profile.firstName[0]}</div>
                     <div>
@@ -870,6 +951,7 @@ function LaunchSpace() {
                             setPoll(
                               await pollRequest(novemberEventSlug, {
                                 action: "submit",
+                                datasetId: dataset?.id,
                                 accessToken: token,
                                 questionVersion: poll.config.questionVersion || 1,
                                 answers,

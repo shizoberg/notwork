@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  launchCompanyQuestions,
   novemberEventSlug,
   pollRequest,
   type PollPayload,
@@ -17,8 +18,10 @@ export function EventPollAdmin({
   nodes?: boolean;
   organizerName?: string;
 }) {
+  const [newPoll, setNewPoll] = useState(false);
   const [questions, setQuestions] = useState<PollQuestion[] | null>(null);
   const [baseRevision, setBaseRevision] = useState(0);
+  const [baseDatasetId, setBaseDatasetId] = useState<string>();
   const [notice, setNotice] = useState("");
   const [data, setData] = useState<PollPayload | null>(null),
     [error, setError] = useState(""),
@@ -34,6 +37,7 @@ export function EventPollAdmin({
     setData(null);
     setDraft("");
     setQuestions(null);
+    setNewPoll(false);
     setNotice("");
     const refresh = () => {
       if (!document.hidden)
@@ -56,13 +60,22 @@ export function EventPollAdmin({
     action: string,
     input: Record<string, unknown> = {},
     revision = data?.config.revision,
+    datasetId = data?.database.datasetId,
   ) {
     if (!data) return false;
     setBusy(true);
     setError("");
     setNotice("");
     try {
-      setData(await pollRequest(event, { action, password, revision, ...input }));
+      setData(
+        await pollRequest(event, {
+          action,
+          password,
+          revision,
+          datasetId,
+          ...input,
+        }),
+      );
       return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : "İşlem başarısız");
@@ -78,7 +91,7 @@ export function EventPollAdmin({
         <div className="ls-nodes-section-head">
           <div>
             <p className="ls-eyebrow">{organizerName}</p>
-            <h2>Sunum oylaması</h2>
+            <h2>Oylamalar</h2>
           </div>
           <a
             className="ls-secondary"
@@ -106,49 +119,82 @@ export function EventPollAdmin({
             <p className="ls-caption">
               {data.total} yanıt · {data.config.isOpen ? "Oylama açık" : "Oylama kapalı"}
             </p>
-            <div className="ls-actions">
-              <button
-                className="ls-primary"
-                disabled={busy}
-                onClick={() => void act("open", { isOpen: !data.config.isOpen })}
-              >
-                {data.config.isOpen ? "Oylamayı kapat" : "Oylamayı aç"}
-              </button>
-              {data.config.publishedQuestion !== null && (
+            {!questions && (
+              <div className="ls-actions">
+                <button
+                  className="ls-primary"
+                  disabled={busy}
+                  onClick={() => {
+                    setBaseRevision(data.config.revision);
+                    setBaseDatasetId(data.database.datasetId);
+                    setNewPoll(true);
+                    setQuestions(
+                      launchCompanyQuestions.map((question) => ({ ...question, title: "" })),
+                    );
+                  }}
+                >
+                  Yeni oylama oluştur
+                </button>
                 <button
                   className="ls-secondary"
                   disabled={busy}
-                  onClick={() => void act("publish", { questionIndex: null })}
+                  onClick={() => void act("open", { isOpen: !data.config.isOpen })}
                 >
-                  Sahneyi beklet
+                  {data.config.isOpen ? "Oylamayı kapat" : "Oylamayı aç"}
                 </button>
-              )}
-              {!questions && (
-                <button
-                  className="ls-secondary"
-                  disabled={busy || data.total > 0}
-                  onClick={() => {
-                    setBaseRevision(data.config.revision);
-                    setQuestions(data.config.questions);
-                  }}
-                >
-                  Soruları düzenle
-                </button>
-              )}
-            </div>
+                {data.config.publishedQuestion !== null && (
+                  <button
+                    className="ls-secondary"
+                    disabled={busy}
+                    onClick={() => void act("publish", { questionIndex: null })}
+                  >
+                    Sahneyi beklet
+                  </button>
+                )}
+                {!questions && (
+                  <button
+                    className="ls-secondary"
+                    disabled={busy || data.total > 0}
+                    onClick={() => {
+                      setBaseRevision(data.config.revision);
+                      setBaseDatasetId(data.database.datasetId);
+                      setNewPoll(false);
+                      setQuestions(data.config.questions);
+                    }}
+                  >
+                    Soruları düzenle
+                  </button>
+                )}
+              </div>
+            )}
             {questions ? (
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  void act("configure", { questions }, baseRevision).then((ok) => {
+                  void act(
+                    newPoll ? "newPoll" : "configure",
+                    { questions },
+                    baseRevision,
+                    baseDatasetId,
+                  ).then((ok) => {
                     if (ok) {
                       setQuestions(null);
-                      setNotice("Anket kaydedildi.");
+                      setNotice(
+                        newPoll
+                          ? "Oylama açıldı ve katılımcı ekranlarına gönderildi."
+                          : "Anket kaydedildi.",
+                      );
                     }
                   });
                 }}
               >
-                <fieldset disabled={busy || data.total > 0}>
+                <h3>{newPoll ? "Yeni oylama" : "Soruları düzenle"}</h3>
+                {newPoll && (
+                  <p className="ls-caption">
+                    Kaydettiğinde yeni oylama açılır. Önceki oylamanın sonuçları arşive alınır.
+                  </p>
+                )}
+                <fieldset disabled={busy || (!newPoll && data.total > 0)}>
                   {questions.map((q, i) => (
                     <section key={i} className="ls-flow-question">
                       <label>
@@ -250,7 +296,9 @@ export function EventPollAdmin({
                         Soru ekle
                       </button>
                     )}
-                    <button className="ls-primary">Anketi kaydet</button>
+                    <button className="ls-primary">
+                      {newPoll ? "Oylamayı oluştur ve gönder" : "Değişiklikleri kaydet"}
+                    </button>
                   </div>
                 </fieldset>
                 <button type="button" className="ls-back" onClick={() => setQuestions(null)}>
@@ -281,7 +329,32 @@ export function EventPollAdmin({
                 </article>
               ))
             )}
-            {data.total > 0 && (
+            {!!data.previousPolls?.length && (
+              <details className="ls-flow-question">
+                <summary>Önceki oylamalar ({data.previousPolls.length})</summary>
+                {[...data.previousPolls].reverse().map((vote) => (
+                  <details className="ls-flow-question" key={vote.id}>
+                    <summary>
+                      {vote.title} · {vote.total} yanıt
+                    </summary>
+                    {vote.results.map((result) => (
+                      <div key={result.question.id}>
+                        <h4>{result.question.title}</h4>
+                        <ul className="ls-nodes-votes">
+                          {result.counts.map(({ label, count }) => (
+                            <li key={label}>
+                              <span>{label}</span>
+                              <strong>{count}</strong>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </details>
+                ))}
+              </details>
+            )}
+            {!newPoll && data.total > 0 && (
               <p className="ls-caption">
                 Yanıt alındığı için soru ve seçenekler düzenlemeye kapalı.
               </p>

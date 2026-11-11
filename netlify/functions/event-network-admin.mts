@@ -53,6 +53,8 @@ export default async (request: Request, _context: Context) => {
       "matchlab",
       async () => {
         const store = getEventNetworkStore();
+        if (input.datasetId && input.datasetId !== getEventNetworkDatasetInfo().datasetId)
+          return new Response("Veri seti değişti. Sayfayı yenile.", { status: 409 });
         if (input.action === "startMatching" || input.action === "processMatching") {
           if (!eventIdentifier) return new Response("Etkinlik gerekli", { status: 400 });
           const matching =
