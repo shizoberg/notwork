@@ -7,9 +7,11 @@ try {
     localStorage.setItem("notwork-cookie-consent-v1", JSON.stringify({ status: "necessary" })),
   );
   let grow = false;
+  let firstCount;
   await p.route("**/api/event-products/poll", async (route) => {
     const r = await route.fetch();
     const d = await r.json();
+    if (d.published && firstCount === undefined) firstCount = d.published.counts[0].count;
     if (grow && d.published) {
       d.total += 10;
       d.published.total += 10;
@@ -24,7 +26,11 @@ try {
   const w = (await p.locator(".ls-result-fill").first().boundingBox()).width;
   await p.screenshot({ path: "/tmp/launch-bars-desktop.png", fullPage: true });
   grow = true;
-  await p.getByText("30 oy", { exact: true }).waitFor();
+  await p
+    .locator(".ls-result-bar")
+    .first()
+    .getByText(`${firstCount + 10} oy`, { exact: true })
+    .waitFor();
   await p.waitForTimeout(1200);
   assert.ok((await p.locator(".ls-result-fill").first().boundingBox()).width > w);
   grow = false;

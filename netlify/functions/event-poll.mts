@@ -11,18 +11,20 @@ import {
 import { getEventNetworkStore, getRegistrationByToken } from "./_event-network-store.mjs";
 import {
   defaultPollQuestions,
+  launchCompanyQuestions,
+  novemberEventSlug,
   type PollConfig,
   type PollQuestion,
 } from "../../src/lib/event-poll.ts";
 
 type State = { config: PollConfig; ballots: Record<string, string[]> };
-const initial = (): State => ({
+const initial = (launch: boolean): State => ({
   config: {
     revision: 1,
     questionVersion: 1,
     isOpen: false,
     publishedQuestion: null,
-    questions: defaultPollQuestions,
+    questions: launch ? launchCompanyQuestions : defaultPollQuestions,
   },
   ballots: {},
 });
@@ -35,8 +37,9 @@ function isAdmin(password: unknown) {
   );
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
-function questions(value: unknown): PollQuestion[] {
-  if (!Array.isArray(value) || value.length !== 5) throw Error("Tam 5 soru gerekli");
+function questions(value: unknown, launch: boolean): PollQuestion[] {
+  if (!Array.isArray(value) || value.length > 5 || value.length < (launch ? 1 : 5))
+    throw Error(launch ? "1–5 soru ekle" : "Tam 5 soru gerekli");
   const result = value.map((q, i) => {
     if (
       !q ||
@@ -81,7 +84,9 @@ export default async (request: Request) => {
         )
           return new Response("Bu etkinlikte yanıt alımı kapalı", { status: 403 });
         const store = getStore({ name: "event-network", consistency: "strong" });
-        const key = `${context.keyPrefix}/poll/state.json`;
+        const launch = context.event.slug === novemberEventSlug;
+        const key = `${context.keyPrefix}/poll/${launch ? "company-vote" : "state"}.json`;
+        const initialState = () => initial(launch);
         let participantId = "";
         if (input.accessToken) {
           const registration = await getRegistrationByToken(
@@ -101,7 +106,7 @@ export default async (request: Request) => {
         )
           return new Response("Geçersiz işlem", { status: 400 });
         if (["configure", "open", "publish", "reset", "submit"].includes(action)) {
-          await atomicState<State, void>(store, key, initial, (state) => {
+          await atomicState<State, void>(store, key, initialState, (state) => {
             if (action !== "submit" && input.revision !== state.config.revision)
               throw Error("Anket değişti, yenile ve tekrar dene");
             if (action === "submit") {
@@ -111,20 +116,21 @@ export default async (request: Request) => {
                 throw Error("Anket soruları güncellendi, soruları yenile");
               if (
                 !Array.isArray(input.answers) ||
-                input.answers.length !== 5 ||
+                input.answers.length !== state.config.questions.length ||
                 input.answers.some(
                   (a: unknown, i: number) =>
                     typeof a !== "string" || !state.config.questions[i].options.includes(a),
                 )
               )
-                throw Error("Beş soruyu da geçerli seçeneklerle cevapla");
+                throw Error("Her soruyu geçerli bir seçenekle cevapla");
               if (Object.keys(state.ballots).length >= 2000) throw Error("Anket kapasitesi doldu");
               state.ballots[participantId] = input.answers;
             } else {
               if (action === "configure") {
                 if (Object.keys(state.ballots).length)
                   throw Error("Cevaplar geldikten sonra sorular değiştirilemez");
-                state.config.questions = questions(input.questions);
+                state.config.questions = questions(input.questions, launch);
+                state.config.publishedQuestion = null;
                 state.config.questionVersion = (state.config.questionVersion || 1) + 1;
               }
               if (action === "open") state.config.isOpen = input.isOpen === true;
@@ -133,7 +139,7 @@ export default async (request: Request) => {
                   input.questionIndex !== null &&
                   (!Number.isInteger(input.questionIndex) ||
                     input.questionIndex < 0 ||
-                    input.questionIndex >= 5)
+                    input.questionIndex >= state.config.questions.length)
                 )
                   throw Error("Geçersiz soru");
                 state.config.publishedQuestion = input.questionIndex;
@@ -149,7 +155,7 @@ export default async (request: Request) => {
             }
           });
         }
-        const state = await readAtomicState<State>(store, key, initial);
+        const state = await readAtomicState<State>(store, key, initialState);
         state.config.questionVersion ||= 1;
         const total = Object.keys(state.ballots).length;
         const results = state.config.questions.map((question, index) => ({

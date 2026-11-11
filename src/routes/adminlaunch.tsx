@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { BarChart3, CalendarDays, Network, SlidersHorizontal } from "lucide-react";
+import { LaunchEventHeader } from "@/components/launch-space/LaunchEventHeader";
+import { defaultLaunchFlow, getLaunchFlow } from "@/lib/launch-flow";
 import { LaunchFlowAdmin } from "@/components/LaunchFlowAdmin";
 import { EventPollAdmin } from "@/components/EventPollAdmin";
 import { createNoIndexSeo } from "@/lib/seo";
@@ -40,6 +43,8 @@ export function LaunchAdminPanel() {
       offersDetail: string;
     }>
   >([]);
+  const [section, setSection] = useState<"event" | "flow" | "match" | "poll">("event");
+  const [flow, setFlow] = useState(defaultLaunchFlow);
   const [query, setQuery] = useState("");
   const [username, setUsername] = useState("");
   async function auth(action: string) {
@@ -68,6 +73,9 @@ export function LaunchAdminPanel() {
     setCount(r.registrations.length);
     setParticipants(r.registrations);
     setActive(true);
+    void getLaunchFlow()
+      .then(setFlow)
+      .catch(() => {});
   }
   return (
     <div className="launch-space">
@@ -79,7 +87,7 @@ export function LaunchAdminPanel() {
         <span className="ls-demo">ORGANİZATÖR</span>
       </header>
       <main className="ls-main">
-        <h1>Topluluk hazır mı?</h1>
+        <LaunchEventHeader schedule={flow.schedule} />
         {!active ? (
           <form
             onSubmit={(e) => {
@@ -88,6 +96,7 @@ export function LaunchAdminPanel() {
             }}
             className="ls-form"
           >
+            <h2>Organizatör girişi</h2>
             <label>
               Kullanıcı adı
               <input
@@ -114,70 +123,109 @@ export function LaunchAdminPanel() {
           </form>
         ) : (
           <>
-            <div className="ls-panel">
-              <p className="ls-eyebrow">14 KASIM · LAUNCH SPACE</p>
-              <h2>{count} katılımcı</h2>
-              <div className="ls-actions">
+            <nav className="ls-admin-tabs" aria-label="Etkinlik yönetimi">
+              {(
+                [
+                  ["event", "Etkinlik", CalendarDays],
+                  ["flow", "Kayıt ve akış", SlidersHorizontal],
+                  ["match", "Match", Network],
+                  ["poll", "Anket", BarChart3],
+                ] as const
+              ).map(([id, label, Icon]) => (
                 <button
-                  className="ls-secondary"
-                  onClick={() => void load().catch((e) => setError(e.message))}
+                  key={id}
+                  aria-current={section === id ? "page" : undefined}
+                  onClick={() => setSection(id)}
                 >
-                  Katılımcıları yenile
+                  <Icon size={17} /> {label}
                 </button>
-                <button
-                  disabled={busy}
-                  className="ls-primary"
-                  onClick={async () => {
-                    setBusy(true);
-                    setError("");
-                    try {
-                      let r = await request("startMatching");
-                      while (r.matching.status === "running") r = await request("processMatching");
-                      await load();
-                    } catch (e) {
-                      setError(e instanceof Error ? e.message : "Eşleşme başlatılamadı");
-                    } finally {
-                      setBusy(false);
-                    }
-                  }}
-                >
-                  {busy ? "Eşleştiriliyor…" : "Herkes hazır · eşleştir"}
-                </button>
+              ))}
+            </nav>
+            {section === "event" && (
+              <>
+                <section className="ls-panel">
+                  <p className="ls-eyebrow">Etkinlik bilgileri</p>
+                  <h2>Etkinlik amacı</h2>
+                  <p className="ls-muted ls-flow-copy">{flow.welcomeText}</p>
+                  <ul className="ls-nodes-votes">
+                    {flow.schedule.map(({ time, label }, index) => (
+                      <li key={index}>
+                        <strong>{time.replace(":", ".")}</strong>
+                        <span>{label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <a className="ls-secondary" href="/launch-space" target="_blank" rel="noreferrer">
+                    Katılımcı ekranını aç ↗
+                  </a>
+                </section>
+                <details className="ls-panel">
+                  <summary>Kayıtlı kişiler ({count})</summary>
+                  <label>
+                    Katılımcı ara
+                    <input value={query} onChange={(e) => setQuery(e.target.value)} />
+                  </label>
+                  <div style={{ maxHeight: 440, overflow: "auto" }}>
+                    {participants
+                      .filter((p) =>
+                        (p.profile.firstName + " " + p.profile.lastName)
+                          .toLocaleLowerCase("tr-TR")
+                          .includes(query.toLocaleLowerCase("tr-TR")),
+                      )
+                      .map((p, i) => (
+                        <article key={i} className="ls-flow-question">
+                          <strong>
+                            {p.profile.firstName} {p.profile.lastName}
+                          </strong>
+                          <p className="ls-caption">{p.intro}</p>
+                          <p className="ls-caption">Katkı: {p.offersDetail}</p>
+                          <p className="ls-caption">Aradığı: {p.needs}</p>
+                        </article>
+                      ))}
+                  </div>
+                </details>
+              </>
+            )}
+            {section === "match" && (
+              <div className="ls-panel">
+                <p className="ls-eyebrow">node.games</p>
+                <h2>notwork match</h2>
+                <p className="ls-caption">{count} kayıtlı katılımcı</p>
+                <div className="ls-actions">
+                  <button
+                    className="ls-secondary"
+                    onClick={() => void load().catch((e) => setError(e.message))}
+                  >
+                    Katılımcıları yenile
+                  </button>
+                  <button
+                    disabled={busy}
+                    className="ls-primary"
+                    onClick={async () => {
+                      setBusy(true);
+                      setError("");
+                      try {
+                        let r = await request("startMatching");
+                        while (r.matching.status === "running")
+                          r = await request("processMatching");
+                        await load();
+                      } catch (e) {
+                        setError(e instanceof Error ? e.message : "Eşleşme başlatılamadı");
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  >
+                    {busy ? "Eşleştiriliyor…" : "Eşleşmeleri başlat"}
+                  </button>
+                </div>
+                <p className="ls-caption">
+                  Aktif eşleşmeler korunur. Yeni katılımcılar ortak havuza katılır.
+                </p>
               </div>
-              <p className="ls-caption">
-                Aktif eşleşmeler korunur. Yeni katılımcılar ortak havuza katılır.
-              </p>
-            </div>
-            <details className="ls-panel">
-              <summary>Katılımcılar ve etkinlik yanıtları ({count})</summary>
-              <label>
-                Katılımcı ara
-                <input value={query} onChange={(e) => setQuery(e.target.value)} />
-              </label>
-              <div style={{ maxHeight: 440, overflow: "auto" }}>
-                {participants
-                  .filter((p) =>
-                    (p.profile.firstName + " " + p.profile.lastName)
-                      .toLocaleLowerCase("tr-TR")
-                      .includes(query.toLocaleLowerCase("tr-TR")),
-                  )
-                  .map((p, i) => (
-                    <article
-                      key={i}
-                      style={{ borderBottom: "1px solid #35373c", padding: "16px 0" }}
-                    >
-                      <strong>
-                        {p.profile.firstName} {p.profile.lastName}
-                      </strong>
-                      <p className="ls-caption">{p.intro}</p>
-                      <p className="ls-caption">Katkı: {p.offersDetail}</p>
-                      <p className="ls-caption">Aradığı: {p.needs}</p>
-                    </article>
-                  ))}
-              </div>
-            </details>
-            <LaunchFlowAdmin />
-            <EventPollAdmin event={novemberEventSlug} password="" />
+            )}
+            {section === "flow" && <LaunchFlowAdmin onSaved={setFlow} />}
+            {section === "poll" && <EventPollAdmin event={novemberEventSlug} password="" nodes />}
           </>
         )}
         {active ? (
@@ -186,6 +234,7 @@ export function LaunchAdminPanel() {
             onClick={() =>
               void auth("logout").then(() => {
                 setActive(false);
+                setSection("event");
                 setPassword("");
               })
             }

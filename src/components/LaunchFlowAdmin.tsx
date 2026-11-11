@@ -5,7 +5,7 @@ const splitLines = (text: string) => text.split("\n");
 const cleanLines = (lines: string[]) => lines.map((line) => line.trim()).filter(Boolean);
 const questionNames = ["Kendini tanıtma", "Sunabileceği katkı", "Aradığı bağlantı"];
 
-export function LaunchFlowAdmin() {
+export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => void }) {
   const [flow, setFlow] = useState<LaunchFlow>();
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -48,7 +48,9 @@ export function LaunchFlowAdmin() {
         body: JSON.stringify({ action: "saveFlow", flow: draft }),
       });
       if (!response.ok) throw Error(await response.text());
-      setFlow(await response.json());
+      const saved = await response.json();
+      setFlow(saved);
+      onSaved?.(saved);
       setDirty(false);
       setStatus("Akış kaydedildi. Katılımcılar sayfayı açtığında yeni akışı görecek.");
     } catch (error) {
@@ -81,7 +83,7 @@ export function LaunchFlowAdmin() {
         >
           <fieldset disabled={saving}>
             <details open>
-              <summary>Karşılama ve butonlar</summary>
+              <summary>Etkinlik amacı ve giriş</summary>
               <label>
                 Başlık
                 <textarea
@@ -92,7 +94,7 @@ export function LaunchFlowAdmin() {
                 />
               </label>
               <label>
-                Açıklama
+                Etkinlik amacı
                 <textarea
                   required
                   maxLength={240}

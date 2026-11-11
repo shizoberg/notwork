@@ -1,7 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
-import { pollRequest, type PollPayload } from "@/lib/event-poll";
+import {
+  novemberEventSlug,
+  pollRequest,
+  type PollPayload,
+  type PollQuestion,
+} from "@/lib/event-poll";
 
-export function EventPollAdmin({ event, password }: { event: string; password: string }) {
+export function EventPollAdmin({
+  event,
+  password,
+  nodes = false,
+}: {
+  event: string;
+  password: string;
+  nodes?: boolean;
+}) {
+  const [questions, setQuestions] = useState<PollQuestion[] | null>(null);
+  const [baseRevision, setBaseRevision] = useState(0);
+  const [notice, setNotice] = useState("");
   const [data, setData] = useState<PollPayload | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
@@ -15,6 +31,8 @@ export function EventPollAdmin({ event, password }: { event: string; password: s
     let current = true;
     setData(null);
     setDraft("");
+    setQuestions(null);
+    setNotice("");
     const refresh = () => {
       if (!document.hidden)
         void pollRequest(event, { action: "admin", password })
@@ -32,21 +50,244 @@ export function EventPollAdmin({ event, password }: { event: string; password: s
       clearInterval(timer);
     };
   }, [event, password]);
-  async function act(action: string, input: Record<string, unknown> = {}) {
-    if (!data) return;
+  async function act(
+    action: string,
+    input: Record<string, unknown> = {},
+    revision = data?.config.revision,
+  ) {
+    if (!data) return false;
     setBusy(true);
     setError("");
+    setNotice("");
     try {
-      setData(
-        await pollRequest(event, { action, password, revision: data.config.revision, ...input }),
-      );
+      setData(await pollRequest(event, { action, password, revision, ...input }));
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : "İşlem başarısız");
       await load().catch(() => {});
+      return false;
     } finally {
       setBusy(false);
     }
   }
+  if (nodes && event === novemberEventSlug)
+    return (
+      <section className="ls-panel ls-nodes-poll" aria-label="Anket yönetimi">
+        <div className="ls-nodes-section-head">
+          <div>
+            <p className="ls-eyebrow">node.games</p>
+            <h2>Sunum oylaması</h2>
+          </div>
+          <a
+            className="ls-secondary"
+            href={`/launch-space-sahne?event=${encodeURIComponent(event)}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Sahneyi aç ↗
+          </a>
+        </div>
+        {error && (
+          <p role="alert" className="ls-caption">
+            {error}
+          </p>
+        )}
+        {notice && (
+          <p role="status" className="ls-caption">
+            {notice}
+          </p>
+        )}
+        {!data ? (
+          <p className="ls-caption">Anket yükleniyor…</p>
+        ) : (
+          <>
+            <p className="ls-caption">
+              {data.total} yanıt · {data.config.isOpen ? "Oylama açık" : "Oylama kapalı"}
+            </p>
+            <div className="ls-actions">
+              <button
+                className="ls-primary"
+                disabled={busy}
+                onClick={() => void act("open", { isOpen: !data.config.isOpen })}
+              >
+                {data.config.isOpen ? "Oylamayı kapat" : "Oylamayı aç"}
+              </button>
+              {data.config.publishedQuestion !== null && (
+                <button
+                  className="ls-secondary"
+                  disabled={busy}
+                  onClick={() => void act("publish", { questionIndex: null })}
+                >
+                  Sahneyi beklet
+                </button>
+              )}
+              {!questions && (
+                <button
+                  className="ls-secondary"
+                  disabled={busy || data.total > 0}
+                  onClick={() => {
+                    setBaseRevision(data.config.revision);
+                    setQuestions(data.config.questions);
+                  }}
+                >
+                  Soruları düzenle
+                </button>
+              )}
+            </div>
+            {questions ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void act("configure", { questions }, baseRevision).then((ok) => {
+                    if (ok) {
+                      setQuestions(null);
+                      setNotice("Anket kaydedildi.");
+                    }
+                  });
+                }}
+              >
+                <fieldset disabled={busy || data.total > 0}>
+                  {questions.map((q, i) => (
+                    <section key={i} className="ls-flow-question">
+                      <label>
+                        Soru {i + 1}
+                        <input
+                          required
+                          maxLength={180}
+                          value={q.title}
+                          onChange={(e) =>
+                            setQuestions(
+                              questions.map((item, index) =>
+                                index === i ? { ...item, title: e.target.value } : item,
+                              ),
+                            )
+                          }
+                        />
+                      </label>
+                      {q.options.map((option, j) => (
+                        <div className="ls-poll-editor-row" key={j}>
+                          <label>
+                            Seçenek {j + 1}
+                            <input
+                              required
+                              maxLength={80}
+                              value={option}
+                              onChange={(e) =>
+                                setQuestions(
+                                  questions.map((item, index) =>
+                                    index === i
+                                      ? {
+                                          ...item,
+                                          options: item.options.map((o, k) =>
+                                            k === j ? e.target.value : o,
+                                          ),
+                                        }
+                                      : item,
+                                  ),
+                                )
+                              }
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            className="ls-secondary"
+                            aria-label={`Seçenek ${j + 1} kaldır`}
+                            disabled={q.options.length <= 2}
+                            onClick={() =>
+                              setQuestions(
+                                questions.map((item, index) =>
+                                  index === i
+                                    ? { ...item, options: item.options.filter((_, k) => k !== j) }
+                                    : item,
+                                ),
+                              )
+                            }
+                          >
+                            Kaldır
+                          </button>
+                        </div>
+                      ))}
+                      <div className="ls-actions">
+                        <button
+                          type="button"
+                          className="ls-secondary"
+                          disabled={q.options.length >= 8}
+                          onClick={() =>
+                            setQuestions(
+                              questions.map((item, index) =>
+                                index === i ? { ...item, options: [...item.options, ""] } : item,
+                              ),
+                            )
+                          }
+                        >
+                          Seçenek ekle
+                        </button>
+                        {questions.length > 1 && (
+                          <button
+                            type="button"
+                            className="ls-secondary"
+                            onClick={() =>
+                              setQuestions(questions.filter((_, index) => index !== i))
+                            }
+                          >
+                            Soruyu kaldır
+                          </button>
+                        )}
+                      </div>
+                    </section>
+                  ))}
+                  <div className="ls-actions">
+                    {questions.length < 5 && (
+                      <button
+                        type="button"
+                        className="ls-secondary"
+                        onClick={() =>
+                          setQuestions([...questions, { id: "", title: "", options: ["", ""] }])
+                        }
+                      >
+                        Soru ekle
+                      </button>
+                    )}
+                    <button className="ls-primary">Anketi kaydet</button>
+                  </div>
+                </fieldset>
+                <button type="button" className="ls-back" onClick={() => setQuestions(null)}>
+                  İptal
+                </button>
+              </form>
+            ) : (
+              data.results?.map((result, index) => (
+                <article className="ls-flow-question" key={result.question.id}>
+                  <h3>{result.question.title}</h3>
+                  <ul className="ls-nodes-votes">
+                    {result.counts.map(({ label, count }) => (
+                      <li key={label}>
+                        <span>{label}</span>
+                        <strong>{count}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    disabled={busy || data.config.publishedQuestion === index}
+                    className="ls-secondary"
+                    onClick={() => void act("publish", { questionIndex: index })}
+                  >
+                    {data.config.publishedQuestion === index
+                      ? "Sahnede gösteriliyor"
+                      : "Sonuçları sahneye ver"}
+                  </button>
+                </article>
+              ))
+            )}
+            {data.total > 0 && (
+              <p className="ls-caption">
+                Yanıt alındığı için soru ve seçenekler düzenlemeye kapalı.
+              </p>
+            )}
+          </>
+        )}
+      </section>
+    );
   return (
     <section
       className="rounded-3xl border border-primary/25 bg-card p-5 sm:p-7"
@@ -55,7 +296,10 @@ export function EventPollAdmin({ event, password }: { event: string; password: s
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs text-muted-foreground">ETKİNLİĞE ÖZEL · 5 SORU</p>
+          <p className="text-xs text-muted-foreground">
+            ETKİNLİĞE ÖZEL ·{" "}
+            {data?.config.questions.length ?? (event === novemberEventSlug ? 1 : 5)} SORU
+          </p>
           <h2 className="mt-1 text-2xl font-semibold">notwork anket</h2>
         </div>
         <a
@@ -135,7 +379,8 @@ export function EventPollAdmin({ event, password }: { event: string; password: s
           <details className="mt-5 rounded-2xl border p-4">
             <summary className="cursor-pointer text-sm">Taslak soruları düzenle</summary>
             <p className="my-3 text-xs text-muted-foreground">
-              Tam 5 soru, her soruda 2–8 seçenek. Yanıt geldikten sonra soru değiştirilmez.
+              {event === novemberEventSlug ? "1–5 soru" : "Tam 5 soru"}, her soruda 2–8 seçenek.
+              Yanıt geldikten sonra soru değiştirilmez.
             </p>
             <textarea
               aria-label="Anket soruları JSON"

@@ -17,10 +17,10 @@ export type LaunchFlow = {
 
 export const defaultLaunchFlow: LaunchFlow = {
   revision: 0,
-  welcomeTitle: "Bir tanışma.\nYeni ihtimaller.",
-  welcomeText: "Kendini tanıt. Doğru insanlarla buluş.\nTopluluğun sesine katıl.",
-  registerLabel: "Etkinlik profilimi oluştur",
-  loginLabel: "Notwork profilim var · giriş yap",
+  welcomeTitle: "Etkinliğe katıl",
+  welcomeText: "Yeni insanlarla tanış, firma sunumlarını izle ve favori sunumuna oy ver.",
+  registerLabel: "Etkinliğe kayıt ol",
+  loginLabel: "Profilim var · giriş yap",
   nextLabel: "Devam et",
   finishLabel: "Kaydı tamamla",
   categoryLabel: "Katkı alanın",

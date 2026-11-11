@@ -68,6 +68,47 @@ try {
   );
   r = await call(poll, { action: "admin", event: event.slug }, cookie);
   assert.equal(r.status, 200);
+  const pollConfig = (await r.json()).config;
+  assert.equal(pollConfig.questions.length, 1);
+  const draft = pollConfig.questions.map((q) => ({ ...q, options: [...q.options, "Firma altı"] }));
+  r = await call(
+    poll,
+    {
+      action: "configure",
+      event: event.slug,
+      revision: pollConfig.revision,
+      questions: [...draft, { title: "İkinci soru", options: ["Evet", "Hayır"] }],
+    },
+    cookie,
+  );
+  assert.equal(r.status, 200);
+  const expanded = (await r.json()).config;
+  assert.equal(expanded.questions.length, 2);
+  r = await call(
+    poll,
+    {
+      action: "configure",
+      event: event.slug,
+      revision: expanded.revision,
+      questions: draft,
+    },
+    cookie,
+  );
+  assert.equal(r.status, 200);
+  const reduced = (await r.json()).config;
+  assert.equal(reduced.questions.length, 1);
+  assert.equal(reduced.questions[0].options.length, 6);
+  r = await call(
+    poll,
+    {
+      action: "publish",
+      event: event.slug,
+      revision: reduced.revision,
+      questionIndex: 1,
+    },
+    cookie,
+  );
+  assert.equal(r.status, 400);
   r = await call(poll, { action: "admin", event: other.id }, cookie);
   assert.equal(r.status, 401);
   r = await call(net, { action: "list", event: event.id }, cookie);

@@ -104,6 +104,8 @@ try {
   state = (
     await call(poll, { action: "open", password, revision: state.config.revision, isOpen: true })
   ).data;
+  assert.equal(state.config.questions.length, 1);
+  assert.deepEqual(state.config.questions[0].options, lib.launchCompanyQuestions[0].options);
   const answers = state.config.questions.map((q) => q.options[0]);
   const results = await Promise.all(
     participants.map((p) =>
@@ -138,13 +140,13 @@ try {
       action: "publish",
       password,
       revision: state.config.revision,
-      questionIndex: 2,
+      questionIndex: 0,
     })
   ).data;
   r = await call(poll, { action: "stage" });
   assert.equal(r.data.published.total, 100);
   assert.equal(state.config.questionVersion, 1);
-  assert.equal(r.data.published.question.id, state.config.questions[2].id);
+  assert.equal(r.data.published.question.id, state.config.questions[0].id);
   assert.ok(!JSON.stringify(r.data).includes("demo-0@"));
   r = await call(poll, {
     action: "configure",

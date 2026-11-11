@@ -1085,54 +1085,10 @@
 .ls-space-area {
   margin-top: 36px;
 }
-.ls-space-cover {
-  position: relative;
-  height: 240px;
-  overflow: hidden;
-  border-radius: 24px;
-  background: #25332e;
-}
-.ls-space-cover > img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.6;
-}
-.ls-space-cover:after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(0deg, #0d0e10b5, transparent);
-}
-.ls-space-cover > div {
-  position: absolute;
-  left: 24px;
-  bottom: 22px;
-  z-index: 1;
-}
-.ls-space-cover small,
-.ls-space-purpose > small {
-  letter-spacing: 1.6px;
-  font-size: 10px;
-}
-.ls-space-cover h2 {
-  font-size: 34px;
-  margin: 6px 0;
-}
-.ls-space-cover p {
-  margin: 0;
-  font-size: 13px;
-}
-.ls-space-identity {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  margin: -18px 18px 24px;
-  position: relative;
-}
 .ls-space-logo {
   width: 76px;
   height: 76px;
+  flex: none;
   border: 4px solid var(--ls-bg);
   border-radius: 22px;
   background: #202629;
@@ -1141,40 +1097,6 @@
 }
 .ls-space-logo img {
   width: 58px;
-}
-.ls-space-identity > span:last-child {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  padding-top: 20px;
-  font-size: 12px;
-}
-.ls-space-identity small {
-  width: 100%;
-  color: #8b969b;
-}
-.ls-space-purpose {
-  padding: 20px;
-  border: 1px solid var(--ls-line);
-  border-radius: 20px;
-}
-.ls-space-purpose p {
-  font-size: 16px;
-  color: #d4dbdd;
-  margin: 10px 0 20px;
-}
-.ls-space-purpose > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 24px;
-  font-size: 11px;
-  color: var(--ls-blue);
-}
-.ls-space-purpose b {
-  font-weight: 500;
-  color: #abb3b9;
-  margin-left: 5px;
 }
 .ls-directory-heading {
   display: flex;
@@ -1363,9 +1285,6 @@
     width: clamp(62px, 18vw, 78px);
     height: clamp(62px, 18vw, 78px);
   }
-  .ls-space-cover {
-    height: 210px;
-  }
   .ls-profile-sheet {
     padding: 24px;
   }
@@ -1457,5 +1376,107 @@
   .launch-space .ls-flow-row button {
     grid-column: 1 / -1;
     justify-self: start;
+  }
+}
+
+.launch-space .ls-event-header {
+  margin-bottom: 20px;
+}
+.launch-space .ls-event-cover {
+  height: clamp(115px, 26vw, 220px);
+  overflow: hidden;
+  border: 1px solid #2a2d31;
+  border-radius: 22px;
+  background: #17191c;
+}
+.launch-space .ls-event-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.launch-space .ls-event-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 4px 0;
+}
+.launch-space .ls-event-identity h1 {
+  margin: 0;
+  font-size: clamp(26px, 6vw, 38px);
+  letter-spacing: -0.04em;
+}
+.launch-space .ls-event-identity p {
+  margin: 4px 0 0;
+  color: #a6a8af;
+  font-size: 12px;
+}
+.launch-space .ls-node-entry,
+.launch-space .ls-area-info {
+  margin-block: 14px;
+}
+.launch-space .ls-admin-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  border: 1px solid #2a2d31;
+  padding: 4px;
+  border-radius: 16px;
+  margin-bottom: 14px;
+}
+.launch-space .ls-admin-tabs button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 4px;
+  border-radius: 12px;
+  min-height: 44px;
+  color: #b7bdc3;
+  font-size: 12px;
+}
+.launch-space .ls-admin-tabs button[aria-current] {
+  background: #232b30;
+  color: #e9f6fb;
+}
+.launch-space .ls-nodes-section-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+}
+.launch-space .ls-nodes-votes {
+  padding: 0;
+  list-style: none;
+  margin-block: 12px;
+}
+.launch-space .ls-nodes-votes li {
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid #2a2d31;
+  padding: 8px 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.launch-space .ls-nodes-poll fieldset {
+  min-inline-size: 0;
+}
+.launch-space .ls-nodes-poll .ls-nodes-votes li {
+  justify-content: space-between;
+}
+.launch-space .ls-poll-editor-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+  margin-block: 10px;
+}
+.launch-space .ls-poll-editor-row label {
+  margin: 0;
+}
+@media (max-width: 480px) {
+  .launch-space .ls-admin-tabs button {
+    flex-direction: column;
+    text-align: center;
   }
 }

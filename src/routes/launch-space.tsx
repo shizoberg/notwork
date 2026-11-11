@@ -27,6 +27,7 @@ import { getMyMemberProfile, loginMember } from "@/lib/member-profile-api";
 import type { EventNetworkRegistration, EventNetworkMatchGroup } from "@/lib/event-network";
 import { novemberEventSlug, pollRequest, type PollPayload } from "@/lib/event-poll";
 import "@/launch-space.css";
+import { LaunchEventHeader } from "@/components/launch-space/LaunchEventHeader";
 import { LaunchSpaceArea } from "@/components/launch-space/LaunchSpaceArea";
 
 export const Route = createFileRoute("/launch-space")({
@@ -55,8 +56,7 @@ function LaunchSpace() {
 
   const [ready, setReady] = useState(false),
     [contextError, setContextError] = useState("");
-  const [eventTitle, setEventTitle] = useState("14 Kasım · notwork"),
-    [mode, setMode] = useState("");
+  const [mode, setMode] = useState("");
   const [registration, setRegistration] = useState<EventNetworkRegistration | null>(null),
     [token, setToken] = useState("");
   const [step, setStep] = useState(-1),
@@ -88,6 +88,12 @@ function LaunchSpace() {
     [answers, setAnswers] = useState<string[]>([]),
     [question, setQuestion] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const pollLength = poll?.config.questions.length ?? 1;
+  const pollQuestion = poll?.config.questions[Math.min(question, pollLength - 1)];
+  useEffect(() => {
+    setQuestion(0);
+    setAnswers([]);
+  }, [poll?.config.questionVersion]);
   const alive = useRef(true);
   useEffect(() => {
     alive.current = true;
@@ -99,7 +105,6 @@ function LaunchSpace() {
         ]);
         if (!alive.current) return;
         setFlow(savedFlow);
-        setEventTitle(context.event.shortTitle);
         setMode(context.event.products.matchlab.dataMode);
         const saved = localStorage.getItem(tokenKey);
         const draft = localStorage.getItem("launch-space:draft");
@@ -321,34 +326,36 @@ function LaunchSpace() {
         ) : !registration ? (
           <>
             {step === -1 && !login ? (
-              <section className="ls-welcome ls-enter">
-                <div className="ls-orbit">
-                  <NodeMark />
-                  <i />
-                  <i />
-                  <i />
+              <section className="ls-enter">
+                <LaunchEventHeader schedule={flow.schedule} />
+                <div className="ls-panel ls-node-entry">
+                  <p className="ls-eyebrow">Etkinlik amacı</p>
+                  <p className="ls-muted ls-flow-copy">{flow.welcomeText}</p>
+                  <details>
+                    <summary>Etkinlik programı</summary>
+                    <ul className="ls-nodes-votes">
+                      {flow.schedule.map(({ time, label }, index) => (
+                        <li key={index}>
+                          <strong>{time.replace(":", ".")}</strong>
+                          <span>{label}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
                 </div>
-                <p className="ls-eyebrow">14 KASIM · {flow.schedule[0].time.replace(":", ".")}</p>
-                <h1 className="ls-flow-copy">{flow.welcomeTitle}</h1>
-                <p className="ls-muted ls-flow-copy">{flow.welcomeText}</p>
-                <button className="ls-primary" onClick={() => setStep(0)}>
-                  {flow.registerLabel} <ArrowRight size={18} />
-                </button>
-                <button className="ls-ghost" onClick={() => setLogin(true)}>
-                  {flow.loginLabel}
-                </button>
-                <p className="ls-caption">
-                  Demo · yalnızca örnek bilgiler kullan.
-                  <br />
-                  Bu akış Nodes hesabı oluşturmaz.
-                </p>
-                <div className="ls-preview">
-                  <span>
-                    <Network size={17} /> Match
-                  </span>
-                  <span>
-                    <Radio size={17} /> Canlı anket
-                  </span>
+                <div className="ls-panel ls-node-entry">
+                  <h2 className="ls-flow-copy">{flow.welcomeTitle}</h2>
+                  <div className="ls-actions">
+                    <button className="ls-primary" onClick={() => setStep(0)}>
+                      {flow.registerLabel} <ArrowRight size={18} />
+                    </button>
+                    <button className="ls-secondary" onClick={() => setLogin(true)}>
+                      {flow.loginLabel}
+                    </button>
+                  </div>
+                  {mode === "demo" && (
+                    <p className="ls-caption">Demo · yalnızca örnek bilgiler kullan.</p>
+                  )}
                 </div>
               </section>
             ) : login ? (
@@ -553,19 +560,21 @@ function LaunchSpace() {
           </>
         ) : (
           <>
-            <div className="ls-flowbar" aria-label="Etkinlik akışı">
-              {flow.schedule.map(({ time, label }, index) => (
-                <span key={index}>
-                  {time.replace(":", ".")} · {label}
-                </span>
-              ))}
-            </div>
+            {tab !== "home" && (
+              <div className="ls-flowbar" aria-label="Etkinlik akışı">
+                {flow.schedule.map(({ time, label }, index) => (
+                  <span key={index}>
+                    {time.replace(":", ".")} · {label}
+                  </span>
+                ))}
+              </div>
+            )}
             {tab === "home" ? (
               <section className="ls-enter">
                 <p className="ls-eyebrow">
                   HOŞ GELDİN, {registration.profile.firstName.toLocaleUpperCase("tr-TR")}
                 </p>
-                <LaunchSpaceArea token={token} goal={registration.needs}>
+                <LaunchSpaceArea token={token} goal={registration.needs} flow={flow}>
                   <div className="ls-person">
                     <div className="ls-avatar">{registration.profile.firstName[0]}</div>
                     <div>
@@ -607,7 +616,7 @@ function LaunchSpace() {
                         <p>
                           {app === "match"
                             ? "Yeni bir gruba katıl ve sohbeti başlat."
-                            : "Beş soruda topluluğun sesine katıl."}
+                            : "Firma sunumları için oyunu kullan."}
                         </p>
                         <ArrowRight />
                       </button>
@@ -784,7 +793,7 @@ function LaunchSpace() {
                       topluluğa karıştı.
                     </h1>
                     <p className="ls-muted">
-                      Beş yanıtın kaydedildi. Topluluğun yanıtlarını buradan takip edebilirsin.
+                      Oyun kaydedildi. Sonuçlar paylaşıldığında buradan görebilirsin.
                     </p>
                     <button onClick={() => setShowResults(true)} className="ls-primary">
                       Sonuçları gör
@@ -801,22 +810,18 @@ function LaunchSpace() {
                       <br />
                       söz sende.
                     </h1>
-                    <p className="ls-muted">
-                      Organizatör anketi açtığında beş soru burada görünecek.
-                    </p>
+                    <p className="ls-muted">Oylama açıldığında buradan oy verebilirsin.</p>
                   </div>
                 ) : (
                   <>
-                    <div className="ls-progress">
-                      <span>SORU {question + 1} / 5</span>
-                      <strong>%{Math.round((question / 5) * 100)}</strong>
-                      <div>
-                        <i style={{ width: `${(question / 5) * 100}%` }} />
-                      </div>
-                    </div>
-                    <h1 className="ls-poll-title">{poll.config.questions[question].title}</h1>
+                    {pollLength > 1 && (
+                      <p className="ls-caption">
+                        Soru {Math.min(question + 1, pollLength)} / {pollLength}
+                      </p>
+                    )}
+                    <h1 className="ls-poll-title">{pollQuestion?.title}</h1>
                     <div className="ls-options">
-                      {poll.config.questions[question].options.map((o) => (
+                      {pollQuestion?.options.map((o) => (
                         <button
                           key={o}
                           aria-pressed={answers[question] === o}
@@ -834,18 +839,20 @@ function LaunchSpace() {
                       ))}
                     </div>
                     <div className="ls-actions">
-                      <button
-                        disabled={question === 0 || busy}
-                        className="ls-ghost"
-                        onClick={() => setQuestion((q) => q - 1)}
-                      >
-                        Geri
-                      </button>
+                      {pollLength > 1 && (
+                        <button
+                          disabled={question === 0 || busy}
+                          className="ls-ghost"
+                          onClick={() => setQuestion((q) => q - 1)}
+                        >
+                          Geri
+                        </button>
+                      )}
                       <button
                         className="ls-primary"
-                        disabled={!answers[question] || busy}
+                        disabled={!pollQuestion?.options.includes(answers[question]) || busy}
                         onClick={async () => {
-                          if (question < 4) {
+                          if (question < pollLength - 1) {
                             setQuestion((q) => q + 1);
                             return;
                           }
@@ -867,7 +874,11 @@ function LaunchSpace() {
                           }
                         }}
                       >
-                        {busy ? "Kaydediliyor…" : question === 4 ? "Yanıtları gönder" : "Devam et"}
+                        {busy
+                          ? "Kaydediliyor…"
+                          : question >= pollLength - 1
+                            ? "Oyumu gönder"
+                            : "Devam et"}
                         <ArrowRight size={16} />
                       </button>
                     </div>

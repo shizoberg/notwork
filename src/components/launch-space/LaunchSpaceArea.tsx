@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowRight, Check, Search, Users, X } from "lucide-react";
+import { LaunchEventHeader } from "./LaunchEventHeader";
+import type { LaunchFlow } from "@/lib/launch-flow";
 import { novemberEventSlug } from "@/lib/event-poll";
 
 type Person = {
@@ -17,10 +19,12 @@ type Person = {
 export function LaunchSpaceArea({
   token,
   goal,
+  flow,
   children,
 }: {
   token: string;
   goal: string;
+  flow: LaunchFlow;
   children?: ReactNode;
 }) {
   const [people, setPeople] = useState<Person[]>([]);
@@ -111,42 +115,20 @@ export function LaunchSpaceArea({
   const incoming = people.filter((p) => p.received && !p.sent);
   return (
     <div className="ls-space-area">
-      <div className="ls-space-cover">
-        <img src="/nodes-app/assets/community-cover.jpg" alt="Notwork topluluk buluşması" />
-        <div>
-          <small>ÖZEL TOPLULUK ALANIN</small>
-          <h2>Launch Space</h2>
-          <p>14 Kasım · 18.00</p>
-        </div>
-      </div>
-      <div className="ls-space-identity">
-        <span className="ls-space-logo">
-          <img src="/brand/notwork-logo.png" alt="notwork" />
-        </span>
-        <span>
-          <Users size={15} />{" "}
-          {loading ? "Katılımcılar yükleniyor" : `${people.length} kayıtlı kişi`}
-          <small>nodes by notwork</small>
-        </span>
-      </div>
-      <section className="ls-space-purpose">
-        <small>BU BULUŞMADAKİ AMACIN</small>
-        <p>
-          {goal ||
-            "Yeni insanlarla tanışmak, deneyimini paylaşmak ve birlikte yeni ihtimaller keşfetmek."}
-        </p>
-        <div>
-          <span>
-            18.00 <b>Buluşma & tanışma</b>
-          </span>
-          <span>
-            19.00 <b>Sunumlar</b>
-          </span>
-          <span>
-            <b>Match & canlı anket</b>
-          </span>
-        </div>
-      </section>
+      <LaunchEventHeader schedule={flow.schedule} />
+      <details className="ls-panel ls-area-info">
+        <summary>Etkinlik bilgileri</summary>
+        <p className="ls-muted ls-flow-copy">{flow.welcomeText}</p>
+        <ul className="ls-nodes-votes">
+          {flow.schedule.map(({ time, label }, index) => (
+            <li key={index}>
+              <strong>{time.replace(":", ".")}</strong>
+              <span>{label}</span>
+            </li>
+          ))}
+        </ul>
+        {goal && <p className="ls-caption">Bu buluşmadaki amacın · {goal}</p>}
+      </details>
       {children}
       {incoming.length > 0 && (
         <div className="ls-intro-notice">

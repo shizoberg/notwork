@@ -41,6 +41,13 @@ export const novemberEventDraft = {
     five: { enabled: false, visible: false, state: "disabled" as const, dataMode: "demo" as const },
   },
 };
+export const launchCompanyQuestions: PollQuestion[] = [
+  {
+    id: "q1",
+    title: "Hangi firmanın sunumunu en başarılı buldun?",
+    options: ["Firma bir", "Firma iki", "Firma üç", "Firma dört", "Firma beş"],
+  },
+];
 export const defaultPollQuestions: PollQuestion[] = [
   {
     id: "field",
