@@ -4290,14 +4290,14 @@ html[data-notwork-entry-ready="true"] .event-entry-dock {
   }
 
   .desktop-site-header {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 12px;
     min-height: 68px;
     padding-inline: 16px;
   }
 
   .desktop-site-brand {
-    grid-area: 1 / 2;
+    grid-area: 1 / 1;
     display: grid;
     min-width: 60px;
     min-height: 46px;
@@ -4307,7 +4307,7 @@ html[data-notwork-entry-ready="true"] .event-entry-dock {
   .desktop-site-brand .desktop-site-logo { height: 38px; }
 
   .desktop-site-links {
-    grid-area: 1 / 1;
+    grid-area: 1 / 2;
     display: flex;
     align-items: center;
     gap: 4px;
