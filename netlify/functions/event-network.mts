@@ -5,6 +5,7 @@ import {
   launchSpacePeople,
   eventChat,
   completeActiveMatchByToken,
+  rateActiveMatch,
   getEventNetworkDatasetInfo,
   getEventNetworkStore,
   getNextMatchGroup,
@@ -137,6 +138,11 @@ export default async (request: Request, _context: Context) => {
         if (!registration)
           return new Response("Bu etkinlik için kayıt bulunamadı", { status: 404 });
         return json(registration);
+      }
+
+      if (action === "rateMatch") {
+        const saved = await rateActiveMatch(store, clean(input.accessToken, 100), input);
+        return saved ? json({ ok: true }) : new Response("Aktif grup bulunamadı", { status: 403 });
       }
 
       if (action === "me") {

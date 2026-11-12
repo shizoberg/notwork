@@ -1,3 +1,4 @@
+import { MatchFeedback } from "@/components/MatchFeedback";
 import { EventChat } from "@/components/EventChat";
 import { EventThinkingStatus } from "@/components/EventThinkingStatus";
 import { EventFlowBanner } from "@/components/EventFlowBanner";
@@ -481,6 +482,7 @@ export function EventMatch({
                       german={german}
                     />
                   )}
+                  {!preview && token && <MatchFeedback key={group.id} token={token} groupId={group.id} selection={eventSelection} />}
                   <div className="match-people">
                     {otherMembers.map((member) => (
                       <article key={member.participantId}>

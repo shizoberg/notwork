@@ -1,3 +1,4 @@
+import { MatchQualityPanel } from "@/components/MatchQualityPanel";
 import { EventPollAdmin } from "@/components/EventPollAdmin";
 import type { MatchLaunchProgress } from "@/lib/event-network";
 import { AnnouncementAdmin } from "@/components/AnnouncementAdmin";
@@ -1898,21 +1899,24 @@ function AdminPage() {
 
               {selectedToolsEvent?.products.matchlab.enabled &&
               activeEventDataProduct === "matchlab" ? (
-                <EventNetworkAdmin
-                  eventTitle={selectedToolsEvent.shortTitle}
-                  selection={selectedToolsEventSelection}
-                  registrations={eventRegistrations}
-                  database={eventDatabase}
-                  matching={matchLaunch}
-                  launching={matchLaunching}
-                  launchMatches={launchEventMatches}
-                  message={networkMessage}
-                  refresh={async () => {
-                    await loadEventNetwork(password, selectedToolsEventSlug);
-                  }}
-                  seedSamples={seedEventNetwork}
-                  resetDemo={resetEventNetwork}
-                />
+                <>
+                  <MatchQualityPanel key={selectedToolsEvent.id} password={password} />
+                  <EventNetworkAdmin
+                    eventTitle={selectedToolsEvent.shortTitle}
+                    selection={selectedToolsEventSelection}
+                    registrations={eventRegistrations}
+                    database={eventDatabase}
+                    matching={matchLaunch}
+                    launching={matchLaunching}
+                    launchMatches={launchEventMatches}
+                    message={networkMessage}
+                    refresh={async () => {
+                      await loadEventNetwork(password, selectedToolsEventSlug);
+                    }}
+                    seedSamples={seedEventNetwork}
+                    resetDemo={resetEventNetwork}
+                  />
+                </>
               ) : null}
 
               {selectedToolsEvent?.products.five.enabled && activeEventDataProduct === "five" ? (

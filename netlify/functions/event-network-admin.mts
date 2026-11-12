@@ -1,3 +1,6 @@
+import { getMatchQuality } from "./_match-quality.mjs";
+import { listEvents } from "./_event-registry-store.mjs";
+import { getEventReviewStore } from "./_event-review-store.mjs";
 import { hasLaunchSession } from "./_launch-admin-auth.mjs";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -47,6 +50,10 @@ export default async (request: Request, _context: Context) => {
       )
         return new Response("Bu işlem için yetkin yok", { status: 403 });
       input.mode = undefined;
+    }
+    if (input.action === "matchQuality") {
+      const result = await getMatchQuality(getEventNetworkStore(), getEventReviewStore(), await listEvents());
+      return Response.json(result, { headers: { "cache-control": "no-store, private" } });
     }
     return runWithEventRequestContext(
       eventIdentifier,

@@ -1,3 +1,4 @@
+import { matchFeedbackKey } from "./_match-quality.mjs";
 import {
   atomicState,
   readAtomicState,
@@ -167,6 +168,7 @@ export type NetworkAdminInput = {
   action?:
     | "list"
     | "matchOverview"
+    | "matchQuality"
     | "resetDemo"
     | "repairCodes"
     | "seedSamples"
@@ -1498,6 +1500,25 @@ async function matchRegistration(
     presence: existing ? ("meeting" as const) : currentPresence,
     group: existing ? await buildActiveMatchGroup(store, existing, current, presenceMap) : null,
   };
+}
+
+export async function rateActiveMatch(
+  store: ReturnType<typeof getEventNetworkStore>,
+  token: string,
+  input: NetworkInput,
+) {
+  const registration = await getRegistrationByToken(store, token);
+  if (!registration || registration.participant.status !== "registered") return false;
+  const active = await getActiveMatch(store, registration.participant.id);
+  if (!active || active.id !== input.groupId) return false;
+  if (!Number.isInteger(input.rating) || input.rating! < 1 || input.rating! > 5)
+    throw new Error("Puan 1–5 arasında olmalı");
+  await store.setJSON(matchFeedbackKey(getNetworkPrefix(), active.id, registration.participant.id), {
+    rating: input.rating,
+    modelImprovement: input.modelImprovementConsent === true,
+    recordedAt: new Date().toISOString(),
+  });
+  return true;
 }
 
 export async function completeActiveMatchByToken(

@@ -194,6 +194,17 @@ export async function completeEventNetworkMatch(accessToken: string, selection?:
   );
 }
 
+export async function rateEventMatch(token: string, groupId: string, rating: number, modelImprovementConsent: boolean, selection: EventSelection) {
+  const activeSelection = resolvedSelection(selection);
+  const response = await fetch(apiUrl(activeSelection), {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(withEventSelectionInput({ action: "rateMatch", accessToken: token, groupId, rating, modelImprovementConsent }, activeSelection)),
+  });
+  if (!response.ok) throw new Error("Puan kaydedilemedi");
+}
+
 export async function completeEventNetworkMatchWithReview(
   accessToken: string,
   review: {
