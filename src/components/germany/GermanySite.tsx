@@ -106,7 +106,7 @@ export function GermanySite({
           </div>
         </div>
       </header>
-      <main className={home ? "flex-1" : "de-site-main"}>{children}</main>
+      <main className={home ? "flex-1 regional-home-content" : "de-site-main"}>{children}</main>
       <footer className="simple-footer">
         <div className="simple-footer-top">
           <Link to="/de">notwork Deutschland</Link>

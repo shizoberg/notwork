@@ -1,5 +1,5 @@
-import { Link, useLocation } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { type MouseEvent, useEffect, useRef, useState } from "react";
 import {
   CalendarDays,
   CircleHelp,
@@ -56,6 +56,31 @@ export function RegionSwitch({
   className?: string;
 }) {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const [pendingRegion, setPendingRegion] = useState<"de" | "tr">();
+  const transitionTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(transitionTimer.current), []);
+
+  function changeRegion(event: MouseEvent<HTMLAnchorElement>, region: "de" | "tr", to: string) {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.altKey ||
+      german === (region === "de") ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    )
+      return;
+    event.preventDefault();
+    window.clearTimeout(transitionTimer.current);
+    setPendingRegion(region);
+    transitionTimer.current = window.setTimeout(() => {
+      void navigate({ to }).finally(() => setPendingRegion(undefined));
+    }, 155);
+  }
+
   const regionalPages: Record<string, string> = {
     "/etkinlikler": "/de/events",
     "/networking": "/de/networking",
@@ -74,7 +99,7 @@ export function RegionSwitch({
   return (
     <nav
       className={`site-region-toggle ${className}`}
-      data-region={german ? "de" : "tr"}
+      data-region={pendingRegion ?? (german ? "de" : "tr")}
       aria-label={german ? "Sprache und Region" : "Dil ve bölge"}
     >
       <span className="site-region-thumb" aria-hidden="true" />
@@ -84,7 +109,7 @@ export function RegionSwitch({
         aria-label="Türkçe"
         activeOptions={{ exact: true }}
         aria-current={german ? undefined : "true"}
-        viewTransition
+        onClick={(event) => changeRegion(event, "tr", turkey)}
       >
         TR
       </Link>
@@ -94,7 +119,7 @@ export function RegionSwitch({
         aria-label="Deutsch"
         activeOptions={{ exact: true }}
         aria-current={german ? "true" : undefined}
-        viewTransition
+        onClick={(event) => changeRegion(event, "de", germany)}
       >
         DE
       </Link>

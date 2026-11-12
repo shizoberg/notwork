@@ -87,7 +87,7 @@ export function HomeLanding({ german = false }: { german?: boolean }) {
   return (
     <div className="min-h-screen flex flex-col">
       <SiteNav />
-      <main className="flex-1">{content}</main>
+      <main className="flex-1 regional-home-content">{content}</main>
       <SiteFooter />
     </div>
   );

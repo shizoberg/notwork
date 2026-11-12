@@ -6206,17 +6206,12 @@ html[data-notwork-entry-ready="true"] .event-entry-dock {
   border-radius: inherit;
   background: linear-gradient(160deg, #fff, #e9f6fd);
   box-shadow: 0 2px 7px #24496135, inset 0 0 0 1px #fff;
-  view-transition-name: notwork-region-thumb;
+
 }
 .site-region-toggle[data-region="de"] .site-region-thumb { translate: 100% 0; }
 
 @media (prefers-reduced-motion: no-preference) {
-  ::view-transition-group(notwork-region-thumb) { animation-duration: 290ms; animation-timing-function: cubic-bezier(.2,.8,.2,1); }
-  ::view-transition-old(root) { animation: notwork-region-out 160ms ease-out both; }
-  ::view-transition-new(root) { animation: notwork-region-in 290ms cubic-bezier(.2,.8,.2,1) both; }
-  @keyframes notwork-region-out { to { opacity: 0; filter: blur(3px); } }
-  @keyframes notwork-region-in { from { opacity: 0; translate: 0 6px; filter: blur(3px); } }
-}
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation-duration: 0s; }
+  .site-region-thumb { transition: translate 170ms cubic-bezier(.2,.8,.2,1); }
+  .regional-home-content { animation: notwork-region-in 330ms cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes notwork-region-in { from { opacity: .55; translate: 0 5px; } }
 }
