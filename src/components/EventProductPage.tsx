@@ -70,6 +70,7 @@ export type EventProductConfig = {
   timeDetail: string;
   venue: string;
   venueUrl?: string;
+  venueAddress?: string;
   city: string;
   experienceLabel: string;
   experienceDetail: string;
@@ -373,7 +374,7 @@ function PurchasePanel({
           {config.venueUrl ? (
             <a href={config.venueUrl} target="_blank" rel="noreferrer">
               <MapPin size={14} aria-hidden="true" />
-              {config.venue} · {config.city} ↗
+              {config.venue}{config.city ? ` · ${config.city}` : ""} ↗
             </a>
           ) : (
             <span>
@@ -382,6 +383,9 @@ function PurchasePanel({
             </span>
           )}
         </div>
+        {config.venueAddress && (
+          <p className="mb-3 text-sm leading-relaxed text-muted-foreground">{config.venueAddress}</p>
+        )}
         <div className="flex flex-nowrap items-center gap-1.5 overflow-hidden">
           <span className="whitespace-nowrap rounded-full bg-foreground px-2 py-1 text-[8px] font-black uppercase tracking-[0.04em] text-background sm:px-2.5 sm:text-[9px] sm:tracking-[0.12em]">
             networking experience

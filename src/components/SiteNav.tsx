@@ -34,7 +34,6 @@ import { getMyMemberProfile, MEMBER_SESSION_CHANGED_EVENT } from "@/lib/member-p
 type SiteNavVariant = "default" | "event" | "eventDark";
 
 const desktopLinks = [
-  { to: "/notwork-nedir", label: "notwork nedir", icon: CircleHelp },
   { to: "/etkinlikler", label: "Etkinlikler", icon: CalendarDays },
   { to: "/networking", label: "Networking", icon: Network },
 ] as const;
@@ -243,7 +242,7 @@ export function SiteNav({
 
   return (
     <header className="site-header-shell sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-md">
-      <div className="desktop-site-header mx-auto hidden max-w-6xl items-center sm:grid">
+      <div className="desktop-site-header mx-auto hidden max-w-[1440px] items-center sm:grid">
         <Link
           to={home}
           className="desktop-site-brand"
@@ -262,13 +261,12 @@ export function SiteNav({
             const Icon = item.icon;
             const target = english ? englishPath(item.to) : regionalPath(item.to, german);
             const active = location.pathname === target;
-            const compact = item.to === "/notwork-nedir" ? " desktop-about-link" : "";
             return (
               <Link
                 key={item.to}
                 to={target}
                 aria-current={active ? "page" : undefined}
-                className={`desktop-site-link${compact}${active ? " is-active" : ""}`}
+                className={`desktop-site-link${active ? " is-active" : ""}`}
               >
                 <Icon size={15} strokeWidth={1.8} aria-hidden="true" />
                 <span>{english || german ? labels[item.to] : item.label}</span>
@@ -287,11 +285,11 @@ export function SiteNav({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              align="start"
+              align="end"
               sideOffset={10}
               className="glass-menu desktop-site-dropdown w-60 p-2"
             >
-              <DropdownMenuItem asChild className="desktop-about-menu-item rounded-xl p-0">
+              <DropdownMenuItem asChild className="rounded-xl p-0">
                 <Link
                   to={english ? "/en/about" : german ? "/de/ueber-notwork" : "/notwork-nedir"}
                   className="flex min-h-11 items-center gap-3 px-3 text-sm"
