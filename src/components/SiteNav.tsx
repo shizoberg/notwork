@@ -63,6 +63,7 @@ const regionalPages: Record<string, string> = {
   "/sponsor": "/de/sponsor",
   "/merch": "/de/merch",
   "/duyurular": "/de/mitteilungen",
+  "/dokumantasyon": "/de/dokumentation",
   "/kvkk": "/de/datenschutz",
   "/acik-riza": "/de/einwilligung",
   "/cerez-politikasi": "/de/cookies",
@@ -79,13 +80,18 @@ export function RegionSwitch({
   german?: boolean;
   className?: string;
 }) {
-  const { pathname } = useLocation();
+  const { pathname, searchStr } = useLocation();
   const navigate = useNavigate();
   const [pendingRegion, setPendingRegion] = useState<"de" | "tr">();
   const transitionTimer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(transitionTimer.current), []);
 
-  function changeRegion(event: MouseEvent<HTMLAnchorElement>, region: "de" | "tr", to: string) {
+  function changeRegion(
+    event: MouseEvent<HTMLAnchorElement>,
+    region: "de" | "tr",
+    to: string,
+    search?: { mode: string },
+  ) {
     if (
       event.defaultPrevented ||
       event.button !== 0 ||
@@ -101,14 +107,21 @@ export function RegionSwitch({
     window.clearTimeout(transitionTimer.current);
     setPendingRegion(region);
     transitionTimer.current = window.setTimeout(() => {
-      void navigate({ to }).finally(() => setPendingRegion(undefined));
+      void navigate({ to, search }).finally(() => setPendingRegion(undefined));
     }, 155);
   }
 
+  const registerInTurkey =
+    pathname === "/profil" && new URLSearchParams(searchStr).get("mode") === "register";
+  const registerInGermany = pathname === "/de/registrieren";
+  const turkeySearch = registerInGermany || registerInTurkey ? { mode: "register" } : undefined;
   const germany =
-    regionalPages[pathname] ?? (pathname.startsWith("/u/") ? `/de${pathname}` : "/de");
+    (registerInTurkey ? "/de/registrieren" : undefined) ??
+    regionalPages[pathname] ??
+    (pathname.startsWith("/u/") ? `/de${pathname}` : "/de");
   const turkey =
     Object.keys(regionalPages).find((key) => regionalPages[key] === pathname) ??
+    (registerInGermany ? "/profil" : undefined) ??
     (pathname.startsWith("/de/u/") ? pathname.slice(3) : "/");
   return (
     <nav
@@ -119,11 +132,12 @@ export function RegionSwitch({
       <span className="site-region-thumb" aria-hidden="true" />
       <Link
         to={turkey}
+        search={turkeySearch}
         lang="tr"
         aria-label="Türkçe"
         activeOptions={{ exact: true }}
         aria-current={german ? undefined : "true"}
-        onClick={(event) => changeRegion(event, "tr", turkey)}
+        onClick={(event) => changeRegion(event, "tr", turkey, turkeySearch)}
       >
         TR
       </Link>
@@ -541,6 +555,9 @@ export function SiteFooter({ german = false }: { german?: boolean } = {}) {
       <div className="simple-footer-bottom">
         <span>© {new Date().getFullYear()} notwork</span>
         <Link to={regionalPath("/duyurular", german)}>{german ? "Mitteilungen" : "Duyurular"}</Link>
+        <Link to={regionalPath("/dokumantasyon", german)}>
+          {german ? "Dokumentation" : "Dokümantasyon"}
+        </Link>
         <details>
           <summary>{german ? "Datenschutz und Einstellungen" : "Gizlilik ve tercihler"}</summary>
           <div className="footer-legal">

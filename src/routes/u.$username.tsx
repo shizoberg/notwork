@@ -1,3 +1,4 @@
+import { useProfileLanguage } from "@/lib/profile-language";
 import { CountryTag } from "@/components/CountryTag";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/u/$username")({
       description: "Doğrulanmış Notwork üyesinin referanslı business kartı.",
       path: "/u",
     }),
-  component: PublicMemberProfilePage,
+  component: () => <PublicMemberProfilePage username={Route.useParams().username} />,
 });
 
 function safeExternalUrl(value: string, fallbackPrefix = "") {
@@ -48,13 +49,13 @@ function safeExternalUrl(value: string, fallbackPrefix = "") {
   }
 }
 
-function PublicMemberProfilePage() {
-  const { username } = Route.useParams();
+export function PublicMemberProfilePage({ username }: { username: string }) {
+  const { t, german } = useProfileLanguage();
   const [profile, setProfile] = useState<PublicNotworkMemberProfile | null>(null);
   const [viewer, setViewer] = useState<NotworkMemberProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const shareUrl = `https://notwork.me/u/${encodeURIComponent(username)}`;
+  const shareUrl = `https://notwork.me${german ? "/de" : ""}/u/${encodeURIComponent(username)}`;
 
   useEffect(() => {
     let active = true;
@@ -94,7 +95,7 @@ function PublicMemberProfilePage() {
     if (navigator.share) {
       await navigator.share({
         title: `${profile.name} · ntw.business`,
-        text: profile.headline || "Doğrulanmış Notwork üye profili",
+        text: profile.headline || t("Doğrulanmış Notwork üye profili"),
         url: shareUrl,
       });
       return;
@@ -106,7 +107,7 @@ function PublicMemberProfilePage() {
 
   return (
     <div className="public-profile-page min-h-screen text-foreground">
-      <SiteNav />
+      <SiteNav german={german} />
       <main className="public-profile-main mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-12">
         {loading ? (
           <div className="flex min-h-[55vh] items-center justify-center">
@@ -115,12 +116,17 @@ function PublicMemberProfilePage() {
         ) : !profile ? (
           <section className="mx-auto max-w-xl rounded-[2rem] border border-border bg-card p-7 text-center shadow-[var(--shadow-card)] sm:p-10">
             <UserRound className="mx-auto h-12 w-12 text-primary-deep" />
-            <h1 className="mt-5 text-3xl font-black tracking-[-0.05em]">Bu kart yayında değil.</h1>
+            <h1 className="mt-5 text-3xl font-black tracking-[-0.05em]">
+              {t("Bu kart yayında değil.")}
+            </h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Üye kartı henüz paylaşılmamış veya bağlantı artık kullanılamıyor.
+              {t("Üye kartı henüz paylaşılmamış veya bağlantı artık kullanılamıyor.")}
             </p>
-            <Link to="/networking" className="profile-primary-button mx-auto mt-6 w-fit">
-              Notwork community’yi gör
+            <Link
+              to={german ? "/de/networking" : "/networking"}
+              className="profile-primary-button mx-auto mt-6 w-fit"
+            >
+              {t("Notwork community’yi gör")}
             </Link>
           </section>
         ) : (
@@ -132,7 +138,7 @@ function PublicMemberProfilePage() {
                     ntw.business
                   </span>
                   <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-black text-primary-foreground">
-                    paylaşılabilir profil
+                    {t("paylaşılabilir profil")}
                   </span>
                 </div>
               </div>
@@ -153,11 +159,14 @@ function PublicMemberProfilePage() {
                     {profile.verifiedMember ? (
                       <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-black text-primary-deep sm:text-xs">
                         <BadgeCheck className="h-4 w-4" />
-                        {profile.badge?.label || "Doğrulanmış Notwork Üyesi"}
+                        {german
+                          ? t("Doğrulanmış Notwork Üyesi")
+                          : profile.badge?.label || t("Doğrulanmış Notwork Üyesi")}
                       </div>
                     ) : null}
                     <h1 className="mt-2 font-display text-3xl font-black tracking-[-0.05em] sm:text-5xl">
-                      {profile.name} <CountryTag country={profile.country} />
+                      {profile.name}{" "}
+                      <CountryTag country={profile.country ?? "TR"} german={german} flagOnly />
                     </h1>
                     <p className="mt-1 text-xs font-bold text-muted-foreground">
                       @{profile.username}
@@ -167,7 +176,7 @@ function PublicMemberProfilePage() {
 
                 <div className="mt-7 border-t border-border pt-6">
                   <p className="text-xl font-black tracking-[-0.03em] sm:text-2xl">
-                    {profile.headline || "Notwork community üyesi"}
+                    {profile.headline || t("Notwork community üyesi")}
                   </p>
                   {profile.bio ? (
                     <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
@@ -179,7 +188,7 @@ function PublicMemberProfilePage() {
                 {profile.skills.length ? (
                   <section className="mt-7">
                     <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em]">
-                      <Sparkles className="h-4 w-4 text-primary-deep" /> Yapabildikleri
+                      <Sparkles className="h-4 w-4 text-primary-deep" /> {t("Yapabildikleri")}
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {profile.skills.map((skill) => (
@@ -197,7 +206,7 @@ function PublicMemberProfilePage() {
                 {profile.experiences.length ? (
                   <section className="mt-7">
                     <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em]">
-                      <BriefcaseBusiness className="h-4 w-4 text-primary-deep" /> Deneyim
+                      <BriefcaseBusiness className="h-4 w-4 text-primary-deep" /> {t("Deneyim")}
                     </div>
                     <div className="mt-3 grid gap-2 sm:grid-cols-3">
                       {profile.experiences.map((experience) => (
@@ -205,7 +214,7 @@ function PublicMemberProfilePage() {
                           key={`${experience.company}-${experience.role}`}
                           className="rounded-2xl border border-border bg-background p-4"
                         >
-                          <div className="font-black">{experience.company || "Deneyim"}</div>
+                          <div className="font-black">{experience.company || t("Deneyim")}</div>
                           <div className="mt-1 text-xs font-semibold text-muted-foreground">
                             {experience.role}
                           </div>
@@ -225,20 +234,21 @@ function PublicMemberProfilePage() {
                 <QRCode value={shareUrl} size={220} className="h-auto w-full" />
               </div>
               <p className="mt-4 text-center text-xs font-semibold leading-5 text-muted-foreground">
-                Bu business kartı açmak için QR kodu okut.
+                {t("Bu business kartı açmak için QR kodu okut.")}
               </p>
               <button
                 type="button"
                 onClick={() => void shareProfile()}
                 className="profile-primary-button mt-4 w-full"
               >
-                <Share2 className="h-4 w-4" /> {copied ? "Bağlantı kopyalandı" : "Kartı paylaş"}
+                <Share2 className="h-4 w-4" />{" "}
+                {copied ? t("Bağlantı kopyalandı") : t("Kartı paylaş")}
               </button>
             </aside>
           </div>
         )}
       </main>
-      <SiteFooter />
+      <SiteFooter german={german} />
     </div>
   );
 }
@@ -250,7 +260,8 @@ function ReferenceSection({
   profile: PublicNotworkMemberProfile;
   viewer: NotworkMemberProfile | null;
 }) {
-  const [skill, setSkill] = useState(profile.skills[0] || "genel yetkinlik");
+  const { t, german } = useProfileLanguage();
+  const [skill, setSkill] = useState(profile.skills[0] || t("genel yetkinlik"));
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState("");
@@ -262,9 +273,9 @@ function ReferenceSection({
     try {
       await submitMemberReference(profile.username, skill, message);
       setMessage("");
-      setStatus("Referansın admin onayına gönderildi.");
+      setStatus(t("Referansın admin onayına gönderildi."));
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Referans gönderilemedi.");
+      setStatus(!german && error instanceof Error ? error.message : t("Referans gönderilemedi."));
     } finally {
       setSubmitting(false);
     }
@@ -273,7 +284,7 @@ function ReferenceSection({
   return (
     <section id="referanslar" className="mt-8 scroll-mt-24 border-t border-border pt-7">
       <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em]">
-        <MessageSquareQuote className="h-4 w-4 text-primary-deep" /> Üye referansları
+        <MessageSquareQuote className="h-4 w-4 text-primary-deep" /> {t("Üye referansları")}
       </div>
       {profile.references.length ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -295,24 +306,26 @@ function ReferenceSection({
         </div>
       ) : (
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Bu profil için henüz yayınlanmış üye referansı yok.
+          {t("Bu profil için henüz yayınlanmış üye referansı yok.")}
         </p>
       )}
 
       {viewer?.username === profile.username ? (
         <p className="mt-5 rounded-2xl bg-muted p-4 text-sm font-semibold text-muted-foreground">
-          Kendi profiline referans yazamazsın. Başka bir Notwork üyesinin kartından ona referans
-          olabilirsin.
+          {t(
+            "Kendi profiline referans yazamazsın. Başka bir Notwork üyesinin kartından ona referans olabilirsin.",
+          )}
         </p>
       ) : viewer?.verifiedMember && !viewer.mustChangePassword ? (
         <form
           onSubmit={submitReference}
           className="mt-5 rounded-[1.6rem] border border-primary/25 bg-primary/8 p-4 sm:p-5"
         >
-          <div className="font-black">Bu üyeye referans ol</div>
+          <div className="font-black">{t("Bu üyeye referans ol")}</div>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            Yalnızca doğrulanmış Notwork üyeleri yazabilir. Adın ve kullanıcı adın, admin onayından
-            sonra referansla birlikte görünür.
+            {t(
+              "Yalnızca doğrulanmış Notwork üyeleri yazabilir. Adın ve kullanıcı adın, admin onayından sonra referansla birlikte görünür.",
+            )}
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-[180px_1fr]">
             {profile.skills.length ? (
@@ -320,7 +333,7 @@ function ReferenceSection({
                 value={skill}
                 onChange={(event) => setSkill(event.target.value)}
                 className="profile-input"
-                aria-label="Referans verilen yetenek"
+                aria-label={t("Referans verilen yetenek")}
               >
                 {profile.skills.map((profileSkill) => (
                   <option key={profileSkill} value={profileSkill}>
@@ -334,7 +347,7 @@ function ReferenceSection({
                 onChange={(event) => setSkill(event.target.value)}
                 maxLength={40}
                 className="profile-input"
-                placeholder="hangi konuda iyi?"
+                placeholder={t("hangi konuda iyi?")}
               />
             )}
             <textarea
@@ -345,7 +358,9 @@ function ReferenceSection({
               required
               rows={3}
               className="profile-input min-h-24 resize-none"
-              placeholder="Bu kişinin bu konuda neden iyi olduğunu birlikte çalışma deneyiminle anlat."
+              placeholder={t(
+                "Bu kişinin bu konuda neden iyi olduğunu birlikte çalışma deneyiminle anlat.",
+              )}
             />
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
@@ -358,7 +373,7 @@ function ReferenceSection({
               ) : (
                 <Send className="h-4 w-4" />
               )}
-              Referansı gönder
+              {t("Referansı gönder")}
             </button>
           </div>
           {status ? <p className="mt-3 text-xs font-bold text-primary-deep">{status}</p> : null}
@@ -366,10 +381,10 @@ function ReferenceSection({
       ) : (
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-background p-4">
           <p className="text-sm font-semibold text-muted-foreground">
-            Referans yazmak için doğrulanmış üye hesabınla giriş yap.
+            {t("Referans yazmak için doğrulanmış üye hesabınla giriş yap.")}
           </p>
-          <Link to="/profil" className="profile-primary-button">
-            <LogIn className="h-4 w-4" /> Üye girişi
+          <Link to={german ? "/de/profil" : "/profil"} className="profile-primary-button">
+            <LogIn className="h-4 w-4" /> {t("Üye girişi")}
           </Link>
         </div>
       )}
@@ -378,6 +393,7 @@ function ReferenceSection({
 }
 
 function ProfileLinks({ profile }: { profile: PublicNotworkMemberProfile }) {
+  const { t } = useProfileLanguage();
   const links = [
     {
       label: "LinkedIn",
@@ -389,7 +405,11 @@ function ProfileLinks({ profile }: { profile: PublicNotworkMemberProfile }) {
       href: safeExternalUrl(profile.links.instagram, "https://instagram.com/"),
       icon: Instagram,
     },
-    { label: "Web sitesi", href: safeExternalUrl(profile.links.website, "https://"), icon: Globe2 },
+    {
+      label: t("Web sitesi"),
+      href: safeExternalUrl(profile.links.website, "https://"),
+      icon: Globe2,
+    },
   ].filter((item) => item.href);
 
   if (!links.length) return null;

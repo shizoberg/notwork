@@ -1,3 +1,4 @@
+import { useProfileLanguage } from "@/lib/profile-language";
 import { ArrowLeft, Check, LoaderCircle, Mail } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { completeMemberPasswordReset, requestMemberPasswordReset } from "@/lib/member-profile-api";
@@ -11,6 +12,7 @@ export function PasswordResetRequest({
   variant?: "profile" | "event";
   resetToken?: string;
 }) {
+  const { t, german } = useProfileLanguage();
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -25,17 +27,17 @@ export function PasswordResetRequest({
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (resetToken && newPassword !== confirmation) {
-      setError("Şifreler eşleşmiyor");
+      setError(t("Şifreler eşleşmiyor"));
       return;
     }
     setSubmitting(true);
     setError("");
     try {
       if (resetToken) await completeMemberPasswordReset(resetToken, newPassword);
-      else await requestMemberPasswordReset(email.trim());
+      else await requestMemberPasswordReset(email.trim(), german ? "de" : "tr");
       setSubmitted(true);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Şifre yenilenemedi");
+      setError(!german && caught instanceof Error ? caught.message : t("Şifre yenilenemedi"));
     } finally {
       setSubmitting(false);
     }
@@ -48,36 +50,42 @@ export function PasswordResetRequest({
       </span>
       <div>
         <h1 className="text-3xl font-black tracking-[-0.04em]">
-          {resetToken ? "Şifren yenilendi" : "E-postanı kontrol et"}
+          {resetToken ? t("Şifren yenilendi") : t("E-postanı kontrol et")}
         </h1>
         <p className="mt-3 text-sm leading-6 text-foreground/60">
           {resetToken
-            ? "Yeni şifrenle hemen giriş yapabilirsin. Diğer cihazlardaki açık oturumların kapatıldı."
-            : "Bu adrese bağlı bir profil varsa 30 dakika geçerli güvenli yenileme bağlantısını gönderdik."}
+            ? t(
+                "Yeni şifrenle hemen giriş yapabilirsin. Diğer cihazlardaki açık oturumların kapatıldı.",
+              )
+            : t(
+                "Bu adrese bağlı bir profil varsa 30 dakika geçerli güvenli yenileme bağlantısını gönderdik.",
+              )}
         </p>
       </div>
       <button type="button" onClick={onBack} className={primaryButtonClass}>
-        <ArrowLeft className="h-4 w-4" /> Girişe dön
+        <ArrowLeft className="h-4 w-4" /> {t("Girişe dön")}
       </button>
     </div>
   ) : (
     <>
       <button type="button" onClick={onBack} className="text-xs font-black text-primary-deep">
-        ← girişe dön
+        {t("← girişe dön")}
       </button>
       <div className="mt-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary-deep">
         <Mail className="h-6 w-6" />
       </div>
-      <h1 className="mt-5 text-3xl font-black tracking-[-0.04em]">Şifreni yenile</h1>
+      <h1 className="mt-5 text-3xl font-black tracking-[-0.04em]">{t("Şifreni yenile")}</h1>
       <p className="mt-2 text-sm leading-6 text-foreground/60">
         {resetToken
-          ? "Yeni şifreni belirle. Bu bağlantı yalnızca bir kez kullanılabilir."
-          : "Profilinde kayıtlı e-posta adresini yaz. Güvenli yenileme bağlantısı doğrudan adresine gelsin."}
+          ? t("Yeni şifreni belirle. Bu bağlantı yalnızca bir kez kullanılabilir.")
+          : t(
+              "Profilinde kayıtlı e-posta adresini yaz. Güvenli yenileme bağlantısı doğrudan adresine gelsin.",
+            )}
       </p>
       <form onSubmit={submit} className="mt-6 space-y-4">
         {!resetToken ? (
           <label className="block text-sm font-bold">
-            E-posta
+            {t("E-posta")}
             <input
               required
               type="email"
@@ -90,13 +98,13 @@ export function PasswordResetRequest({
                   ? "profile-input mt-2"
                   : "mt-2 w-full rounded-2xl border border-primary/20 bg-primary/5 px-4 py-4 text-base outline-none focus:border-primary"
               }
-              placeholder="ornek@eposta.com"
+              placeholder={t("ornek@eposta.com")}
             />
           </label>
         ) : (
           <>
             <label className="block text-sm font-bold">
-              Yeni şifre
+              {t("Yeni şifre")}
               <input
                 required
                 type="password"
@@ -106,11 +114,11 @@ export function PasswordResetRequest({
                 value={newPassword}
                 onChange={(event) => setNewPassword(event.target.value)}
                 className="profile-input mt-2"
-                placeholder="En az 10 karakter · harf ve rakam"
+                placeholder={t("En az 10 karakter · harf ve rakam")}
               />
             </label>
             <label className="block text-sm font-bold">
-              Yeni şifre tekrar
+              {t("Yeni şifre tekrar")}
               <input
                 required
                 type="password"
@@ -144,11 +152,11 @@ export function PasswordResetRequest({
           )}
           {submitting
             ? resetToken
-              ? "Şifre yenileniyor…"
-              : "Bağlantı gönderiliyor…"
+              ? t("Şifre yenileniyor…")
+              : t("Bağlantı gönderiliyor…")
             : resetToken
-              ? "Şifremi şimdi yenile"
-              : "Yenileme bağlantısını gönder"}
+              ? t("Şifremi şimdi yenile")
+              : t("Yenileme bağlantısını gönder")}
         </button>
       </form>
     </>

@@ -1,3 +1,4 @@
+import { useProfileLanguage } from "@/lib/profile-language";
 import { compressProfilePhoto } from "@/lib/profile-photo";
 import { CountryTag } from "@/components/CountryTag";
 import { memberCountry } from "@/lib/member-country";
@@ -41,7 +42,7 @@ import {
   type ReactNode,
 } from "react";
 import QRCode from "react-qr-code";
-import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { regionalPath, SiteFooter, SiteNav } from "@/components/SiteNav";
 import { PasswordResetRequest } from "@/components/PasswordResetRequest";
 import {
   MemberProfileApiError,
@@ -70,10 +71,19 @@ export const Route = createFileRoute("/profil")({
 
 const emptyExperience = { company: "", role: "" };
 
-function getSafeReturnTo() {
+function getSafeReturnTo(german: boolean) {
   if (typeof window === "undefined") return "";
   const next = new URLSearchParams(window.location.search).get("next") || "";
-  return next.startsWith("/") && !next.startsWith("//") ? next : "";
+  if (!next.startsWith("/") || next.startsWith("//") || next.includes("\\")) return "";
+  const target = new URL(next, window.location.origin);
+  if (target.origin !== window.location.origin) return "";
+  if (!german || target.pathname.startsWith("/de/") || target.pathname === "/de") {
+    return target.pathname + target.search + target.hash;
+  }
+  const path = target.pathname.startsWith("/u/")
+    ? `/de${target.pathname}`
+    : regionalPath(target.pathname, true);
+  return path + target.search + target.hash;
 }
 
 const eventDetails: Record<string, { title: string; venue: string; href: string }> = {
@@ -141,6 +151,25 @@ function getEventDetails(eventId: string) {
   );
 }
 
+function germanProfileEventLabel(label: string) {
+  const months: Record<string, string> = {
+    Ocak: "Januar",
+    Şubat: "Februar",
+    Mart: "März",
+    Nisan: "April",
+    Mayıs: "Mai",
+    Temmuz: "Juli",
+    Ağustos: "August",
+    Aralık: "Dezember",
+    Ekim: "Oktober",
+    Eylül: "September",
+    Kasım: "November",
+  };
+  return label.replace(/^(\d+) (\S+)/, (original, day, month) =>
+    months[month] ? `${day}. ${months[month]}` : original,
+  );
+}
+
 function externalUrl(value: string, prefix = "") {
   if (!value) return "";
   const candidate = /^https?:\/\//i.test(value) ? value : `${prefix}${value}`;
@@ -165,19 +194,30 @@ function profileDraft(profile: NotworkMemberProfile): EditableMemberProfile {
   };
 }
 
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "İşlem tamamlanamadı. Tekrar dene.";
+function errorMessage(error: unknown, german: boolean) {
+  if (!german) return error instanceof Error ? error.message : "İşlem tamamlanamadı. Tekrar dene.";
+  const message = error instanceof Error ? error.message : "";
+  if (message.includes("profil zaten var"))
+    return "Für diese E-Mail-Adresse gibt es bereits ein Profil. Melde dich an.";
+  if (message.includes("140")) return "Jede Antwort muss mindestens 140 Zeichen lang sein.";
+  if (message.toLocaleLowerCase("tr-TR").includes("şifre"))
+    return "Prüfe dein Passwort und versuche es erneut.";
+  return "Das hat nicht geklappt. Prüfe deine Angaben und versuche es erneut.";
 }
 
-function MemberProfilePage() {
+export function MemberProfilePage({ registration = false }: { registration?: boolean } = {}) {
+  const { german } = useProfileLanguage();
   const [profile, setProfile] = useState<NotworkMemberProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   function applyLoggedInProfile(memberProfile: NotworkMemberProfile) {
     setProfile(memberProfile);
-    if (!memberProfile.mustChangePassword && promptForAnnouncements(memberProfile, "/profil"))
+    if (
+      !memberProfile.mustChangePassword &&
+      promptForAnnouncements(memberProfile, german ? "/de/profil" : "/profil")
+    )
       return;
-    const returnTo = getSafeReturnTo();
+    const returnTo = getSafeReturnTo(german);
     if (returnTo && !memberProfile.mustChangePassword) window.location.assign(returnTo);
   }
 
@@ -198,11 +238,11 @@ function MemberProfilePage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [german]);
 
   return (
     <div className="member-profile-page min-h-screen text-foreground">
-      <SiteNav />
+      <SiteNav german={german} />
 
       <main className="member-profile-main mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10">
         {loading ? (
@@ -210,26 +250,35 @@ function MemberProfilePage() {
             <LoaderCircle className="h-8 w-8 animate-spin text-primary-deep" />
           </div>
         ) : !profile ? (
-          <LoginPanel onLoggedIn={applyLoggedInProfile} onRegistered={setProfile} />
+          <LoginPanel
+            registration={registration}
+            onLoggedIn={applyLoggedInProfile}
+            onRegistered={setProfile}
+          />
         ) : profile.mustChangePassword ? (
           <PasswordPanel profile={profile} onChanged={setProfile} />
         ) : (
           <ProfileEditor profile={profile} onProfileChange={setProfile} />
         )}
       </main>
-      <SiteFooter />
+      <SiteFooter german={german} />
     </div>
   );
 }
 
 function LoginPanel({
+  registration,
   onLoggedIn,
   onRegistered,
 }: {
+  registration: boolean;
   onLoggedIn: (profile: NotworkMemberProfile) => void;
   onRegistered: (profile: NotworkMemberProfile) => void;
 }) {
-  const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
+  const { t, german } = useProfileLanguage();
+  const [mode, setMode] = useState<"login" | "register" | "forgot">(
+    registration ? "register" : "login",
+  );
   const [resetToken, setResetToken] = useState("");
   const [identity, setIdentity] = useState("");
   const [password, setPassword] = useState("");
@@ -253,7 +302,7 @@ function LoginPanel({
     try {
       onLoggedIn(await loginMember(identity, password));
     } catch (caught) {
-      setError(errorMessage(caught));
+      setError(errorMessage(caught, german));
     } finally {
       setSubmitting(false);
     }
@@ -274,14 +323,16 @@ function LoginPanel({
           <UserRound className="h-6 w-6" />
         </div>
         <h1 className="mt-5 font-display text-4xl font-black tracking-[-0.05em] sm:text-5xl">
-          notwork profilin
+          {t("notwork profilin")}
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Etkinlik katılımcısı olarak sana iletilen kullanıcı adı ve geçici şifreyle giriş yap.
+          {t(
+            "Etkinlik katılımcısı olarak sana iletilen kullanıcı adı ve geçici şifreyle giriş yap.",
+          )}
         </p>
       </div>
       <form onSubmit={submit} className="space-y-4 p-6 sm:p-8">
-        <Field label="Kullanıcı adı veya e-posta">
+        <Field label={t("Kullanıcı adı veya e-posta")}>
           <input
             required
             autoCapitalize="none"
@@ -289,10 +340,10 @@ function LoginPanel({
             value={identity}
             onChange={(event) => setIdentity(event.target.value)}
             className="profile-input"
-            placeholder="kullaniciadi veya e-posta"
+            placeholder={german ? "Benutzername oder E-Mail-Adresse" : "kullaniciadi veya e-posta"}
           />
         </Field>
-        <Field label="Şifre">
+        <Field label={t("Şifre")}>
           <div className="relative">
             <input
               required
@@ -301,13 +352,13 @@ function LoginPanel({
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               className="profile-input pr-12"
-              placeholder="Geçici şifren"
+              placeholder={t("Geçici şifren")}
             />
             <button
               type="button"
               onClick={() => setShowPassword((visible) => !visible)}
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl p-2 text-muted-foreground hover:bg-primary/10"
-              aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+              aria-label={showPassword ? t("Şifreyi gizle") : t("Şifreyi göster")}
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
@@ -318,7 +369,7 @@ function LoginPanel({
           onClick={() => setMode("forgot")}
           className="ml-auto block text-sm font-black text-primary-deep hover:underline"
         >
-          Şifremi unuttum
+          {t("Şifremi unuttum")}
         </button>
         {error ? <StatusMessage tone="error">{error}</StatusMessage> : null}
         <button disabled={submitting} className="profile-primary-button w-full" type="submit">
@@ -327,23 +378,24 @@ function LoginPanel({
           ) : (
             <ShieldCheck className="h-5 w-5" />
           )}
-          Güvenli giriş
+          {t("Güvenli giriş")}
         </button>
         <div className="flex items-center gap-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
-          <span className="h-px flex-1 bg-border" /> veya <span className="h-px flex-1 bg-border" />
+          <span className="h-px flex-1 bg-border" /> {t("veya")}{" "}
+          <span className="h-px flex-1 bg-border" />
         </div>
         <button
           type="button"
           onClick={() => setMode("register")}
           className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-primary/35 bg-primary/5 px-5 py-3 text-sm font-black text-primary-deep hover:bg-primary/10"
         >
-          <Plus className="h-5 w-5" /> Yeni profil oluştur
+          <Plus className="h-5 w-5" /> {t("Yeni profil oluştur")}
         </button>
         <Link
-          to="/networking"
+          to={german ? "/de/networking" : "/networking"}
           className="flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Networking’e dön
+          <ArrowLeft className="h-4 w-4" /> {t("Networking’e dön")}
         </Link>
       </form>
     </section>
@@ -357,7 +409,8 @@ function RegisterPanel({
   onBack: () => void;
   onRegistered: (profile: NotworkMemberProfile) => void;
 }) {
-  const [country, setCountry] = useState<"DE" | "TR" | undefined>();
+  const { t, german } = useProfileLanguage();
+  const [country, setCountry] = useState<"DE" | "TR" | undefined>(german ? "DE" : undefined);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -388,7 +441,7 @@ function RegisterPanel({
     try {
       setPhotoDataUrl(await compressProfilePhoto(file));
     } catch (caught) {
-      setError(errorMessage(caught));
+      setError(errorMessage(caught, german));
     } finally {
       setCompressingPhoto(false);
     }
@@ -397,11 +450,11 @@ function RegisterPanel({
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!photoDataUrl) {
-      setError("Kayıt için profil fotoğrafı yüklemelisin.");
+      setError(t("Kayıt için profil fotoğrafı yüklemelisin."));
       return;
     }
     if (password !== confirmation) {
-      setError("Şifreler aynı olmalı.");
+      setError(t("Şifreler aynı olmalı."));
       return;
     }
     setSubmitting(true);
@@ -427,7 +480,7 @@ function RegisterPanel({
       });
       onRegistered(result.profile);
     } catch (caught) {
-      setError(errorMessage(caught));
+      setError(errorMessage(caught, german));
     } finally {
       setSubmitting(false);
     }
@@ -441,24 +494,27 @@ function RegisterPanel({
           onClick={onBack}
           className="inline-flex items-center gap-2 text-xs font-black text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Giriş ekranına dön
+          <ArrowLeft className="h-4 w-4" /> {t("Giriş ekranına dön")}
         </button>
         <h1 className="mt-5 font-display text-4xl font-black tracking-[-0.05em] sm:text-5xl">
-          notwork profilini oluştur
+          {t("notwork profilini oluştur")}
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Bilgilerini tamamladığında profilin anında aktif olur ve doğrudan hesabına geçersin.
+          {t(
+            "Bilgilerini tamamladığında profilin anında aktif olur ve doğrudan hesabına geçersin.",
+          )}
         </p>
       </div>
 
       <form onSubmit={submit} className="space-y-6 p-5 sm:p-8">
         <div className="rounded-[1.5rem] border border-primary/30 bg-primary/10 p-4 text-sm leading-6">
           <div className="flex items-center gap-2 font-black text-primary-deep">
-            <ShieldCheck className="h-5 w-5" /> Notwork üyelik koşulu
+            <ShieldCheck className="h-5 w-5" /> {t("Notwork üyelik koşulu")}
           </div>
           <p className="mt-2 text-muted-foreground">
-            Notwork etkinliklerinden birine katıldıysan veya bir Notwork üyesinin referansıyla
-            geliyorsan profilini oluşturup doğrudan kullanmaya başlayabilirsin.
+            {t(
+              "Notwork etkinliklerinden birine katıldıysan veya bir Notwork üyesinin referansıyla geliyorsan profilini oluşturup doğrudan kullanmaya başlayabilirsin.",
+            )}
           </p>
         </div>
 
@@ -468,12 +524,12 @@ function RegisterPanel({
               type="button"
               onClick={() => photoInput.current?.click()}
               className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.4rem] border border-dashed border-primary bg-background text-primary-deep"
-              aria-label="Zorunlu profil fotoğrafını seç"
+              aria-label={t("Zorunlu profil fotoğrafını seç")}
             >
               {photoDataUrl ? (
                 <img
                   src={photoDataUrl}
-                  alt="Profil önizlemesi"
+                  alt={t("Profil önizlemesi")}
                   className="h-full w-full object-cover"
                 />
               ) : compressingPhoto ? (
@@ -483,16 +539,16 @@ function RegisterPanel({
               )}
             </button>
             <div>
-              <div className="text-sm font-black">Profil fotoğrafı *</div>
+              <div className="text-sm font-black">{t("Profil fotoğrafı *")}</div>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Zorunlu · yüzünün net göründüğü JPG, PNG veya WebP fotoğraf yükle.
+                {t("Zorunlu · yüzünün net göründüğü JPG, PNG veya WebP fotoğraf yükle.")}
               </p>
               <button
                 type="button"
                 onClick={() => photoInput.current?.click()}
                 className="mt-3 text-xs font-black text-primary-deep underline underline-offset-4"
               >
-                {photoDataUrl ? "fotoğrafı değiştir" : "fotoğraf seç"}
+                {photoDataUrl ? t("fotoğrafı değiştir") : t("fotoğraf seç")}
               </button>
             </div>
           </div>
@@ -506,7 +562,7 @@ function RegisterPanel({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Ad soyad *">
+          <Field label={t("Ad soyad *")}>
             <input
               required
               autoComplete="name"
@@ -514,10 +570,10 @@ function RegisterPanel({
               value={name}
               onChange={(event) => setName(event.target.value)}
               className="profile-input"
-              placeholder="Adın ve soyadın"
+              placeholder={t("Adın ve soyadın")}
             />
           </Field>
-          <Field label="E-posta *">
+          <Field label={t("E-posta *")}>
             <input
               required
               type="email"
@@ -526,76 +582,82 @@ function RegisterPanel({
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="profile-input"
-              placeholder="ornek@eposta.com"
+              placeholder={t("ornek@eposta.com")}
             />
           </Field>
         </div>
 
-        <Field label="Hangi Notwork etkinliğine katıldın? *" hint="Profil bilgisi">
+        <Field label={t("Hangi Notwork etkinliğine katıldın? *")} hint={t("Profil bilgisi")}>
           <select
             required
             value={attendedEventClaim}
             onChange={(event) => setAttendedEventClaim(event.target.value)}
             className="profile-input"
           >
-            <option value="">Etkinliği seç</option>
+            <option value="">{t("Etkinliği seç")}</option>
+            {german && <option value="germany-community">notwork Community Deutschland</option>}
             {registrationEventOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {german ? germanProfileEventLabel(t(option.label)) : option.label}
               </option>
             ))}
           </select>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Katıldığın etkinliği seç. Referans ile geliyorsan aşağıdaki alana seni tanıyan üyeyi
-            yaz.
+            {t(
+              "Katıldığın etkinliği seç. Referans ile geliyorsan aşağıdaki alana seni tanıyan üyeyi yaz.",
+            )}
           </p>
         </Field>
 
         {attendedEventClaim === "referral" ? (
-          <Field label="Notwork referansın *" hint="ad, e-posta veya @kullanıcı adı">
+          <Field label={t("Notwork referansın *")} hint={t("ad, e-posta veya @kullanıcı adı")}>
             <input
               required
               maxLength={120}
               value={referrer}
               onChange={(event) => setReferrer(event.target.value)}
               className="profile-input"
-              placeholder="Seni referans gösteren Notwork üyesi"
+              placeholder={t("Seni referans gösteren Notwork üyesi")}
             />
           </Field>
         ) : null}
 
-        <Field label="Profilde gösterilecek ülke">
+        <Field label={t("Profilde gösterilecek ülke")}>
           <select
             className="profile-input"
             value={country || ""}
             onChange={(e) => setCountry(memberCountry(e.target.value))}
           >
-            <option value="">Belirtmek istemiyorum</option>
-            <option value="TR">🇹🇷 Türkiye</option>
-            <option value="DE">🇩🇪 Almanya</option>
+            <option value="">{t("Belirtmek istemiyorum")}</option>
+            <option value="TR">{t("🇹🇷 Türkiye")}</option>
+            <option value="DE">{t("🇩🇪 Almanya")}</option>
           </select>
         </Field>
         <RegistrationQuestion
-          label="Kendini tanıt *"
+          label={t("Kendini tanıt *")}
           value={introduction}
           onChange={setIntroduction}
-          placeholder="Neler yaptığını, deneyimini ve seni tanımamız gereken detayları anlat."
+          placeholder={t("Neler yaptığını, deneyimini ve seni tanımamız gereken detayları anlat.")}
         />
         <RegistrationQuestion
-          label="Ne istiyorsun? *"
+          label={t("Ne istiyorsun? *")}
           value={lookingFor}
           onChange={setLookingFor}
-          placeholder="Aradığın bağlantıları, fırsatları, insanları veya projeleri detaylı anlat."
+          placeholder={t(
+            "Aradığın bağlantıları, fırsatları, insanları veya projeleri detaylı anlat.",
+          )}
         />
         <RegistrationQuestion
-          label="Neler yapabilirsin? *"
+          label={t("Neler yapabilirsin? *")}
           value={canHelpWith}
           onChange={setCanHelpWith}
-          placeholder="Topluluğa katabileceğin yetenekleri, deneyimleri ve desteği detaylı anlat."
+          placeholder={t(
+            "Topluluğa katabileceğin yetenekleri, deneyimleri ve desteği detaylı anlat.",
+          )}
         />
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="LinkedIn" hint="opsiyonel">
+          <Field label="LinkedIn" hint={t("opsiyonel")}>
             <input
               inputMode="url"
               maxLength={240}
@@ -605,16 +667,16 @@ function RegisterPanel({
               placeholder="linkedin.com/in/..."
             />
           </Field>
-          <Field label="Instagram" hint="opsiyonel">
+          <Field label="Instagram" hint={t("opsiyonel")}>
             <input
               maxLength={100}
               value={instagram}
               onChange={(event) => setInstagram(event.target.value)}
               className="profile-input"
-              placeholder="kullaniciadi"
+              placeholder={t("kullaniciadi")}
             />
           </Field>
-          <Field label="Telefon" hint="opsiyonel">
+          <Field label={t("Telefon")} hint={t("opsiyonel")}>
             <input
               type="tel"
               autoComplete="tel"
@@ -622,13 +684,13 @@ function RegisterPanel({
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
               className="profile-input"
-              placeholder="05xx xxx xx xx"
+              placeholder={t("05xx xxx xx xx")}
             />
           </Field>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Şifre *" hint="10+ karakter, harf ve rakam">
+          <Field label={t("Şifre *")} hint={t("10+ karakter, harf ve rakam")}>
             <div className="relative">
               <input
                 required
@@ -643,13 +705,13 @@ function RegisterPanel({
                 type="button"
                 onClick={() => setShowPassword((visible) => !visible)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl p-2 text-muted-foreground hover:bg-primary/10"
-                aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                aria-label={showPassword ? t("Şifreyi gizle") : t("Şifreyi göster")}
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
           </Field>
-          <Field label="Şifre tekrar *">
+          <Field label={t("Şifre tekrar *")}>
             <input
               required
               minLength={10}
@@ -663,11 +725,14 @@ function RegisterPanel({
         </div>
 
         <p className="rounded-2xl border border-primary/15 bg-primary/5 p-4 text-xs font-semibold leading-5 text-muted-foreground">
-          Kişisel verilerinin nasıl işlendiğini{" "}
-          <Link to="/kvkk" className="font-black text-foreground underline underline-offset-2">
-            KVKK Aydınlatma Metni
+          {t("Kişisel verilerinin nasıl işlendiğini")}{" "}
+          <Link
+            to={german ? "/de/datenschutz" : "/kvkk"}
+            className="font-black text-foreground underline underline-offset-2"
+          >
+            {t("KVKK Aydınlatma Metni")}
           </Link>
-          ’nden inceleyebilirsin. Bu bilgilendirme, açık rıza tercihinden ayrıdır.
+          {t("’nden inceleyebilirsin. Bu bilgilendirme, açık rıza tercihinden ayrıdır.")}
         </p>
 
         <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-background p-4">
@@ -679,13 +744,14 @@ function RegisterPanel({
             className="mt-1 h-4 w-4 accent-[var(--primary)]"
           />
           <span className="text-xs font-semibold leading-5 text-muted-foreground">
-            Profil bilgilerimin notwork networking ağı, business kart ve üye referans sistemi içinde
-            seçtiğim görünürlükte paylaşılmasına açık rıza veriyorum.{" "}
+            {t(
+              "Profil bilgilerimin notwork networking ağı, business kart ve üye referans sistemi içinde seçtiğim görünürlükte paylaşılmasına açık rıza veriyorum.",
+            )}{" "}
             <Link
-              to="/acik-riza"
+              to={german ? "/de/einwilligung" : "/acik-riza"}
               className="font-black text-foreground underline underline-offset-2"
             >
-              Açık Rıza Metni
+              {t("Açık Rıza Metni")}
             </Link>
           </span>
         </label>
@@ -702,7 +768,7 @@ function RegisterPanel({
           ) : (
             <UserRound className="h-5 w-5" />
           )}
-          Profilimi oluştur
+          {t("Profilimi oluştur")}
         </button>
       </form>
     </section>
@@ -720,8 +786,9 @@ function RegistrationQuestion({
   onChange: (value: string) => void;
   placeholder: string;
 }) {
+  const { german } = useProfileLanguage();
   return (
-    <Field label={label} hint={`${value.length}/500 · en az 140`}>
+    <Field label={label} hint={`${value.length}/500 · ${german ? "mind. 140" : "en az 140"}`}>
       <textarea
         required
         minLength={140}
@@ -743,6 +810,7 @@ function PasswordPanel({
   profile: NotworkMemberProfile;
   onChanged: (profile: NotworkMemberProfile) => void;
 }) {
+  const { t, german } = useProfileLanguage();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -751,7 +819,7 @@ function PasswordPanel({
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (password !== confirmation) {
-      setError("Şifreler aynı olmalı.");
+      setError(t("Şifreler aynı olmalı."));
       return;
     }
     setSubmitting(true);
@@ -759,7 +827,7 @@ function PasswordPanel({
     try {
       onChanged(await changeMemberPassword(password));
     } catch (caught) {
-      setError(errorMessage(caught));
+      setError(errorMessage(caught, german));
     } finally {
       setSubmitting(false);
     }
@@ -773,16 +841,25 @@ function PasswordPanel({
         </div>
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
-            ilk giriş
+            {t("ilk giriş")}
           </p>
-          <h1 className="text-2xl font-black tracking-[-0.04em]">Merhaba {profile.name}</h1>
+          <h1 className="text-2xl font-black tracking-[-0.04em]">
+            {t("Merhaba")} {profile.name}
+          </h1>
         </div>
       </div>
       <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-        Profilini düzenlemeden önce yalnızca senin bildiğin yeni bir şifre oluştur.
+        {t("Profilini düzenlemeden önce yalnızca senin bildiğin yeni bir şifre oluştur.")}
       </p>
       <form onSubmit={submit} className="mt-6 space-y-4">
-        <Field label="Yeni şifre" hint="En az 10 karakter, bir harf ve bir rakam">
+        <Field
+          label={t("Yeni şifre")}
+          hint={
+            german
+              ? "Mindestens 10 Zeichen, ein Buchstabe und eine Zahl"
+              : "En az 10 karakter, bir harf ve bir rakam"
+          }
+        >
           <input
             required
             minLength={10}
@@ -793,7 +870,7 @@ function PasswordPanel({
             className="profile-input"
           />
         </Field>
-        <Field label="Yeni şifre tekrar">
+        <Field label={t("Yeni şifre tekrar")}>
           <input
             required
             minLength={10}
@@ -811,7 +888,7 @@ function PasswordPanel({
           ) : (
             <Check className="h-5 w-5" />
           )}
-          Şifremi oluştur
+          {t("Şifremi oluştur")}
         </button>
       </form>
     </section>
@@ -825,6 +902,7 @@ function ProfileEditor({
   profile: NotworkMemberProfile;
   onProfileChange: (profile: NotworkMemberProfile | null) => void;
 }) {
+  const { t, german } = useProfileLanguage();
   const [draft, setDraft] = useState(() => profileDraft(profile));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -834,7 +912,7 @@ function ProfileEditor({
   const [connections, setConnections] = useState<NotworkMemberConnection[]>([]);
   const [connectionsLoading, setConnectionsLoading] = useState(true);
   const photoInput = useRef<HTMLInputElement>(null);
-  const publicCardUrl = `https://notwork.me/u/${encodeURIComponent(profile.username)}`;
+  const publicCardUrl = `https://notwork.me${german ? "/de" : ""}/u/${encodeURIComponent(profile.username)}`;
 
   useEffect(() => {
     let active = true;
@@ -863,9 +941,9 @@ function ProfileEditor({
       const nextProfile = await updateMyMemberProfile(draft);
       onProfileChange(nextProfile);
       setDraft(profileDraft(nextProfile));
-      setMessage("Profilin kaydedildi.");
+      setMessage(t("Profilin kaydedildi."));
     } catch (caught) {
-      setError(errorMessage(caught));
+      setError(errorMessage(caught, german));
     } finally {
       setSaving(false);
     }
@@ -881,9 +959,9 @@ function ProfileEditor({
     try {
       const photoDataUrl = await compressProfilePhoto(file);
       onProfileChange(await uploadMemberPhoto(photoDataUrl));
-      setMessage("Profil fotoğrafın güncellendi.");
+      setMessage(t("Profil fotoğrafın güncellendi."));
     } catch (caught) {
-      setError(errorMessage(caught));
+      setError(errorMessage(caught, german));
     } finally {
       setUploading(false);
     }
@@ -894,7 +972,7 @@ function ProfileEditor({
       await logoutMember();
       onProfileChange(null);
     } catch (caught) {
-      setError(errorMessage(caught));
+      setError(errorMessage(caught, german));
     }
   }
 
@@ -922,7 +1000,7 @@ function ProfileEditor({
             type="button"
             onClick={() => photoInput.current?.click()}
             className="group relative h-24 w-24 shrink-0 overflow-hidden rounded-[1.6rem] border border-primary/30 bg-primary/10 sm:h-28 sm:w-28"
-            aria-label="Profil fotoğrafını değiştir"
+            aria-label={t("Profil fotoğrafını değiştir")}
           >
             {profile.photoUrl ? (
               <img
@@ -939,7 +1017,7 @@ function ProfileEditor({
               ) : (
                 <Camera className="h-3 w-3" />
               )}
-              fotoğraf
+              {t("fotoğraf")}
             </span>
           </button>
           <input
@@ -952,10 +1030,11 @@ function ProfileEditor({
           <div className="min-w-0 flex-1">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-black text-primary-deep sm:text-xs">
               <BadgeCheck className="h-4 w-4" />
-              {profile.badge?.label || "Notwork Üyesi"}
+              {german ? t("Notwork Üyesi") : profile.badge?.label || t("Notwork Üyesi")}
             </div>
             <h1 className="mt-2 truncate font-display text-3xl font-black tracking-[-0.05em] sm:text-5xl">
-              {profile.name} <CountryTag country={profile.country} />
+              {profile.name}{" "}
+              <CountryTag country={profile.country ?? "TR"} german={german} flagOnly />
             </h1>
             <p className="mt-1 text-xs font-bold text-muted-foreground">@{profile.username}</p>
           </div>
@@ -968,9 +1047,9 @@ function ProfileEditor({
             <CalendarDays className="h-5 w-5" strokeWidth={1.9} />
           </div>
           <div>
-            <h2 className="text-xl font-black tracking-[-0.04em]">Katıldığım etkinlikler</h2>
+            <h2 className="text-xl font-black tracking-[-0.04em]">{t("Katıldığım etkinlikler")}</h2>
             <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm">
-              Notwork yolculuğunda bulunduğun geceler.
+              {t("Notwork yolculuğunda bulunduğun geceler.")}
             </p>
           </div>
         </div>
@@ -981,18 +1060,20 @@ function ProfileEditor({
               return (
                 <a
                   key={eventId}
-                  href={event.href}
+                  href={regionalPath(event.href, german)}
                   className="group min-w-[76vw] max-w-[290px] snap-start rounded-[1.4rem] border border-border bg-background p-4 transition hover:border-primary sm:min-w-[250px]"
                 >
                   <div className="text-[10px] font-black uppercase tracking-[0.18em] text-primary-deep">
-                    katıldın
+                    {t("katıldın")}
                   </div>
-                  <div className="mt-2 text-lg font-black tracking-[-0.03em]">{event.title}</div>
+                  <div className="mt-2 text-lg font-black tracking-[-0.03em]">
+                    {german ? germanProfileEventLabel(event.title) : event.title}
+                  </div>
                   <div className="mt-1 text-xs font-semibold text-muted-foreground">
-                    {event.venue}
+                    {german && event.venue === "Notwork etkinliği" ? "notwork Event" : event.venue}
                   </div>
                   <div className="mt-4 inline-flex items-center gap-1 text-xs font-black text-foreground">
-                    Etkinliği gör <ExternalLink className="h-3.5 w-3.5" />
+                    {t("Etkinliği gör")} <ExternalLink className="h-3.5 w-3.5" />
                   </div>
                 </a>
               );
@@ -1000,7 +1081,7 @@ function ProfileEditor({
           </div>
         ) : (
           <p className="px-5 pb-6 text-sm text-muted-foreground sm:px-7">
-            Katıldığın etkinlikler hesabınla eşleştirildiğinde burada görünecek.
+            {t("Katıldığın etkinlikler hesabınla eşleştirildiğinde burada görünecek.")}
           </p>
         )}
       </section>
@@ -1012,17 +1093,17 @@ function ProfileEditor({
           </div>
           <div>
             <h2 className="text-xl font-black tracking-[-0.04em]">
-              Edindiğim bağlantılar ve arkadaşlar
+              {t("Edindiğim bağlantılar ve arkadaşlar")}
             </h2>
             <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm">
-              Match Lab’de aynı gruba geldiğin üyeler ve iletişim bilgileri.
+              {t("Match Lab’de aynı gruba geldiğin üyeler ve iletişim bilgileri.")}
             </p>
           </div>
         </div>
         {connectionsLoading ? (
           <div className="flex items-center gap-2 px-5 pb-6 text-sm font-semibold text-muted-foreground sm:px-7">
             <LoaderCircle className="h-4 w-4 animate-spin text-primary-deep" />
-            Bağlantıların yükleniyor
+            {t("Bağlantıların yükleniyor")}
           </div>
         ) : connections.length ? (
           <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-5 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-7 sm:pb-7">
@@ -1051,18 +1132,20 @@ function ProfileEditor({
                     <div className="min-w-0">
                       <h3 className="truncate text-base font-black">{connection.name}</h3>
                       <p className="mt-0.5 line-clamp-2 text-xs font-semibold leading-5 text-muted-foreground">
-                        {connection.headline || "Notwork community üyesi"}
+                        {connection.headline || t("Notwork community üyesi")}
                       </p>
                     </div>
                   </div>
                   <div className="mt-4 rounded-2xl bg-primary/10 px-3 py-2.5">
                     <div className="text-[10px] font-black uppercase tracking-[0.14em] text-primary-deep">
-                      {event.title}
+                      {german ? germanProfileEventLabel(event.title) : event.title}
                     </div>
                     <div className="mt-1 text-xs font-bold text-foreground">
                       {connection.sharedGroupCount > 1
-                        ? `${connection.sharedGroupCount} Match Lab grubunda eşleştiniz`
-                        : "Match Lab’de eşleştiniz"}
+                        ? german
+                          ? `Ihr wart in ${connection.sharedGroupCount} Match-Gruppen zusammen`
+                          : `${connection.sharedGroupCount} Match Lab grubunda eşleştiniz`
+                        : t("Match Lab’de eşleştiniz")}
                     </div>
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -1070,14 +1153,14 @@ function ProfileEditor({
                       href={`mailto:${connection.email}`}
                       className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-black hover:border-primary"
                     >
-                      <Mail className="h-3.5 w-3.5" /> e-posta
+                      <Mail className="h-3.5 w-3.5" /> {t("e-posta")}
                     </a>
                     {connection.phone ? (
                       <a
                         href={`tel:${connection.phone.replace(/\s+/g, "")}`}
                         className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-black hover:border-primary"
                       >
-                        <Phone className="h-3.5 w-3.5" /> telefon
+                        <Phone className="h-3.5 w-3.5" /> {t("telefon")}
                       </a>
                     ) : null}
                     {instagramUrl ? (
@@ -1102,11 +1185,11 @@ function ProfileEditor({
                     ) : null}
                     {connection.publicProfileEnabled && connection.username ? (
                       <Link
-                        to="/u/$username"
+                        to={german ? "/de/u/$username" : "/u/$username"}
                         params={{ username: connection.username }}
                         className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground px-3 text-xs font-black text-background"
                       >
-                        profili gör <ExternalLink className="h-3.5 w-3.5" />
+                        {t("profili gör")} <ExternalLink className="h-3.5 w-3.5" />
                       </Link>
                     ) : null}
                   </div>
@@ -1116,7 +1199,7 @@ function ProfileEditor({
           </div>
         ) : (
           <p className="px-5 pb-6 text-sm leading-6 text-muted-foreground sm:px-7">
-            Tamamladığın Match Lab buluşmalarındaki kişiler burada birikecek.
+            {t("Tamamladığın Match Lab buluşmalarındaki kişiler burada birikecek.")}
           </p>
         )}
       </section>
@@ -1128,9 +1211,9 @@ function ProfileEditor({
               <IdCard className="h-5 w-5" strokeWidth={1.8} />
             </div>
             <div>
-              <h2 className="text-lg font-black tracking-[-0.03em]">ntw kodun</h2>
+              <h2 className="text-lg font-black tracking-[-0.03em]">{t("ntw kodun")}</h2>
               <p className="mt-1 text-xs leading-5 text-muted-foreground sm:text-sm">
-                E-posta adresinle oluşturulan bu kod hesabına sabittir.
+                {t("E-posta adresinle oluşturulan bu kod hesabına sabittir.")}
               </p>
             </div>
           </div>
@@ -1142,7 +1225,7 @@ function ProfileEditor({
               >
                 <div>
                   <div className="text-xs font-black uppercase tracking-[0.16em] text-muted-foreground">
-                    ntw kodun
+                    {t("ntw kodun")}
                   </div>
                 </div>
                 <div className="font-display text-4xl font-black tracking-[-0.05em]">
@@ -1152,8 +1235,8 @@ function ProfileEditor({
             ))}
           </div>
           <div className="flex items-center gap-2 border-t border-border px-5 py-3 text-xs font-bold text-muted-foreground sm:px-6">
-            <EyeOff className="h-4 w-4 text-primary-deep" /> Bu kodlar yalnızca sana görünür;
-            ntw.business kartında paylaşılmaz.
+            <EyeOff className="h-4 w-4 text-primary-deep" />{" "}
+            {t("Bu kodlar yalnızca sana görünür; ntw.business kartında paylaşılmaz.")}
           </div>
         </section>
       ) : null}
@@ -1163,7 +1246,7 @@ function ProfileEditor({
           icon={<FileText className="h-5 w-5" strokeWidth={1.8} />}
           title="Kendini anlat"
         >
-          <Field label="Profilde gösterilecek ülke">
+          <Field label={t("Profilde gösterilecek ülke")}>
             <select
               className="profile-input"
               value={draft.country || ""}
@@ -1171,45 +1254,45 @@ function ProfileEditor({
                 setDraft({ ...draft, country: memberCountry(e.target.value) ?? null })
               }
             >
-              <option value="">Belirtmek istemiyorum</option>
-              <option value="TR">🇹🇷 Türkiye</option>
-              <option value="DE">🇩🇪 Almanya</option>
+              <option value="">{t("Belirtmek istemiyorum")}</option>
+              <option value="TR">{t("🇹🇷 Türkiye")}</option>
+              <option value="DE">{t("🇩🇪 Almanya")}</option>
             </select>
           </Field>
-          <Field label="Profil başlığı" hint={`${draft.headline.length}/120`}>
+          <Field label={t("Profil başlığı")} hint={`${draft.headline.length}/120`}>
             <input
               maxLength={120}
               value={draft.headline}
               onChange={(event) => setDraft({ ...draft, headline: event.target.value })}
               className="profile-input"
-              placeholder="Örn. Ürün tasarımcısı ve topluluk kurucusu"
+              placeholder={t("Örn. Ürün tasarımcısı ve topluluk kurucusu")}
             />
           </Field>
-          <Field label="Kısa biyografi" hint={`${draft.bio.length}/320`}>
+          <Field label={t("Kısa biyografi")} hint={`${draft.bio.length}/320`}>
             <textarea
               maxLength={320}
               rows={4}
               value={draft.bio}
               onChange={(event) => setDraft({ ...draft, bio: event.target.value })}
               className="profile-input resize-none"
-              placeholder="Neler yaptığını ve neye açık olduğunu kısa anlat."
+              placeholder={t("Neler yaptığını ve neye açık olduğunu kısa anlat.")}
             />
           </Field>
         </EditorSection>
 
         <EditorSection
           icon={<Award className="h-5 w-5" strokeWidth={1.8} />}
-          title="En güçlü 5 yeteneğin"
+          title={t("En güçlü 5 yeteneğin")}
           action={
             draft.skills.length < 5 ? (
               <SmallButton type="button" onClick={addSkill}>
-                <Plus className="h-4 w-4" /> Ekle
+                <Plus className="h-4 w-4" /> {t("Ekle")}
               </SmallButton>
             ) : null
           }
         >
           <p className="-mt-1 text-xs leading-relaxed text-muted-foreground">
-            Ünvanından çok gerçekten yapabildiklerini yaz. En fazla 5 yetenek.
+            {t("Ünvanından çok gerçekten yapabildiklerini yaz. En fazla 5 yetenek.")}
           </p>
           {draft.skills.length ? (
             <div className="space-y-2">
@@ -1224,10 +1307,10 @@ function ProfileEditor({
                       setDraft({ ...draft, skills });
                     }}
                     className="profile-input"
-                    placeholder={`Yetenek ${index + 1}`}
+                    placeholder={`${german ? "Fähigkeit" : "Yetenek"} ${index + 1}`}
                   />
                   <IconButton
-                    label="Yeteneği sil"
+                    label={t("Yeteneği sil")}
                     onClick={() =>
                       setDraft({
                         ...draft,
@@ -1240,24 +1323,24 @@ function ProfileEditor({
             </div>
           ) : (
             <button type="button" onClick={addSkill} className="profile-empty-button">
-              <Plus className="h-5 w-5" /> İlk yeteneğini ekle
+              <Plus className="h-5 w-5" /> {t("İlk yeteneğini ekle")}
             </button>
           )}
         </EditorSection>
 
         <EditorSection
           icon={<BriefcaseBusiness className="h-5 w-5" strokeWidth={1.8} />}
-          title="Deneyimlerin"
+          title={t("Deneyimlerin")}
           action={
             draft.experiences.length < 3 ? (
               <SmallButton type="button" onClick={addExperience}>
-                <Plus className="h-4 w-4" /> Ekle
+                <Plus className="h-4 w-4" /> {t("Ekle")}
               </SmallButton>
             ) : null
           }
         >
           <p className="-mt-1 text-xs leading-relaxed text-muted-foreground">
-            Çalıştığın veya staj yaptığın en fazla 3 yeri ekle.
+            {t("Çalıştığın veya staj yaptığın en fazla 3 yeri ekle.")}
           </p>
           {draft.experiences.length ? (
             <div className="space-y-3">
@@ -1267,7 +1350,7 @@ function ProfileEditor({
                   className="rounded-2xl border border-border bg-background p-3"
                 >
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Firma">
+                    <Field label={t("Firma")}>
                       <input
                         maxLength={80}
                         value={experience.company}
@@ -1280,7 +1363,7 @@ function ProfileEditor({
                         className="profile-input bg-card"
                       />
                     </Field>
-                    <Field label="Rol / staj">
+                    <Field label={t("Rol / staj")}>
                       <input
                         maxLength={80}
                         value={experience.role}
@@ -1306,20 +1389,23 @@ function ProfileEditor({
                     }
                     className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-destructive"
                   >
-                    <Trash2 className="h-3.5 w-3.5" /> Deneyimi kaldır
+                    <Trash2 className="h-3.5 w-3.5" /> {t("Deneyimi kaldır")}
                   </button>
                 </div>
               ))}
             </div>
           ) : (
             <button type="button" onClick={addExperience} className="profile-empty-button">
-              <Plus className="h-5 w-5" /> İlk deneyimini ekle
+              <Plus className="h-5 w-5" /> {t("İlk deneyimini ekle")}
             </button>
           )}
         </EditorSection>
 
-        <EditorSection icon={<Link2 className="h-5 w-5" strokeWidth={1.8} />} title="Bağlantıların">
-          <Field label="Telefon" hint="Yalnızca giriş yapmış üyeler görür">
+        <EditorSection
+          icon={<Link2 className="h-5 w-5" strokeWidth={1.8} />}
+          title={t("Bağlantıların")}
+        >
+          <Field label={t("Telefon")} hint={t("Yalnızca giriş yapmış üyeler görür")}>
             <div className="relative">
               <Phone className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -1329,7 +1415,7 @@ function ProfileEditor({
                 value={draft.phone}
                 onChange={(event) => setDraft({ ...draft, phone: event.target.value })}
                 className="profile-input pl-11"
-                placeholder="05xx xxx xx xx"
+                placeholder={t("05xx xxx xx xx")}
               />
             </div>
           </Field>
@@ -1344,7 +1430,7 @@ function ProfileEditor({
               placeholder="https://linkedin.com/in/..."
             />
           </Field>
-          <Field label="Instagram kullanıcı adı">
+          <Field label={t("Instagram kullanıcı adı")}>
             <div className="relative">
               <Instagram className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -1356,11 +1442,11 @@ function ProfileEditor({
                   })
                 }
                 className="profile-input pl-11"
-                placeholder="kullaniciadi"
+                placeholder={t("kullaniciadi")}
               />
             </div>
           </Field>
-          <Field label="Web sitesi">
+          <Field label={t("Web sitesi")}>
             <input
               inputMode="url"
               value={draft.links.website}
@@ -1375,13 +1461,13 @@ function ProfileEditor({
 
         <EditorSection
           icon={<IdCard className="h-5 w-5" strokeWidth={1.8} />}
-          title="ntw.business share"
+          title={t("ntw.business share")}
         >
           <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-background p-4">
             <div>
-              <div className="font-black">Business kartını dışarıya aç</div>
+              <div className="font-black">{t("Business kartını dışarıya aç")}</div>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                E-posta adresin paylaşılmaz. Yalnızca profilinde yazdığın bilgiler görünür.
+                {t("E-posta adresin paylaşılmaz. Yalnızca profilinde yazdığın bilgiler görünür.")}
               </p>
             </div>
             <button
@@ -1409,13 +1495,13 @@ function ProfileEditor({
             </div>
             <div className="flex min-w-0 flex-col justify-center">
               <div className="text-[10px] font-black uppercase tracking-[0.18em] text-background/55">
-                senin business linkin
+                {t("senin business linkin")}
               </div>
               <div className="mt-2 truncate text-sm font-black sm:text-base">
-                notwork.me/u/{profile.username}
+                {publicCardUrl.replace("https://", "")}
               </div>
               <p className="mt-2 text-xs leading-5 text-background/60">
-                QR ve bağlantı, profilini kaydedip görünür yaptığında çalışır.
+                {t("QR ve bağlantı, profilini kaydedip görünür yaptığında çalışır.")}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
@@ -1424,10 +1510,10 @@ function ProfileEditor({
                   disabled={!profile.publicProfileEnabled}
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-3 py-2 text-xs font-black text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <Copy className="h-4 w-4" /> {copied ? "kopyalandı" : "linki kopyala"}
+                  <Copy className="h-4 w-4" /> {copied ? t("kopyalandı") : t("linki kopyala")}
                 </button>
                 <a
-                  href={`/u/${encodeURIComponent(profile.username)}`}
+                  href={`${german ? "/de" : ""}/u/${encodeURIComponent(profile.username)}`}
                   target="_blank"
                   rel="noreferrer"
                   aria-disabled={!profile.publicProfileEnabled}
@@ -1440,7 +1526,7 @@ function ProfileEditor({
                       : "cursor-not-allowed opacity-40"
                   }`}
                 >
-                  <ExternalLink className="h-4 w-4" /> kartı gör
+                  <ExternalLink className="h-4 w-4" /> {t("kartı gör")}
                 </a>
               </div>
             </div>
@@ -1456,13 +1542,13 @@ function ProfileEditor({
             ) : (
               <Save className="h-5 w-5" />
             )}
-            Profili kaydet
+            {t("Profili kaydet")}
           </button>
           <button
             type="button"
             onClick={signOut}
             className="inline-flex items-center justify-center rounded-xl border border-border px-4 text-sm font-black hover:bg-card"
-            aria-label="Çıkış yap"
+            aria-label={t("Çıkış yap")}
           >
             <LogOut className="h-5 w-5" />
           </button>

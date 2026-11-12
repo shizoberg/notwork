@@ -12,6 +12,7 @@ const defaultKeywords = [
 
 type SeoOptions = {
   title: string;
+  locale?: "tr_TR" | "de_DE";
   description: string;
   path: string;
   keywords?: string[];
@@ -25,18 +26,26 @@ type SeoOptions = {
 
 export function createSeo({
   title,
+  locale = "tr_TR",
   description,
   path,
   keywords = [],
   image = defaultImage,
-  imageAlt = "notwork İzmir network club etkinliğinden katılımcılar",
+  imageAlt = locale === "de_DE"
+    ? "Teilnehmende eines notwork Events"
+    : "notwork İzmir network club etkinliğinden katılımcılar",
   canonicalPath,
   robots = "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
   type = "website",
   structuredData,
 }: SeoOptions) {
   const canonical = `${siteUrl}${canonicalPath ?? path}`;
-  const keywordContent = [...new Set([...defaultKeywords, ...keywords])].join(", ");
+  const keywordContent = [
+    ...new Set([
+      ...(locale === "tr_TR" ? defaultKeywords : ["notwork", "Networking", "Networking-Events"]),
+      ...keywords,
+    ]),
+  ].join(", ");
 
   return {
     meta: [
@@ -45,7 +54,7 @@ export function createSeo({
       { name: "keywords", content: keywordContent },
       { name: "robots", content: robots },
       { property: "og:site_name", content: "notwork" },
-      { property: "og:locale", content: "tr_TR" },
+      { property: "og:locale", content: locale },
       { property: "og:type", content: type },
       { property: "og:title", content: title },
       { property: "og:description", content: description },

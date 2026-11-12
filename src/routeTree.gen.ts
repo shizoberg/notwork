@@ -30,6 +30,7 @@ import { Route as FiveRouteImport } from './routes/five'
 import { Route as EtkinliklerRouteImport } from './routes/etkinlikler'
 import { Route as EtkinlikDegerlendirmeRouteImport } from './routes/etkinlik-degerlendirme'
 import { Route as DuyurularRouteImport } from './routes/duyurular'
+import { Route as DokumantasyonRouteImport } from './routes/dokumantasyon'
 import { Route as Demo2RouteImport } from './routes/demo2'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DeRouteImport } from './routes/de'
@@ -65,8 +66,10 @@ import { Route as DeMerchRouteImport } from './routes/de.merch'
 import { Route as DeLiveRouteImport } from './routes/de.live'
 import { Route as DeEventsRouteImport } from './routes/de.events'
 import { Route as DeEinwilligungRouteImport } from './routes/de.einwilligung'
+import { Route as DeDokumentationRouteImport } from './routes/de.dokumentation'
 import { Route as DeDatenschutzRouteImport } from './routes/de.datenschutz'
 import { Route as DeCookiesRouteImport } from './routes/de.cookies'
+import { Route as DeCommunityRouteImport } from './routes/de.community'
 import { Route as De4DezemberRouteImport } from './routes/de.4-dezember'
 import { Route as R21AgustosWordcloudRouteImport } from './routes/21-agustos.wordcloud'
 import { Route as R21AgustosSonuclarRouteImport } from './routes/21-agustos.sonuclar'
@@ -178,6 +181,11 @@ const EtkinlikDegerlendirmeRoute = EtkinlikDegerlendirmeRouteImport.update({
 const DuyurularRoute = DuyurularRouteImport.update({
   id: '/duyurular',
   path: '/duyurular',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DokumantasyonRoute = DokumantasyonRouteImport.update({
+  id: '/dokumantasyon',
+  path: '/dokumantasyon',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Demo2Route = Demo2RouteImport.update({
@@ -355,6 +363,11 @@ const DeEinwilligungRoute = DeEinwilligungRouteImport.update({
   path: '/einwilligung',
   getParentRoute: () => DeRoute,
 } as any)
+const DeDokumentationRoute = DeDokumentationRouteImport.update({
+  id: '/dokumentation',
+  path: '/dokumentation',
+  getParentRoute: () => DeRoute,
+} as any)
 const DeDatenschutzRoute = DeDatenschutzRouteImport.update({
   id: '/datenschutz',
   path: '/datenschutz',
@@ -363,6 +376,11 @@ const DeDatenschutzRoute = DeDatenschutzRouteImport.update({
 const DeCookiesRoute = DeCookiesRouteImport.update({
   id: '/cookies',
   path: '/cookies',
+  getParentRoute: () => DeRoute,
+} as any)
+const DeCommunityRoute = DeCommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
   getParentRoute: () => DeRoute,
 } as any)
 const De4DezemberRoute = De4DezemberRouteImport.update({
@@ -423,6 +441,7 @@ export interface FileRoutesByFullPath {
   '/de': typeof DeRouteWithChildren
   '/demo': typeof DemoRoute
   '/demo2': typeof Demo2Route
+  '/dokumantasyon': typeof DokumantasyonRoute
   '/duyurular': typeof DuyurularRoute
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
@@ -449,8 +468,10 @@ export interface FileRoutesByFullPath {
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
   '/de/4-dezember': typeof De4DezemberRoute
+  '/de/community': typeof DeCommunityRoute
   '/de/cookies': typeof DeCookiesRoute
   '/de/datenschutz': typeof DeDatenschutzRoute
+  '/de/dokumentation': typeof DeDokumentationRoute
   '/de/einwilligung': typeof DeEinwilligungRoute
   '/de/events': typeof DeEventsRoute
   '/de/live': typeof DeLiveRoute
@@ -489,6 +510,7 @@ export interface FileRoutesByTo {
   '/creative': typeof CreativeRoute
   '/demo': typeof DemoRoute
   '/demo2': typeof Demo2Route
+  '/dokumantasyon': typeof DokumantasyonRoute
   '/duyurular': typeof DuyurularRoute
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
@@ -515,8 +537,10 @@ export interface FileRoutesByTo {
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
   '/de/4-dezember': typeof De4DezemberRoute
+  '/de/community': typeof DeCommunityRoute
   '/de/cookies': typeof DeCookiesRoute
   '/de/datenschutz': typeof DeDatenschutzRoute
+  '/de/dokumentation': typeof DeDokumentationRoute
   '/de/einwilligung': typeof DeEinwilligungRoute
   '/de/events': typeof DeEventsRoute
   '/de/live': typeof DeLiveRoute
@@ -557,6 +581,7 @@ export interface FileRoutesById {
   '/de': typeof DeRouteWithChildren
   '/demo': typeof DemoRoute
   '/demo2': typeof Demo2Route
+  '/dokumantasyon': typeof DokumantasyonRoute
   '/duyurular': typeof DuyurularRoute
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
@@ -583,8 +608,10 @@ export interface FileRoutesById {
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
   '/de/4-dezember': typeof De4DezemberRoute
+  '/de/community': typeof DeCommunityRoute
   '/de/cookies': typeof DeCookiesRoute
   '/de/datenschutz': typeof DeDatenschutzRoute
+  '/de/dokumentation': typeof DeDokumentationRoute
   '/de/einwilligung': typeof DeEinwilligungRoute
   '/de/events': typeof DeEventsRoute
   '/de/live': typeof DeLiveRoute
@@ -626,6 +653,7 @@ export interface FileRouteTypes {
     | '/de'
     | '/demo'
     | '/demo2'
+    | '/dokumantasyon'
     | '/duyurular'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
@@ -652,8 +680,10 @@ export interface FileRouteTypes {
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
     | '/de/4-dezember'
+    | '/de/community'
     | '/de/cookies'
     | '/de/datenschutz'
+    | '/de/dokumentation'
     | '/de/einwilligung'
     | '/de/events'
     | '/de/live'
@@ -692,6 +722,7 @@ export interface FileRouteTypes {
     | '/creative'
     | '/demo'
     | '/demo2'
+    | '/dokumantasyon'
     | '/duyurular'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
@@ -718,8 +749,10 @@ export interface FileRouteTypes {
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
     | '/de/4-dezember'
+    | '/de/community'
     | '/de/cookies'
     | '/de/datenschutz'
+    | '/de/dokumentation'
     | '/de/einwilligung'
     | '/de/events'
     | '/de/live'
@@ -759,6 +792,7 @@ export interface FileRouteTypes {
     | '/de'
     | '/demo'
     | '/demo2'
+    | '/dokumantasyon'
     | '/duyurular'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
@@ -785,8 +819,10 @@ export interface FileRouteTypes {
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
     | '/de/4-dezember'
+    | '/de/community'
     | '/de/cookies'
     | '/de/datenschutz'
+    | '/de/dokumentation'
     | '/de/einwilligung'
     | '/de/events'
     | '/de/live'
@@ -827,6 +863,7 @@ export interface RootRouteChildren {
   DeRoute: typeof DeRouteWithChildren
   DemoRoute: typeof DemoRoute
   Demo2Route: typeof Demo2Route
+  DokumantasyonRoute: typeof DokumantasyonRoute
   DuyurularRoute: typeof DuyurularRoute
   EtkinlikDegerlendirmeRoute: typeof EtkinlikDegerlendirmeRoute
   EtkinliklerRoute: typeof EtkinliklerRoute
@@ -1003,6 +1040,13 @@ declare module '@tanstack/react-router' {
       path: '/duyurular'
       fullPath: '/duyurular'
       preLoaderRoute: typeof DuyurularRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dokumantasyon': {
+      id: '/dokumantasyon'
+      path: '/dokumantasyon'
+      fullPath: '/dokumantasyon'
+      preLoaderRoute: typeof DokumantasyonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo2': {
@@ -1250,6 +1294,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DeEinwilligungRouteImport
       parentRoute: typeof DeRoute
     }
+    '/de/dokumentation': {
+      id: '/de/dokumentation'
+      path: '/dokumentation'
+      fullPath: '/de/dokumentation'
+      preLoaderRoute: typeof DeDokumentationRouteImport
+      parentRoute: typeof DeRoute
+    }
     '/de/datenschutz': {
       id: '/de/datenschutz'
       path: '/datenschutz'
@@ -1262,6 +1313,13 @@ declare module '@tanstack/react-router' {
       path: '/cookies'
       fullPath: '/de/cookies'
       preLoaderRoute: typeof DeCookiesRouteImport
+      parentRoute: typeof DeRoute
+    }
+    '/de/community': {
+      id: '/de/community'
+      path: '/community'
+      fullPath: '/de/community'
+      preLoaderRoute: typeof DeCommunityRouteImport
       parentRoute: typeof DeRoute
     }
     '/de/4-dezember': {
@@ -1318,8 +1376,10 @@ declare module '@tanstack/react-router' {
 
 interface DeRouteChildren {
   De4DezemberRoute: typeof De4DezemberRoute
+  DeCommunityRoute: typeof DeCommunityRoute
   DeCookiesRoute: typeof DeCookiesRoute
   DeDatenschutzRoute: typeof DeDatenschutzRoute
+  DeDokumentationRoute: typeof DeDokumentationRoute
   DeEinwilligungRoute: typeof DeEinwilligungRoute
   DeEventsRoute: typeof DeEventsRoute
   DeLiveRoute: typeof DeLiveRoute
@@ -1338,8 +1398,10 @@ interface DeRouteChildren {
 
 const DeRouteChildren: DeRouteChildren = {
   De4DezemberRoute: De4DezemberRoute,
+  DeCommunityRoute: DeCommunityRoute,
   DeCookiesRoute: DeCookiesRoute,
   DeDatenschutzRoute: DeDatenschutzRoute,
+  DeDokumentationRoute: DeDokumentationRoute,
   DeEinwilligungRoute: DeEinwilligungRoute,
   DeEventsRoute: DeEventsRoute,
   DeLiveRoute: DeLiveRoute,
@@ -1380,6 +1442,7 @@ const rootRouteChildren: RootRouteChildren = {
   DeRoute: DeRouteWithChildren,
   DemoRoute: DemoRoute,
   Demo2Route: Demo2Route,
+  DokumantasyonRoute: DokumantasyonRoute,
   DuyurularRoute: DuyurularRoute,
   EtkinlikDegerlendirmeRoute: EtkinlikDegerlendirmeRoute,
   EtkinliklerRoute: EtkinliklerRoute,
