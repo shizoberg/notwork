@@ -3,6 +3,8 @@ import { type MouseEvent, useEffect, useRef, useState } from "react";
 import {
   CalendarDays,
   CircleHelp,
+  Check,
+  Globe2,
   Images,
   Instagram,
   Menu,
@@ -76,9 +78,11 @@ export function regionalPath(path: string, german: boolean) {
 export function RegionSwitch({
   german = false,
   className = "",
+  inMenu = false,
 }: {
   german?: boolean;
   className?: string;
+  inMenu?: boolean;
 }) {
   const { pathname, searchStr } = useLocation();
   const navigate = useNavigate();
@@ -123,6 +127,35 @@ export function RegionSwitch({
     Object.keys(regionalPages).find((key) => regionalPages[key] === pathname) ??
     (registerInGermany ? "/profil" : undefined) ??
     (pathname.startsWith("/de/u/") ? pathname.slice(3) : "/");
+  if (inMenu) {
+    return (
+      <>
+        <DropdownMenuLabel className="flex items-center gap-2 px-3 pb-1 pt-2 text-xs text-muted-foreground">
+          <Globe2 size={15} aria-hidden="true" />
+          {german ? "Sprache und Region" : "Dil ve bölge"}
+        </DropdownMenuLabel>
+        <DropdownMenuItem asChild className="min-h-11 gap-2 rounded-xl px-3">
+          <Link
+            to={turkey}
+            search={turkeySearch}
+            lang="tr"
+            aria-current={german ? undefined : "true"}
+          >
+            <span aria-hidden="true">🇹🇷</span> Türkçe
+            {!german && (
+              <Check size={15} aria-hidden="true" className="ml-auto text-primary-deep" />
+            )}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="min-h-11 gap-2 rounded-xl px-3">
+          <Link to={germany} lang="de" aria-current={german ? "true" : undefined}>
+            <span aria-hidden="true">🇩🇪</span> Deutsch
+            {german && <Check size={15} aria-hidden="true" className="ml-auto text-primary-deep" />}
+          </Link>
+        </DropdownMenuItem>
+      </>
+    );
+  }
   return (
     <nav
       className={`site-region-toggle ${className}`}
@@ -297,13 +330,10 @@ export function SiteNav({
           <ProfileLink german={german} className="desktop-profile-button" />
         </div>
       </div>
-      <div className="mx-auto grid h-16 grid-cols-[116px_1fr_116px] items-center px-3 sm:hidden">
-        <MobileSiteMenu german={german} />
-        <BrandLink german={german} className="justify-self-center" />
-        <div className="site-mobile-actions">
-          <RegionSwitch german={german} />
-          <ProfileLink german={german} />
-        </div>
+      <div className="mx-auto h-16 grid-cols-[3.5rem_minmax(0,1fr)_3.5rem] items-center px-3 [display:grid] sm:hidden">
+        <MobileSiteMenu german={german} showRegion />
+        <BrandLink german={german} className="min-w-0 justify-self-center" />
+        <ProfileLink german={german} className="justify-self-end" />
       </div>
     </header>
   );
@@ -352,7 +382,10 @@ const mobileSecondaryLinks = [
   { to: "/sunum-yukle", label: "Sunum yapmak istiyorum", icon: Presentation },
 ] as const;
 
-function MobileSiteMenu({ german = false }: { german?: boolean } = {}) {
+function MobileSiteMenu({
+  german = false,
+  showRegion = false,
+}: { german?: boolean; showRegion?: boolean } = {}) {
   const [open, setOpen] = useState(false);
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -360,9 +393,14 @@ function MobileSiteMenu({ german = false }: { german?: boolean } = {}) {
         <button
           type="button"
           aria-label={german ? "Menü öffnen" : "Site menüsünü aç"}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/90 bg-white/55 text-xs sm:hidden"
+          className={`inline-flex h-11 items-center justify-center gap-1.5 justify-self-start rounded-full border border-white/90 bg-white/55 text-xs sm:hidden ${showRegion ? "w-14" : "w-11"}`}
         >
-          <Menu size={19} strokeWidth={1.5} />
+          <Menu size={18} strokeWidth={1.6} aria-hidden="true" />
+          {showRegion && (
+            <span className="text-[0.63rem] font-bold text-primary-deep" aria-hidden="true">
+              {german ? "DE" : "TR"}
+            </span>
+          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -370,14 +408,12 @@ function MobileSiteMenu({ german = false }: { german?: boolean } = {}) {
         sideOffset={12}
         className="glass-menu z-[9999] w-64 p-3 sm:hidden"
       >
-        <DropdownMenuLabel className="flex items-center gap-3 px-3 py-3">
-          <span className="menu-wordmark">ntw</span>
-          <span className="text-xs font-normal text-muted-foreground">
-            {german ? "Networking-Community" : "network topluluğu"}
-            <br />
-            {german ? "und Plattform." : "ve platform."}
-          </span>
-        </DropdownMenuLabel>
+        {showRegion && (
+          <>
+            <RegionSwitch german={german} inMenu />
+            <DropdownMenuSeparator />
+          </>
+        )}
         {[
           { to: "/notwork-nedir", label: "notwork nedir?", icon: Sparkles },
           ...mobileSecondaryLinks,
