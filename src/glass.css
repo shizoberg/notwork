@@ -6241,3 +6241,53 @@ html[data-notwork-entry-ready="true"] .event-entry-dock {
   .desktop-site-header-centered .desktop-site-links { grid-area: 1 / 1; justify-self: start; }
   .desktop-site-header-centered .desktop-site-actions { grid-area: 1 / 3; justify-self: end; }
 }
+
+.hero-upcoming .hero-event-link.hero-event-link-poster {
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 164px;
+  padding: 15px 16px 48px !important;
+  gap: 5px;
+}
+
+.hero-event-link-poster::before,
+.hero-event-link-poster::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-event-link-poster::before {
+  z-index: -2;
+  background: url("/events/9-ekim/notwork-sahne-akis-sade.webp") 55% center / cover no-repeat;
+  filter: blur(4px);
+  transform: scale(1.06);
+}
+
+.hero-event-link-poster::after {
+  z-index: -1;
+  background: linear-gradient(90deg, #122638fa, #122638e8 46%, #12263884 100%);
+}
+
+.hero-upcoming .hero-event-link.hero-event-link-poster .hero-event-name {
+  font-size: clamp(18px, 4.5vw, 28px) !important;
+  white-space: normal;
+}
+
+.hero-event-link-poster .hero-event-location {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #e1f2fa;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.hero-event-location svg { flex-shrink: 0; }
+.hero-event-link-poster .notwork-logo.hero-event-logo {
+  left: 16px;
+  bottom: 13px;
+  width: 30px;
+  opacity: 1;
+}

@@ -1,6 +1,6 @@
 import { CountryTag } from "@/components/CountryTag";
 import { munichEvent } from "@/lib/munich-event";
-import { Ticket, MessageCircle } from "lucide-react";
+import { MapPin, Ticket, MessageCircle } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import gallery2 from "@/assets/gallery/notwork-2.jpg";
@@ -285,26 +285,30 @@ function Hero({ german, english }: { german: boolean; english: boolean }) {
           <div className="hero-event-links hero-upcoming-links">
             {(english
               ? [
-                  { date: "22 November", name: "Stage", subtitle: "Stories of failure and networking · Türkiye", to: "/en/22-november", flag: "🇹🇷", cta: "Get tickets" },
+                  { date: "22 November 2026", name: "notwork sahne", subtitle: "Stories of failure and networking", location: "Rene Lokal · Bornova, İzmir", to: "/en/22-november", flag: "🇹🇷", cta: "Get tickets" },
                   { date: "4 December", name: "Stage", subtitle: "Munich, Germany", to: "/en/4-december", flag: "🇩🇪", cta: "Coming soon" },
                 ]
               : german
                 ? [{ date: munichEvent.date, name: "Bühne", subtitle: munichEvent.city, to: munichEvent.path, flag: "🇩🇪", cta: munichEvent.status }]
-                : [{ date: "22 Kasım", name: "Sahne", subtitle: "Başarısızlık hikâyeleri ve networking", to: "/22-kasim", flag: "🇹🇷", cta: "Bilet al" }]
-            ).map(({ date, name, subtitle, to, flag, cta }) => (
+                : [{ date: "22 Kasım 2026", name: "notwork sahne", subtitle: "Başarısızlık hikâyeleri ve networking", location: "Rene Lokal · Bornova, İzmir", to: "/22-kasim", flag: "🇹🇷", cta: "Bilet al" }]
+            ).map(({ date, name, subtitle, location, to, flag, cta }) => (
               <Link
                 key={to}
                 to={to}
                 data-analytics="click"
-                data-analytics-label={`${date} ${name}`}
-                aria-label={`${date} notwork ${name}`}
-                className="hero-event-link hero-event-link-contrast"
+                data-analytics-label={location ? (english ? "22 November Stage" : "22 Kasım Sahne") : `${date} ${name}`}
+                className={`hero-event-link hero-event-link-contrast${location ? " hero-event-link-poster" : ""}`}
               >
                 <span className="hero-event-date">
-                  <span aria-hidden="true">{flag}</span>{" "}{date.toLocaleUpperCase(english ? "en-GB" : german ? "de-DE" : "tr-TR")} / 2026
+                  <span aria-hidden="true">{flag}</span>{" "}{location ? date : `${date} / 2026`}
                 </span>
                 <span className="hero-event-name">{name}</span>
                 <span className="hero-event-subtitle">{subtitle}</span>
+                {location && (
+                  <span className="hero-event-location">
+                    <MapPin size={13} aria-hidden="true" /> {location}
+                  </span>
+                )}
                 <img
                   src="/brand/notwork-logo.png"
                   alt=""
