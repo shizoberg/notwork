@@ -1,4 +1,21 @@
 import { Link } from "@tanstack/react-router";
+import {
+  CalendarDays,
+  ChartNoAxesColumn,
+  CircleHelp,
+  ClipboardCheck,
+  CodeXml,
+  List,
+  MessageCircle,
+  Network,
+  ShieldCheck,
+  SlidersHorizontal,
+  Sparkles,
+  Timer,
+  UserRound,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react";
 import { regionalPath, SiteFooter, SiteNav } from "@/components/SiteNav";
 import { documentation } from "@/lib/notwork-documentation";
 import { createSeo } from "@/lib/seo";
@@ -39,6 +56,24 @@ export function documentationHead(german = false) {
     ],
   };
 }
+
+const sectionIcons: Record<string, LucideIcon> = {
+  etkinlikler: CalendarDays,
+  katilim: UserRound,
+  match: Network,
+  ai: Sparkles,
+  grup: MessageCircle,
+  five: Timer,
+  "sahne-araclari": ChartNoAxesColumn,
+  topluluk: UsersRound,
+  veri: ShieldCheck,
+  yonetim: SlidersHorizontal,
+  mimari: CodeXml,
+  nodes: Network,
+  sorular: CircleHelp,
+};
+
+const journeyIcons = [CalendarDays, ClipboardCheck, Network, MessageCircle, UsersRound];
 
 const nodesScreens = [
   { image: "community", tr: "Toplulukları keşfet", de: "Communitys entdecken" },
@@ -98,16 +133,25 @@ export function NotworkDocumentation({ german = false }: { german?: boolean } = 
 
   const sectionLinks = (
     <ul className="grid gap-1 sm:grid-cols-2 lg:grid-cols-1">
-      {copy.sections.map((section) => (
-        <li key={section.id}>
-          <a
-            href={`#${section.id}`}
-            className="flex min-h-10 items-center rounded-md px-2 py-1.5 text-sm leading-snug text-[#b1d7ff] hover:bg-[#283e58] hover:underline"
-          >
-            {section.title}
-          </a>
-        </li>
-      ))}
+      {copy.sections.map((section) => {
+        const Icon = sectionIcons[section.id] ?? List;
+        return (
+          <li key={section.id}>
+            <a
+              href={`#${section.id}`}
+              className="flex min-h-10 items-center gap-2 rounded-md px-2 py-1.5 text-sm leading-snug text-[#b1d7ff] hover:bg-[#283e58] hover:underline"
+            >
+              <Icon
+                size={15}
+                strokeWidth={1.6}
+                className="shrink-0 text-[#90b9e7]"
+                aria-hidden="true"
+              />
+              {section.title}
+            </a>
+          </li>
+        );
+      })}
     </ul>
   );
 
@@ -116,41 +160,49 @@ export function NotworkDocumentation({ german = false }: { german?: boolean } = 
       <SiteNav german={german} />
       <main className="mx-auto max-w-6xl px-3 pb-28 pt-4 sm:px-5 sm:pb-16 sm:pt-8">
         <header className="border-b border-[#344258] pb-6 sm:pb-8">
-          <div className="relative isolate min-h-[21rem] overflow-hidden rounded-2xl border border-[#344258] bg-[#152237] px-4 pb-24 pt-6 sm:min-h-[23rem] sm:rounded-3xl sm:px-9 sm:pb-16 sm:pt-10">
-            <img
-              src="/community/25.jpg"
-              alt=""
-              width={1080}
-              height={1350}
-              fetchPriority="high"
-              className="absolute inset-0 -z-20 h-full w-full object-cover object-[center_30%] sm:object-[center_65%]"
-            />
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,#0b1528f5_0%,#0b1528e0_40%,#0b152852_100%)] sm:bg-[linear-gradient(95deg,#0b1528f5_0%,#0b1528cc_43%,#0b152820_100%)]"
-            />
-            <h1 className="max-w-3xl text-balance break-words font-display text-[clamp(1.85rem,7vw,3.65rem)] font-black leading-[1.02] tracking-tight text-white">
+          <div className="isolate [display:grid] grid-cols-1 sm:grid-rows-[auto_1fr]">
+            <div className="relative col-start-1 row-start-1 min-h-[18rem] overflow-hidden rounded-2xl border border-[#344258] bg-[#152237] sm:row-end-3 sm:min-h-[23rem] sm:rounded-3xl">
+              <img
+                src="/community/25.jpg"
+                alt=""
+                width={1080}
+                height={1350}
+                fetchPriority="high"
+                className="absolute inset-0 h-full w-full object-cover object-[center_54%] sm:object-[center_65%]"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-[linear-gradient(180deg,#0b1528e6_0%,#0b1528a6_25%,#0b152800_56%)] sm:bg-[linear-gradient(95deg,#0b1528ed_0%,#0b1528c7_37%,#0b152800_74%)]"
+              />
+            </div>
+            <h1 className="relative col-start-1 row-start-1 max-w-3xl self-start text-balance break-words px-4 pt-5 font-display text-[clamp(1.85rem,7vw,3.65rem)] font-black leading-[1.02] tracking-tight text-white sm:px-9 sm:pt-10">
               {copy.heading}
             </h1>
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-[#e4edf8] sm:text-lg">
+            <p className="relative col-start-1 row-start-2 mt-4 max-w-xl text-sm leading-relaxed text-[#c3d0df] sm:px-9 sm:pb-10 sm:text-lg sm:text-[#e4edf8]">
               {copy.lead}
             </p>
           </div>
           <ol
             aria-label={copy.journeyLabel}
-            className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-[#344258] bg-[#344258] sm:mt-6 md:grid-cols-5"
+            className="mt-4 [display:grid] grid-cols-2 gap-px overflow-hidden rounded-2xl border border-[#344258] bg-[#344258] sm:mt-6 md:grid-cols-5"
           >
-            {copy.journey.map((step, index) => (
-              <li
-                key={step}
-                className="flex items-start gap-2 bg-[#172438] px-3 py-3 text-xs font-semibold sm:text-sm"
-              >
-                <span className="font-mono text-xs text-[#b1d7ff]">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                {step}
-              </li>
-            ))}
+            {copy.journey.map((step, index) => {
+              const Icon = journeyIcons[index];
+              return (
+                <li
+                  key={step}
+                  className="flex items-center gap-2 bg-[#172438] px-3 py-3 text-xs font-semibold sm:text-sm"
+                >
+                  <Icon
+                    size={17}
+                    strokeWidth={1.6}
+                    className="shrink-0 text-[#b1d7ff]"
+                    aria-hidden="true"
+                  />
+                  {step}
+                </li>
+              );
+            })}
           </ol>
         </header>
         <div className="mt-7 grid items-start gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12">
@@ -168,48 +220,54 @@ export function NotworkDocumentation({ german = false }: { german?: boolean } = 
             {sectionLinks}
           </nav>
           <article className="min-w-0">
-            {copy.sections.map((section) => (
-              <section
-                key={section.id}
-                id={section.id}
-                className="scroll-mt-24 border-b border-[#344258] py-7 first:pt-0 sm:py-8"
-              >
-                <h2 className="font-display text-2xl font-black tracking-tight sm:text-3xl">
-                  {section.title}
-                </h2>
-                {section.id === "nodes" && <NodesPreview german={german} />}
-                {section.summary && (
-                  <p className="mt-4 leading-relaxed text-[#bfccdc]">{section.summary}</p>
-                )}
-                {section.entries && (
-                  <dl className="mt-5 divide-y divide-[#344258] rounded-2xl border border-[#344258] bg-[#172438]">
-                    {section.entries.map(([label, description]) => (
-                      <div
-                        key={label}
-                        className="grid gap-1 p-3 sm:p-4 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-4"
-                      >
-                        <dt className="text-sm font-bold text-[#f0f5fc]">{label}</dt>
-                        <dd className="text-sm leading-relaxed text-[#bfccdc]">{description}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                )}
-                {section.link && (
-                  <Link
-                    className="mt-4 inline-block font-bold text-[#b1d7ff] underline underline-offset-4"
-                    to={regionalPath(section.link[0], german)}
-                  >
-                    {section.link[1]}
-                  </Link>
-                )}
-                {section.faq?.map(([question, answer]) => (
-                  <div key={question} className="mt-5">
-                    <h3 className="font-bold">{question}</h3>
-                    <p className="mt-1 leading-relaxed text-[#bfccdc]">{answer}</p>
-                  </div>
-                ))}
-              </section>
-            ))}
+            {copy.sections.map((section) => {
+              const Icon = sectionIcons[section.id] ?? List;
+              return (
+                <section
+                  key={section.id}
+                  id={section.id}
+                  className="scroll-mt-24 border-b border-[#344258] py-7 first:pt-0 sm:py-8"
+                >
+                  <h2 className="flex items-start gap-2.5 font-display text-2xl font-black tracking-tight sm:text-3xl">
+                    <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-[#233852] text-[#b1d7ff] sm:size-9">
+                      <Icon size={18} strokeWidth={1.65} aria-hidden="true" />
+                    </span>
+                    <span>{section.title}</span>
+                  </h2>
+                  {section.id === "nodes" && <NodesPreview german={german} />}
+                  {section.summary && (
+                    <p className="mt-4 leading-relaxed text-[#bfccdc]">{section.summary}</p>
+                  )}
+                  {section.entries && (
+                    <dl className="mt-5 divide-y divide-[#344258] rounded-2xl border border-[#344258] bg-[#172438]">
+                      {section.entries.map(([label, description]) => (
+                        <div
+                          key={label}
+                          className="grid gap-1 p-3 sm:p-4 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-4"
+                        >
+                          <dt className="text-sm font-bold text-[#f0f5fc]">{label}</dt>
+                          <dd className="text-sm leading-relaxed text-[#bfccdc]">{description}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                  {section.link && (
+                    <Link
+                      className="mt-4 inline-block font-bold text-[#b1d7ff] underline underline-offset-4"
+                      to={regionalPath(section.link[0], german)}
+                    >
+                      {section.link[1]}
+                    </Link>
+                  )}
+                  {section.faq?.map(([question, answer]) => (
+                    <div key={question} className="mt-5">
+                      <h3 className="font-bold">{question}</h3>
+                      <p className="mt-1 leading-relaxed text-[#bfccdc]">{answer}</p>
+                    </div>
+                  ))}
+                </section>
+              );
+            })}
           </article>
         </div>
       </main>
