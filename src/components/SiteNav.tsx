@@ -285,7 +285,7 @@ export function SiteNav({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              align="end"
+              align="start"
               sideOffset={10}
               className="glass-menu desktop-site-dropdown w-60 p-2"
             >

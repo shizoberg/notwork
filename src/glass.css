@@ -4307,7 +4307,7 @@ html[data-notwork-entry-ready="true"] .event-entry-dock {
   .desktop-site-brand .desktop-site-logo { height: 38px; }
 
   .desktop-site-links {
-    grid-area: 1 / 3;
+    grid-area: 1 / 1;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -4386,21 +4386,20 @@ html[data-notwork-entry-ready="true"] .event-entry-dock {
   }
 }
 
-@media (640px <= width < 1400px) {
+@media (640px <= width < 820px) {
   .desktop-site-header {
     column-gap: 8px;
-    padding: 4px 12px;
+    padding-inline: 12px;
   }
 
-  .desktop-site-brand { grid-row: 1 / 3; }
-  .desktop-site-links { gap: 2px; justify-self: end; }
+  .desktop-site-links { gap: 2px; }
   .desktop-site-link, .desktop-site-menu {
     min-height: 36px;
     gap: 5px;
     padding-inline: 6px;
     font-size: .8125rem;
   }
-  .desktop-site-actions { grid-area: 2 / 3; gap: 6px; }
+  .desktop-site-actions { gap: 6px; }
   .desktop-site-join { min-height: 36px; padding-inline: 9px; }
 }
 
