@@ -1,3 +1,5 @@
+import { CountryTag } from "@/components/CountryTag";
+import { munichEvent } from "@/lib/munich-event";
 import { Ticket, MessageCircle } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
@@ -190,6 +192,18 @@ const pastEvents = [
   },
 ];
 
+const germanEventIds = new Set([munichEvent.id, "evt_4_aralik_2026", "4-dezember-2026"]);
+
+function eventCountry(eventId: string) {
+  if (germanEventIds.has(eventId)) return "DE";
+  return eventId in eventMetaById ||
+    /^(?:evt_)?(?:11[-_]ekim|9[-_]ekim|17[-_]eylul|21[-_]agustos|14[-_]temmuz|22[-_]kasim|19[-_]aralik)(?:[-_]2026)?$/.test(
+      eventId,
+    )
+    ? "TR"
+    : undefined;
+}
+
 const eventMetaById = Object.fromEntries(pastEvents.map((event) => [event.id, event]));
 
 const turkishTitles = ["networking club", "notworking club", "network community"];
@@ -271,10 +285,10 @@ function Hero({ german }: { german: boolean }) {
             {(german
               ? [
                   {
-                    date: "4. Dezember",
-                    name: "Deutschland",
-                    subtitle: "Persönliches Networking und neue Kontakte",
-                    to: "/de/events" as const,
+                    date: munichEvent.date,
+                    name: "Bühne",
+                    subtitle: munichEvent.city,
+                    to: munichEvent.path,
                   },
                 ]
               : [
@@ -306,7 +320,7 @@ function Hero({ german }: { german: boolean }) {
                 />
                 <span className="hero-event-buy">
                   <Ticket size={15} strokeWidth={1.7} aria-hidden="true" />
-                  {german ? "Zum Event" : "Bilet al"}
+                  {german ? munichEvent.status : "Bilet al"}
                 </span>
               </Link>
             ))}
@@ -314,25 +328,19 @@ function Hero({ german }: { german: boolean }) {
           <p className="mt-4 text-sm text-muted-foreground">
             {german ? "Informationen zur Anmeldung folgen." : "Biletler satışta."}
           </p>
-          {german ? (
-            <Link
-              to="/de/live"
-              className="mt-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-3 text-sm font-semibold text-foreground"
-            >
-              <MessageCircle size={17} aria-hidden="true" /> Match ausprobieren
-            </Link>
-          ) : (
-            <a
-              href={WHATSAPP_CHANNEL_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-analytics="click"
-              data-analytics-label="Sonraki etkinlikler WhatsApp duyuru grubu"
-              className="mt-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-3 text-sm font-semibold text-foreground"
-            >
-              <MessageCircle size={17} aria-hidden="true" /> WhatsApp grubuna katıl
-            </a>
-          )}
+          <a
+            href={WHATSAPP_CHANNEL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-analytics="click"
+            data-analytics-label={
+              german ? "WhatsApp-Gruppe" : "Sonraki etkinlikler WhatsApp duyuru grubu"
+            }
+            className="mt-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-3 text-sm font-semibold text-foreground"
+          >
+            <MessageCircle size={17} aria-hidden="true" />{" "}
+            {german ? "WhatsApp-Gruppe beitreten" : "WhatsApp grubuna katıl"}
+          </a>
         </section>
       </div>
     </section>
@@ -345,7 +353,7 @@ function Nedir({ german }: { german: boolean }) {
   const slides = [
     {
       name: german ? "Bühne" : "sahne",
-      href: german ? ("/de/events" as const) : ("/22-kasim" as const),
+      href: german ? munichEvent.path : ("/22-kasim" as const),
       items: [
         {
           n: "01",
@@ -586,6 +594,9 @@ function PastEvents({ german }: { german: boolean }) {
                     className={`absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_32%)] bg-gradient-to-br ${event.accent} ${eventPhoto ? "mix-blend-multiply" : ""}`}
                   />
                   {eventPhoto && <div className="absolute inset-0 bg-ink/35" />}
+                  <div className="absolute right-2 top-2 z-10">
+                    <CountryTag country={eventCountry(event.id)} german={german} flagOnly />
+                  </div>
                   <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full border-[20px] border-primary/25" />
                   <div className="absolute -bottom-14 left-8 h-32 w-32 rounded-full border-[22px] border-primary/15" />
                   <div className="relative flex min-h-28 flex-col justify-between p-3.5 sm:min-h-40 sm:p-4">
@@ -628,17 +639,20 @@ function PastEvents({ german }: { german: boolean }) {
                     </div>
                   )}
                   <div className="mt-auto inline-flex items-center gap-2 pt-3 text-xs font-bold text-primary-deep sm:pt-4 sm:text-sm">
-                    {event.href && !german ? t("Event sayfasına git") : t("Arşiv kaydı")}
-                    {event.href && !german && (
-                      <span className="transition group-hover:translate-x-1">→</span>
-                    )}
+                    {event.href ? t("Event sayfasına git") : t("Arşiv kaydı")}
+                    {event.href && <span className="transition group-hover:translate-x-1">→</span>}
                   </div>
                 </div>
               </article>
             );
 
-            return event.href && !german ? (
-              <Link key={event.date} to={event.href} className="shrink-0">
+            return event.href ? (
+              <Link
+                key={event.date}
+                to={german ? "/de/archiv/$eventId" : event.href}
+                params={german ? { eventId: event.id } : undefined}
+                className="shrink-0"
+              >
                 {card}
               </Link>
             ) : (
@@ -704,6 +718,7 @@ function EventReviewsFlow({ german }: { german: boolean }) {
         <div className="flex snap-x gap-3 sm:gap-4">
           {sortedReviews.map((review) => {
             const event = eventMetaById[review.eventId];
+            const country = eventCountry(review.eventId);
             const isExpanded = !!expandedReviews[review.id];
             const canExpand = review.comment.length > 170;
             return (
@@ -717,6 +732,9 @@ function EventReviewsFlow({ german }: { german: boolean }) {
                       className="photo-review-image"
                     />
                   )}
+                  <div className="absolute right-2 top-2 z-10">
+                    <CountryTag country={country} german={german} flagOnly />
+                  </div>
                   <div className="photo-review-overlay">
                     <span
                       className="photo-review-stars"
@@ -726,7 +744,8 @@ function EventReviewsFlow({ german }: { german: boolean }) {
                     </span>
                     <strong>{review.name || t("notwork katılımcısı")}</strong>
                     <span>
-                      {(german && germanArchive[review.eventId]?.date) ||
+                      {(country === "DE" && `${munichEvent.date} ${munichEvent.year}`) ||
+                        (german && germanArchive[review.eventId]?.date) ||
                         event?.date ||
                         (german ? "notwork Event" : review.eventTitle)}
                     </span>
@@ -734,7 +753,7 @@ function EventReviewsFlow({ german }: { german: boolean }) {
                 </div>
                 <div className="photo-review-copy">
                   <p
-                    lang={german ? "tr" : undefined}
+                    lang={country === "TR" ? "tr" : undefined}
                     className={`mt-2 text-xs leading-relaxed text-foreground/75 sm:text-sm ${
                       isExpanded ? "" : "line-clamp-2 sm:line-clamp-3"
                     }`}

@@ -1,3 +1,4 @@
+import { germanPageText } from "@/lib/german-page-text";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowUpRight,
@@ -11,7 +12,7 @@ import {
   Sparkles,
   UsersRound,
 } from "lucide-react";
-import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { regionalPath, SiteFooter, SiteNav } from "@/components/SiteNav";
 import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/notwork-nedir")({
@@ -101,59 +102,63 @@ const moments = [
 
 const whatsappCommunityUrl = "https://chat.whatsapp.com/G096ufx4BgxLbqPfTnF0EE";
 
-function NotworkNedirPage() {
+export function NotworkNedirPage({ german = false }: { german?: boolean } = {}) {
+  const t = germanPageText(german);
   return (
     <div className="about-notwork min-h-screen text-foreground">
-      <SiteNav />
+      <SiteNav german={german} />
       <main>
         <section className="about-hero">
           <div className="about-hero-copy">
             <div className="about-kicker">
-              <span aria-hidden="true" /> notwork nedir
+              <span aria-hidden="true" /> {t("notwork nedir")}
             </div>
             <h1>
-              tanışmayı
+              {t("tanışmayı")}
               <br />
-              <em>tesadüfe bırakmayan</em>
+              <em>{t("tesadüfe bırakmayan")}</em>
               <br />
-              network platformu
+              {t("network platformu")}
             </h1>
             <p>
-              notwork gerçek hikâyeleri, fiziksel etkinlikleri ve networking teknolojilerini bir
-              araya getirir. İnsanların yalnızca aynı yerde bulunmasını değil gerçekten tanışmasını
-              sağlar.
+              {t(
+                "notwork gerçek hikâyeleri, fiziksel etkinlikleri ve networking teknolojilerini bir araya getirir. İnsanların yalnızca aynı yerde bulunmasını değil gerçekten tanışmasını sağlar.",
+              )}
             </p>
             <div className="about-hero-actions">
-              <Link to="/etkinlikler">
-                Etkinlikleri gör <ArrowUpRight size={17} />
+              <Link to={regionalPath("/etkinlikler", german)}>
+                {t("Etkinlikleri gör")} <ArrowUpRight size={17} />
               </Link>
-              <Link to="/profil" search={{ mode: "register" }}>
-                notwork ol
+              <Link
+                to={german ? "/de/registrieren" : "/profil"}
+                search={german ? {} : { mode: "register" }}
+              >
+                {t("notwork ol")}
               </Link>
             </div>
           </div>
 
-          <div className="about-system" aria-label="notwork sistemi">
+          <div className="about-system" aria-label={t("notwork sistemi")}>
             <div className="about-system-orbit" aria-hidden="true" />
             <div className="about-system-core">
               <strong>ntw</strong>
-              <span>gerçek bağlantılar</span>
+              <span>{t("gerçek bağlantılar")}</span>
             </div>
             <article className="about-system-card card-story">
               <Sparkles size={18} />
-              <span>gerçek hikâye</span>
+              <span>{t("gerçek hikâye")}</span>
             </article>
             <article className="about-system-card card-failure">
               <BrainCircuit size={18} />
-              <span>başarısızlık hikâyeleri</span>
+              <span>{t("başarısızlık hikâyeleri")}</span>
             </article>
             <article className="about-system-card card-match">
               <Network size={18} />
-              <span>doğru eşleşme</span>
+              <span>{t("doğru eşleşme")}</span>
             </article>
             <article className="about-system-card card-community">
               <HeartHandshake size={18} />
-              <span>devam eden bağ</span>
+              <span>{t("devam eden bağ")}</span>
             </article>
           </div>
         </section>
@@ -161,22 +166,23 @@ function NotworkNedirPage() {
         <section className="about-definition">
           <span className="about-section-index">01</span>
           <div>
-            <p className="about-eyebrow">tek cümlede</p>
-            <h2>network etkinlikleri ve çözümleri üreten bir network platformu</h2>
+            <p className="about-eyebrow">{t("tek cümlede")}</p>
+            <h2>{t("network etkinlikleri ve çözümleri üreten bir network platformu")}</h2>
           </div>
           <p>
-            Etkinlik bizim buluşma noktamız. Teknoloji ise o kalabalığın içinde doğru kişiyi
-            bulmayı, konuşmayı başlatmayı ve bağlantıyı etkinlikten sonra sürdürmeyi kolaylaştırır.
+            {t(
+              "Etkinlik bizim buluşma noktamız. Teknoloji ise o kalabalığın içinde doğru kişiyi bulmayı, konuşmayı başlatmayı ve bağlantıyı etkinlikten sonra sürdürmeyi kolaylaştırır.",
+            )}
           </p>
         </section>
 
         <section className="about-journey">
           <header className="about-section-heading">
             <div>
-              <p className="about-eyebrow">bir notwork gecesi</p>
-              <h2>hikâyeden bağlantıya</h2>
+              <p className="about-eyebrow">{t("bir notwork gecesi")}</p>
+              <h2>{t("hikâyeden bağlantıya")}</h2>
             </div>
-            <p>İzlemekle başlayıp tanışmakla devam eden basit bir akış</p>
+            <p>{t("İzlemekle başlayıp tanışmakla devam eden basit bir akış")}</p>
           </header>
           <div className="about-journey-grid">
             {journey.map(({ number, title, text, icon: Icon }) => (
@@ -185,8 +191,8 @@ function NotworkNedirPage() {
                   <span>{number}</span>
                   <Icon size={20} strokeWidth={1.65} />
                 </div>
-                <h3>{title}</h3>
-                <p>{text}</p>
+                <h3>{t(title)}</h3>
+                <p>{t(text)}</p>
               </article>
             ))}
           </div>
@@ -195,16 +201,20 @@ function NotworkNedirPage() {
         <section className="about-moments">
           <header className="about-section-heading">
             <div>
-              <p className="about-eyebrow">o an orada</p>
-              <h2>notwork böyle hissettirir</h2>
+              <p className="about-eyebrow">{t("o an orada")}</p>
+              <h2>{t("notwork böyle hissettirir")}</h2>
             </div>
-            <p>Sahne, masa sohbetleri ve yeni karşılaşmalar aynı gecenin parçaları</p>
+            <p>{t("Sahne, masa sohbetleri ve yeni karşılaşmalar aynı gecenin parçaları")}</p>
           </header>
           <div className="about-photo-grid">
             {moments.map((moment, index) => (
               <figure key={moment.src} className={index === 0 ? "is-featured" : ""}>
-                <img src={moment.src} alt={moment.alt} loading={index === 0 ? "eager" : "lazy"} />
-                <figcaption>{index === 0 ? "aynı oda" : "gerçek anlar"}</figcaption>
+                <img
+                  src={moment.src}
+                  alt={german ? "Foto von einem notwork Event" : moment.alt}
+                  loading={index === 0 ? "eager" : "lazy"}
+                />
+                <figcaption>{index === 0 ? t("aynı oda") : t("gerçek anlar")}</figcaption>
               </figure>
             ))}
           </div>
@@ -213,10 +223,10 @@ function NotworkNedirPage() {
         <section className="about-formats">
           <header className="about-section-heading">
             <div>
-              <p className="about-eyebrow">notwork deneyimleri</p>
-              <h2>her formatın tek bir amacı var</h2>
+              <p className="about-eyebrow">{t("notwork deneyimleri")}</p>
+              <h2>{t("her formatın tek bir amacı var")}</h2>
             </div>
-            <p>İnsanların konuşmasını kolaylaştırmak ve yeni ihtimaller yaratmak</p>
+            <p>{t("İnsanların konuşmasını kolaylaştırmak ve yeni ihtimaller yaratmak")}</p>
           </header>
           <div className="about-format-grid">
             {formats.map(({ name, label, text, icon: Icon }) => (
@@ -224,9 +234,9 @@ function NotworkNedirPage() {
                 <div className="about-format-icon">
                   <Icon size={22} strokeWidth={1.6} />
                 </div>
-                <span>{label}</span>
-                <h3>{name}</h3>
-                <p>{text}</p>
+                <span>{t(label)}</span>
+                <h3>{german && name === "notwork sahne" ? "notwork Bühne" : name}</h3>
+                <p>{t(text)}</p>
               </article>
             ))}
           </div>
@@ -234,18 +244,19 @@ function NotworkNedirPage() {
 
         <section className="about-belief">
           <div className="about-belief-copy">
-            <p className="about-eyebrow">neden varız</p>
-            <h2>networking bir odadaki insan sayısı değildir</h2>
+            <p className="about-eyebrow">{t("neden varız")}</p>
+            <h2>{t("networking bir odadaki insan sayısı değildir")}</h2>
             <p>
-              İyi bir network ortamı kendini anlatabildiğin, ihtiyacını söyleyebildiğin ve karşı
-              tarafı gerçekten duyabildiğin yerdir. notwork bütün deneyimi bu açıklık için tasarlar.
+              {t(
+                "İyi bir network ortamı kendini anlatabildiğin, ihtiyacını söyleyebildiğin ve karşı tarafı gerçekten duyabildiğin yerdir. notwork bütün deneyimi bu açıklık için tasarlar.",
+              )}
             </p>
           </div>
           <div className="about-principles">
             {principles.map((principle) => (
               <div key={principle}>
                 <Check size={17} strokeWidth={2.2} />
-                <span>{principle}</span>
+                <span>{t(principle)}</span>
               </div>
             ))}
           </div>
@@ -255,7 +266,11 @@ function NotworkNedirPage() {
           <div className="about-video-frame">
             <iframe
               src="https://www.youtube.com/embed/vtzncdq4Jlk"
-              title="notwork'ü Berk ve Armağan anlatıyor"
+              title={
+                german
+                  ? "Berk und Armağan erzählen von notwork"
+                  : "notwork'ü Berk ve Armağan anlatıyor"
+              }
               loading="lazy"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
@@ -263,33 +278,34 @@ function NotworkNedirPage() {
           </div>
           <div className="about-video-copy">
             <BrainCircuit size={28} strokeWidth={1.5} />
-            <p className="about-eyebrow">hikâyenin başı</p>
-            <h2>notwork’ü kurucularından dinle</h2>
+            <p className="about-eyebrow">{t("hikâyenin başı")}</p>
+            <h2>{t("notwork’ü kurucularından dinle")}</h2>
             <p>
-              Berk ve Armağan notwork’ün neden ortaya çıktığını, sahne ile networking arasındaki
-              bağı ve topluluğun nasıl büyüdüğünü anlatıyor.
+              {t(
+                "Berk ve Armağan notwork’ün neden ortaya çıktığını, sahne ile networking arasındaki bağı ve topluluğun nasıl büyüdüğünü anlatıyor.",
+              )}
             </p>
             <a href="https://www.youtube.com/watch?v=vtzncdq4Jlk" target="_blank" rel="noreferrer">
-              YouTube’da izle <ArrowUpRight size={16} />
+              {t("YouTube’da izle")} <ArrowUpRight size={16} />
             </a>
           </div>
         </section>
 
         <section className="about-final">
           <div className="about-final-mark">ntw</div>
-          <p className="about-eyebrow">bir sonraki bağlantın burada olabilir</p>
-          <h2>aynı odada buluşalım</h2>
+          <p className="about-eyebrow">{t("bir sonraki bağlantın burada olabilir")}</p>
+          <h2>{t("aynı odada buluşalım")}</h2>
           <div>
-            <Link to="/etkinlikler">
-              Yaklaşan etkinlikler <ArrowUpRight size={17} />
+            <Link to={regionalPath("/etkinlikler", german)}>
+              {t("Yaklaşan etkinlikler")} <ArrowUpRight size={17} />
             </Link>
             <a href={whatsappCommunityUrl} target="_blank" rel="noreferrer">
-              <MessageCircle size={17} /> WhatsApp topluluğu
+              <MessageCircle size={17} /> {t("WhatsApp topluluğu")}
             </a>
           </div>
         </section>
       </main>
-      <SiteFooter />
+      <SiteFooter german={german} />
     </div>
   );
 }

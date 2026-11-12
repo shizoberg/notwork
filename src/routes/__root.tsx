@@ -154,7 +154,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const german = pathname === "/de" || pathname.startsWith("/de/");
-  const hideWhatsAppChannel = german || isEventExperiencePath(pathname);
+  const hideWhatsAppChannel = pathname === "/de/live" || isEventExperiencePath(pathname);
   const publicPage = !pathname.startsWith("/admin");
   const eventApp = isEventAppPath(pathname);
   const demo =
@@ -180,7 +180,7 @@ function RootComponent() {
           <Outlet />
         )}
         {publicPage && !eventApp && !demo && <MobileDock />}
-        {!hideWhatsAppChannel && !demo && <WhatsAppChannelCta />}
+        {!hideWhatsAppChannel && !demo && <WhatsAppChannelCta german={german} />}
       </div>
       <CookieConsent german={german} />
     </QueryClientProvider>

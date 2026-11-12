@@ -1,8 +1,9 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { EventMatch } from "@/components/EventMatch";
 import { SiteNav } from "@/components/SiteNav";
 import { getPublicEventContext, type NotworkEvent } from "@/lib/event-registry";
+import { munichEvent } from "@/lib/munich-event";
 import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/ntw")({
@@ -15,10 +16,11 @@ export const Route = createFileRoute("/ntw")({
   component: NtwPage,
 });
 
-function NtwPage() {
+export function NtwPage({ german = false }: { german?: boolean } = {}) {
   const [activeEvent, setActiveEvent] = useState<NotworkEvent | null>(null);
 
   useEffect(() => {
+    if (german) return;
     let cancelled = false;
     async function refresh() {
       try {
@@ -36,15 +38,15 @@ function NtwPage() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [german]);
 
-  if (activeEvent) {
+  if (!german && activeEvent) {
     return <Navigate to="/linkler" search={{ eventId: activeEvent.id }} replace />;
   }
 
   return (
     <div className="ntw-shell">
-      <SiteNav />
+      <SiteNav german={german} />
       <main className="ntw-waiting">
         <div className="ntw-scene" aria-hidden="true">
           <svg viewBox="0 0 430 700" preserveAspectRatio="none">
@@ -54,7 +56,7 @@ function NtwPage() {
             <img src="/community/23.jpg" alt="" />
           </div>
           <div className="ntw-bubble bubble-two">↗</div>
-          <div className="ntw-bubble bubble-three">merhaba</div>
+          <div className="ntw-bubble bubble-three">{german ? "hallo" : "merhaba"}</div>
           <div className="ntw-bubble bubble-four">
             <img src="/community/17.jpg" alt="" />
           </div>
@@ -62,24 +64,24 @@ function NtwPage() {
         </div>
         <div className="ntw-waiting-copy">
           <div className="ntw-glass-mark">ntw</div>
-          <p className="ntw-eyebrow">o an orada ol</p>
+          <p className="ntw-eyebrow">{german ? "Sei dabei" : "o an orada ol"}</p>
           <h1>
-            bağlantılar
+            {german ? "Hier entstehen" : "bağlantılar"}
             <br />
-            birazdan canlanır.
+            {german ? "neue Kontakte." : "birazdan canlanır."}
           </h1>
           <p>
-            Aynı mekân · yeni insanlar
+            {german ? "Am selben Ort · neue Menschen" : "Aynı mekân · yeni insanlar"}
             <br />
-            Gerçek zamanlı karşılaşmalar
+            {german ? "Persönliche Begegnungen" : "Gerçek zamanlı karşılaşmalar"}
           </p>
-          <a className="ntw-availability" href="/etkinlikler">
-            Yaklaşan etkinlikler ↗
-          </a>
+          <Link className="ntw-availability" to={german ? munichEvent.path : "/etkinlikler"}>
+            {german ? "4. Dezember · München ↗" : "Yaklaşan etkinlikler ↗"}
+          </Link>
         </div>
       </main>
       <div className="ntw-match-demo-wrap">
-        <EventMatch embedded />
+        <EventMatch embedded german={german} />
       </div>
     </div>
   );

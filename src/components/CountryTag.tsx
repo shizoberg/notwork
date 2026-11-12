@@ -3,9 +3,11 @@ import type { MemberCountry } from "@/lib/member-country";
 export function CountryTag({
   country,
   german = false,
+  flagOnly = false,
 }: {
   country?: MemberCountry;
   german?: boolean;
+  flagOnly?: boolean;
 }) {
   if (!country) return null;
   const label =
@@ -14,7 +16,7 @@ export function CountryTag({
     <span className="member-country-tag" title={label}>
       <span aria-hidden="true">{country === "DE" ? "🇩🇪" : "🇹🇷"}</span>
       <span className="sr-only">{label}</span>
-      {country}
+      {!flagOnly && country}
     </span>
   );
 }

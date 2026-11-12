@@ -48,6 +48,30 @@ export const desktopGlassStyle = {
   WebkitBackdropFilter: "blur(24px) saturate(165%)",
 };
 
+const regionalPages: Record<string, string> = {
+  "/notwork-nedir": "/de/ueber-notwork",
+  "/etkinlikler": "/de/events",
+  "/22-kasim": "/de/4-dezember",
+  "/11-ekim": "/de/archiv/11-ekim-2026",
+  "/17-eylul": "/de/archiv/17-eylul-2026",
+  "/21agustos": "/de/archiv/21-agustos-2026",
+  "/14temmuz": "/de/archiv/14-temmuz-2026",
+  "/networking": "/de/networking",
+  "/profil": "/de/profil",
+  "/ntw": "/de/live",
+  "/sunum-yukle": "/de/vortrag",
+  "/sponsor": "/de/sponsor",
+  "/merch": "/de/merch",
+  "/duyurular": "/de/mitteilungen",
+  "/kvkk": "/de/datenschutz",
+  "/acik-riza": "/de/einwilligung",
+  "/cerez-politikasi": "/de/cookies",
+};
+
+export function regionalPath(path: string, german: boolean) {
+  return german ? (regionalPages[path] ?? "/de") : path;
+}
+
 export function RegionSwitch({
   german = false,
   className = "",
@@ -81,16 +105,6 @@ export function RegionSwitch({
     }, 155);
   }
 
-  const regionalPages: Record<string, string> = {
-    "/etkinlikler": "/de/events",
-    "/networking": "/de/networking",
-    "/profil": "/de/profil",
-    "/ntw": "/de/live",
-    "/sunum-yukle": "/de/vortrag",
-    "/kvkk": "/de/datenschutz",
-    "/acik-riza": "/de/einwilligung",
-    "/cerez-politikasi": "/de/cookies",
-  };
   const germany =
     regionalPages[pathname] ?? (pathname.startsWith("/u/") ? `/de${pathname}` : "/de");
   const turkey =
@@ -127,7 +141,13 @@ export function RegionSwitch({
   );
 }
 
-export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
+export function SiteNav({
+  variant = "default",
+  german = false,
+}: {
+  variant?: SiteNavVariant;
+  german?: boolean;
+}) {
   const location = useLocation();
   const [memberLoggedIn, setMemberLoggedIn] = useState<boolean | null>(null);
 
@@ -157,6 +177,16 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
   }, [variant]);
 
   if (variant !== "default") return <EventSiteNav variant={variant} />;
+  const home = german ? "/de" : "/";
+  const labels: Record<string, string> = {
+    "/notwork-nedir": "Was ist notwork?",
+    "/etkinlikler": "Events",
+    "/networking": "Networking",
+    "/sunum-yukle": "Vortrag halten",
+    "/ntw": "Event live",
+    "/sponsor": "Sponsoring",
+    "/merch": "Merch",
+  };
 
   return (
     <header className="site-header-shell sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-md">
@@ -164,7 +194,11 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
         className="desktop-site-header mx-auto hidden max-w-6xl items-center sm:flex"
         style={desktopGlassStyle}
       >
-        <Link to="/" className="desktop-site-brand" aria-label="notwork ana sayfa">
+        <Link
+          to={home}
+          className="desktop-site-brand"
+          aria-label={german ? "notwork Startseite" : "notwork ana sayfa"}
+        >
           <img
             src="/brand/notwork-logo.png"
             alt="notwork"
@@ -172,28 +206,33 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
           />
         </Link>
 
-        <nav className="desktop-site-links" aria-label="Ana menü">
+        <nav className="desktop-site-links" aria-label={german ? "Hauptmenü" : "Ana menü"}>
           {desktopLinks.map((item) => {
             const Icon = item.icon;
+            const target = regionalPath(item.to, german);
             const active =
               item.to === "/etkinlikler"
-                ? location.pathname === "/" || location.pathname === item.to
-                : location.pathname === item.to;
+                ? location.pathname === home || location.pathname === target
+                : location.pathname === target;
             return (
               <Link
                 key={item.to}
-                to={item.to}
+                to={target}
                 aria-current={active ? "page" : undefined}
                 className={`desktop-site-link${active ? " is-active" : ""}`}
               >
                 <Icon size={15} strokeWidth={1.8} aria-hidden="true" />
-                <span>{item.label}</span>
+                <span>{german ? labels[item.to] : item.label}</span>
               </Link>
             );
           })}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className="desktop-site-menu" aria-label="Diğer sayfaları aç">
+              <button
+                type="button"
+                className="desktop-site-menu"
+                aria-label={german ? "Weitere Seiten öffnen" : "Diğer sayfaları aç"}
+              >
                 <Menu size={15} strokeWidth={1.8} aria-hidden="true" />
                 <span>Menü</span>
               </button>
@@ -204,19 +243,25 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
               className="glass-menu desktop-site-dropdown w-60 p-2"
             >
               <DropdownMenuLabel className="px-3 py-2 text-[0.65rem] uppercase tracking-[0.16em] text-foreground/40">
-                Diğer
+                {german ? "Weitere Seiten" : "Diğer"}
               </DropdownMenuLabel>
               <DropdownMenuItem asChild className="rounded-xl p-0">
-                <a href="/#galeri" className="flex min-h-11 items-center gap-3 px-3 text-sm">
+                <a
+                  href={german ? "/de#galeri" : "/#galeri"}
+                  className="flex min-h-11 items-center gap-3 px-3 text-sm"
+                >
                   <Images size={17} strokeWidth={1.7} />
-                  Galeri
+                  {german ? "Galerie" : "Galeri"}
                 </a>
               </DropdownMenuItem>
               {desktopMenuLinks.map(({ to, label, icon: Icon }) => (
                 <DropdownMenuItem key={to} asChild className="rounded-xl p-0">
-                  <Link to={to} className="flex min-h-11 items-center gap-3 px-3 text-sm">
+                  <Link
+                    to={regionalPath(to, german)}
+                    className="flex min-h-11 items-center gap-3 px-3 text-sm"
+                  >
                     <Icon size={17} strokeWidth={1.7} />
-                    {label}
+                    {german ? labels[to] : label}
                   </Link>
                 </DropdownMenuItem>
               ))}
@@ -225,41 +270,57 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
         </nav>
 
         <div className="desktop-site-actions">
-          <RegionSwitch />
+          <RegionSwitch german={german} />
           {memberLoggedIn === false ? (
-            <Link to="/profil" search={{ mode: "register" }} className="desktop-site-join">
-              notwork ol
+            <Link
+              to={german ? "/de/registrieren" : "/profil"}
+              search={german ? {} : { mode: "register" }}
+              className="desktop-site-join"
+            >
+              {german ? "Mitglied werden" : "notwork ol"}
             </Link>
           ) : null}
-          <ProfileLink className="desktop-profile-button" />
+          <ProfileLink german={german} className="desktop-profile-button" />
         </div>
       </div>
       <div className="mx-auto grid h-16 grid-cols-[116px_1fr_116px] items-center px-3 sm:hidden">
-        <MobileSiteMenu />
-        <BrandLink className="justify-self-center" />
+        <MobileSiteMenu german={german} />
+        <BrandLink german={german} className="justify-self-center" />
         <div className="site-mobile-actions">
-          <RegionSwitch />
-          <ProfileLink />
+          <RegionSwitch german={german} />
+          <ProfileLink german={german} />
         </div>
       </div>
     </header>
   );
 }
 
-function BrandLink({ className = "" }: { className?: string }) {
+function BrandLink({ className = "", german = false }: { className?: string; german?: boolean }) {
   return (
-    <Link to="/" className={`notwork-logo-link ${className}`} aria-label="notwork ana sayfa">
+    <Link
+      to={german ? "/de" : "/"}
+      className={`notwork-logo-link ${className}`}
+      aria-label={german ? "notwork Startseite" : "notwork ana sayfa"}
+    >
       <img src="/brand/notwork-logo.png" alt="notwork" className="notwork-logo mobile-site-logo" />
     </Link>
   );
 }
 
-function ProfileLink({ className = "", dark = false }: { className?: string; dark?: boolean }) {
+function ProfileLink({
+  className = "",
+  dark = false,
+  german = false,
+}: {
+  className?: string;
+  dark?: boolean;
+  german?: boolean;
+}) {
   return (
     <Link
-      to="/profil"
-      aria-label="Üye profiline git"
-      title="Üye profili"
+      to={german ? "/de/profil" : "/profil"}
+      aria-label={german ? "Zum Profil" : "Üye profiline git"}
+      title={german ? "Profil" : "Üye profili"}
       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
         dark
           ? "border-white/20 bg-white/10 text-white hover:bg-white/20"
@@ -277,14 +338,14 @@ const mobileSecondaryLinks = [
   { to: "/sunum-yukle", label: "Sunum yapmak istiyorum", icon: Presentation },
 ] as const;
 
-function MobileSiteMenu() {
+function MobileSiteMenu({ german = false }: { german?: boolean } = {}) {
   const [open, setOpen] = useState(false);
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label="Site menüsünü aç"
+          aria-label={german ? "Menü öffnen" : "Site menüsünü aç"}
           className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/90 bg-white/55 text-xs sm:hidden"
         >
           <Menu size={19} strokeWidth={1.5} />
@@ -298,9 +359,9 @@ function MobileSiteMenu() {
         <DropdownMenuLabel className="flex items-center gap-3 px-3 py-3">
           <span className="menu-wordmark">ntw</span>
           <span className="text-xs font-normal text-muted-foreground">
-            network topluluğu
+            {german ? "Networking-Community" : "network topluluğu"}
             <br />
-            ve platform.
+            {german ? "und Plattform." : "ve platform."}
           </span>
         </DropdownMenuLabel>
         {[
@@ -309,19 +370,29 @@ function MobileSiteMenu() {
         ].map(({ to, label, icon: Icon }) => (
           <DropdownMenuItem key={to} asChild className="rounded-2xl p-0">
             <Link
-              to={to}
+              to={regionalPath(to, german)}
               onClick={() => setOpen(false)}
               className="flex min-h-12 items-center gap-3 px-3 text-sm"
             >
               <Icon size={18} strokeWidth={1.5} />
-              {label}
+              {german
+                ? {
+                    "/notwork-nedir": "Was ist notwork?",
+                    "/merch": "Merch",
+                    "/sponsor": "Sponsoring",
+                    "/sunum-yukle": "Vortrag halten",
+                  }[to]
+                : label}
             </Link>
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="rounded-2xl p-0">
-          <a href="/#galeri" className="flex min-h-12 items-center gap-3 px-3 text-sm">
-            Galeri ↗
+          <a
+            href={german ? "/de#galeri" : "/#galeri"}
+            className="flex min-h-12 items-center gap-3 px-3 text-sm"
+          >
+            {german ? "Galerie ↗" : "Galeri ↗"}
           </a>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="rounded-2xl p-0">
@@ -430,11 +501,15 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
   );
 }
 
-export function SiteFooter() {
+export function SiteFooter({ german = false }: { german?: boolean } = {}) {
   return (
     <footer className="simple-footer">
       <div className="simple-footer-top">
-        <Link to="/" className="notwork-logo-link" aria-label="notwork ana sayfa">
+        <Link
+          to={german ? "/de" : "/"}
+          className="notwork-logo-link"
+          aria-label={german ? "notwork Startseite" : "notwork ana sayfa"}
+        >
           <img
             src="/brand/notwork-logo.png"
             alt="notwork"
@@ -459,24 +534,28 @@ export function SiteFooter() {
             <Youtube size={19} />
           </a>
           <a href="mailto:berk@notwork.me" className="text-xs">
-            İletişim ↗
+            {german ? "Kontakt ↗" : "İletişim ↗"}
           </a>
         </div>
       </div>
       <div className="simple-footer-bottom">
         <span>© {new Date().getFullYear()} notwork</span>
-        <Link to="/duyurular">Duyurular</Link>
+        <Link to={regionalPath("/duyurular", german)}>{german ? "Mitteilungen" : "Duyurular"}</Link>
         <details>
-          <summary>Gizlilik ve tercihler</summary>
+          <summary>{german ? "Datenschutz und Einstellungen" : "Gizlilik ve tercihler"}</summary>
           <div className="footer-legal">
-            <Link to="/kvkk">KVKK</Link>
-            <Link to="/acik-riza">Açık rıza</Link>
-            <Link to="/cerez-politikasi">Çerez politikası</Link>
+            <Link to={regionalPath("/kvkk", german)}>{german ? "Datenschutz" : "KVKK"}</Link>
+            <Link to={regionalPath("/acik-riza", german)}>
+              {german ? "Einwilligung" : "Açık rıza"}
+            </Link>
+            <Link to={regionalPath("/cerez-politikasi", german)}>
+              {german ? "Cookie-Richtlinie" : "Çerez politikası"}
+            </Link>
             <button
               type="button"
               onClick={() => window.dispatchEvent(new Event(COOKIE_CONSENT_OPEN_EVENT))}
             >
-              Çerez tercihleri
+              {german ? "Cookie-Einstellungen" : "Çerez tercihleri"}
             </button>
           </div>
         </details>

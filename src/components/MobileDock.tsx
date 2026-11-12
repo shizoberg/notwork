@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { CalendarDays, Network, Radio } from "lucide-react";
+import { CalendarDays, Network } from "lucide-react";
 
 export function MobileDock() {
   const { pathname } = useLocation();
@@ -10,7 +10,7 @@ export function MobileDock() {
           to: "/de/events",
           label: "Events",
           icon: CalendarDays,
-          active: pathname === "/de" || pathname === "/de/events",
+          active: pathname === "/de" || pathname === "/de/events" || pathname === "/de/4-dezember",
         },
         {
           to: "/de/networking",
@@ -18,7 +18,7 @@ export function MobileDock() {
           icon: Network,
           active: pathname === "/de/networking" || pathname.startsWith("/de/u/"),
         },
-        { to: "/de/live", label: "Event live", icon: Radio, active: pathname === "/de/live" },
+        { to: "/de/live", label: "Event live", icon: null, active: pathname === "/de/live" },
       ] as const)
     : ([
         {

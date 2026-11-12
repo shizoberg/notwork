@@ -139,6 +139,22 @@ const roleGroups = [
   },
 ] as const;
 
+const germanRoleGroups: Record<string, string> = {
+  all: "Alle",
+  technology: "Technologie & Daten",
+  design: "Design & Produkt",
+  architecture: "Architektur & Raum",
+  content: "Inhalte & Bühne",
+  marketing: "Marketing & Vertrieb",
+  community: "Community & Events",
+  business: "Gründung & Strategie",
+  finance: "Finanzen & Betrieb",
+  health: "Gesundheit & Wohlbefinden",
+  people: "Menschen & Entwicklung",
+  legal: "Recht & Beratung",
+  other: "Weitere Bereiche",
+};
+
 const maxMembersPerVisualCluster = 18;
 
 const roleSubgroups: Record<
@@ -499,7 +515,13 @@ function withEventSource(member: Member, eventSource: string): Member {
   return { ...member, contact };
 }
 
-export function NetworkingExperience({ variant = "general" }: { variant?: NetworkingVariant }) {
+export function NetworkingExperience({
+  variant = "general",
+  german = false,
+}: {
+  variant?: NetworkingVariant;
+  german?: boolean;
+}) {
   const config = networkingVariants[variant];
   const [directoryPreview, setDirectoryPreview] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
@@ -561,7 +583,8 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
       .then((profile) => {
         if (active) {
           setMemberProfile(profile);
-          if (!profile.mustChangePassword) promptForAnnouncements(profile, "/networking");
+          if (!profile.mustChangePassword)
+            promptForAnnouncements(profile, german ? "/de/networking" : "/networking");
         }
       })
       .catch((caught) => {
@@ -575,7 +598,7 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
     return () => {
       active = false;
     };
-  }, []);
+  }, [german]);
 
   const canViewContacts = Boolean(memberProfile?.verifiedMember || directoryPreview);
 
@@ -809,12 +832,12 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
       className={`network-glass min-h-screen flex flex-col ${config.shellClass}`}
       style={config.style}
     >
-      <SiteNav />
+      <SiteNav german={german} />
       <main className="flex-1">
         <section className="mx-auto max-w-6xl px-5 pt-10 sm:pt-16 pb-6">
           <div className="inline-flex items-center gap-2 text-xs sm:text-sm text-foreground/70 mb-4">
             <span className="w-2 h-2 rounded-full bg-primary blink" />
-            <span>{config.eyebrow}</span>
+            <span>{german ? "Echte Verbindungen" : config.eyebrow}</span>
           </div>
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <h1 className="max-w-3xl text-4xl font-black tracking-[-0.04em] leading-[0.95] sm:text-6xl">
@@ -823,12 +846,20 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
             {variant === "july14" ? (
               <NtwMascot />
             ) : (
-              <Link to="/profil" search={{ mode: "register" }} className="network-join-button">
-                notworker ol <ArrowUpRight aria-hidden="true" />
+              <Link
+                to={german ? "/de/registrieren" : "/profil"}
+                search={german ? {} : { mode: "register" }}
+                className="network-join-button"
+              >
+                {german ? "Mitglied werden" : "notworker ol"} <ArrowUpRight aria-hidden="true" />
               </Link>
             )}
           </div>
-          <p className="mt-4 text-foreground/70 max-w-2xl text-base sm:text-lg">{config.intro}</p>
+          <p className="mt-4 text-foreground/70 max-w-2xl text-base sm:text-lg">
+            {german
+              ? "Entdecke Menschen, ihre Fähigkeiten und die Verbindungen, die daraus entstehen können."
+              : config.intro}
+          </p>
         </section>
 
         {config.eventSource && (
@@ -1072,15 +1103,23 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
               <div className="network-directory-heading">
                 <div>
                   <span className="tool-eyebrow">notwork network</span>
-                  <h2>notworker’ları keşfet</h2>
-                  <p>İsim, uzmanlık veya ilgi alanına göre ara ve doğrudan profile git.</p>
+                  <h2>{german ? "Entdecke die notworker" : "notworker’ları keşfet"}</h2>
+                  <p>
+                    {german
+                      ? "Suche nach Namen, Fachgebieten oder Interessen und öffne das Profil."
+                      : "İsim, uzmanlık veya ilgi alanına göre ara ve doğrudan profile git."}
+                  </p>
                 </div>
-                <div className="network-directory-stats" aria-label="Topluluk özeti">
+                <div
+                  className="network-directory-stats"
+                  aria-label={german ? "Community im Überblick" : "Topluluk özeti"}
+                >
                   <span>
-                    <strong>{scopedMembers.length}</strong> profil
+                    <strong>{scopedMembers.length}</strong> {german ? "Profile" : "profil"}
                   </span>
                   <span className="is-verified">
-                    <BadgeCheck /> <strong>{verifiedMemberCount}</strong> NTW üyesi
+                    <BadgeCheck /> <strong>{verifiedMemberCount}</strong>{" "}
+                    {german ? "NTW-Mitglieder" : "NTW üyesi"}
                   </span>
                 </div>
               </div>
@@ -1088,26 +1127,32 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
               <div className="network-directory-controls">
                 <label className="network-search-field">
                   <Search aria-hidden="true" />
-                  <span className="sr-only">Üyelerde ara</span>
+                  <span className="sr-only">{german ? "Mitglieder suchen" : "Üyelerde ara"}</span>
                   <input
                     type="search"
                     value={filter}
                     onChange={(event) => setFilter(event.target.value)}
-                    placeholder="İsim, rol veya yetenek ara"
+                    placeholder={
+                      german ? "Name, Rolle oder Fähigkeit suchen" : "İsim, rol veya yetenek ara"
+                    }
                     autoComplete="off"
                   />
                   {filter && (
                     <button
                       type="button"
                       onClick={() => setFilter("")}
-                      aria-label="Aramayı temizle"
+                      aria-label={german ? "Suche zurücksetzen" : "Aramayı temizle"}
                     >
                       ×
                     </button>
                   )}
                 </label>
 
-                <div className="network-membership-filter" role="group" aria-label="Üyelik durumu">
+                <div
+                  className="network-membership-filter"
+                  role="group"
+                  aria-label={german ? "Mitgliedsstatus" : "Üyelik durumu"}
+                >
                   {(
                     [
                       ["all", "Tümü", scopedMembers.length],
@@ -1123,13 +1168,20 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                       className={membershipFilter === id ? "is-active" : ""}
                     >
                       {id === "verified" && <BadgeCheck aria-hidden="true" />}
-                      {label} <span>{count}</span>
+                      {german
+                        ? { all: "Alle", verified: "NTW-Mitglieder", community: "Community" }[id]
+                        : label}{" "}
+                      <span>{count}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div role="tablist" aria-label="Uzmanlık alanları" className="network-role-tabs">
+              <div
+                role="tablist"
+                aria-label={german ? "Fachgebiete" : "Uzmanlık alanları"}
+                className="network-role-tabs"
+              >
                 {memberTabs.map((tab) => (
                   <button
                     key={tab.id}
@@ -1139,7 +1191,8 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
                     onClick={() => setActiveGroupId(tab.id)}
                     className={activeGroupId === tab.id ? "is-active" : ""}
                   >
-                    {tab.label} <span>{tab.count}</span>
+                    {german ? (germanRoleGroups[tab.id] ?? tab.label) : tab.label}{" "}
+                    <span>{tab.count}</span>
                   </button>
                 ))}
               </div>
@@ -1147,18 +1200,23 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
               {!canViewContacts && (
                 <div className="network-directory-note">
                   <LockKeyhole aria-hidden="true" />
-                  Doğrulanmış NTW üyeleri profillerde paylaşılan iletişim yollarını da görebilir.
+                  {german
+                    ? "Verifizierte NTW-Mitglieder sehen auch die freigegebenen Kontaktmöglichkeiten."
+                    : "Doğrulanmış NTW üyeleri profillerde paylaşılan iletişim yollarını da görebilir."}
                 </div>
               )}
 
               {loading ? (
-                <div className="network-directory-loading">profiller yükleniyor…</div>
+                <div className="network-directory-loading">
+                  {german ? "Profile werden geladen …" : "profiller yükleniyor…"}
+                </div>
               ) : visibleMembers.length > 0 ? (
                 <div className="network-profile-grid">
                   {visibleMembers.map((member) => (
                     <MemberDirectoryCard
                       key={member.id}
                       member={member}
+                      german={german}
                       canViewContacts={canViewContacts}
                       isOwnProfile={member.username === viewerUsername}
                     />
@@ -1167,15 +1225,21 @@ export function NetworkingExperience({ variant = "general" }: { variant?: Networ
               ) : (
                 <div className="network-directory-empty">
                   <Search aria-hidden="true" />
-                  <strong>Bu aramayla eşleşen profil yok</strong>
-                  <span>Başka bir isim, rol veya yetenek deneyebilirsin.</span>
+                  <strong>
+                    {german ? "Keine passenden Profile gefunden" : "Bu aramayla eşleşen profil yok"}
+                  </strong>
+                  <span>
+                    {german
+                      ? "Versuche es mit einem anderen Namen, einer Rolle oder einer Fähigkeit."
+                      : "Başka bir isim, rol veya yetenek deneyebilirsin."}
+                  </span>
                 </div>
               )}
             </div>
           </section>
         ) : null}
       </main>
-      <SiteFooter />
+      <SiteFooter german={german} />
     </div>
   );
 }
@@ -1262,10 +1326,12 @@ function MemberAvatar({
 
 function MemberDirectoryCard({
   member,
+  german = false,
   canViewContacts,
   isOwnProfile,
 }: {
   member: Member;
+  german?: boolean;
   canViewContacts: boolean;
   isOwnProfile: boolean;
 }) {
@@ -1282,11 +1348,17 @@ function MemberDirectoryCard({
         <div className="network-profile-card-identity">
           <div className={`network-verification-pill ${verified ? "is-verified" : ""}`}>
             {verified ? <BadgeCheck aria-hidden="true" /> : <span aria-hidden="true" />}
-            {verified ? "Doğrulanmış NTW üyesi" : "Topluluk profili · doğrulanmadı"}
+            {verified
+              ? german
+                ? "Verifiziertes NTW-Mitglied"
+                : "Doğrulanmış NTW üyesi"
+              : german
+                ? "Community-Profil · unverifiziert"
+                : "Topluluk profili · doğrulanmadı"}
           </div>
           <div className="network-profile-name-row">
             <h3>{member.name}</h3>
-            <CountryTag country={member.country} />
+            <CountryTag country={member.country ?? "TR"} german={german} flagOnly />
           </div>
           <p>{member.title}</p>
           {member.username && <span className="network-profile-handle">@{member.username}</span>}
@@ -1295,13 +1367,26 @@ function MemberDirectoryCard({
 
       <div className="network-profile-card-body">
         <div className="network-profile-meta">
-          <span>{group.label}</span>
-          {badges[0] && <span>{badges[0].label}</span>}
+          <span>{german ? (germanRoleGroups[group.id] ?? group.label) : group.label}</span>
+          {badges[0] && (
+            <span>
+              {german
+                ? badges[0].label
+                    .replace("Ağustos", "August")
+                    .replace("Temmuz", "Juli")
+                    .replace("Eylül", "September")
+                    .replace("Ekim", "Oktober")
+                    .replace("katılımcıları", "Teilnehmende")
+                : badges[0].label}
+            </span>
+          )}
         </div>
         {contact.about ? (
           <p className="network-profile-about">{contact.about}</p>
         ) : (
-          <p className="network-profile-about is-empty">Profil açıklaması henüz eklenmedi.</p>
+          <p className="network-profile-about is-empty">
+            {german ? "Keine Profilbeschreibung vorhanden." : "Profil açıklaması henüz eklenmedi."}
+          </p>
         )}
         {member.skills.length > 0 && (
           <div className="network-profile-skills">
@@ -1318,7 +1403,7 @@ function MemberDirectoryCard({
           {canViewContacts && contact.email && (
             <a
               href={`mailto:${contact.email}`}
-              aria-label={`${member.name} kişisine e-posta gönder`}
+              aria-label={`${german ? "E-Mail an" : "E-posta:"} ${member.name}`}
             >
               <Mail aria-hidden="true" />
             </a>
@@ -1328,7 +1413,7 @@ function MemberDirectoryCard({
               href={`https://instagram.com/${contact.instagram}`}
               target="_blank"
               rel="noreferrer"
-              aria-label={`${member.name} Instagram profilini aç`}
+              aria-label={`Instagram · ${member.name}`}
             >
               <Instagram aria-hidden="true" />
             </a>
@@ -1338,23 +1423,23 @@ function MemberDirectoryCard({
               href={contact.linkedin}
               target="_blank"
               rel="noreferrer"
-              aria-label={`${member.name} LinkedIn profilini aç`}
+              aria-label={`LinkedIn · ${member.name}`}
             >
               <Linkedin aria-hidden="true" />
             </a>
           )}
         </div>
         {isOwnProfile ? (
-          <Link to="/profil" className="network-profile-open">
-            Profilimi düzenle <ArrowUpRight aria-hidden="true" />
+          <Link to={german ? "/de/profil" : "/profil"} className="network-profile-open">
+            {german ? "Profil bearbeiten" : "Profilimi düzenle"} <ArrowUpRight aria-hidden="true" />
           </Link>
         ) : (
           <Link
-            to="/u/$username"
+            to={german ? "/de/u/$username" : "/u/$username"}
             params={{ username: member.username }}
             className="network-profile-open"
           >
-            Profili aç <ArrowUpRight aria-hidden="true" />
+            {german ? "Profil ansehen" : "Profili aç"} <ArrowUpRight aria-hidden="true" />
           </Link>
         )}
       </div>
@@ -1887,7 +1972,7 @@ function MemberDetailModal({
                     kişi kartı
                   </div>
                   <h2 className="mt-3 break-words text-3xl font-black tracking-[-0.04em] sm:text-4xl">
-                    {member.name} <CountryTag country={member.country} />
+                    {member.name} <CountryTag country={member.country ?? "TR"} flagOnly />
                   </h2>
                   <p className="mt-2 text-sm font-semibold text-foreground/60">{member.title}</p>
                   {member.username && (

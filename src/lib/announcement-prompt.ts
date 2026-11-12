@@ -9,7 +9,7 @@ export function promptForAnnouncements(
     if (localStorage.getItem(`notwork-announcement-seen:${person.email.toLowerCase()}`) === version)
       return false;
     sessionStorage.setItem(pendingKey, JSON.stringify({ ...person, returnTo }));
-    window.location.assign("/duyurular");
+    window.location.assign(returnTo.startsWith("/de/") ? "/de/mitteilungen" : "/duyurular");
     return true;
   } catch {
     return false;
@@ -34,7 +34,7 @@ export function finishAnnouncementPrompt(email: string) {
       localStorage.setItem(`notwork-announcement-seen:${pending.email.toLowerCase()}`, version);
     sessionStorage.removeItem(pendingKey);
     const target = pending?.returnTo || "/networking";
-    return /^\/(profil|networking|linkler)(\?|$)/.test(target) ? target : "/networking";
+    return /^\/(?:profil|networking|linkler|de\/(?:profil|networking))(\?|$)/.test(target) ? target : "/networking";
   } catch {
     return "/networking";
   }

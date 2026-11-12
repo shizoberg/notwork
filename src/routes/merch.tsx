@@ -1,7 +1,8 @@
+import { germanPageText } from "@/lib/german-page-text";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Gift, KeyRound, PackageOpen, Shirt, Sparkles } from "lucide-react";
 
-import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { regionalPath, SiteFooter, SiteNav } from "@/components/SiteNav";
 import { createSeo } from "@/lib/seo";
 
 const products = [
@@ -58,10 +59,11 @@ export const Route = createFileRoute("/merch")({
   component: MerchPage,
 });
 
-function MerchPage() {
+export function MerchPage({ german = false }: { german?: boolean } = {}) {
+  const t = germanPageText(german);
   return (
     <div className="min-h-screen bg-[#f4f8f7] text-foreground">
-      <SiteNav />
+      <SiteNav german={german} />
       <main>
         <section className="relative overflow-hidden border-b border-border/60 px-3 py-10 sm:px-6 sm:py-20">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_12%,rgba(143,203,208,0.38),transparent_30%),radial-gradient(circle_at_92%_20%,rgba(255,171,207,0.3),transparent_28%),linear-gradient(180deg,#f8fbfa_0%,#eef6f5_100%)]" />
@@ -74,13 +76,14 @@ function MerchPage() {
                 notwork merch
               </h1>
               <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-xl">
-                Bir geceden kalan enerjiyi yanında taşı. ntw sticker, anahtarlık ve tişörtler;
-                community içinde üretilen sınırlı parçalar.
+                {t(
+                  "Bir geceden kalan enerjiyi yanında taşı. ntw sticker, anahtarlık ve tişörtler; community içinde üretilen sınırlı parçalar.",
+                )}
               </p>
               <div className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-[#f2c55b]/45 bg-[#fff3c9] px-4 py-3 text-[#523a06]">
                 <Gift size={20} className="shrink-0" />
                 <span className="text-sm font-bold leading-snug">
-                  11 Ekim notwork Sahne biletlerinde sticker paketi + ntw anahtarlık hediye.
+                  {t("11 Ekim notwork Sahne biletlerinde sticker paketi + ntw anahtarlık hediye.")}
                 </span>
               </div>
             </div>
@@ -89,7 +92,7 @@ function MerchPage() {
               <div className="aspect-[5/4] sm:aspect-[16/10]">
                 <img
                   src="/community/12.jpg"
-                  alt="ntw sticker paketi ve notwork anahtarlık"
+                  alt={t("ntw sticker paketi ve notwork anahtarlık")}
                   className="h-full w-full object-cover"
                   style={{ objectPosition: "center 58%" }}
                 />
@@ -101,11 +104,11 @@ function MerchPage() {
                     featured drop
                   </div>
                   <div className="mt-1 text-2xl font-black tracking-[-0.04em] sm:text-4xl">
-                    ntw sticker + anahtarlık
+                    {t("ntw sticker + anahtarlık")}
                   </div>
                 </div>
                 <span className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-foreground sm:text-xs">
-                  yakında satışta
+                  {t("yakında satışta")}
                 </span>
               </div>
             </div>
@@ -119,12 +122,13 @@ function MerchPage() {
                 ntw collection
               </div>
               <h2 className="mt-2 font-display text-4xl font-black leading-[0.9] tracking-[-0.055em] sm:text-6xl">
-                Community’den çıkan parçalar.
+                {t("Community’den çıkan parçalar.")}
               </h2>
             </div>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-              İlk drop sınırlı üretilecek. Fiyat ve satış bağlantıları ürünler hazır olduğunda
-              burada açılacak.
+              {t(
+                "İlk drop sınırlı üretilecek. Fiyat ve satış bağlantıları ürünler hazır olduğunda burada açılacak.",
+              )}
             </p>
           </div>
 
@@ -139,7 +143,7 @@ function MerchPage() {
                   <div className="relative aspect-[4/5] overflow-hidden bg-[#dce9e8]">
                     <img
                       src={product.image}
-                      alt={product.imageAlt}
+                      alt={t(product.imageAlt)}
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]"
                       style={{ objectPosition: product.id === "tshirt" ? "center 62%" : "center" }}
                     />
@@ -155,17 +159,17 @@ function MerchPage() {
                         <Icon size={20} />
                       </span>
                       <span className="rounded-full bg-muted px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">
-                        yakında satışta
+                        {t("yakında satışta")}
                       </span>
                     </div>
                     <div className="mt-4 text-[10px] font-black uppercase tracking-[0.19em] text-primary-deep">
                       {product.eyebrow}
                     </div>
                     <h3 className="mt-2 text-2xl font-black leading-tight tracking-[-0.035em]">
-                      {product.name}
+                      {t(product.name)}
                     </h3>
                     <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                      {product.description}
+                      {t(product.description)}
                     </p>
                   </div>
                 </article>
@@ -181,19 +185,19 @@ function MerchPage() {
                 first access
               </div>
               <h2 className="mt-2 max-w-2xl font-display text-3xl font-black leading-[0.95] tracking-[-0.045em] sm:text-5xl">
-                İlk merch drop’unu etkinliklerde gör.
+                {t("İlk merch drop’unu etkinliklerde gör.")}
               </h2>
             </div>
             <Link
-              to="/etkinlikler"
+              to={regionalPath("/etkinlikler", german)}
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#8fcbd0] px-5 py-3 text-sm font-black text-[#071416] transition hover:-translate-y-0.5 hover:bg-white"
             >
-              Etkinlikleri gör <ArrowRight size={17} />
+              {t("Etkinlikleri gör")} <ArrowRight size={17} />
             </Link>
           </div>
         </section>
       </main>
-      <SiteFooter />
+      <SiteFooter german={german} />
     </div>
   );
 }

@@ -1,7 +1,8 @@
+import { germanPageText } from "@/lib/german-page-text";
 import { pendingAnnouncementPrompt, finishAnnouncementPrompt } from "@/lib/announcement-prompt";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { regionalPath, SiteFooter, SiteNav } from "@/components/SiteNav";
 import { createSeo } from "@/lib/seo";
 export const Route = createFileRoute("/duyurular")({
   head: () =>
@@ -12,7 +13,8 @@ export const Route = createFileRoute("/duyurular")({
     }),
   component: AnnouncementPreferences,
 });
-function AnnouncementPreferences() {
+export function AnnouncementPreferences({ german = false }: { german?: boolean } = {}) {
+  const t = germanPageText(german);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [noticeRead, setNoticeRead] = useState(false);
@@ -29,7 +31,8 @@ function AnnouncementPreferences() {
     }
   }, []);
   function skip() {
-    window.location.assign(finishAnnouncementPrompt(email));
+    const destination = finishAnnouncementPrompt(email);
+    window.location.assign(german && !destination.startsWith("/de/") ? "/de/networking" : destination);
   }
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,10 +53,17 @@ function AnnouncementPreferences() {
       });
       if (!response.ok) throw new Error(await response.text());
       const result = await response.json();
-      setMessage(result.message);
-      setReturnTo(finishAnnouncementPrompt(email));
+      setMessage(german ? "Deine Einstellungen wurden gespeichert." : result.message);
+      const destination = finishAnnouncementPrompt(email);
+      setReturnTo(german && !destination.startsWith("/de/") ? "/de/networking" : destination);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Lütfen yeniden dene.");
+      setMessage(
+        german
+          ? "Bitte versuche es erneut."
+          : error instanceof Error
+            ? error.message
+            : "Lütfen yeniden dene.",
+      );
     } finally {
       setBusy(false);
     }
@@ -61,39 +71,39 @@ function AnnouncementPreferences() {
   const field = "mt-2 w-full rounded-xl border border-border bg-background px-4 py-3";
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SiteNav />
+      <SiteNav german={german} />
       <main className="mx-auto max-w-2xl px-5 py-14">
-        <h1 className="font-display text-4xl font-black tracking-tight">haberdar olalım</h1>
+        <h1 className="font-display text-4xl font-black tracking-tight">{t("haberdar olalım")}</h1>
         <p className="mt-4 text-muted-foreground">
-          yeni etkinlikleri ve notwork’ten haberleri e-postayla almak istersen buradan tercihini
-          paylaşabilirsin. üye olmana gerek yok.
+          {t(
+            "yeni etkinlikleri ve notwork’ten haberleri e-postayla almak istersen buradan tercihini paylaşabilirsin. üye olmana gerek yok.",
+          )}
         </p>
         <div className="mt-6 rounded-2xl border border-border p-5 text-sm leading-6">
           <p>
-            Veri sorumlusu: Berk Aktaş · Kurucu ortak. İletişim:{" "}
+            {t("Veri sorumlusu: Berk Aktaş · Kurucu ortak. İletişim:")}{" "}
             <a className="underline" href="mailto:berk@notwork.me">
               berk@notwork.me
             </a>
           </p>
           <p className="mt-2">
-            Adın ve e-posta adresin duyuru tercihini yönetmek ve izin verdiğin etkinlik, bilet ve
-            topluluk duyurularını iletmek için kullanılır. İzin vermen siteyi kullanmanın veya
-            etkinliklere katılmanın şartı değildir. Her duyurudaki abonelikten çık bağlantısıyla
-            ücretsiz ayrılabilirsin.
+            {t(
+              "Adın ve e-posta adresin duyuru tercihini yönetmek ve izin verdiğin etkinlik, bilet ve topluluk duyurularını iletmek için kullanılır. İzin vermen siteyi kullanmanın veya etkinliklere katılmanın şartı değildir. Her duyurudaki abonelikten çık bağlantısıyla ücretsiz ayrılabilirsin.",
+            )}
           </p>
           <p className="mt-2">
-            <Link className="underline" to="/kvkk">
-              KVKK Aydınlatma Metni
+            <Link className="underline" to={regionalPath("/kvkk", german)}>
+              {t("KVKK Aydınlatma Metni")}
             </Link>{" "}
             ·{" "}
-            <Link className="underline" to="/acik-riza">
-              Açık Rıza Metni
+            <Link className="underline" to={regionalPath("/acik-riza", german)}>
+              {t("Açık Rıza Metni")}
             </Link>
           </p>
         </div>
         <form onSubmit={submit} className="mt-6 grid gap-5">
           <label>
-            Ad soyad
+            {t("Ad soyad")}
             <input
               className={field}
               value={name}
@@ -104,7 +114,7 @@ function AnnouncementPreferences() {
             />
           </label>
           <label>
-            E-posta
+            {t("E-posta")}
             <input
               className={field}
               type="email"
@@ -135,7 +145,9 @@ function AnnouncementPreferences() {
               required
             />
             <span>
-              KVKK Aydınlatma Metni’ni okudum ve bilgilendirildim. Bu seçim duyuru izni değildir.
+              {t(
+                "KVKK Aydınlatma Metni’ni okudum ve bilgilendirildim. Bu seçim duyuru izni değildir.",
+              )}
             </span>
           </label>
           <label className="flex items-start gap-3 text-sm">
@@ -147,23 +159,29 @@ function AnnouncementPreferences() {
               required
             />
             <span>
-              Adımın ve e-posta adresimin notwork etkinlik, bilet ve topluluk duyuruları için
-              kullanılmasına ve bana e-posta ile ticari elektronik ileti gönderilmesine izin
-              veriyorum. İzin isteğe bağlıdır; dilediğim zaman ücretsiz ayrılabilirim.
+              {t(
+                "Adımın ve e-posta adresimin notwork etkinlik, bilet ve topluluk duyuruları için kullanılmasına ve bana e-posta ile ticari elektronik ileti gönderilmesine izin veriyorum. İzin isteğe bağlıdır; dilediğim zaman ücretsiz ayrılabilirim.",
+              )}
             </span>
           </label>
           <button
             className="rounded-full bg-primary px-6 py-3 font-bold text-primary-foreground disabled:opacity-50"
             disabled={busy}
           >
-            {busy ? "kaydediliyor" : "duyuru tercihimi kaydet"}
+            {busy
+              ? german
+                ? "Wird gespeichert …"
+                : "kaydediliyor"
+              : german
+                ? "Einstellungen speichern"
+                : "duyuru tercihimi kaydet"}
           </button>
           <button type="button" onClick={skip} className="text-sm underline">
-            şimdilik geç · izin vermeden devam et
+            {t("şimdilik geç · izin vermeden devam et")}
           </button>
           {message && (
             <a href={returnTo} className="text-center text-sm underline">
-              siteye devam et
+              {t("siteye devam et")}
             </a>
           )}
           {message && (
@@ -173,7 +191,7 @@ function AnnouncementPreferences() {
           )}
         </form>
       </main>
-      <SiteFooter />
+      <SiteFooter german={german} />
     </div>
   );
 }

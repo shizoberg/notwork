@@ -3,6 +3,9 @@ import { ArrowUpRight, MapPin, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
+import { munichEvent } from "@/lib/munich-event";
+import { germanArchive } from "@/lib/home-language";
+import { CountryTag } from "@/components/CountryTag";
 import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/etkinlikler")({
@@ -66,11 +69,18 @@ const catalogEvents: EventCatalogItem[] = [
   },
 
   {
-    id: "19-aralik-2026", dateIso: "2026-12-19", date: "19 Aralık 2026 · 20.30", year: "2026",
-    venue: "Folkart Time Sosyal Sahne", title: "notwork Fast",
-    summary: "Match, Five ve DJ ile hızlı networking.", participants: "Biletler satışta",
-    tags: ["Folkart Time Sosyal Sahne", "Networking"], href: "/19-aralik",
-    accent: "from-[#071416] via-[#245f66] to-[#d8c6ff]", image: "/community/17.jpg",
+    id: "19-aralik-2026",
+    dateIso: "2026-12-19",
+    date: "19 Aralık 2026 · 20.30",
+    year: "2026",
+    venue: "Folkart Time Sosyal Sahne",
+    title: "notwork Fast",
+    summary: "Match, Five ve DJ ile hızlı networking.",
+    participants: "Biletler satışta",
+    tags: ["Folkart Time Sosyal Sahne", "Networking"],
+    href: "/19-aralik",
+    accent: "from-[#071416] via-[#245f66] to-[#d8c6ff]",
+    image: "/community/17.jpg",
   },
   {
     id: "11-ekim-2026",
@@ -228,15 +238,64 @@ const catalogEvents: EventCatalogItem[] = [
   },
 ];
 
-const upcomingEventIds = new Set(["22-kasim-2026", "19-aralik-2026"]);
+const upcomingEventIds = new Set(["22-kasim-2026", "19-aralik-2026", munichEvent.id]);
 
-function EventsCatalogPage() {
+export const germanCatalog: EventCatalogItem[] = [
+  {
+    ...catalogEvents[0],
+    ...munichEvent,
+    venue: munichEvent.city,
+    title: "notwork Bühne",
+    summary:
+      "Geschichten vom Scheitern, eine interaktive WordCloud und Networking mit notwork Match.",
+    participants: munichEvent.status,
+    href: munichEvent.path,
+    tags: [munichEvent.city, "WordCloud", "notwork match", "Networking"],
+  },
+  ...catalogEvents
+    .filter((event) => germanArchive[event.id])
+    .map((event) => {
+      const translated = germanArchive[event.id];
+      return {
+        ...event,
+        date: translated.date,
+        title: translated.title,
+        summary: translated.text,
+        participants: event.participants
+          .replace("katılımcı", "Teilnehmende")
+          .replace("Sınırlı kontenjan", "Begrenzte Plätze"),
+        tags: event.tags.map(
+          (tag) =>
+            ({
+              Konuşmacılar: "Vorträge",
+              "Networking ağı": "Networking",
+              Kariyer: "Karriere",
+              Üretim: "Produktion",
+              İletişim: "Kommunikation",
+              "İş birliği": "Zusammenarbeit",
+              Deneyim: "Erfahrung",
+              Topluluk: "Community",
+              "Yeni başlangıç": "Neuanfang",
+              Dersler: "Erfahrungen",
+              Plan: "Plan",
+              Dönüşüm: "Veränderung",
+              Başlangıç: "Auftakt",
+              Tanışma: "Kennenlernen",
+            })[tag] ?? tag,
+        ),
+        href: event.href ? `/de/archiv/${event.id}` : undefined,
+      };
+    }),
+];
+
+export function EventsCatalogPage({ german = false }: { german?: boolean } = {}) {
+  const locale = german ? "de-DE" : "tr-TR";
   const [activeFilter, setActiveFilter] = useState("Tümü");
   const [activeScope, setActiveScope] = useState<"all" | "upcoming" | "past">("all");
   const [query, setQuery] = useState("");
 
   const visibleEvents = useMemo(() => {
-    return catalogEvents.filter(
+    return (german ? germanCatalog : catalogEvents).filter(
       (event) =>
         (activeScope === "all" ||
           (activeScope === "upcoming"
@@ -246,30 +305,32 @@ function EventsCatalogPage() {
           event.year === activeFilter ||
           event.venue.includes(activeFilter) ||
           event.tags.some((tag) =>
-            tag.toLocaleLowerCase("tr-TR").includes(activeFilter.toLocaleLowerCase("tr-TR")),
+            tag.toLocaleLowerCase(locale).includes(activeFilter.toLocaleLowerCase(locale)),
           )) &&
         `${event.title} ${event.venue} ${event.summary} ${event.tags.join(" ")}`
-          .toLocaleLowerCase("tr-TR")
-          .includes(query.trim().toLocaleLowerCase("tr-TR")),
+          .toLocaleLowerCase(locale)
+          .includes(query.trim().toLocaleLowerCase(locale)),
     );
-  }, [activeFilter, activeScope, query]);
+  }, [activeFilter, activeScope, german, locale, query]);
 
   const upcomingEvents = visibleEvents.filter((event) => upcomingEventIds.has(event.id));
   const pastEvents = visibleEvents.filter((event) => !upcomingEventIds.has(event.id));
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SiteNav />
+      <SiteNav german={german} />
       <main className="mx-auto max-w-5xl px-4 pb-24 pt-5 sm:px-5 sm:pb-20 sm:pt-16">
         <section>
           <div className="text-[11px] font-black uppercase tracking-[0.2em] text-primary-deep sm:text-sm">
-            notwork / takvim
+            {german ? "notwork / Kalender" : "notwork / takvim"}
           </div>
           <h1 className="mt-2 font-display text-4xl font-black leading-none tracking-[-0.055em] sm:mt-4 sm:text-6xl">
-            etkinlikler
+            {german ? "Events" : "etkinlikler"}
           </h1>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground sm:mt-3 sm:text-base">
-            Sıradaki buluşmayı ve geçmiş notwork gecelerini tek akışta gör.
+            {german
+              ? "Entdecke das nächste Treffen und vergangene notwork Abende an einem Ort."
+              : "Sıradaki buluşmayı ve geçmiş notwork gecelerini tek akışta gör."}
           </p>
         </section>
 
@@ -277,7 +338,7 @@ function EventsCatalogPage() {
           <div className="flex items-center justify-between gap-3">
             <div
               className="flex rounded-full border border-border bg-card p-1"
-              aria-label="Etkinlik dönemi"
+              aria-label={german ? "Eventzeitraum" : "Etkinlik dönemi"}
             >
               {(
                 [
@@ -297,28 +358,30 @@ function EventsCatalogPage() {
                       : "text-foreground/60 hover:text-foreground"
                   }`}
                 >
-                  {label}
+                  {german
+                    ? { all: "Alle", upcoming: "Kommende", past: "Vergangene" }[scope]
+                    : label}
                 </button>
               ))}
             </div>
             <span className="shrink-0 text-xs font-semibold text-muted-foreground sm:text-sm">
-              {visibleEvents.length} etkinlik
+              {visibleEvents.length} {german ? "Events" : "etkinlik"}
             </span>
           </div>
           <div className="mt-3 grid grid-cols-[minmax(0,1fr)_128px] gap-2 sm:grid-cols-[1fr_220px]">
             <label className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 text-muted-foreground">
               <Search size={17} aria-hidden="true" />
-              <span className="sr-only">Etkinlik ara</span>
+              <span className="sr-only">{german ? "Events suchen" : "Etkinlik ara"}</span>
               <input
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Etkinlik ara"
+                placeholder={german ? "Events suchen" : "Etkinlik ara"}
                 className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
               />
             </label>
             <label className="sr-only" htmlFor="event-catalog-filter">
-              Yer veya tema seç
+              {german ? "Ort oder Thema auswählen" : "Yer veya tema seç"}
             </label>
             <select
               id="event-catalog-filter"
@@ -326,11 +389,13 @@ function EventsCatalogPage() {
               onChange={(event) => setActiveFilter(event.target.value)}
               className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-semibold text-foreground outline-none focus:border-primary"
             >
-              {filters.map((filter) => (
-                <option key={filter} value={filter}>
-                  {filter === "Tümü" ? "Yer / tema" : filter}
-                </option>
-              ))}
+              {(german ? ["Tümü", "2026", munichEvent.city, ...filters.slice(2)] : filters).map(
+                (filter) => (
+                  <option key={filter} value={filter}>
+                    {filter === "Tümü" ? (german ? "Ort / Thema" : "Yer / tema") : filter}
+                  </option>
+                ),
+              )}
             </select>
           </div>
         </div>
@@ -338,20 +403,24 @@ function EventsCatalogPage() {
         {visibleEvents.length ? (
           <>
             <CatalogSection
-              title="Yaklaşan"
-              eyebrow="sıradaki buluşma"
+              title={german ? "Kommende Events" : "Yaklaşan"}
+              eyebrow={german ? "Das nächste Treffen" : "sıradaki buluşma"}
               events={upcomingEvents}
+              german={german}
               upcoming
             />
             <CatalogSection
-              title="Geçmiş etkinlikler"
-              eyebrow="notwork arşivi"
+              title={german ? "Vergangene Events" : "Geçmiş etkinlikler"}
+              eyebrow={german ? "notwork Archiv" : "notwork arşivi"}
               events={pastEvents}
+              german={german}
             />
           </>
         ) : (
           <div className="border-b border-border py-16 text-center">
-            <p className="font-display text-xl font-black">Bu aramada etkinlik bulunamadı.</p>
+            <p className="font-display text-xl font-black">
+              {german ? "Keine Events gefunden." : "Bu aramada etkinlik bulunamadı."}
+            </p>
             <button
               type="button"
               onClick={() => {
@@ -361,12 +430,12 @@ function EventsCatalogPage() {
               }}
               className="mt-3 text-sm font-bold text-primary-deep underline underline-offset-4"
             >
-              Filtreleri temizle
+              {german ? "Filter zurücksetzen" : "Filtreleri temizle"}
             </button>
           </div>
         )}
       </main>
-      <SiteFooter />
+      <SiteFooter german={german} />
     </div>
   );
 }
@@ -376,11 +445,13 @@ function CatalogSection({
   eyebrow,
   events,
   upcoming = false,
+  german = false,
 }: {
   title: string;
   eyebrow: string;
   events: EventCatalogItem[];
   upcoming?: boolean;
+  german?: boolean;
 }) {
   if (!events.length) return null;
 
@@ -399,14 +470,22 @@ function CatalogSection({
       </div>
       <ol className="divide-y divide-border/70 border-y border-border/70">
         {events.map((event) => (
-          <EventListRow key={event.id} event={event} upcoming={upcoming} />
+          <EventListRow key={event.id} event={event} upcoming={upcoming} german={german} />
         ))}
       </ol>
     </section>
   );
 }
 
-function EventListRow({ event, upcoming }: { event: EventCatalogItem; upcoming: boolean }) {
+function EventListRow({
+  event,
+  upcoming,
+  german,
+}: {
+  event: EventCatalogItem;
+  upcoming: boolean;
+  german: boolean;
+}) {
   const [day, month] = event.date.split(" ");
   const content = (
     <>
@@ -431,11 +510,18 @@ function EventListRow({ event, upcoming }: { event: EventCatalogItem; upcoming: 
           className="size-full object-cover transition duration-500 group-hover:scale-105"
           style={{ objectPosition: event.imagePosition ?? "center" }}
         />
+        <div className="absolute right-1 top-1">
+          <CountryTag
+            country={event.id === munichEvent.id ? "DE" : "TR"}
+            german={german}
+            flagOnly
+          />
+        </div>
       </div>
       <div className="min-w-0 flex-1">
         {upcoming ? (
           <span className="mb-1 inline-block text-[10px] font-black uppercase tracking-[0.15em] text-primary-deep">
-            Sıradaki etkinlik
+            {german ? "Nächstes Event" : "Sıradaki etkinlik"}
           </span>
         ) : null}
         <h3 className="font-display text-base font-black leading-tight tracking-[-0.03em] sm:text-xl">
@@ -457,9 +543,17 @@ function EventListRow({ event, upcoming }: { event: EventCatalogItem; upcoming: 
             className="text-primary-deep transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
           />
         ) : (
-          <span className="text-[10px] font-semibold text-muted-foreground">Arşiv</span>
+          <span className="text-[10px] font-semibold text-muted-foreground">
+            {german ? "Archiv" : "Arşiv"}
+          </span>
         )}
-        <span className="hidden text-xs font-semibold text-muted-foreground sm:block">
+        <span
+          className={
+            event.id === munichEvent.id
+              ? "text-[10px] font-semibold text-muted-foreground sm:text-xs"
+              : "hidden text-xs font-semibold text-muted-foreground sm:block"
+          }
+        >
           {event.participants}
         </span>
       </div>
@@ -471,7 +565,7 @@ function EventListRow({ event, upcoming }: { event: EventCatalogItem; upcoming: 
       {event.href ? (
         <Link
           to={event.href}
-          aria-label={`${event.title}, ${event.date}, detayları aç`}
+          aria-label={`${event.title}, ${event.date}, ${german ? "Details öffnen" : "detayları aç"}`}
           className={`group flex items-center gap-3 py-3 transition hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary sm:gap-6 sm:px-3 sm:py-5 ${upcoming ? "bg-primary/5" : ""}`}
         >
           {content}

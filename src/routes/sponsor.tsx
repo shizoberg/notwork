@@ -1,3 +1,4 @@
+import { germanPageText } from "@/lib/german-page-text";
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { createSeo } from "@/lib/seo";
@@ -75,38 +76,40 @@ const verticalEvents = [
   },
 ];
 
-function SponsorPage() {
+export function SponsorPage({ german = false }: { german?: boolean } = {}) {
+  const t = germanPageText(german);
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <SiteNav />
+      <SiteNav german={german} />
       <main>
         <section className="mx-auto max-w-6xl px-5 pb-12 pt-12 sm:pb-16 sm:pt-20">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary-deep">
             <span className="h-2 w-2 rounded-full bg-primary blink" />
-            markalar için notwork
+            {t("markalar için notwork")}
           </div>
           <div className="mt-7 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
             <div>
               <h1 className="max-w-4xl font-display text-5xl font-black leading-[0.9] tracking-[-0.05em] sm:text-7xl">
-                notwork’e <span className="text-primary-deep">sponsor olun</span>
+                {t("notwork’e")} <span className="text-primary-deep">{t("sponsor olun")}</span>
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-relaxed text-foreground/65 sm:text-xl">
-                notwork olarak etkinliklerimizde markanız için çekim hizmeti sağlıyor, markanızla
-                uygun konsepti buluşturuyor ve katılımcılara gerçek bir ürün deneyimi sunuyoruz.
+                {t(
+                  "notwork olarak etkinliklerimizde markanız için çekim hizmeti sağlıyor, markanızla uygun konsepti buluşturuyor ve katılımcılara gerçek bir ürün deneyimi sunuyoruz.",
+                )}
               </p>
             </div>
             <div className="rounded-3xl border border-border bg-card p-6 shadow-[var(--shadow-card)]">
               <div className="text-sm font-bold uppercase tracking-[0.2em] text-primary-deep">
-                sponsor görüşmesi
+                {t("sponsor görüşmesi")}
               </div>
               <p className="mt-4 text-foreground/65">
-                Markanız için doğru etkinlik formatını birlikte tasarlamak üzere bize ulaşın.
+                {t("Markanız için doğru etkinlik formatını birlikte tasarlamak üzere bize ulaşın.")}
               </p>
               <a
                 href={sponsorMailUrl}
                 className="mt-6 inline-flex rounded-full bg-primary px-5 py-3 font-semibold text-primary-foreground transition hover:opacity-90"
               >
-                Sponsor olmak istiyorum
+                {t("Sponsor olmak istiyorum")}
               </a>
             </div>
           </div>
@@ -115,23 +118,23 @@ function SponsorPage() {
         <section className="mx-auto max-w-6xl px-5 pb-14">
           <div className="mb-5 max-w-3xl">
             <div className="text-sm font-bold uppercase tracking-[0.2em] text-primary-deep">
-              sponsorluk türleri
+              {t("sponsorluk türleri")}
             </div>
             <h2 className="mt-3 text-3xl font-black tracking-[-0.03em] sm:text-5xl">
-              Markanız için doğru görünürlük modelini birlikte seçiyoruz.
+              {t("Markanız için doğru görünürlük modelini birlikte seçiyoruz.")}
             </h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             {sponsorshipTypes.map((type) => (
               <article
-                key={type.title}
+                key={t(type.title)}
                 className="rounded-2xl border border-border bg-card p-5 shadow-sm"
               >
                 <div className="mb-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary-deep">
-                  {type.tag}
+                  {t(type.tag)}
                 </div>
-                <h3 className="text-xl font-black leading-tight">{type.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-foreground/60">{type.text}</p>
+                <h3 className="text-xl font-black leading-tight">{t(type.title)}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-foreground/60">{t(type.text)}</p>
               </article>
             ))}
           </div>
@@ -139,9 +142,12 @@ function SponsorPage() {
 
         <section className="mx-auto grid max-w-6xl gap-4 px-5 pb-14 md:grid-cols-3">
           {sponsorBenefits.map((benefit) => (
-            <article key={benefit.title} className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="text-2xl font-bold">{benefit.title}</h2>
-              <p className="mt-4 leading-relaxed text-foreground/60">{benefit.text}</p>
+            <article
+              key={t(benefit.title)}
+              className="rounded-2xl border border-border bg-card p-6"
+            >
+              <h2 className="text-2xl font-bold">{t(benefit.title)}</h2>
+              <p className="mt-4 leading-relaxed text-foreground/60">{t(benefit.text)}</p>
             </article>
           ))}
         </section>
@@ -150,15 +156,15 @@ function SponsorPage() {
           <div className="rounded-3xl border border-primary/25 bg-primary/10 p-6 sm:p-8">
             <div className="max-w-3xl">
               <div className="text-sm font-bold uppercase tracking-[0.2em] text-primary-deep">
-                meslek bazlı özel etkinlikler
+                {t("meslek bazlı özel etkinlikler")}
               </div>
               <h2 className="mt-4 text-3xl font-black tracking-[-0.03em] sm:text-5xl">
-                Markanızı doğru meslek topluluğuyla buluşturuyoruz.
+                {t("Markanızı doğru meslek topluluğuyla buluşturuyoruz.")}
               </h2>
               <p className="mt-4 leading-relaxed text-foreground/65">
-                notpharmacy, notdoctor, notarchitecture gibi meslek bazlı spesifik eventler host
-                ediyoruz. Buradaki temel amaç etkinliğin net bir meslek kategorisine odaklanması ve
-                markanızın doğru bağlamda deneyimlenmesi.
+                {t(
+                  "notpharmacy, notdoctor, notarchitecture gibi meslek bazlı spesifik eventler host ediyoruz. Buradaki temel amaç etkinliğin net bir meslek kategorisine odaklanması ve markanızın doğru bağlamda deneyimlenmesi.",
+                )}
               </p>
             </div>
             <div className="mt-7 grid gap-3 md:grid-cols-3">
@@ -168,14 +174,14 @@ function SponsorPage() {
                   className="rounded-2xl border border-border bg-background p-5"
                 >
                   <div className="font-brand text-2xl text-primary-deep">{event.name}</div>
-                  <p className="mt-3 text-sm leading-relaxed text-foreground/60">{event.text}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-foreground/60">{t(event.text)}</p>
                 </article>
               ))}
             </div>
           </div>
         </section>
       </main>
-      <SiteFooter />
+      <SiteFooter german={german} />
     </div>
   );
 }

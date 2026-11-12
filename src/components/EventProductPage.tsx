@@ -52,6 +52,8 @@ export type EventFlowStep = {
 };
 
 export type EventProductConfig = {
+  german?: boolean;
+  comingSoon?: boolean;
   trackingId: string;
   trackingName: string;
   eventLabel: string;
@@ -120,13 +122,14 @@ export function EventProductPage({ config }: { config: EventProductConfig }) {
 
   return (
     <div className="min-h-screen bg-[#f4f8f7] text-foreground">
-      <SiteNav />
+      <SiteNav german={config.german} />
       <main>
         <section className="relative overflow-hidden border-b border-border/60">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(143,203,208,0.32),transparent_32%),radial-gradient(circle_at_90%_12%,rgba(255,171,207,0.24),transparent_27%),linear-gradient(180deg,#f8fbfa_0%,#eef6f5_100%)]" />
           <div className="relative mx-auto max-w-7xl px-3 pb-4 pt-2 sm:px-6 sm:py-8 lg:px-8">
             <div className="grid grid-cols-1 items-start gap-4 sm:gap-7 lg:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)] lg:gap-10">
               <EventGallery
+                german={config.german}
                 gallery={config.gallery}
                 imageTitle={config.imageTitle}
                 imageSubtitle={config.imageSubtitle}
@@ -163,12 +166,13 @@ export function EventProductPage({ config }: { config: EventProductConfig }) {
           onTicketRedirect={showTicketRedirectNotice}
         />
       ) : null}
-      <SiteFooter />
+      <SiteFooter german={config.german} />
     </div>
   );
 }
 
 function EventGallery({
+  german = false,
   gallery,
   imageTitle,
   imageSubtitle,
@@ -176,6 +180,7 @@ function EventGallery({
   onSelect,
   onMove,
 }: {
+  german?: boolean;
   gallery: EventGalleryImage[];
   imageTitle: string;
   imageSubtitle: string;
@@ -189,11 +194,15 @@ function EventGallery({
 
   return (
     <div className="min-w-0">
-      <div className="relative overflow-hidden rounded-[1.55rem] border border-white/80 bg-[#0a1618] shadow-[0_22px_64px_rgba(15,45,50,0.16)] sm:rounded-[2.5rem] sm:shadow-[0_30px_90px_rgba(15,45,50,0.18)]"
+      <div
+        className="relative overflow-hidden rounded-[1.55rem] border border-white/80 bg-[#0a1618] shadow-[0_22px_64px_rgba(15,45,50,0.16)] sm:rounded-[2.5rem] sm:shadow-[0_30px_90px_rgba(15,45,50,0.18)]"
         style={{ touchAction: "pan-y pinch-zoom" }}
         onTouchStart={(event) => {
           const target = event.target as HTMLElement;
-          if (event.touches.length !== 1 || target.closest("button, video[controls]")) { touchStart.current = null; return; }
+          if (event.touches.length !== 1 || target.closest("button, video[controls]")) {
+            touchStart.current = null;
+            return;
+          }
           const touch = event.touches[0];
           touchStart.current = { x: touch.clientX, y: touch.clientY };
         }}
@@ -206,7 +215,9 @@ function EventGallery({
           const dy = touch.clientY - start.y;
           if (Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.3) onMove(dx < 0 ? 1 : -1);
         }}
-        onTouchCancel={() => { touchStart.current = null; }}
+        onTouchCancel={() => {
+          touchStart.current = null;
+        }}
       >
         <div className="aspect-[4/5] max-h-[760px] w-full sm:aspect-[5/6] lg:aspect-[4/5]">
           {image.mediaType === "video" ? (
@@ -259,10 +270,16 @@ function EventGallery({
             </div>
           ) : null}
           <div className="flex gap-2">
-            <GalleryButton label="Önceki görsel" onClick={() => onMove(-1)}>
+            <GalleryButton
+              label={german ? "Vorheriges Bild" : "Önceki görsel"}
+              onClick={() => onMove(-1)}
+            >
               <ArrowLeft size={18} />
             </GalleryButton>
-            <GalleryButton label="Sonraki görsel" onClick={() => onMove(1)}>
+            <GalleryButton
+              label={german ? "Nächstes Bild" : "Sonraki görsel"}
+              onClick={() => onMove(1)}
+            >
               <ArrowRight size={18} />
             </GalleryButton>
           </div>
@@ -275,7 +292,7 @@ function EventGallery({
             key={item.src}
             type="button"
             onClick={() => onSelect(index)}
-            aria-label={`${index + 1}. etkinlik görselini aç`}
+            aria-label={`${german ? "Bild öffnen" : "Etkinlik görselini aç"} ${index + 1}`}
             className={`relative aspect-[5/4] w-[22%] min-w-[4.25rem] flex-none snap-start overflow-hidden rounded-xl border-2 transition sm:aspect-[4/5] sm:w-24 sm:rounded-3xl ${
               activeImage === index
                 ? "border-primary shadow-[0_10px_30px_rgba(77,175,184,0.24)]"
@@ -335,7 +352,10 @@ function PurchasePanel({
   return (
     <aside className="min-w-0 lg:sticky lg:top-24">
       <div className="rounded-[1.55rem] border border-white/90 bg-white/85 p-4 shadow-[0_20px_60px_rgba(15,45,50,0.1)] backdrop-blur-xl sm:rounded-[2rem] sm:p-7 sm:shadow-[0_25px_80px_rgba(15,45,50,0.12)] lg:rounded-[2.5rem]">
-        <div className="event-meta-line" aria-label="Etkinlik bilgileri">
+        <div
+          className="event-meta-line"
+          aria-label={config.german ? "Eventinformationen" : "Etkinlik bilgileri"}
+        >
           <span>
             <CalendarDays size={14} aria-hidden="true" />
             {config.date} · {config.time}
@@ -346,10 +366,17 @@ function PurchasePanel({
               {config.experienceLabel}
             </span>
           ) : null}
-          <a href={config.venueUrl} target="_blank" rel="noreferrer">
-            <MapPin size={14} aria-hidden="true" />
-            {config.venue} · {config.city} ↗
-          </a>
+          {config.venueUrl ? (
+            <a href={config.venueUrl} target="_blank" rel="noreferrer">
+              <MapPin size={14} aria-hidden="true" />
+              {config.venue} · {config.city} ↗
+            </a>
+          ) : (
+            <span>
+              <MapPin size={14} aria-hidden="true" /> {config.venue}
+              {config.city ? ` · ${config.city}` : ""}
+            </span>
+          )}
         </div>
         <div className="flex flex-nowrap items-center gap-1.5 overflow-hidden">
           <span className="whitespace-nowrap rounded-full bg-foreground px-2 py-1 text-[8px] font-black uppercase tracking-[0.04em] text-background sm:px-2.5 sm:text-[9px] sm:tracking-[0.12em]">
@@ -373,7 +400,11 @@ function PurchasePanel({
             </span>
           ))}
         </h1>
-        {config.titleSubtitle ? <p className="mt-0.5 text-sm font-light tracking-normal text-muted-foreground sm:mt-1 sm:text-base">{config.titleSubtitle}</p> : null}
+        {config.titleSubtitle ? (
+          <p className="mt-0.5 text-sm font-light tracking-normal text-muted-foreground sm:mt-1 sm:text-base">
+            {config.titleSubtitle}
+          </p>
+        ) : null}
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-lg">
           {config.descriptionContent || config.description}
         </p>
@@ -382,7 +413,7 @@ function PurchasePanel({
           <div className="flex items-end justify-between gap-3">
             <div>
               <div className="text-xs font-black uppercase tracking-[0.2em] text-primary-deep">
-                biletini seç
+                {config.german ? "Ticketoptionen" : "biletini seç"}
               </div>
             </div>
             <Ticket className="text-primary-deep" size={24} />
@@ -490,7 +521,7 @@ function TicketButton({
       disabled
       className="mt-5 flex min-h-14 w-full cursor-not-allowed items-center justify-center gap-2 rounded-2xl bg-foreground/85 px-5 py-4 text-base font-black text-background/80"
     >
-      Bilet bağlantısı yakında <Sparkles size={18} />
+      {config.comingSoon ? "Coming Soon" : "Bilet bağlantısı yakında"} <Sparkles size={18} />
     </button>
   );
 }
@@ -643,10 +674,11 @@ function CommunitySection({ config }: { config: EventProductConfig }) {
             </p>
             <div className="mt-4 flex flex-wrap gap-2 sm:mt-7 sm:gap-3">
               <Link
-                to="/networking"
+                to={config.german ? "/de/networking" : "/networking"}
                 className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-xs font-black text-background transition hover:bg-primary-deep sm:px-5 sm:py-3 sm:text-sm"
               >
-                Community’ye katıl <ArrowRight size={16} />
+                {config.german ? "Community entdecken" : "Community’ye katıl"}{" "}
+                <ArrowRight size={16} />
               </Link>
             </div>
           </div>
@@ -663,7 +695,11 @@ function CommunitySection({ config }: { config: EventProductConfig }) {
                   <div className="aspect-[4/5]">
                     <img
                       src={src}
-                      alt="notwork community etkinlik anı"
+                      alt={
+                        config.german
+                          ? "Foto von einem notwork Event"
+                          : "notwork community etkinlik anı"
+                      }
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -693,7 +729,7 @@ function FloatingTicketCta({
     "fixed bottom-3 left-1/2 z-40 inline-flex min-h-11 -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/20 bg-[#071416]/94 px-3 py-2 text-xs font-bold text-white shadow-[0_18px_55px_rgba(5,22,24,0.3)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-primary-deep sm:bottom-5 sm:min-h-12 sm:px-4";
   const content = (
     <>
-      <Ticket size={15} /> Bilet al
+      <Ticket size={15} /> {config.comingSoon ? "Coming Soon" : "Bilet al"}
       <span className="rounded-full bg-white/12 px-2 py-1 text-[10px] text-white/75">
         {selectedOption.price} TL
       </span>
@@ -727,7 +763,11 @@ function FloatingTicketCta({
   }
 
   return (
-    <a href="#biletler" className={className} aria-label="Bilet seçeneklerine git">
+    <a
+      href="#biletler"
+      className={className}
+      aria-label={config.german ? "Zu den Ticketoptionen" : "Bilet seçeneklerine git"}
+    >
       {content}
     </a>
   );
