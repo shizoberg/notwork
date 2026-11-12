@@ -268,7 +268,7 @@ function Hero() {
         </h1>
 
         <p className="hero-description">
-          Network etkinlikleri ve çözümleri üreten networking platformu.
+          Türkiye ve Almanya’da networking etkinlikleri düzenleyen bir topluluk.
         </p>
         <section className="hero-upcoming" aria-label="Sonraki etkinlikler">
           <p className="mt-6 text-xs text-muted-foreground">Sonraki buluşmalar</p>

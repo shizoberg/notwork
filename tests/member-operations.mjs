@@ -635,6 +635,23 @@ try {
       else process.env[key] = savedEnv[key];
     }
   }
+  const germanIntro = "Ich interessiere mich für digitale Produkte und möchte mit anderen Mitgliedern Erfahrungen zu Design und Aufbau neuer Projekte austauschen. Gemeinsam lernen wir mehr.";
+  const germanRegistration = await members.registerMemberProfile({
+    name: "German Example",
+    email: "german@example.org",
+    password: "Example-password-123!",
+    country: "DE",
+    attendedEventClaim: "germany-community",
+    introduction: germanIntro,
+    lookingFor: germanIntro,
+    canHelpWith: germanIntro,
+    consent: true,
+  });
+  assert.equal(germanRegistration.profile.country, "DE");
+  assert.equal(germanRegistration.profile.verifiedMember, false);
+  assert.equal(germanRegistration.profile.photoUrl, "");
+  assert.equal((await sourceStore.get("members/german-example.json")).country, "DE");
+
 } finally {
   await fs.rm(temp, { recursive: true, force: true });
 }

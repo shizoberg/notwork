@@ -103,12 +103,12 @@ export async function loginMember(identity: string, password: string) {
   return profile;
 }
 
-export async function requestMemberPasswordReset(email: string) {
+export async function requestMemberPasswordReset(email: string, locale: "de" | "tr" = "tr") {
   const response = await fetch("/api/member-profile", {
     method: "POST",
     credentials: "same-origin",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ action: "requestPasswordReset", email }),
+    body: JSON.stringify({ action: "requestPasswordReset", email, locale }),
   });
   if (!response.ok) {
     const message = (await response.text()).trim() || "Şifre yenileme e-postası gönderilemedi";

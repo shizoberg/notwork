@@ -54,9 +54,15 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DeIndexRouteImport } from './routes/de.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as FiveLiveRouteImport } from './routes/five_.live'
+import { Route as DeVortragRouteImport } from './routes/de.vortrag'
+import { Route as DeRegistrierenRouteImport } from './routes/de.registrieren'
 import { Route as DeProfilRouteImport } from './routes/de.profil'
 import { Route as DeNetworkingRouteImport } from './routes/de.networking'
+import { Route as DeLiveRouteImport } from './routes/de.live'
 import { Route as DeEventsRouteImport } from './routes/de.events'
+import { Route as DeEinwilligungRouteImport } from './routes/de.einwilligung'
+import { Route as DeDatenschutzRouteImport } from './routes/de.datenschutz'
+import { Route as DeCookiesRouteImport } from './routes/de.cookies'
 import { Route as R21AgustosWordcloudRouteImport } from './routes/21-agustos.wordcloud'
 import { Route as R21AgustosSonuclarRouteImport } from './routes/21-agustos.sonuclar'
 import { Route as R21AgustosNetworkRouteImport } from './routes/21-agustos.network'
@@ -288,6 +294,16 @@ const FiveLiveRoute = FiveLiveRouteImport.update({
   path: '/five/live',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DeVortragRoute = DeVortragRouteImport.update({
+  id: '/vortrag',
+  path: '/vortrag',
+  getParentRoute: () => DeRoute,
+} as any)
+const DeRegistrierenRoute = DeRegistrierenRouteImport.update({
+  id: '/registrieren',
+  path: '/registrieren',
+  getParentRoute: () => DeRoute,
+} as any)
 const DeProfilRoute = DeProfilRouteImport.update({
   id: '/profil',
   path: '/profil',
@@ -298,9 +314,29 @@ const DeNetworkingRoute = DeNetworkingRouteImport.update({
   path: '/networking',
   getParentRoute: () => DeRoute,
 } as any)
+const DeLiveRoute = DeLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
+  getParentRoute: () => DeRoute,
+} as any)
 const DeEventsRoute = DeEventsRouteImport.update({
   id: '/events',
   path: '/events',
+  getParentRoute: () => DeRoute,
+} as any)
+const DeEinwilligungRoute = DeEinwilligungRouteImport.update({
+  id: '/einwilligung',
+  path: '/einwilligung',
+  getParentRoute: () => DeRoute,
+} as any)
+const DeDatenschutzRoute = DeDatenschutzRouteImport.update({
+  id: '/datenschutz',
+  path: '/datenschutz',
+  getParentRoute: () => DeRoute,
+} as any)
+const DeCookiesRoute = DeCookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
   getParentRoute: () => DeRoute,
 } as any)
 const R21AgustosWordcloudRoute = R21AgustosWordcloudRouteImport.update({
@@ -376,9 +412,15 @@ export interface FileRoutesByFullPath {
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
+  '/de/cookies': typeof DeCookiesRoute
+  '/de/datenschutz': typeof DeDatenschutzRoute
+  '/de/einwilligung': typeof DeEinwilligungRoute
   '/de/events': typeof DeEventsRoute
+  '/de/live': typeof DeLiveRoute
   '/de/networking': typeof DeNetworkingRoute
   '/de/profil': typeof DeProfilRoute
+  '/de/registrieren': typeof DeRegistrierenRoute
+  '/de/vortrag': typeof DeVortragRoute
   '/five/live': typeof FiveLiveRoute
   '/u/$username': typeof UUsernameRoute
   '/de/': typeof DeIndexRoute
@@ -430,9 +472,15 @@ export interface FileRoutesByTo {
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
+  '/de/cookies': typeof DeCookiesRoute
+  '/de/datenschutz': typeof DeDatenschutzRoute
+  '/de/einwilligung': typeof DeEinwilligungRoute
   '/de/events': typeof DeEventsRoute
+  '/de/live': typeof DeLiveRoute
   '/de/networking': typeof DeNetworkingRoute
   '/de/profil': typeof DeProfilRoute
+  '/de/registrieren': typeof DeRegistrierenRoute
+  '/de/vortrag': typeof DeVortragRoute
   '/five/live': typeof FiveLiveRoute
   '/u/$username': typeof UUsernameRoute
   '/de': typeof DeIndexRoute
@@ -486,9 +534,15 @@ export interface FileRoutesById {
   '/21-agustos/network': typeof R21AgustosNetworkRoute
   '/21-agustos/sonuclar': typeof R21AgustosSonuclarRoute
   '/21-agustos/wordcloud': typeof R21AgustosWordcloudRoute
+  '/de/cookies': typeof DeCookiesRoute
+  '/de/datenschutz': typeof DeDatenschutzRoute
+  '/de/einwilligung': typeof DeEinwilligungRoute
   '/de/events': typeof DeEventsRoute
+  '/de/live': typeof DeLiveRoute
   '/de/networking': typeof DeNetworkingRoute
   '/de/profil': typeof DeProfilRoute
+  '/de/registrieren': typeof DeRegistrierenRoute
+  '/de/vortrag': typeof DeVortragRoute
   '/five_/live': typeof FiveLiveRoute
   '/u/$username': typeof UUsernameRoute
   '/de/': typeof DeIndexRoute
@@ -543,9 +597,15 @@ export interface FileRouteTypes {
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
+    | '/de/cookies'
+    | '/de/datenschutz'
+    | '/de/einwilligung'
     | '/de/events'
+    | '/de/live'
     | '/de/networking'
     | '/de/profil'
+    | '/de/registrieren'
+    | '/de/vortrag'
     | '/five/live'
     | '/u/$username'
     | '/de/'
@@ -597,9 +657,15 @@ export interface FileRouteTypes {
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
+    | '/de/cookies'
+    | '/de/datenschutz'
+    | '/de/einwilligung'
     | '/de/events'
+    | '/de/live'
     | '/de/networking'
     | '/de/profil'
+    | '/de/registrieren'
+    | '/de/vortrag'
     | '/five/live'
     | '/u/$username'
     | '/de'
@@ -652,9 +718,15 @@ export interface FileRouteTypes {
     | '/21-agustos/network'
     | '/21-agustos/sonuclar'
     | '/21-agustos/wordcloud'
+    | '/de/cookies'
+    | '/de/datenschutz'
+    | '/de/einwilligung'
     | '/de/events'
+    | '/de/live'
     | '/de/networking'
     | '/de/profil'
+    | '/de/registrieren'
+    | '/de/vortrag'
     | '/five_/live'
     | '/u/$username'
     | '/de/'
@@ -1029,6 +1101,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FiveLiveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/de/vortrag': {
+      id: '/de/vortrag'
+      path: '/vortrag'
+      fullPath: '/de/vortrag'
+      preLoaderRoute: typeof DeVortragRouteImport
+      parentRoute: typeof DeRoute
+    }
+    '/de/registrieren': {
+      id: '/de/registrieren'
+      path: '/registrieren'
+      fullPath: '/de/registrieren'
+      preLoaderRoute: typeof DeRegistrierenRouteImport
+      parentRoute: typeof DeRoute
+    }
     '/de/profil': {
       id: '/de/profil'
       path: '/profil'
@@ -1043,11 +1129,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DeNetworkingRouteImport
       parentRoute: typeof DeRoute
     }
+    '/de/live': {
+      id: '/de/live'
+      path: '/live'
+      fullPath: '/de/live'
+      preLoaderRoute: typeof DeLiveRouteImport
+      parentRoute: typeof DeRoute
+    }
     '/de/events': {
       id: '/de/events'
       path: '/events'
       fullPath: '/de/events'
       preLoaderRoute: typeof DeEventsRouteImport
+      parentRoute: typeof DeRoute
+    }
+    '/de/einwilligung': {
+      id: '/de/einwilligung'
+      path: '/einwilligung'
+      fullPath: '/de/einwilligung'
+      preLoaderRoute: typeof DeEinwilligungRouteImport
+      parentRoute: typeof DeRoute
+    }
+    '/de/datenschutz': {
+      id: '/de/datenschutz'
+      path: '/datenschutz'
+      fullPath: '/de/datenschutz'
+      preLoaderRoute: typeof DeDatenschutzRouteImport
+      parentRoute: typeof DeRoute
+    }
+    '/de/cookies': {
+      id: '/de/cookies'
+      path: '/cookies'
+      fullPath: '/de/cookies'
+      preLoaderRoute: typeof DeCookiesRouteImport
       parentRoute: typeof DeRoute
     }
     '/21-agustos/wordcloud': {
@@ -1089,17 +1203,29 @@ declare module '@tanstack/react-router' {
 }
 
 interface DeRouteChildren {
+  DeCookiesRoute: typeof DeCookiesRoute
+  DeDatenschutzRoute: typeof DeDatenschutzRoute
+  DeEinwilligungRoute: typeof DeEinwilligungRoute
   DeEventsRoute: typeof DeEventsRoute
+  DeLiveRoute: typeof DeLiveRoute
   DeNetworkingRoute: typeof DeNetworkingRoute
   DeProfilRoute: typeof DeProfilRoute
+  DeRegistrierenRoute: typeof DeRegistrierenRoute
+  DeVortragRoute: typeof DeVortragRoute
   DeIndexRoute: typeof DeIndexRoute
   DeUUsernameRoute: typeof DeUUsernameRoute
 }
 
 const DeRouteChildren: DeRouteChildren = {
+  DeCookiesRoute: DeCookiesRoute,
+  DeDatenschutzRoute: DeDatenschutzRoute,
+  DeEinwilligungRoute: DeEinwilligungRoute,
   DeEventsRoute: DeEventsRoute,
+  DeLiveRoute: DeLiveRoute,
   DeNetworkingRoute: DeNetworkingRoute,
   DeProfilRoute: DeProfilRoute,
+  DeRegistrierenRoute: DeRegistrierenRoute,
+  DeVortragRoute: DeVortragRoute,
   DeIndexRoute: DeIndexRoute,
   DeUUsernameRoute: DeUUsernameRoute,
 }

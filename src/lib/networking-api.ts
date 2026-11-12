@@ -54,7 +54,9 @@ export async function listMembers(): Promise<Member[]> {
     .filter((member) => member.name && member.title)
     .sort(
       (first, second) =>
-        second.createdAt - first.createdAt || second.name.localeCompare(first.name, "tr"),
+        Number(Boolean(second.photoUrl)) - Number(Boolean(first.photoUrl)) ||
+        second.createdAt - first.createdAt ||
+        second.name.localeCompare(first.name, "tr"),
     );
 }
 

@@ -653,6 +653,7 @@ type NewMemberRegistration = {
 };
 
 const allowedEventClaims = new Set([
+  "germany-community",
   "referral",
   "21-agustos-2026",
   "14-temmuz-2026",
@@ -703,6 +704,7 @@ export async function registerMemberProfile(
   const email = clean(input.email, 120).toLocaleLowerCase("tr-TR");
   const password = clean(input.password, 120);
   const attendedEventClaim = clean(input.attendedEventClaim, 80);
+  const germany = attendedEventClaim === "germany-community";
   const introduction = clean(input.introduction, 500);
   const lookingFor = clean(input.lookingFor, 500);
   const canHelpWith = clean(input.canHelpWith, 500);
@@ -722,7 +724,10 @@ export async function registerMemberProfile(
   if (lookingFor.length < 140) throw new Error("Ne aradığını en az 140 karakterle anlat");
   if (canHelpWith.length < 140) throw new Error("Neler yapabildiğini en az 140 karakterle anlat");
 
-  const photo = profilePhotoPayload(clean(input.photoDataUrl, 1_000_000));
+  const photo =
+    germany && !input.photoDataUrl
+      ? null
+      : profilePhotoPayload(clean(input.photoDataUrl, 1_000_000));
   const [profiles, sourceMembers] = await Promise.all([
     getRows<StoredMemberProfile>(store, "profiles/"),
     listSourceMembers(),
@@ -760,20 +765,24 @@ export async function registerMemberProfile(
     country: memberCountry(input.country),
     headline: introduction.slice(0, 120),
     bio: introduction.slice(0, 320),
-    photoUrl: `/api/member-profile?photo=${encodeURIComponent(profileId)}&v=${Date.now()}`,
+    photoUrl: photo
+      ? `/api/member-profile?photo=${encodeURIComponent(profileId)}&v=${Date.now()}`
+      : "",
     skills: [],
     experiences: [],
     links: { linkedin, instagram, website: "" },
     attendedEvents: [],
     eventCodes: [],
-    verifiedMember: true,
+    verifiedMember: !germany,
     publicProfileEnabled: false,
     membershipSource: "profile-application",
-    badge: {
-      code: "verified-event-member",
-      label: "Doğrulanmış Notwork Üyesi",
-      description: "Profil kaydı tamamlandığında üyelik otomatik olarak etkinleştirildi.",
-    },
+    badge: germany
+      ? undefined
+      : {
+          code: "verified-event-member",
+          label: "Doğrulanmış Notwork Üyesi",
+          description: "Profil kaydı tamamlandığında üyelik otomatik olarak etkinleştirildi.",
+        },
     status: "active",
     credential,
     mustChangePassword: false,
@@ -811,9 +820,10 @@ export async function registerMemberProfile(
   await Promise.all([
     store.setJSON(profileKey(username), profile),
     store.setJSON(profileEmailKey(email), { username }),
-    store.set(photoKey(profileId), new Blob([new Uint8Array(photo.image)]), {
-      metadata: { contentType: photo.contentType },
-    }),
+    photo &&
+      store.set(photoKey(profileId), new Blob([new Uint8Array(photo.image)]), {
+        metadata: { contentType: photo.contentType },
+      }),
     directoryStore.setJSON(`members/${username}.json`, directoryMember, { onlyIfNew: true }),
   ]);
 
@@ -1041,6 +1051,7 @@ export async function resetMemberCredential(
 export async function requestForgottenMemberPassword(
   requestedEmail: string,
   store = getMemberProfileStore(),
+  locale: "de" | "tr" = "tr",
 ) {
   const email = clean(requestedEmail, 120).toLocaleLowerCase("tr-TR");
   const { gmailStatus, sendGmailOnce } = await import("./_gmail.mjs");
@@ -1067,14 +1078,23 @@ export async function requestForgottenMemberPassword(
     expiresAt: Date.now() + 30 * 60 * 1000,
     createdAt: new Date().toISOString(),
   });
-  const url = `https://notwork.me/profil?reset=${token}`;
+  const german = locale === "de";
+  const url = `https://notwork.me${german ? "/de/profil" : "/profil"}?reset=${token}`;
+  const subject = german ? "notwork Passwort zurücksetzen" : "notwork şifreni yenile";
+  const intro = german
+    ? "Öffne den Link innerhalb von 30 Minuten, um dein Passwort zurückzusetzen."
+    : "Şifreni yenilemek için aşağıdaki güvenli bağlantıyı 30 dakika içinde aç.";
+  const action = german ? "Passwort zurücksetzen" : "Şifremi yenile";
+  const footer = german
+    ? "Falls du die Anfrage nicht gestellt hast, kannst du diese Nachricht ignorieren."
+    : "Bu isteği sen yapmadıysan mesajı yok say. Şifren değişmeyecek.";
   const delivery = await sendGmailOnce(
     `password-reset:${hashToken(token)}`,
     {
       to: [email],
-      subject: "notwork şifreni yenile",
-      text: `notwork profil şifreni yenilemek için bu bağlantıyı 30 dakika içinde aç: ${url}\n\nBu isteği sen yapmadıysan mesajı yok say. Şifren değişmeyecek.`,
-      html: `<html lang="tr"><meta charset="utf-8"><body style="font-family:Arial,sans-serif;color:#102327"><h1>notwork şifreni yenile</h1><p>Şifreni yenilemek için aşağıdaki güvenli bağlantıyı 30 dakika içinde aç.</p><p><a href="${url}" style="display:inline-block;padding:14px 20px;border-radius:999px;background:#65b5bb;color:#102327;text-decoration:none;font-weight:bold">Şifremi yenile</a></p><p>Bu isteği sen yapmadıysan mesajı yok say. Şifren değişmeyecek.</p><p>berk@notwork.me</p></body></html>`,
+      subject,
+      text: `${intro} ${url}\n\n${footer}`,
+      html: `<html lang="${locale}"><meta charset="utf-8"><body><h1>${subject}</h1><p>${intro}</p><p><a href="${url}">${action}</a></p><p>${footer}</p><p>berk@notwork.me</p></body></html>`,
     },
     { transactional: true },
   );
@@ -1407,7 +1427,16 @@ export async function getNetworkingMemberPhoto(username: string, store = getMemb
     type: "json",
     consistency: "strong",
   })) as StoredMemberProfile | null;
-  if (!profile || profile.status === "suspended" || !profile.verifiedMember || !profile.photoUrl) {
+  if (
+    !profile ||
+    profile.status === "suspended" ||
+    !(
+      profile.verifiedMember ||
+      (profile.status === "active" &&
+        profile.registration?.attendedEventClaim === "germany-community")
+    ) ||
+    !profile.photoUrl
+  ) {
     return null;
   }
   return getMemberProfilePhoto(profile.id, store);
@@ -1419,7 +1448,11 @@ export async function getNetworkingMemberPhotoVersions(store = getMemberProfileS
     profiles
       .filter(
         (profile) =>
-          profile.status !== "suspended" && profile.verifiedMember && Boolean(profile.photoUrl),
+          !["suspended", "rejected"].includes(profile.status) &&
+          (profile.verifiedMember ||
+            (profile.status === "active" &&
+              profile.registration?.attendedEventClaim === "germany-community")) &&
+          Boolean(profile.photoUrl),
       )
       .map((profile) => [profile.username, profile.updatedAt]),
   );

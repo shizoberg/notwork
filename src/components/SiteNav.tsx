@@ -37,6 +37,7 @@ const desktopLinks = [
 ] as const;
 
 const desktopMenuLinks = [
+  { to: "/sunum-yukle", label: "Sunum yapmak istiyorum", icon: Presentation },
   { to: "/ntw", label: "Etkinlik anı", icon: Radio },
   { to: "/sponsor", label: "Sponsor", icon: Sparkles },
   { to: "/merch", label: "Merch", icon: ShoppingBag },
@@ -55,22 +56,21 @@ export function RegionSwitch({
   className?: string;
 }) {
   const { pathname } = useLocation();
+  const regionalPages: Record<string, string> = {
+    "/etkinlikler": "/de/events",
+    "/networking": "/de/networking",
+    "/profil": "/de/profil",
+    "/ntw": "/de/live",
+    "/sunum-yukle": "/de/vortrag",
+    "/kvkk": "/de/datenschutz",
+    "/acik-riza": "/de/einwilligung",
+    "/cerez-politikasi": "/de/cookies",
+  };
   const germany =
-    pathname === "/etkinlikler"
-      ? "/de/events"
-      : pathname === "/networking"
-        ? "/de/networking"
-        : pathname === "/profil"
-          ? "/de/profil"
-          : "/de";
+    regionalPages[pathname] ?? (pathname.startsWith("/u/") ? `/de${pathname}` : "/de");
   const turkey =
-    pathname === "/de/events"
-      ? "/etkinlikler"
-      : pathname === "/de/networking"
-        ? "/networking"
-        : pathname === "/de/profil"
-          ? "/profil"
-          : "/";
+    Object.keys(regionalPages).find((key) => regionalPages[key] === pathname) ??
+    (pathname.startsWith("/de/u/") ? pathname.slice(3) : "/");
   return (
     <a
       href={german ? turkey : germany}
@@ -78,7 +78,12 @@ export function RegionSwitch({
       lang={german ? "tr" : "de"}
       aria-label={german ? "Notwork Türkiye · Türkçe" : "Notwork Deutschland · Deutsch"}
     >
-      {german ? "🇹🇷 TR" : "🇩🇪 DE"}
+      <span aria-hidden="true" className="site-region-wide">
+        {german ? "🇩🇪 DE → 🇹🇷 TR" : "🇹🇷 TR → 🇩🇪 DE"}
+      </span>
+      <span aria-hidden="true" className="site-region-compact">
+        {german ? "DE → TR" : "TR → DE"}
+      </span>
     </a>
   );
 }
@@ -230,7 +235,7 @@ function ProfileLink({ className = "", dark = false }: { className?: string; dar
 const mobileSecondaryLinks = [
   { to: "/merch", label: "Merch", icon: ShoppingBag },
   { to: "/sponsor", label: "Sponsor", icon: Sparkles },
-  { to: "/sunum-yukle", label: "Sunum yap", icon: Presentation },
+  { to: "/sunum-yukle", label: "Sunum yapmak istiyorum", icon: Presentation },
 ] as const;
 
 function MobileSiteMenu() {

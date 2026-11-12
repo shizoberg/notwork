@@ -36,6 +36,7 @@ type ProfileInput = {
   password?: string;
   newPassword?: string;
   resetToken?: string;
+  locale?: string;
   headline?: string;
   bio?: string;
   skills?: string[];
@@ -237,7 +238,7 @@ export default async (request: Request, _context: Context) => {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return new Response("Geçerli bir e-posta yaz", { status: 400 });
       }
-      await requestForgottenMemberPassword(email);
+      await requestForgottenMemberPassword(email, undefined, input.locale === "de" ? "de" : "tr");
       return json({ ok: true });
     }
 

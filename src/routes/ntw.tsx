@@ -1,5 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { MatchMiniDemo } from "@/components/MatchMiniDemo";
 import { SiteNav } from "@/components/SiteNav";
 import { getPublicEventContext, type NotworkEvent } from "@/lib/event-registry";
 import { createSeo } from "@/lib/seo";
@@ -72,14 +73,14 @@ function NtwPage() {
             <br />
             Gerçek zamanlı karşılaşmalar
           </p>
-          <div className="ntw-availability">
-            <span aria-hidden="true">● </span>
-            11 Ekim
-            <br />
-            etkinlik günü aktif olacaktır
-          </div>
+          <a className="ntw-availability" href="/etkinlikler">
+            Yaklaşan etkinlikler ↗
+          </a>
         </div>
       </main>
+      <div className="ntw-mini-wrap">
+        <MatchMiniDemo />
+      </div>
     </div>
   );
 }

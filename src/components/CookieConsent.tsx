@@ -53,11 +53,11 @@ export function CookieConsent({ german = false }: { german?: boolean }) {
               : "Zorunlu çerezler siteyi çalıştırır. Onay verirseniz analiz ve pazarlama çerezleriyle ziyaret, buton tıklaması ve etkinlik ilgisi gibi verileri ölçeriz. Tercihinizi her zaman footer’dan değiştirebilirsiniz."}
           </p>
           <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold text-primary-deep">
-            <Link to="/cerez-politikasi" className="hover:underline">
-              {german ? "Cookie-Richtlinie (Türkisch)" : "Çerez Politikası"}
+            <Link to={german ? "/de/cookies" : "/cerez-politikasi"} className="hover:underline">
+              {german ? "Cookie-Richtlinie" : "Çerez Politikası"}
             </Link>
-            <Link to="/kvkk" className="hover:underline">
-              {german ? "Datenschutzhinweise (Türkisch)" : "KVKK Aydınlatma Metni"}
+            <Link to={german ? "/de/datenschutz" : "/kvkk"} className="hover:underline">
+              {german ? "Datenschutzhinweise" : "KVKK Aydınlatma Metni"}
             </Link>
           </div>
         </div>

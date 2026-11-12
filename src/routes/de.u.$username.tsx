@@ -63,9 +63,6 @@ function GermanyPublicProfile() {
             </>
           )}
           {profile.verifiedMember && <p>✓ Verifiziertes notwork Mitglied</p>}
-          <a href={`/u/${encodeURIComponent(username)}`} lang="tr" className="de-secondary">
-            Vollständige Visitenkarte (Türkisch) ↗
-          </a>
         </section>
       )}
     </GermanySite>
