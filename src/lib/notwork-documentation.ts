@@ -255,12 +255,9 @@ export const documentation: Record<"tr" | "de", Documentation> = {
             "Match demosu",
             "Demo, kayıt, bekleme, grup ekranı, sohbet ve örnek fotoğraf adımlarını örnek kişilerle gösterir. Yatay demo ekranındaki yakınlık göstergesi bir arayüz simülasyonudur.",
           ],
-          [
-            "Nodes by notwork",
-            "Nodes, toplulukların kendi alanlarını kurması, üyelerin birbirini keşfetmesi ve etkinlik sırasında tanışması için geliştirilen ayrı bir deneyimdir. Web test görünümü örnek verilerle çalışır.",
-          ],
         ],
       },
+      { id: "nodes", title: "Nodes by notwork" },
       {
         id: "sorular",
         title: "Sık sorulan sorular",
@@ -517,12 +514,9 @@ export const documentation: Record<"tr" | "de", Documentation> = {
             "Match-Demo",
             "Die Demo zeigt Registrierung, Wartebereich, Gruppenansicht, Chat und Beispielfoto mit fiktiven Personen. Die Näherungsanzeige im Querformat ist eine Simulation der Oberfläche.",
           ],
-          [
-            "Nodes by notwork",
-            "Nodes ist eine separate Anwendung für Community-Bereiche, Mitgliederverzeichnisse und Begegnungen bei Veranstaltungen. Die Web-Testansicht verwendet Beispieldaten.",
-          ],
         ],
       },
+      { id: "nodes", title: "Nodes by notwork" },
       {
         id: "sorular",
         title: "Häufig gestellte Fragen",
