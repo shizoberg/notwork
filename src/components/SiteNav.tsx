@@ -46,11 +46,6 @@ const desktopMenuLinks = [
   { to: "/merch", label: "Merch", icon: ShoppingBag },
 ] as const;
 
-export const desktopGlassStyle = {
-  backdropFilter: "blur(24px) saturate(165%)",
-  WebkitBackdropFilter: "blur(24px) saturate(165%)",
-};
-
 const regionalPages: Record<string, string> = {
   "/notwork-nedir": "/de/ueber-notwork",
   "/etkinlikler": "/de/events",
@@ -238,7 +233,7 @@ export function SiteNav({
   const home = english ? "/en" : german ? "/de" : "/";
   const labels: Record<string, string> = {
     "/notwork-nedir": english ? "About" : "Was ist notwork?",
-    "/etkinlikler": "Events",
+    "/etkinlikler": german ? "Veranstaltungen" : "Events",
     "/networking": "Networking",
     "/sunum-yukle": english ? "Speak at an event" : "Vortrag halten",
     "/ntw": english ? "Live event" : "Event live",
@@ -248,13 +243,11 @@ export function SiteNav({
 
   return (
     <header className="site-header-shell sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-md">
-      <div
-        className="desktop-site-header desktop-site-header-centered mx-auto hidden max-w-6xl items-center sm:flex"
-        style={desktopGlassStyle}
-      >
+      <div className="desktop-site-header mx-auto hidden max-w-6xl items-center sm:grid">
         <Link
           to={home}
           className="desktop-site-brand"
+          aria-current={location.pathname === home ? "page" : undefined}
           aria-label={english ? "notwork home" : german ? "notwork Startseite" : "notwork ana sayfa"}
         >
           <img
@@ -268,16 +261,14 @@ export function SiteNav({
           {desktopLinks.map((item) => {
             const Icon = item.icon;
             const target = english ? englishPath(item.to) : regionalPath(item.to, german);
-            const active =
-              item.to === "/etkinlikler"
-                ? location.pathname === home || location.pathname === target
-                : location.pathname === target;
+            const active = location.pathname === target;
+            const compact = item.to === "/notwork-nedir" ? " desktop-about-link" : "";
             return (
               <Link
                 key={item.to}
                 to={target}
                 aria-current={active ? "page" : undefined}
-                className={`desktop-site-link${active ? " is-active" : ""}`}
+                className={`desktop-site-link${compact}${active ? " is-active" : ""}`}
               >
                 <Icon size={15} strokeWidth={1.8} aria-hidden="true" />
                 <span>{english || german ? labels[item.to] : item.label}</span>
@@ -296,13 +287,19 @@ export function SiteNav({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              align="end"
-              sideOffset={14}
+              align="start"
+              sideOffset={10}
               className="glass-menu desktop-site-dropdown w-60 p-2"
             >
-              <DropdownMenuLabel className="px-3 py-2 text-[0.65rem] uppercase tracking-[0.16em] text-foreground/40">
-                {english ? "More pages" : german ? "Weitere Seiten" : "Diğer"}
-              </DropdownMenuLabel>
+              <DropdownMenuItem asChild className="desktop-about-menu-item rounded-xl p-0">
+                <Link
+                  to={english ? "/en/about" : german ? "/de/ueber-notwork" : "/notwork-nedir"}
+                  className="flex min-h-11 items-center gap-3 px-3 text-sm"
+                >
+                  <CircleHelp size={17} strokeWidth={1.7} aria-hidden="true" />
+                  {english || german ? labels["/notwork-nedir"] : "notwork nedir"}
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild className="rounded-xl p-0">
                 <a
                   href={english ? "/en#galeri" : german ? "/de#galeri" : "/#galeri"}
