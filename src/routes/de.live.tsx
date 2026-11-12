@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { GermanySite, germanySeo } from "@/components/germany/GermanySite";
-import { MatchMiniDemo } from "@/components/MatchMiniDemo";
+import { EventMatch } from "@/components/EventMatch";
 
 export const Route = createFileRoute("/de/live")({
   head: () => germanySeo("/de/live", "Event live", "Probiere notwork Match vor dem Event aus."),
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/de/live")({
           Zum Event ↗
         </Link>
       </section>
-      <MatchMiniDemo german />
+      <EventMatch embedded german />
     </GermanySite>
   ),
 });

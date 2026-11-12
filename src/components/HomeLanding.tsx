@@ -1,0 +1,916 @@
+import { Ticket, MessageCircle } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import gallery2 from "@/assets/gallery/notwork-2.jpg";
+import gallery3 from "@/assets/gallery/notwork-3.jpg";
+import gallery4 from "@/assets/gallery/notwork-4.jpg";
+import gallery5 from "@/assets/gallery/notwork-5.jpg";
+import gallery6 from "@/assets/gallery/notwork-6.jpg";
+import gallery8 from "@/assets/gallery/notwork-8.jpg";
+import gallery9 from "@/assets/gallery/notwork-9.jpg";
+import gallery10 from "@/assets/gallery/notwork-10.jpg";
+import gallery12 from "@/assets/gallery/notwork-12.jpg";
+import gallery13 from "@/assets/gallery/notwork-13.jpg";
+import { InterviewReels } from "@/components/InterviewReels";
+import { SiteNav, SiteFooter } from "@/components/SiteNav";
+import { averageRating, listEventReviews, type EventReview } from "@/lib/event-reviews";
+import { GermanySite } from "@/components/germany/GermanySite";
+import { homeText, germanFaq, germanArchive } from "@/lib/home-language";
+import { WHATSAPP_CHANNEL_URL } from "@/components/WhatsAppChannelCta";
+
+const communityGalleryImageOrder = [25, 24, 23, 21, 20, 19, 2, 3, 27, 26, 8, 14, 13, 7, 9, 12, 15];
+
+const gallery = [
+  ...communityGalleryImageOrder.slice(0, 8).map((imageNumber) => `/community/${imageNumber}.jpg`),
+  gallery13,
+  `/community/${communityGalleryImageOrder[8]}.jpg`,
+  gallery12,
+  `/community/${communityGalleryImageOrder[9]}.jpg`,
+  gallery2,
+  `/community/${communityGalleryImageOrder[10]}.jpg`,
+  gallery3,
+  `/community/${communityGalleryImageOrder[11]}.jpg`,
+  gallery4,
+  `/community/${communityGalleryImageOrder[12]}.jpg`,
+  gallery10,
+  `/community/${communityGalleryImageOrder[13]}.jpg`,
+  gallery9,
+  `/community/${communityGalleryImageOrder[14]}.jpg`,
+  gallery8,
+  `/community/${communityGalleryImageOrder[15]}.jpg`,
+  gallery6,
+  `/community/${communityGalleryImageOrder[16]}.jpg`,
+  gallery5,
+];
+
+const faq = [
+  {
+    q: "notwork tam olarak ne?",
+    a: "notwork, Türkiye ve Almanya’da buluşmalar düzenler. Etkinliklerde gerçek deneyimleri ve onlardan öğrendiklerimizi paylaşır, yeni insanlarla tanışırız.",
+  },
+  {
+    q: "Sahnede kimler var?",
+    a: "Her event 4 konuşmacı ağırlıyor. Her biri 10 dakikada bir deneyimini, çıkardığı dersi ve dönüşümünü sunumla anlatıyor.",
+  },
+  {
+    q: "Konu akışı nasıl seçiliyor?",
+    a: "Üç kol üzerinden ilerliyoruz: kariyer, ilişki ve macera. Her eventte bu üç perspektiften farklı hayatlar dinliyoruz.",
+  },
+  {
+    q: "Networking ne zaman?",
+    a: "Sunumlar bittikten sonra. Öncesinde ısınmak için mikrofonu seyirciye uzatıp interaktif bir oyun oynuyoruz.",
+  },
+  {
+    q: "Ben de sahneye çıkabilir miyim?",
+    a: "Evet. Sunum yükle sayfasından sunumunu ve hikâyeni gönder, sana WhatsApp'tan dönelim.",
+  },
+];
+
+export function HomeLanding({ german = false }: { german?: boolean }) {
+  const content = (
+    <>
+      <Hero german={german} />
+      <Nedir german={german} />
+      <InterviewReels german={german} />
+      <EventReviewsFlow german={german} />
+      <PastEvents german={german} />
+      <Gallery german={german} />
+      <FAQ german={german} />
+    </>
+  );
+  if (german)
+    return (
+      <GermanySite active="/de" home>
+        {content}
+      </GermanySite>
+    );
+  return (
+    <div className="min-h-screen flex flex-col">
+      <SiteNav />
+      <main className="flex-1">{content}</main>
+      <SiteFooter />
+    </div>
+  );
+}
+
+const pastEvents = [
+  {
+    id: "11-ekim-2026",
+    date: "11 Ekim 2026",
+    location: "Rene Lokal",
+    title: "notwork Sahne",
+    text: "Başarısızlık hikâyeleri, interaktif WordCloud ve notwork match ile yeni bağlantılar kurduğumuz sahne buluşması.",
+    tags: ["notwork match", "WordCloud", "Networking"],
+    href: "/11-ekim",
+    accent: "from-[#071416] via-[#6b304e] to-[#d8c6ff]",
+  },
+  {
+    id: "17-eylul-2026",
+    date: "17 Eylül 2026",
+    location: "Köşk Alsancak",
+    title: "notwork Fast",
+    text: "ntw.match, ntw.five, DJ ve serbest networking akışını aynı gecede bir araya getiren notwork buluşması.",
+    tags: ["notwork match", "ntw.five", "DJ", "Networking"],
+    href: "/17-eylul",
+    accent: "from-[#071416] via-[#245f66] to-[#d8c6ff]",
+  },
+  {
+    id: "21-agustos-2026",
+    date: "21 Ağustos 2026",
+    location: "House of Rene Lokal",
+    title: "21 Ağustos notwork İzmir",
+    text: "Rene Lokal’de başarısızlık hikâyeleri, notwork match, WordCloud ve etkinlik sonrası networking akışıyla büyüyen notwork gecesi.",
+    tags: ["notwork match", "WordCloud", "Rene Lokal", "Networking"],
+    href: "/21agustos",
+    accent: "from-[#0f2f35] via-[#2f9aa5] to-[#8fcbd0]",
+  },
+  {
+    id: "14-temmuz-2026",
+    date: "14 Temmuz 2026",
+    location: "Mahal Bomonti İzmir",
+    title: "14 Temmuz notwork İzmir",
+    text: "İnteraktif sahne, 4 sunucu, networking free time ve etkinlik günü topluluk ağıyla birlikte ilerleyen özel notwork gecesi.",
+    tags: ["Konuşmacılar", "Program", "Konum", "Networking ağı"],
+    href: "/14temmuz",
+    accent: "from-[#142643] via-[#111827] to-[#0f172a]",
+  },
+  {
+    id: "22-mayis",
+    date: "22 Mayıs",
+    location: "İstinyeArt İzmir",
+    title: "notwork · Mayıs buluşması",
+    text: "Kariyer ve üretim süreçlerinde olduramadıklarımızı, sonrasında kurulan yeni yolları konuştuğumuz samimi bir networking gecesi.",
+    tags: ["Kariyer", "Üretim", "Networking"],
+    accent: "from-[#173f68] via-[#265f73] to-[#8fcbd0]",
+  },
+  {
+    id: "10-nisan",
+    date: "10 Nisan",
+    location: "İstinyeArt İzmir",
+    title: "notwork · Nisan sahnesi",
+    text: "İletişim, iş birlikleri ve yeni başlangıçlar üzerine; hatalardan öğrenilenleri sahneye taşıyan bir akşam.",
+    tags: ["İletişim", "İş birliği", "Sahne"],
+    accent: "from-[#5f2a4f] via-[#8b2c5c] to-[#e3a3bf]",
+  },
+  {
+    id: "8-mart",
+    date: "8 Mart",
+    location: "İstinyeArt İzmir",
+    title: "notwork · 8 Mart özel",
+    text: "Farklı hayat deneyimlerinden gelen cesaret, kırılma noktaları ve yeniden başlama hikâyeleriyle güçlü bir buluşma.",
+    tags: ["Deneyim", "Cesaret", "Topluluk"],
+    accent: "from-[#7f1d1d] via-[#b23b3b] to-[#f3a46b]",
+  },
+  {
+    id: "10-subat",
+    date: "10 Şubat",
+    location: "İstinyeArt İzmir",
+    title: "notwork · Şubat gecesi",
+    text: "Yeni yılın ilk büyük adımlarında; yanlış kararlar, yarım kalan işler ve onları dönüştüren dersler konuşuldu.",
+    tags: ["Yeni başlangıç", "Dersler", "Bağlantı"],
+    accent: "from-[#1e3a8a] via-[#2563eb] to-[#93c5fd]",
+  },
+  {
+    id: "16-ocak",
+    date: "16 Ocak",
+    location: "İstinyeArt İzmir",
+    title: "notwork · Ocak buluşması",
+    text: "Planların tutmadığı, yolların değiştiği ve buna rağmen yeni kapıların açıldığı hikâyelerle yılın ritmi kuruldu.",
+    tags: ["Plan", "Dönüşüm", "Network"],
+    accent: "from-[#134e4a] via-[#0f766e] to-[#99f6e4]",
+  },
+  {
+    id: "8-aralik",
+    date: "8 Aralık",
+    location: "İstinyeArt İzmir",
+    title: "notwork · Aralık başlangıcı",
+    text: "notwork ruhunu taşıyan ilk buluşmalardan biri; başarısızlık hikâyeleriyle tanışmayı kolaylaştıran sıcak bir akşam.",
+    tags: ["Başlangıç", "Hikâye", "Tanışma"],
+    accent: "from-[#3f2d1f] via-[#8a5a32] to-[#f2c078]",
+  },
+];
+
+const eventMetaById = Object.fromEntries(pastEvents.map((event) => [event.id, event]));
+
+const turkishTitles = ["networking club", "notworking club", "network community"];
+const germanTitles = ["Networking-Club", "Neue Kontakte", "Eine Community"];
+
+function Hero({ german }: { german: boolean }) {
+  const t = homeText(german);
+  const heroTitleVariants = german ? germanTitles : turkishTitles;
+  const [titleIndex, setTitleIndex] = useState(0);
+  const [displayTitle, setDisplayTitle] = useState(heroTitleVariants[0]);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let timeoutId = 0;
+    let cancelled = false;
+
+    const typeNextTitle = (currentIndex: number) => {
+      const currentTitle = heroTitleVariants[currentIndex];
+      const nextIndex = (currentIndex + 1) % heroTitleVariants.length;
+      const nextTitle = heroTitleVariants[nextIndex];
+
+      const erase = (length: number) => {
+        if (cancelled) return;
+        if (length <= 0) {
+          type(1, nextIndex, nextTitle);
+          return;
+        }
+        setDisplayTitle(currentTitle.slice(0, length));
+        timeoutId = window.setTimeout(() => erase(length - 1), 34);
+      };
+
+      const type = (length: number, nextTitleIndex: number, title: string) => {
+        if (cancelled) return;
+        setDisplayTitle(title.slice(0, length));
+        if (length >= title.length) {
+          setTitleIndex(nextTitleIndex);
+          timeoutId = window.setTimeout(() => typeNextTitle(nextTitleIndex), 2200);
+          return;
+        }
+        timeoutId = window.setTimeout(() => type(length + 1, nextTitleIndex, title), 58);
+      };
+
+      timeoutId = window.setTimeout(() => erase(currentTitle.length - 1), 1800);
+    };
+
+    typeNextTitle(0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [heroTitleVariants]);
+
+  return (
+    <section className="relative">
+      <div className="mx-auto max-w-5xl px-4 pb-8 pt-5 text-center sm:px-5 sm:pb-10 sm:pt-10">
+        <p className="hero-dates">
+          <span className="hero-date-pulse">{german ? "4. Dezember" : "22 Kasım"}</span>
+        </p>
+        <div className="mx-auto mt-3 h-px w-10 bg-primary" />
+
+        <h1
+          className="mt-3 text-balance break-keep font-display text-[3.5rem] font-black leading-[0.82] tracking-[-0.05em] text-foreground sm:text-7xl md:text-8xl lg:text-9xl"
+          aria-label={heroTitleVariants[titleIndex]}
+        >
+          <span className="inline-block min-h-[1.65em] sm:min-h-[0.92em]">
+            {displayTitle}
+            <span className="ml-1 inline-block h-[0.78em] w-[0.08em] translate-y-[0.08em] animate-pulse rounded-full bg-primary align-baseline" />
+          </span>
+        </h1>
+
+        <p className="hero-description">
+          {t("Network etkinlikleri ve çözümleri üreten networking platformu.")}
+        </p>
+        <section className="hero-upcoming" aria-label={t("Sonraki etkinlikler")}>
+          <p className="mt-6 text-xs text-muted-foreground">{t("Sonraki buluşmalar")}</p>
+          <div className="hero-event-links hero-upcoming-links">
+            {(german
+              ? [
+                  {
+                    date: "4. Dezember",
+                    name: "Deutschland",
+                    subtitle: "Persönliches Networking und neue Kontakte",
+                    to: "/de/events" as const,
+                  },
+                ]
+              : [
+                  {
+                    date: "22 Kasım",
+                    name: "Sahne",
+                    subtitle: "Başarısızlık hikâyeleri ve networking",
+                    to: "/22-kasim" as const,
+                  },
+                ]
+            ).map(({ date, name, subtitle, to }) => (
+              <Link
+                key={to}
+                to={to}
+                data-analytics="click"
+                data-analytics-label={`${date} ${name}`}
+                aria-label={`${date} notwork ${name}`}
+                className="hero-event-link"
+              >
+                <span className="hero-event-date">
+                  {date.toLocaleUpperCase(german ? "de-DE" : "tr-TR")} / 2026
+                </span>
+                <span className="hero-event-name">{name}</span>
+                <span className="hero-event-subtitle">{subtitle}</span>
+                <img
+                  src="/brand/notwork-logo.png"
+                  alt=""
+                  className="notwork-logo hero-event-logo"
+                />
+                <span className="hero-event-buy">
+                  <Ticket size={15} strokeWidth={1.7} aria-hidden="true" />
+                  {german ? "Zum Event" : "Bilet al"}
+                </span>
+              </Link>
+            ))}
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">
+            {german ? "Informationen zur Anmeldung folgen." : "Biletler satışta."}
+          </p>
+          {german ? (
+            <Link
+              to="/de/live"
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-3 text-sm font-semibold text-foreground"
+            >
+              <MessageCircle size={17} aria-hidden="true" /> Match ausprobieren
+            </Link>
+          ) : (
+            <a
+              href={WHATSAPP_CHANNEL_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-analytics="click"
+              data-analytics-label="Sonraki etkinlikler WhatsApp duyuru grubu"
+              className="mt-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-3 text-sm font-semibold text-foreground"
+            >
+              <MessageCircle size={17} aria-hidden="true" /> WhatsApp grubuna katıl
+            </a>
+          )}
+        </section>
+      </div>
+    </section>
+  );
+}
+
+function Nedir({ german }: { german: boolean }) {
+  const t = homeText(german);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const slides = [
+    {
+      name: german ? "Bühne" : "sahne",
+      href: german ? ("/de/events" as const) : ("/22-kasim" as const),
+      items: [
+        {
+          n: "01",
+          t: t("Başarısızlık hikayeleri"),
+          d: t("Deneyip olmadığında yaşananları ilk ağızdan dinle."),
+        },
+        { n: "02", t: t("İşe yarayan dersler"), d: t("Deneyimlerden kendi yoluna bir şeyler al.") },
+        {
+          n: "03",
+          t: t("İnteraktif sahne"),
+          d: t("WordCloud ve mini oyunlarla seyirci de akışa katılır."),
+        },
+        {
+          n: "04",
+          t: t("Sonra networking"),
+          d: t("Sunum sonrası ntw.match.lab ile doğru bağlantı zamanı."),
+        },
+      ],
+    },
+    {
+      name: "fast",
+      href: german ? ("/de/events" as const) : ("/etkinlikler" as const),
+      items: [
+        {
+          n: "01",
+          t: t("Problemini hızlıca çöz"),
+          d: t("ntw.five ile problemini anlayıp çözüm üretebilecek gerçek bağlantılar edin."),
+        },
+        {
+          n: "02",
+          t: t("İşine yarayan bağlantılar"),
+          d: t("Etkinlikten sonra da iletişimde kalacağın güçlü bir network oluştur."),
+        },
+        {
+          n: "03",
+          t: t("Doğru insanlarla tanış"),
+          d: t("ntw.match.lab ile ihtiyacına, niyetine ve katkına uygun insanları bul."),
+        },
+        {
+          n: "04",
+          t: t("DJ, canlı müzik, keyifli ortam"),
+          d: t("Sıkıcı kartvizit trafiği yerine community enerjisiyle rahatça tanış."),
+        },
+      ],
+    },
+  ];
+  const activeEvent = slides[activeSlide];
+
+  return (
+    <section id="nedir" className="mx-auto mt-14 max-w-6xl overflow-hidden px-4 sm:mt-24 sm:px-5">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3 sm:mb-8">
+        <div>
+          <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
+            {t("Bir notwork eventinde")}
+          </div>
+          <h2 className="mt-2 font-display font-bold text-3xl sm:text-5xl text-foreground max-w-2xl">
+            {german
+              ? `${activeEvent.name} · ${t("deneyiminde seni ne bekliyor?")}`
+              : `${activeEvent.name} deneyiminde seni ne bekliyor?`}
+          </h2>
+        </div>
+        <Link
+          to={activeEvent.href}
+          className="hidden rounded-full border border-border bg-card px-4 py-2 text-sm font-black transition hover:border-primary hover:bg-primary/10 sm:inline-flex"
+        >
+          {t("Etkinliği incele ↗")}
+        </Link>
+      </div>
+
+      <div className="mb-3 flex items-center justify-between gap-3 sm:mb-5">
+        <div className="flex max-w-full overflow-x-auto rounded-full border border-border bg-card p-1">
+          {slides.map((slide, index) => (
+            <button
+              key={slide.name}
+              type="button"
+              onClick={() => setActiveSlide(index)}
+              className={`shrink-0 rounded-full px-3 py-2 text-[11px] font-black transition sm:px-4 sm:text-sm ${
+                activeSlide === index
+                  ? "bg-foreground text-background shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {slide.name}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1.5">
+          <button
+            type="button"
+            onClick={() =>
+              setActiveSlide((current) => (current === 0 ? slides.length - 1 : current - 1))
+            }
+            aria-label={t("Önceki etkinlik akışı")}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-lg font-black transition hover:border-primary hover:bg-primary/10"
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSlide((current) => (current + 1) % slides.length)}
+            aria-label={t("Sonraki etkinlik akışı")}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-lg font-black transition hover:border-primary hover:bg-primary/10"
+          >
+            →
+          </button>
+        </div>
+      </div>
+
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-500 ease-out motion-reduce:transition-none"
+          style={{
+            width: `${slides.length * 100}%`,
+            transform: `translateX(-${activeSlide * (100 / slides.length)}%)`,
+          }}
+        >
+          {slides.map((slide) => (
+            <div
+              key={slide.name}
+              className="grid shrink-0 grid-cols-2 gap-2 pr-px sm:grid-cols-4 sm:gap-4"
+              style={{ width: `${100 / slides.length}%` }}
+            >
+              {slide.items.map((item) => (
+                <article
+                  key={`${slide.name}-${item.n}`}
+                  className="rounded-2xl border border-border bg-card p-3 transition hover:border-primary/60 hover:shadow-[var(--shadow-card)] sm:p-5"
+                >
+                  <div className="font-display text-primary text-xl font-bold sm:text-3xl">
+                    {item.n}
+                  </div>
+                  <h3 className="mt-2 font-display font-semibold text-sm leading-tight sm:text-lg">
+                    {item.t}
+                  </h3>
+                  <p className="mt-1.5 text-xs leading-snug text-muted-foreground sm:mt-2 sm:text-sm sm:leading-relaxed">
+                    {item.d}
+                  </p>
+                </article>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between sm:mt-4">
+        <div className="flex gap-1.5" aria-label={t("Etkinlik slaytı göstergesi")}>
+          {slides.map((slide, index) => (
+            <button
+              key={slide.name}
+              type="button"
+              onClick={() => setActiveSlide(index)}
+              aria-label={`${slide.name} ${german ? "anzeigen" : "akışını göster"}`}
+              className={`h-1.5 rounded-full transition-all ${
+                activeSlide === index ? "w-8 bg-primary" : "w-3 bg-border"
+              }`}
+            />
+          ))}
+        </div>
+        <Link
+          to={activeEvent.href}
+          className="text-xs font-black text-primary-deep hover:underline sm:hidden"
+        >
+          {t("Etkinliği incele ↗")}
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+function PastEvents({ german }: { german: boolean }) {
+  const t = homeText(german);
+  const [reviewsByEvent, setReviewsByEvent] = useState<Record<string, EventReview[]>>({});
+
+  useEffect(() => {
+    let active = true;
+    listEventReviews()
+      .then((reviews) => {
+        if (!active) return;
+        const grouped = reviews.reduce<Record<string, EventReview[]>>((acc, review) => {
+          acc[review.eventId] = [...(acc[review.eventId] || []), review];
+          return acc;
+        }, {});
+        setReviewsByEvent(grouped);
+      })
+      .catch(() => {
+        if (active) setReviewsByEvent({});
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return (
+    <section
+      id="etkinlikler"
+      className="mx-auto mt-14 max-w-6xl scroll-mt-24 px-4 sm:mt-24 sm:px-5"
+    >
+      <div className="mb-5 flex flex-col justify-between gap-3 sm:mb-7 sm:flex-row sm:items-end">
+        <div>
+          <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
+            {t("etkinlikler")}
+          </div>
+          <h2 className="mt-2 font-display font-bold text-3xl sm:text-5xl text-foreground">
+            {t("notwork geceleri")}
+          </h2>
+        </div>
+        <p className="max-w-md text-xs leading-relaxed text-muted-foreground sm:text-sm">
+          {t(
+            "Geçmiş notwork gecelerinden hikâyeleri, yorumları ve etkinlik arşivini burada topluyoruz.",
+          )}
+        </p>
+        <Link
+          to={german ? "/de/events" : "/etkinlikler"}
+          className="inline-flex w-fit rounded-full border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm font-black text-primary-deep transition hover:bg-primary hover:text-primary-foreground sm:px-5 sm:py-3"
+        >
+          {t("Tüm etkinlikleri gör")}
+        </Link>
+      </div>
+
+      <div className="-mx-4 overflow-x-auto px-4 pb-3 [scrollbar-width:thin] sm:-mx-5 sm:px-5 sm:pb-4">
+        <div className="flex snap-x gap-3 sm:gap-4">
+          {pastEvents.map((event) => {
+            const localized = german ? germanArchive[event.id] : undefined;
+            const eventReviews = reviewsByEvent[event.id] || [];
+            const eventAverage = averageRating(eventReviews);
+            const eventPhoto = eventReviews.find((review) => review.photoDataUrl)?.photoDataUrl;
+            const card = (
+              <article className="group flex h-full min-h-[338px] w-[76vw] max-w-[290px] snap-start flex-col overflow-hidden rounded-[22px] border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:min-h-[390px] sm:w-[300px] sm:max-w-[300px] sm:rounded-[24px]">
+                <div className="relative min-h-28 overflow-hidden bg-ink text-cream sm:min-h-40">
+                  {eventPhoto && (
+                    <img
+                      src={eventPhoto}
+                      alt={`${localized?.title ?? event.title} · ${german ? "Eventfoto" : "etkinlik fotoğrafı"}`}
+                      loading="lazy"
+                      className="absolute inset-0 h-full w-full object-cover opacity-75 transition duration-500 group-hover:scale-105"
+                    />
+                  )}
+                  <div
+                    className={`absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_32%)] bg-gradient-to-br ${event.accent} ${eventPhoto ? "mix-blend-multiply" : ""}`}
+                  />
+                  {eventPhoto && <div className="absolute inset-0 bg-ink/35" />}
+                  <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full border-[20px] border-primary/25" />
+                  <div className="absolute -bottom-14 left-8 h-32 w-32 rounded-full border-[22px] border-primary/15" />
+                  <div className="relative flex min-h-28 flex-col justify-between p-3.5 sm:min-h-40 sm:p-4">
+                    <div className="inline-flex w-fit rounded-full border border-cream/20 bg-cream/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em]">
+                      {localized?.date ?? event.date}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-[0.24em] text-primary">
+                        {event.location}
+                      </div>
+                      <div className="mt-1 font-display text-2xl font-black leading-none tracking-[-0.05em]">
+                        {t("notwork gecesi")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-1 flex-col p-3.5 sm:p-5">
+                  <div className="inline-flex w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-deep">
+                    {t("Geçmiş event")}
+                  </div>
+                  <h3 className="mt-2.5 font-display text-lg font-black tracking-[-0.04em] sm:mt-3 sm:text-xl">
+                    {localized?.title ?? event.title}
+                  </h3>
+                  <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground sm:mt-2 sm:line-clamp-3 sm:text-sm">
+                    {localized?.text ?? event.text}
+                  </p>
+                  {eventReviews.length > 0 && (
+                    <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-primary/5 px-3 py-2 sm:mt-4 sm:py-2.5">
+                      <div>
+                        <div className="text-sm tracking-tight text-primary-deep">
+                          {renderEventStars(Math.round(eventAverage))}
+                        </div>
+                        <div className="mt-0.5 text-[10px] font-semibold text-foreground/45">
+                          {eventReviews.length} {t("değerlendirme")}
+                        </div>
+                      </div>
+                      <div className="text-sm font-black text-primary-deep">
+                        {eventAverage.toFixed(1)} / 5
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-auto inline-flex items-center gap-2 pt-3 text-xs font-bold text-primary-deep sm:pt-4 sm:text-sm">
+                    {event.href && !german ? t("Event sayfasına git") : t("Arşiv kaydı")}
+                    {event.href && !german && (
+                      <span className="transition group-hover:translate-x-1">→</span>
+                    )}
+                  </div>
+                </div>
+              </article>
+            );
+
+            return event.href && !german ? (
+              <Link key={event.date} to={event.href} className="shrink-0">
+                {card}
+              </Link>
+            ) : (
+              <div key={event.date} className="shrink-0">
+                {card}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function renderEventStars(rating: number) {
+  return "★".repeat(rating) + "☆".repeat(Math.max(0, 5 - rating));
+}
+
+function EventReviewsFlow({ german }: { german: boolean }) {
+  const t = homeText(german);
+  const [reviews, setReviews] = useState<EventReview[]>([]);
+  const [expandedReviews, setExpandedReviews] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    let active = true;
+    listEventReviews()
+      .then((items) => {
+        if (active) setReviews(items);
+      })
+      .catch(() => {
+        if (active) setReviews([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (reviews.length === 0) return null;
+
+  const sortedReviews = [...reviews].sort((first, second) => {
+    const photoPriority =
+      Number(Boolean(second.photoDataUrl)) - Number(Boolean(first.photoDataUrl));
+    if (photoPriority !== 0) return photoPriority;
+    return second.createdAt.localeCompare(first.createdAt);
+  });
+  return (
+    <section
+      id="katilimci-yorumlari"
+      className="photo-reviews mx-auto mt-14 max-w-6xl scroll-mt-24 px-4 sm:mt-24 sm:px-5"
+    >
+      <div className="mb-5 flex flex-col justify-between gap-3 sm:mb-7 sm:flex-row sm:items-end">
+        <div>
+          <div className="text-primary-deep font-medium text-sm uppercase tracking-widest">
+            {t("katılımcı yorumları")}
+          </div>
+          <h2 className="mt-2 font-display font-bold text-3xl sm:text-5xl text-foreground">
+            {t("O geceden kalanlar.")}
+          </h2>
+        </div>
+      </div>
+
+      <div className="-mx-4 overflow-x-auto px-4 pb-3 [scrollbar-width:thin] sm:-mx-5 sm:px-5 sm:pb-4">
+        <div className="flex snap-x gap-3 sm:gap-4">
+          {sortedReviews.map((review) => {
+            const event = eventMetaById[review.eventId];
+            const isExpanded = !!expandedReviews[review.id];
+            const canExpand = review.comment.length > 170;
+            return (
+              <article key={review.id} className="photo-review-card">
+                <div className="photo-review-visual">
+                  {review.photoDataUrl && (
+                    <img
+                      src={review.photoDataUrl}
+                      alt={`${german ? "Eventfoto" : review.eventTitle + " yorumu"}`}
+                      loading="lazy"
+                      className="photo-review-image"
+                    />
+                  )}
+                  <div className="photo-review-overlay">
+                    <span
+                      className="photo-review-stars"
+                      aria-label={`${review.rating} / 5 ${german ? "Sterne" : "yıldız"}`}
+                    >
+                      {renderEventStars(review.rating)}
+                    </span>
+                    <strong>{review.name || t("notwork katılımcısı")}</strong>
+                    <span>
+                      {(german && germanArchive[review.eventId]?.date) ||
+                        event?.date ||
+                        (german ? "notwork Event" : review.eventTitle)}
+                    </span>
+                  </div>
+                </div>
+                <div className="photo-review-copy">
+                  <p
+                    lang={german ? "tr" : undefined}
+                    className={`mt-2 text-xs leading-relaxed text-foreground/75 sm:text-sm ${
+                      isExpanded ? "" : "line-clamp-2 sm:line-clamp-3"
+                    }`}
+                  >
+                    “{review.comment}”
+                  </p>
+                  {canExpand && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedReviews((current) => ({
+                          ...current,
+                          [review.id]: !current[review.id],
+                        }))
+                      }
+                      className="mt-2 w-fit text-xs font-black text-primary-deep hover:underline"
+                    >
+                      {isExpanded ? t("Daha az göster") : t("Devamını oku")}
+                    </button>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Gallery({ german }: { german: boolean }) {
+  const t = homeText(german);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const resumeAutoScrollAtRef = useRef(0);
+  const loop = [...gallery, ...gallery];
+
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let animationFrame = 0;
+    let previousTime = performance.now();
+
+    const moveSlider = (currentTime: number) => {
+      const elapsed = Math.min(currentTime - previousTime, 50);
+      previousTime = currentTime;
+
+      if (currentTime >= resumeAutoScrollAtRef.current) {
+        slider.scrollLeft += elapsed * 0.007;
+        const loopPoint = slider.scrollWidth / 2;
+        if (slider.scrollLeft >= loopPoint) slider.scrollLeft -= loopPoint;
+      }
+
+      animationFrame = window.requestAnimationFrame(moveSlider);
+    };
+
+    animationFrame = window.requestAnimationFrame(moveSlider);
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, []);
+
+  const pauseAutoScroll = (duration = 5000) => {
+    resumeAutoScrollAtRef.current = performance.now() + duration;
+  };
+
+  const moveManually = (direction: -1 | 1) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    pauseAutoScroll();
+    slider.scrollBy({
+      left: direction * Math.min(slider.clientWidth * 0.78, 420),
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <section id="galeri" className="mt-14 sm:mt-24">
+      <div className="mx-auto mb-5 flex max-w-6xl items-end justify-between gap-3 px-4 sm:mb-7 sm:px-5">
+        <div>
+          <h2 className="font-display text-3xl font-bold sm:text-4xl">{t("Önceki eventlerden")}</h2>
+          <p className="mt-1.5 text-xs text-muted-foreground sm:mt-2 sm:text-sm">
+            {t("Kaydır veya oklarla fotoğrafları incele.")}
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            onClick={() => moveManually(-1)}
+            aria-label={t("Önceki fotoğraf")}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-base font-black transition hover:border-primary hover:bg-primary/10 sm:h-10 sm:w-10 sm:text-lg"
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            onClick={() => moveManually(1)}
+            aria-label={t("Sonraki fotoğraf")}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-base font-black transition hover:border-primary hover:bg-primary/10 sm:h-10 sm:w-10 sm:text-lg"
+          >
+            →
+          </button>
+        </div>
+      </div>
+      <div className="relative">
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-background to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-background to-transparent z-10" />
+        <div
+          ref={sliderRef}
+          onPointerDown={() => {
+            resumeAutoScrollAtRef.current = Number.POSITIVE_INFINITY;
+          }}
+          onPointerUp={() => pauseAutoScroll()}
+          onPointerCancel={() => pauseAutoScroll()}
+          onPointerLeave={() => pauseAutoScroll()}
+          onWheel={() => pauseAutoScroll()}
+          className="cursor-grab overflow-x-auto px-4 pb-3 active:cursor-grabbing [scrollbar-width:thin] sm:px-5"
+        >
+          <div className="flex w-max snap-x snap-mandatory gap-4">
+            {loop.map((src, i) => (
+              <img
+                key={`${src}-${i}`}
+                src={src}
+                alt={`notwork ${german ? "Eventfoto" : "event anı"} ${(i % gallery.length) + 1}`}
+                loading="lazy"
+                width={1024}
+                height={1024}
+                draggable={false}
+                className="h-52 w-auto shrink-0 snap-start select-none rounded-2xl object-cover sm:h-72"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FAQ({ german }: { german: boolean }) {
+  const t = homeText(german);
+  return (
+    <section className="mx-auto mt-14 max-w-3xl px-4 sm:mt-24 sm:px-5">
+      <h2 className="font-display font-bold text-3xl sm:text-4xl text-center">
+        {t("Sık sorulanlar")}
+      </h2>
+      <p className="mt-3 text-center text-muted-foreground">
+        {t("Aklında kalan her şey, hızlıca.")}
+      </p>
+      <div className="mt-5 divide-y divide-border rounded-2xl border border-border bg-card sm:mt-8">
+        {(german ? germanFaq : faq).map((f, i) => (
+          <FaqItem key={i} q={f.q} a={f.a} defaultOpen={i === 0} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FaqItem({ q, a, defaultOpen }: { q: string; a: string; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(!!defaultOpen);
+  return (
+    <button
+      type="button"
+      onClick={() => setOpen((o) => !o)}
+      className="w-full px-4 py-4 text-left sm:px-6 sm:py-5"
+    >
+      <div className="flex items-center justify-between gap-4">
+        <span className="font-display font-semibold text-base sm:text-lg">{q}</span>
+        <span
+          className={`shrink-0 w-7 h-7 rounded-full bg-primary/15 text-primary-deep flex items-center justify-center font-bold transition-transform ${open ? "rotate-45" : ""}`}
+        >
+          +
+        </span>
+      </div>
+      <div
+        className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0"}`}
+      >
+        <div className="overflow-hidden text-muted-foreground leading-relaxed">{a}</div>
+      </div>
+    </button>
+  );
+}

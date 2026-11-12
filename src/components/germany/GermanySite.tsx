@@ -37,9 +37,17 @@ export function germanySeo(path: string, title: string, description: string, noi
   };
 }
 
-export function GermanySite({ children, active }: { children: ReactNode; active?: string }) {
+export function GermanySite({
+  children,
+  active,
+  home = false,
+}: {
+  children: ReactNode;
+  active?: string;
+  home?: boolean;
+}) {
   return (
-    <>
+    <div className="min-h-screen flex flex-col" lang="de">
       <header className="site-header-shell de-site-header sticky top-0 z-40 bg-background/70 backdrop-blur-md">
         <div
           className="desktop-site-header mx-auto hidden max-w-6xl items-center sm:flex"
@@ -72,8 +80,17 @@ export function GermanySite({ children, active }: { children: ReactNode; active?
             </Link>
           </div>
         </div>
-        <div className="mx-auto grid h-16 grid-cols-[96px_1fr_96px] items-center px-3 sm:hidden">
-          <RegionSwitch german className="justify-self-start" />
+        <div className="mx-auto grid h-16 grid-cols-[116px_1fr_116px] items-center px-3 sm:hidden">
+          <details className="de-mobile-menu justify-self-start">
+            <summary className="site-region-switch" aria-label="Menü öffnen">
+              <Menu size={17} />
+            </summary>
+            <nav aria-label="Weitere Seiten" className="glass-menu de-mobile-menu-panel">
+              <Link to="/de">Über notwork</Link>
+              <Link to="/de/vortrag">Ich möchte einen Vortrag halten</Link>
+              <Link to="/de/datenschutz">Datenschutz</Link>
+            </nav>
+          </details>
           <Link to="/de" className="justify-self-center" aria-label="notwork Deutschland">
             <img
               className="notwork-logo mobile-site-logo"
@@ -82,23 +99,14 @@ export function GermanySite({ children, active }: { children: ReactNode; active?
             />
           </Link>
           <div className="site-mobile-actions">
-            <details className="de-mobile-menu">
-              <summary className="site-region-switch" aria-label="Menü öffnen">
-                <Menu size={17} />
-              </summary>
-              <nav aria-label="Weitere Seiten" className="glass-menu de-mobile-menu-panel">
-                <Link to="/de">Über notwork</Link>
-                <Link to="/de/vortrag">Ich möchte einen Vortrag halten</Link>
-                <Link to="/de/datenschutz">Datenschutz</Link>
-              </nav>
-            </details>
+            <RegionSwitch german />
             <Link to="/de/profil" className="site-region-switch" aria-label="Mein Profil">
               <UserRound size={17} />
             </Link>
           </div>
         </div>
       </header>
-      <main className="de-site-main">{children}</main>
+      <main className={home ? "flex-1" : "de-site-main"}>{children}</main>
       <footer className="simple-footer">
         <div className="simple-footer-top">
           <Link to="/de">notwork Deutschland</Link>
@@ -117,51 +125,7 @@ export function GermanySite({ children, active }: { children: ReactNode; active?
           </button>
         </div>
       </footer>
-    </>
-  );
-}
-
-export function GermanyHome() {
-  return (
-    <GermanySite active="/de">
-      <section className="de-hero">
-        <p className="de-kicker">🇩🇪 NOTWORK DEUTSCHLAND · DEUTSCH</p>
-        <h1>
-          Gute Gespräche.
-          <br />
-          Echte Verbindungen.
-        </h1>
-        <p>
-          notwork veranstaltet Networking-Events in Deutschland und der Türkei. Wir bringen Menschen
-          zusammen, die Erfahrungen teilen, Ideen ausprobieren und gemeinsam etwas aufbauen wollen.
-        </p>
-        <div className="de-actions">
-          <Link to="/de/events" className="de-primary">
-            4. Dezember · Zum Event <ArrowRight size={17} />
-          </Link>
-          <Link to="/de/networking" className="de-secondary">
-            Community entdecken
-          </Link>
-        </div>
-      </section>
-      <section className="de-feature-grid" aria-label="Das erwartet dich">
-        <article className="de-card">
-          <CalendarDays />
-          <h2>Gemeinsam vor Ort</h2>
-          <p>
-            Bei unseren Treffen lernst du Menschen kennen, mit denen du Ideen und Erfahrungen
-            austauschen kannst.
-          </p>
-        </article>
-        <article className="de-card">
-          <Network />
-          <h2>Verbindungen, die bleiben</h2>
-          <p>
-            Entdecke, woran andere arbeiten, was sie suchen und womit sie dich unterstützen können.
-          </p>
-        </article>
-      </section>
-    </GermanySite>
+    </div>
   );
 }
 

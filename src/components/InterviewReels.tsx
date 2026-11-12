@@ -34,28 +34,39 @@ export function InterviewReels({
   eyebrow = "röportajlar",
   description = "Etkinlik sonrası aldığımız kısa yorumlar. Kartlarda sessiz döner; tıklayınca sesli izleyebilirsin.",
   videos = defaultVideos,
+  german = false,
 }: {
   title?: string;
   eyebrow?: string;
   description?: string;
   videos?: InterviewVideo[];
+  german?: boolean;
 }) {
   const [activeVideo, setActiveVideo] = useState<InterviewVideo | null>(null);
-  const loopVideos = [...videos, ...videos];
+  const localizedVideos =
+    german && videos === defaultVideos
+      ? videos.map((video, index) => ({
+          ...video,
+          title: `Interview vom 21. August · ${index + 1}`,
+        }))
+      : videos;
+  const loopVideos = [...localizedVideos, ...localizedVideos];
 
   return (
     <section className="mx-auto mt-12 max-w-6xl px-4 sm:mt-20 sm:px-5">
       <div className="mb-4 flex flex-col justify-between gap-2 sm:mb-6 sm:flex-row sm:items-end sm:gap-4">
         <div>
           <div className="text-sm font-bold uppercase tracking-[0.2em] text-primary-deep">
-            {eyebrow}
+            {german ? "Interviews" : eyebrow}
           </div>
           <h2 className="mt-1.5 font-display text-3xl font-black tracking-[-0.04em] sm:mt-2 sm:text-5xl">
-            {title}
+            {german ? "Eure Stimmen" : title}
           </h2>
         </div>
         <p className="max-w-md text-xs leading-relaxed text-muted-foreground sm:text-base">
-          {description}
+          {german
+            ? "Kurze Stimmen nach dem Event. Tippe auf ein Video, um es mit Ton abzuspielen. Die Interviews sind auf Türkisch."
+            : description}
         </p>
       </div>
 
@@ -69,7 +80,7 @@ export function InterviewReels({
               type="button"
               onClick={() => setActiveVideo(video)}
               className="group relative h-52 w-32 shrink-0 overflow-hidden rounded-2xl border border-border bg-ink text-left shadow-[var(--shadow-card)] transition hover:-translate-y-1 sm:h-72 sm:w-48"
-              aria-label={`${video.title} videosunu aç`}
+              aria-label={`${video.title} ${german ? "abspielen" : "videosunu aç"}`}
             >
               <video
                 src={video.src}
@@ -101,7 +112,7 @@ export function InterviewReels({
               onClick={() => setActiveVideo(null)}
               className="absolute right-3 top-3 z-10 rounded-full bg-white px-3 py-1 text-sm font-black text-ink"
             >
-              kapat
+              {german ? "Schließen" : "kapat"}
             </button>
             <video
               src={activeVideo.src}
@@ -112,7 +123,7 @@ export function InterviewReels({
             />
             <div className="bg-card p-4">
               <div className="text-xs font-black uppercase tracking-[0.18em] text-primary-deep">
-                21 Ağustos etkinlik röportajları
+                {german ? "Interviews vom 21. August" : "21 Ağustos etkinlik röportajları"}
               </div>
               <div className="mt-1 font-display text-2xl font-black tracking-[-0.04em]">
                 {activeVideo.title}

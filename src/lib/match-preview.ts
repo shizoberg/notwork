@@ -34,22 +34,26 @@ let round =
   typeof window === "undefined"
     ? 1
     : Number(window.localStorage.getItem("notwork-match-preview-round")) || 1;
-export function matchPreview() {
+export function matchPreview(embeddedRound?: number) {
+  const demoRound = embeddedRound ?? round;
   const longNameDemo =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("demo") === "long-name";
-  const codes = round % 2 ? ["C03", "A12", "B07"] : ["C03", "D18", "E24"];
+  const codes = demoRound % 2 ? ["C03", "A12", "B07"] : ["C03", "D18", "E24"];
+  const exampleNames = demoRound % 2 ? ["Sen", "Deniz", "Ece"] : ["Sen", "Can", "Ada"];
   const prompts = [
     "Son zamanlarda fikrini değiştiren bir şey neydi?",
     "Bugün birinden tek bir şey öğrenebilseydin ne olurdu?",
   ];
   const group: EventNetworkMatchGroup = {
-    id: `preview-${round}`,
+    id: `preview-${demoRound}`,
     groupName: longNameDemo
       ? "Taşın altına elini koyanlar"
-      : round % 2 ? "İş bitiriciler" : "Hızlı aksiyon alanlar",
+      : demoRound % 2
+        ? "İş bitiriciler"
+        : "Hızlı aksiyon alanlar",
     groupSize: 3,
-    round,
+    round: demoRound,
     score: 90,
     reason: "Farklı deneyimler, ortak merak.",
     aiAnalysis:
@@ -61,7 +65,7 @@ export function matchPreview() {
     members: codes.map((publicCode, index) => ({
       participantId: index ? `preview-${publicCode}` : "preview-person",
       publicCode,
-      name: index ? `Örnek katılımcı ${index}` : "Sen",
+      name: index ? (embeddedRound ? exampleNames[index] : `Örnek katılımcı ${index}`) : "Sen",
       offers: ["tasarım"],
       needs: "Yeni bir fikri birlikte geliştirmek istiyorum.",
       needTag: "fikir",

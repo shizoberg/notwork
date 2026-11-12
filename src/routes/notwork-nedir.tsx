@@ -162,7 +162,7 @@ function NotworkNedirPage() {
           <span className="about-section-index">01</span>
           <div>
             <p className="about-eyebrow">tek cümlede</p>
-            <h2>Türkiye ve Almanya’da networking etkinlikleri düzenleyen bir topluluk</h2>
+            <h2>network etkinlikleri ve çözümleri üreten bir network platformu</h2>
           </div>
           <p>
             Etkinlik bizim buluşma noktamız. Teknoloji ise o kalabalığın içinde doğru kişiyi

@@ -72,19 +72,33 @@ export function RegionSwitch({
     Object.keys(regionalPages).find((key) => regionalPages[key] === pathname) ??
     (pathname.startsWith("/de/u/") ? pathname.slice(3) : "/");
   return (
-    <a
-      href={german ? turkey : germany}
-      className={`site-region-switch ${className}`}
-      lang={german ? "tr" : "de"}
-      aria-label={german ? "Notwork Türkiye · Türkçe" : "Notwork Deutschland · Deutsch"}
+    <nav
+      className={`site-region-toggle ${className}`}
+      data-region={german ? "de" : "tr"}
+      aria-label={german ? "Sprache und Region" : "Dil ve bölge"}
     >
-      <span aria-hidden="true" className="site-region-wide">
-        {german ? "🇩🇪 DE → 🇹🇷 TR" : "🇹🇷 TR → 🇩🇪 DE"}
-      </span>
-      <span aria-hidden="true" className="site-region-compact">
-        {german ? "DE → TR" : "TR → DE"}
-      </span>
-    </a>
+      <span className="site-region-thumb" aria-hidden="true" />
+      <Link
+        to={turkey}
+        lang="tr"
+        aria-label="Türkçe"
+        activeOptions={{ exact: true }}
+        aria-current={german ? undefined : "true"}
+        viewTransition
+      >
+        TR
+      </Link>
+      <Link
+        to={germany}
+        lang="de"
+        aria-label="Deutsch"
+        activeOptions={{ exact: true }}
+        aria-current={german ? "true" : undefined}
+        viewTransition
+      >
+        DE
+      </Link>
+    </nav>
   );
 }
 
@@ -195,7 +209,7 @@ export function SiteNav({ variant = "default" }: { variant?: SiteNavVariant }) {
           <ProfileLink className="desktop-profile-button" />
         </div>
       </div>
-      <div className="mx-auto grid h-16 grid-cols-[100px_1fr_100px] items-center px-3 sm:hidden">
+      <div className="mx-auto grid h-16 grid-cols-[116px_1fr_116px] items-center px-3 sm:hidden">
         <MobileSiteMenu />
         <BrandLink className="justify-self-center" />
         <div className="site-mobile-actions">

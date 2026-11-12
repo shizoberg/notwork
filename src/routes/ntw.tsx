@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { MatchMiniDemo } from "@/components/MatchMiniDemo";
+import { EventMatch } from "@/components/EventMatch";
 import { SiteNav } from "@/components/SiteNav";
 import { getPublicEventContext, type NotworkEvent } from "@/lib/event-registry";
 import { createSeo } from "@/lib/seo";
@@ -78,8 +78,8 @@ function NtwPage() {
           </a>
         </div>
       </main>
-      <div className="ntw-mini-wrap">
-        <MatchMiniDemo />
+      <div className="ntw-match-demo-wrap">
+        <EventMatch embedded />
       </div>
     </div>
   );
