@@ -1,10 +1,16 @@
+import { isEnglishPath } from "@/lib/english-site";
 import { Link, useLocation } from "@tanstack/react-router";
 import { CalendarDays, Network } from "lucide-react";
 
 export function MobileDock() {
   const { pathname } = useLocation();
   const german = pathname === "/de" || pathname.startsWith("/de/");
-  const items = german
+  const english = isEnglishPath(pathname);
+  const items = english ? [
+    { to: "/en/events", label: "Events", icon: CalendarDays, active: ["/en", "/en/events", "/en/22-november", "/en/4-december"].includes(pathname) || pathname.startsWith("/en/archive/") },
+    { to: "/en/networking", label: "Networking", icon: Network, active: pathname === "/en/networking" || pathname.startsWith("/en/u/") },
+    { to: "/en/live", label: "Live event", icon: null, active: pathname === "/en/live" },
+  ] as const : german
     ? ([
         {
           to: "/de/events",
@@ -43,7 +49,7 @@ export function MobileDock() {
       ] as const);
   const selected = items.findIndex((item) => item.active);
   return (
-    <nav className="mobile-glass-dock" aria-label={german ? "Hauptmenü" : "Ana menü"}>
+    <nav className="mobile-glass-dock" aria-label={english ? "Main navigation" : german ? "Hauptmenü" : "Ana menü"}>
       {selected >= 0 && (
         <span
           className="mobile-glass-selection"

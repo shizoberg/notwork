@@ -50,12 +50,12 @@ function safeExternalUrl(value: string, fallbackPrefix = "") {
 }
 
 export function PublicMemberProfilePage({ username }: { username: string }) {
-  const { t, german } = useProfileLanguage();
+  const { t, german, english } = useProfileLanguage();
   const [profile, setProfile] = useState<PublicNotworkMemberProfile | null>(null);
   const [viewer, setViewer] = useState<NotworkMemberProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const shareUrl = `https://notwork.me${german ? "/de" : ""}/u/${encodeURIComponent(username)}`;
+  const shareUrl = `https://notwork.me${english ? "/en" : german ? "/de" : ""}/u/${encodeURIComponent(username)}`;
 
   useEffect(() => {
     let active = true;
@@ -123,7 +123,7 @@ export function PublicMemberProfilePage({ username }: { username: string }) {
               {t("Üye kartı henüz paylaşılmamış veya bağlantı artık kullanılamıyor.")}
             </p>
             <Link
-              to={german ? "/de/networking" : "/networking"}
+              to={english ? "/en/networking" : german ? "/de/networking" : "/networking"}
               className="profile-primary-button mx-auto mt-6 w-fit"
             >
               {t("Notwork community’yi gör")}
@@ -260,7 +260,7 @@ function ReferenceSection({
   profile: PublicNotworkMemberProfile;
   viewer: NotworkMemberProfile | null;
 }) {
-  const { t, german } = useProfileLanguage();
+  const { t, german, english } = useProfileLanguage();
   const [skill, setSkill] = useState(profile.skills[0] || t("genel yetkinlik"));
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -383,7 +383,7 @@ function ReferenceSection({
           <p className="text-sm font-semibold text-muted-foreground">
             {t("Referans yazmak için doğrulanmış üye hesabınla giriş yap.")}
           </p>
-          <Link to={german ? "/de/profil" : "/profil"} className="profile-primary-button">
+          <Link to={english ? "/en/profile" : german ? "/de/profil" : "/profil"} className="profile-primary-button">
             <LogIn className="h-4 w-4" /> {t("Üye girişi")}
           </Link>
         </div>

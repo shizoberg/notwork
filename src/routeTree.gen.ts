@@ -29,6 +29,7 @@ import { Route as KvkkRouteImport } from './routes/kvkk'
 import { Route as FiveRouteImport } from './routes/five'
 import { Route as EtkinliklerRouteImport } from './routes/etkinlikler'
 import { Route as EtkinlikDegerlendirmeRouteImport } from './routes/etkinlik-degerlendirme'
+import { Route as EnRouteImport } from './routes/en'
 import { Route as DuyurularRouteImport } from './routes/duyurular'
 import { Route as DokumantasyonRouteImport } from './routes/dokumantasyon'
 import { Route as Demo2RouteImport } from './routes/demo2'
@@ -52,9 +53,26 @@ import { Route as R14temmuzRouteImport } from './routes/14temmuz'
 import { Route as R11EkimRouteImport } from './routes/11-ekim'
 import { Route as R10AralikRouteImport } from './routes/10-aralik'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EnIndexRouteImport } from './routes/en.index'
 import { Route as DeIndexRouteImport } from './routes/de.index'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as FiveLiveRouteImport } from './routes/five_.live'
+import { Route as EnSponsorRouteImport } from './routes/en.sponsor'
+import { Route as EnSpeakRouteImport } from './routes/en.speak'
+import { Route as EnRegisterRouteImport } from './routes/en.register'
+import { Route as EnProfileRouteImport } from './routes/en.profile'
+import { Route as EnPrivacyRouteImport } from './routes/en.privacy'
+import { Route as EnNetworkingRouteImport } from './routes/en.networking'
+import { Route as EnMerchRouteImport } from './routes/en.merch'
+import { Route as EnLiveRouteImport } from './routes/en.live'
+import { Route as EnEventsRouteImport } from './routes/en.events'
+import { Route as EnDocumentationRouteImport } from './routes/en.documentation'
+import { Route as EnCookiesRouteImport } from './routes/en.cookies'
+import { Route as EnConsentRouteImport } from './routes/en.consent'
+import { Route as EnAnnouncementsRouteImport } from './routes/en.announcements'
+import { Route as EnAboutRouteImport } from './routes/en.about'
+import { Route as En4DecemberRouteImport } from './routes/en.4-december'
+import { Route as En22NovemberRouteImport } from './routes/en.22-november'
 import { Route as DeVortragRouteImport } from './routes/de.vortrag'
 import { Route as DeUeberNotworkRouteImport } from './routes/de.ueber-notwork'
 import { Route as DeSponsorRouteImport } from './routes/de.sponsor'
@@ -75,6 +93,8 @@ import { Route as R21AgustosWordcloudRouteImport } from './routes/21-agustos.wor
 import { Route as R21AgustosSonuclarRouteImport } from './routes/21-agustos.sonuclar'
 import { Route as R21AgustosNetworkRouteImport } from './routes/21-agustos.network'
 import { Route as R21AgustosEslesmeRouteImport } from './routes/21-agustos.eslesme'
+import { Route as EnUUsernameRouteImport } from './routes/en.u.$username'
+import { Route as EnArchiveEventIdRouteImport } from './routes/en.archive.$eventId'
 import { Route as DeUUsernameRouteImport } from './routes/de.u.$username'
 import { Route as DeArchivEventIdRouteImport } from './routes/de.archiv.$eventId'
 
@@ -176,6 +196,11 @@ const EtkinliklerRoute = EtkinliklerRouteImport.update({
 const EtkinlikDegerlendirmeRoute = EtkinlikDegerlendirmeRouteImport.update({
   id: '/etkinlik-degerlendirme',
   path: '/etkinlik-degerlendirme',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnRoute = EnRouteImport.update({
+  id: '/en',
+  path: '/en',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DuyurularRoute = DuyurularRouteImport.update({
@@ -293,6 +318,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EnIndexRoute = EnIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EnRoute,
+} as any)
 const DeIndexRoute = DeIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -307,6 +337,86 @@ const FiveLiveRoute = FiveLiveRouteImport.update({
   id: '/five_/live',
   path: '/five/live',
   getParentRoute: () => rootRouteImport,
+} as any)
+const EnSponsorRoute = EnSponsorRouteImport.update({
+  id: '/sponsor',
+  path: '/sponsor',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnSpeakRoute = EnSpeakRouteImport.update({
+  id: '/speak',
+  path: '/speak',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnRegisterRoute = EnRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnProfileRoute = EnProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnPrivacyRoute = EnPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnNetworkingRoute = EnNetworkingRouteImport.update({
+  id: '/networking',
+  path: '/networking',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnMerchRoute = EnMerchRouteImport.update({
+  id: '/merch',
+  path: '/merch',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnLiveRoute = EnLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnEventsRoute = EnEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnDocumentationRoute = EnDocumentationRouteImport.update({
+  id: '/documentation',
+  path: '/documentation',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnCookiesRoute = EnCookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnConsentRoute = EnConsentRouteImport.update({
+  id: '/consent',
+  path: '/consent',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnAnnouncementsRoute = EnAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnAboutRoute = EnAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => EnRoute,
+} as any)
+const En4DecemberRoute = En4DecemberRouteImport.update({
+  id: '/4-december',
+  path: '/4-december',
+  getParentRoute: () => EnRoute,
+} as any)
+const En22NovemberRoute = En22NovemberRouteImport.update({
+  id: '/22-november',
+  path: '/22-november',
+  getParentRoute: () => EnRoute,
 } as any)
 const DeVortragRoute = DeVortragRouteImport.update({
   id: '/vortrag',
@@ -408,6 +518,16 @@ const R21AgustosEslesmeRoute = R21AgustosEslesmeRouteImport.update({
   path: '/21-agustos/eslesme',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EnUUsernameRoute = EnUUsernameRouteImport.update({
+  id: '/u/$username',
+  path: '/u/$username',
+  getParentRoute: () => EnRoute,
+} as any)
+const EnArchiveEventIdRoute = EnArchiveEventIdRouteImport.update({
+  id: '/archive/$eventId',
+  path: '/archive/$eventId',
+  getParentRoute: () => EnRoute,
+} as any)
 const DeUUsernameRoute = DeUUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
@@ -443,6 +563,7 @@ export interface FileRoutesByFullPath {
   '/demo2': typeof Demo2Route
   '/dokumantasyon': typeof DokumantasyonRoute
   '/duyurular': typeof DuyurularRoute
+  '/en': typeof EnRouteWithChildren
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
   '/five': typeof FiveRoute
@@ -483,11 +604,30 @@ export interface FileRoutesByFullPath {
   '/de/sponsor': typeof DeSponsorRoute
   '/de/ueber-notwork': typeof DeUeberNotworkRoute
   '/de/vortrag': typeof DeVortragRoute
+  '/en/22-november': typeof En22NovemberRoute
+  '/en/4-december': typeof En4DecemberRoute
+  '/en/about': typeof EnAboutRoute
+  '/en/announcements': typeof EnAnnouncementsRoute
+  '/en/consent': typeof EnConsentRoute
+  '/en/cookies': typeof EnCookiesRoute
+  '/en/documentation': typeof EnDocumentationRoute
+  '/en/events': typeof EnEventsRoute
+  '/en/live': typeof EnLiveRoute
+  '/en/merch': typeof EnMerchRoute
+  '/en/networking': typeof EnNetworkingRoute
+  '/en/privacy': typeof EnPrivacyRoute
+  '/en/profile': typeof EnProfileRoute
+  '/en/register': typeof EnRegisterRoute
+  '/en/speak': typeof EnSpeakRoute
+  '/en/sponsor': typeof EnSponsorRoute
   '/five/live': typeof FiveLiveRoute
   '/u/$username': typeof UUsernameRoute
   '/de/': typeof DeIndexRoute
+  '/en/': typeof EnIndexRoute
   '/de/archiv/$eventId': typeof DeArchivEventIdRoute
   '/de/u/$username': typeof DeUUsernameRoute
+  '/en/archive/$eventId': typeof EnArchiveEventIdRoute
+  '/en/u/$username': typeof EnUUsernameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -552,11 +692,30 @@ export interface FileRoutesByTo {
   '/de/sponsor': typeof DeSponsorRoute
   '/de/ueber-notwork': typeof DeUeberNotworkRoute
   '/de/vortrag': typeof DeVortragRoute
+  '/en/22-november': typeof En22NovemberRoute
+  '/en/4-december': typeof En4DecemberRoute
+  '/en/about': typeof EnAboutRoute
+  '/en/announcements': typeof EnAnnouncementsRoute
+  '/en/consent': typeof EnConsentRoute
+  '/en/cookies': typeof EnCookiesRoute
+  '/en/documentation': typeof EnDocumentationRoute
+  '/en/events': typeof EnEventsRoute
+  '/en/live': typeof EnLiveRoute
+  '/en/merch': typeof EnMerchRoute
+  '/en/networking': typeof EnNetworkingRoute
+  '/en/privacy': typeof EnPrivacyRoute
+  '/en/profile': typeof EnProfileRoute
+  '/en/register': typeof EnRegisterRoute
+  '/en/speak': typeof EnSpeakRoute
+  '/en/sponsor': typeof EnSponsorRoute
   '/five/live': typeof FiveLiveRoute
   '/u/$username': typeof UUsernameRoute
   '/de': typeof DeIndexRoute
+  '/en': typeof EnIndexRoute
   '/de/archiv/$eventId': typeof DeArchivEventIdRoute
   '/de/u/$username': typeof DeUUsernameRoute
+  '/en/archive/$eventId': typeof EnArchiveEventIdRoute
+  '/en/u/$username': typeof EnUUsernameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -583,6 +742,7 @@ export interface FileRoutesById {
   '/demo2': typeof Demo2Route
   '/dokumantasyon': typeof DokumantasyonRoute
   '/duyurular': typeof DuyurularRoute
+  '/en': typeof EnRouteWithChildren
   '/etkinlik-degerlendirme': typeof EtkinlikDegerlendirmeRoute
   '/etkinlikler': typeof EtkinliklerRoute
   '/five': typeof FiveRoute
@@ -623,11 +783,30 @@ export interface FileRoutesById {
   '/de/sponsor': typeof DeSponsorRoute
   '/de/ueber-notwork': typeof DeUeberNotworkRoute
   '/de/vortrag': typeof DeVortragRoute
+  '/en/22-november': typeof En22NovemberRoute
+  '/en/4-december': typeof En4DecemberRoute
+  '/en/about': typeof EnAboutRoute
+  '/en/announcements': typeof EnAnnouncementsRoute
+  '/en/consent': typeof EnConsentRoute
+  '/en/cookies': typeof EnCookiesRoute
+  '/en/documentation': typeof EnDocumentationRoute
+  '/en/events': typeof EnEventsRoute
+  '/en/live': typeof EnLiveRoute
+  '/en/merch': typeof EnMerchRoute
+  '/en/networking': typeof EnNetworkingRoute
+  '/en/privacy': typeof EnPrivacyRoute
+  '/en/profile': typeof EnProfileRoute
+  '/en/register': typeof EnRegisterRoute
+  '/en/speak': typeof EnSpeakRoute
+  '/en/sponsor': typeof EnSponsorRoute
   '/five_/live': typeof FiveLiveRoute
   '/u/$username': typeof UUsernameRoute
   '/de/': typeof DeIndexRoute
+  '/en/': typeof EnIndexRoute
   '/de/archiv/$eventId': typeof DeArchivEventIdRoute
   '/de/u/$username': typeof DeUUsernameRoute
+  '/en/archive/$eventId': typeof EnArchiveEventIdRoute
+  '/en/u/$username': typeof EnUUsernameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -655,6 +834,7 @@ export interface FileRouteTypes {
     | '/demo2'
     | '/dokumantasyon'
     | '/duyurular'
+    | '/en'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
     | '/five'
@@ -695,11 +875,30 @@ export interface FileRouteTypes {
     | '/de/sponsor'
     | '/de/ueber-notwork'
     | '/de/vortrag'
+    | '/en/22-november'
+    | '/en/4-december'
+    | '/en/about'
+    | '/en/announcements'
+    | '/en/consent'
+    | '/en/cookies'
+    | '/en/documentation'
+    | '/en/events'
+    | '/en/live'
+    | '/en/merch'
+    | '/en/networking'
+    | '/en/privacy'
+    | '/en/profile'
+    | '/en/register'
+    | '/en/speak'
+    | '/en/sponsor'
     | '/five/live'
     | '/u/$username'
     | '/de/'
+    | '/en/'
     | '/de/archiv/$eventId'
     | '/de/u/$username'
+    | '/en/archive/$eventId'
+    | '/en/u/$username'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -764,11 +963,30 @@ export interface FileRouteTypes {
     | '/de/sponsor'
     | '/de/ueber-notwork'
     | '/de/vortrag'
+    | '/en/22-november'
+    | '/en/4-december'
+    | '/en/about'
+    | '/en/announcements'
+    | '/en/consent'
+    | '/en/cookies'
+    | '/en/documentation'
+    | '/en/events'
+    | '/en/live'
+    | '/en/merch'
+    | '/en/networking'
+    | '/en/privacy'
+    | '/en/profile'
+    | '/en/register'
+    | '/en/speak'
+    | '/en/sponsor'
     | '/five/live'
     | '/u/$username'
     | '/de'
+    | '/en'
     | '/de/archiv/$eventId'
     | '/de/u/$username'
+    | '/en/archive/$eventId'
+    | '/en/u/$username'
   id:
     | '__root__'
     | '/'
@@ -794,6 +1012,7 @@ export interface FileRouteTypes {
     | '/demo2'
     | '/dokumantasyon'
     | '/duyurular'
+    | '/en'
     | '/etkinlik-degerlendirme'
     | '/etkinlikler'
     | '/five'
@@ -834,11 +1053,30 @@ export interface FileRouteTypes {
     | '/de/sponsor'
     | '/de/ueber-notwork'
     | '/de/vortrag'
+    | '/en/22-november'
+    | '/en/4-december'
+    | '/en/about'
+    | '/en/announcements'
+    | '/en/consent'
+    | '/en/cookies'
+    | '/en/documentation'
+    | '/en/events'
+    | '/en/live'
+    | '/en/merch'
+    | '/en/networking'
+    | '/en/privacy'
+    | '/en/profile'
+    | '/en/register'
+    | '/en/speak'
+    | '/en/sponsor'
     | '/five_/live'
     | '/u/$username'
     | '/de/'
+    | '/en/'
     | '/de/archiv/$eventId'
     | '/de/u/$username'
+    | '/en/archive/$eventId'
+    | '/en/u/$username'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -865,6 +1103,7 @@ export interface RootRouteChildren {
   Demo2Route: typeof Demo2Route
   DokumantasyonRoute: typeof DokumantasyonRoute
   DuyurularRoute: typeof DuyurularRoute
+  EnRoute: typeof EnRouteWithChildren
   EtkinlikDegerlendirmeRoute: typeof EtkinlikDegerlendirmeRoute
   EtkinliklerRoute: typeof EtkinliklerRoute
   FiveRoute: typeof FiveRoute
@@ -1035,6 +1274,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EtkinlikDegerlendirmeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/en': {
+      id: '/en'
+      path: '/en'
+      fullPath: '/en'
+      preLoaderRoute: typeof EnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/duyurular': {
       id: '/duyurular'
       path: '/duyurular'
@@ -1196,6 +1442,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/en/': {
+      id: '/en/'
+      path: '/'
+      fullPath: '/en/'
+      preLoaderRoute: typeof EnIndexRouteImport
+      parentRoute: typeof EnRoute
+    }
     '/de/': {
       id: '/de/'
       path: '/'
@@ -1216,6 +1469,118 @@ declare module '@tanstack/react-router' {
       fullPath: '/five/live'
       preLoaderRoute: typeof FiveLiveRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/en/sponsor': {
+      id: '/en/sponsor'
+      path: '/sponsor'
+      fullPath: '/en/sponsor'
+      preLoaderRoute: typeof EnSponsorRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/speak': {
+      id: '/en/speak'
+      path: '/speak'
+      fullPath: '/en/speak'
+      preLoaderRoute: typeof EnSpeakRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/register': {
+      id: '/en/register'
+      path: '/register'
+      fullPath: '/en/register'
+      preLoaderRoute: typeof EnRegisterRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/profile': {
+      id: '/en/profile'
+      path: '/profile'
+      fullPath: '/en/profile'
+      preLoaderRoute: typeof EnProfileRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/privacy': {
+      id: '/en/privacy'
+      path: '/privacy'
+      fullPath: '/en/privacy'
+      preLoaderRoute: typeof EnPrivacyRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/networking': {
+      id: '/en/networking'
+      path: '/networking'
+      fullPath: '/en/networking'
+      preLoaderRoute: typeof EnNetworkingRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/merch': {
+      id: '/en/merch'
+      path: '/merch'
+      fullPath: '/en/merch'
+      preLoaderRoute: typeof EnMerchRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/live': {
+      id: '/en/live'
+      path: '/live'
+      fullPath: '/en/live'
+      preLoaderRoute: typeof EnLiveRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/events': {
+      id: '/en/events'
+      path: '/events'
+      fullPath: '/en/events'
+      preLoaderRoute: typeof EnEventsRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/documentation': {
+      id: '/en/documentation'
+      path: '/documentation'
+      fullPath: '/en/documentation'
+      preLoaderRoute: typeof EnDocumentationRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/cookies': {
+      id: '/en/cookies'
+      path: '/cookies'
+      fullPath: '/en/cookies'
+      preLoaderRoute: typeof EnCookiesRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/consent': {
+      id: '/en/consent'
+      path: '/consent'
+      fullPath: '/en/consent'
+      preLoaderRoute: typeof EnConsentRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/announcements': {
+      id: '/en/announcements'
+      path: '/announcements'
+      fullPath: '/en/announcements'
+      preLoaderRoute: typeof EnAnnouncementsRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/about': {
+      id: '/en/about'
+      path: '/about'
+      fullPath: '/en/about'
+      preLoaderRoute: typeof EnAboutRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/4-december': {
+      id: '/en/4-december'
+      path: '/4-december'
+      fullPath: '/en/4-december'
+      preLoaderRoute: typeof En4DecemberRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/22-november': {
+      id: '/en/22-november'
+      path: '/22-november'
+      fullPath: '/en/22-november'
+      preLoaderRoute: typeof En22NovemberRouteImport
+      parentRoute: typeof EnRoute
     }
     '/de/vortrag': {
       id: '/de/vortrag'
@@ -1357,6 +1722,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof R21AgustosEslesmeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/en/u/$username': {
+      id: '/en/u/$username'
+      path: '/u/$username'
+      fullPath: '/en/u/$username'
+      preLoaderRoute: typeof EnUUsernameRouteImport
+      parentRoute: typeof EnRoute
+    }
+    '/en/archive/$eventId': {
+      id: '/en/archive/$eventId'
+      path: '/archive/$eventId'
+      fullPath: '/en/archive/$eventId'
+      preLoaderRoute: typeof EnArchiveEventIdRouteImport
+      parentRoute: typeof EnRoute
+    }
     '/de/u/$username': {
       id: '/de/u/$username'
       path: '/u/$username'
@@ -1420,6 +1799,52 @@ const DeRouteChildren: DeRouteChildren = {
 
 const DeRouteWithChildren = DeRoute._addFileChildren(DeRouteChildren)
 
+interface EnRouteChildren {
+  En22NovemberRoute: typeof En22NovemberRoute
+  En4DecemberRoute: typeof En4DecemberRoute
+  EnAboutRoute: typeof EnAboutRoute
+  EnAnnouncementsRoute: typeof EnAnnouncementsRoute
+  EnConsentRoute: typeof EnConsentRoute
+  EnCookiesRoute: typeof EnCookiesRoute
+  EnDocumentationRoute: typeof EnDocumentationRoute
+  EnEventsRoute: typeof EnEventsRoute
+  EnLiveRoute: typeof EnLiveRoute
+  EnMerchRoute: typeof EnMerchRoute
+  EnNetworkingRoute: typeof EnNetworkingRoute
+  EnPrivacyRoute: typeof EnPrivacyRoute
+  EnProfileRoute: typeof EnProfileRoute
+  EnRegisterRoute: typeof EnRegisterRoute
+  EnSpeakRoute: typeof EnSpeakRoute
+  EnSponsorRoute: typeof EnSponsorRoute
+  EnIndexRoute: typeof EnIndexRoute
+  EnArchiveEventIdRoute: typeof EnArchiveEventIdRoute
+  EnUUsernameRoute: typeof EnUUsernameRoute
+}
+
+const EnRouteChildren: EnRouteChildren = {
+  En22NovemberRoute: En22NovemberRoute,
+  En4DecemberRoute: En4DecemberRoute,
+  EnAboutRoute: EnAboutRoute,
+  EnAnnouncementsRoute: EnAnnouncementsRoute,
+  EnConsentRoute: EnConsentRoute,
+  EnCookiesRoute: EnCookiesRoute,
+  EnDocumentationRoute: EnDocumentationRoute,
+  EnEventsRoute: EnEventsRoute,
+  EnLiveRoute: EnLiveRoute,
+  EnMerchRoute: EnMerchRoute,
+  EnNetworkingRoute: EnNetworkingRoute,
+  EnPrivacyRoute: EnPrivacyRoute,
+  EnProfileRoute: EnProfileRoute,
+  EnRegisterRoute: EnRegisterRoute,
+  EnSpeakRoute: EnSpeakRoute,
+  EnSponsorRoute: EnSponsorRoute,
+  EnIndexRoute: EnIndexRoute,
+  EnArchiveEventIdRoute: EnArchiveEventIdRoute,
+  EnUUsernameRoute: EnUUsernameRoute,
+}
+
+const EnRouteWithChildren = EnRoute._addFileChildren(EnRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   R10AralikRoute: R10AralikRoute,
@@ -1444,6 +1869,7 @@ const rootRouteChildren: RootRouteChildren = {
   Demo2Route: Demo2Route,
   DokumantasyonRoute: DokumantasyonRoute,
   DuyurularRoute: DuyurularRoute,
+  EnRoute: EnRouteWithChildren,
   EtkinlikDegerlendirmeRoute: EtkinlikDegerlendirmeRoute,
   EtkinliklerRoute: EtkinliklerRoute,
   FiveRoute: FiveRoute,

@@ -52,6 +52,7 @@ export type EventFlowStep = {
 };
 
 export type EventProductConfig = {
+  english?: boolean;
   german?: boolean;
   comingSoon?: boolean;
   trackingId: string;
@@ -130,6 +131,7 @@ export function EventProductPage({ config }: { config: EventProductConfig }) {
             <div className="grid grid-cols-1 items-start gap-4 sm:gap-7 lg:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)] lg:gap-10">
               <EventGallery
                 german={config.german}
+                english={config.english}
                 gallery={config.gallery}
                 imageTitle={config.imageTitle}
                 imageSubtitle={config.imageSubtitle}
@@ -156,7 +158,7 @@ export function EventProductPage({ config }: { config: EventProductConfig }) {
           role="status"
           className="fixed bottom-20 left-1/2 z-50 w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-full border border-white/20 bg-[#071416]/95 px-4 py-2.5 text-center text-xs font-black text-white shadow-[0_18px_55px_rgba(5,22,24,0.34)] backdrop-blur-xl sm:bottom-24 sm:px-5 sm:text-sm"
         >
-          Anlaşmalı bilet sayfamıza yönlendiriliyorsunuz.
+          {config.english ? "Opening the ticket provider." : "Anlaşmalı bilet sayfamıza yönlendiriliyorsunuz."}
         </div>
       ) : null}
       {!primaryTicketVisible ? (
@@ -173,6 +175,7 @@ export function EventProductPage({ config }: { config: EventProductConfig }) {
 
 function EventGallery({
   german = false,
+  english = false,
   gallery,
   imageTitle,
   imageSubtitle,
@@ -180,6 +183,7 @@ function EventGallery({
   onSelect,
   onMove,
 }: {
+  english?: boolean;
   german?: boolean;
   gallery: EventGalleryImage[];
   imageTitle: string;
@@ -271,13 +275,13 @@ function EventGallery({
           ) : null}
           <div className="flex gap-2">
             <GalleryButton
-              label={german ? "Vorheriges Bild" : "Önceki görsel"}
+              label={english ? "Previous image" : german ? "Vorheriges Bild" : "Önceki görsel"}
               onClick={() => onMove(-1)}
             >
               <ArrowLeft size={18} />
             </GalleryButton>
             <GalleryButton
-              label={german ? "Nächstes Bild" : "Sonraki görsel"}
+              label={english ? "Next image" : german ? "Nächstes Bild" : "Sonraki görsel"}
               onClick={() => onMove(1)}
             >
               <ArrowRight size={18} />
@@ -292,7 +296,7 @@ function EventGallery({
             key={item.src}
             type="button"
             onClick={() => onSelect(index)}
-            aria-label={`${german ? "Bild öffnen" : "Etkinlik görselini aç"} ${index + 1}`}
+            aria-label={`${english ? "Open image" : german ? "Bild öffnen" : "Etkinlik görselini aç"} ${index + 1}`}
             className={`relative aspect-[5/4] w-[22%] min-w-[4.25rem] flex-none snap-start overflow-hidden rounded-xl border-2 transition sm:aspect-[4/5] sm:w-24 sm:rounded-3xl ${
               activeImage === index
                 ? "border-primary shadow-[0_10px_30px_rgba(77,175,184,0.24)]"
@@ -354,7 +358,7 @@ function PurchasePanel({
       <div className="rounded-[1.55rem] border border-white/90 bg-white/85 p-4 shadow-[0_20px_60px_rgba(15,45,50,0.1)] backdrop-blur-xl sm:rounded-[2rem] sm:p-7 sm:shadow-[0_25px_80px_rgba(15,45,50,0.12)] lg:rounded-[2.5rem]">
         <div
           className="event-meta-line"
-          aria-label={config.german ? "Eventinformationen" : "Etkinlik bilgileri"}
+          aria-label={config.english ? "Event information" : config.german ? "Eventinformationen" : "Etkinlik bilgileri"}
         >
           <span>
             <CalendarDays size={14} aria-hidden="true" />
@@ -413,7 +417,7 @@ function PurchasePanel({
           <div className="flex items-end justify-between gap-3">
             <div>
               <div className="text-xs font-black uppercase tracking-[0.2em] text-primary-deep">
-                {config.german ? "Ticketoptionen" : "biletini seç"}
+                {config.english ? "Ticket options" : config.german ? "Ticketoptionen" : "biletini seç"}
               </div>
             </div>
             <Ticket className="text-primary-deep" size={24} />
@@ -509,7 +513,7 @@ function TicketButton({
         onClick={onTicketRedirect}
         className="mt-5 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-foreground px-5 py-4 text-base font-black text-background transition hover:-translate-y-0.5 hover:bg-primary-deep"
       >
-        Bileti al <ArrowRight size={18} />
+        {config.english ? "Get tickets" : "Bileti al"} <ArrowRight size={18} />
       </a>
     );
   }
@@ -674,10 +678,10 @@ function CommunitySection({ config }: { config: EventProductConfig }) {
             </p>
             <div className="mt-4 flex flex-wrap gap-2 sm:mt-7 sm:gap-3">
               <Link
-                to={config.german ? "/de/networking" : "/networking"}
+                to={config.english ? "/en/networking" : config.german ? "/de/networking" : "/networking"}
                 className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-xs font-black text-background transition hover:bg-primary-deep sm:px-5 sm:py-3 sm:text-sm"
               >
-                {config.german ? "Community entdecken" : "Community’ye katıl"}{" "}
+                {config.english ? "Explore the community" : config.german ? "Community entdecken" : "Community’ye katıl"}{" "}
                 <ArrowRight size={16} />
               </Link>
             </div>
@@ -696,7 +700,7 @@ function CommunitySection({ config }: { config: EventProductConfig }) {
                     <img
                       src={src}
                       alt={
-                        config.german
+                        config.english ? "Photo from a past notwork event" : config.german
                           ? "Foto von einem notwork Event"
                           : "notwork community etkinlik anı"
                       }
@@ -729,7 +733,7 @@ function FloatingTicketCta({
     "fixed bottom-3 left-1/2 z-40 inline-flex min-h-11 -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/20 bg-[#071416]/94 px-3 py-2 text-xs font-bold text-white shadow-[0_18px_55px_rgba(5,22,24,0.3)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-primary-deep sm:bottom-5 sm:min-h-12 sm:px-4";
   const content = (
     <>
-      <Ticket size={15} /> {config.comingSoon ? "Coming Soon" : "Bilet al"}
+      <Ticket size={15} /> {config.comingSoon ? "Coming Soon" : config.english ? "Get tickets" : "Bilet al"}
       <span className="rounded-full bg-white/12 px-2 py-1 text-[10px] text-white/75">
         {selectedOption.price} TL
       </span>
@@ -766,7 +770,7 @@ function FloatingTicketCta({
     <a
       href="#biletler"
       className={className}
-      aria-label={config.german ? "Zu den Ticketoptionen" : "Bilet seçeneklerine git"}
+      aria-label={config.english ? "Go to ticket options" : config.german ? "Zu den Ticketoptionen" : "Bilet seçeneklerine git"}
     >
       {content}
     </a>

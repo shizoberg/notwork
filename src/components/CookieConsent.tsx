@@ -9,7 +9,7 @@ import {
   type CookieConsentStatus,
 } from "@/lib/cookie-consent";
 
-export function CookieConsent({ german = false }: { german?: boolean }) {
+export function CookieConsent({ german = false, english = false }: { german?: boolean; english?: boolean }) {
   const [status, setStatus] = useState<CookieConsentStatus | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -40,24 +40,24 @@ export function CookieConsent({ german = false }: { german?: boolean }) {
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary-deep">
             <span className="h-2 w-2 rounded-full bg-primary" />
-            {german ? "Datenschutz und Cookies" : "KVKK ve çerez tercihleri"}
+            {english ? "Privacy and cookies" : german ? "Datenschutz und Cookies" : "KVKK ve çerez tercihleri"}
           </div>
           <h2 className="mt-3 text-lg font-black tracking-tight sm:text-xl">
-            {german
+            {english ? "We use cookies to improve the website." : german
               ? "Wir verwenden Cookies, um die Website zu verbessern."
               : "Deneyimi iyileştirmek için çerez kullanıyoruz."}
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            {german
+            {english ? "Essential cookies keep the website working. With your permission, we also use analytics and marketing cookies. You can change your preferences in the footer." : german
               ? "Notwendige Cookies ermöglichen den Betrieb der Website. Mit deiner Zustimmung nutzen wir außerdem Analyse- und Marketing-Cookies. Du kannst deine Auswahl jederzeit unten auf der Seite ändern."
               : "Zorunlu çerezler siteyi çalıştırır. Onay verirseniz analiz ve pazarlama çerezleriyle ziyaret, buton tıklaması ve etkinlik ilgisi gibi verileri ölçeriz. Tercihinizi her zaman footer’dan değiştirebilirsiniz."}
           </p>
           <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold text-primary-deep">
-            <Link to={german ? "/de/cookies" : "/cerez-politikasi"} className="hover:underline">
-              {german ? "Cookie-Richtlinie" : "Çerez Politikası"}
+            <Link to={english ? "/en/cookies" : german ? "/de/cookies" : "/cerez-politikasi"} className="hover:underline">
+              {english ? "Cookie policy" : german ? "Cookie-Richtlinie" : "Çerez Politikası"}
             </Link>
-            <Link to={german ? "/de/datenschutz" : "/kvkk"} className="hover:underline">
-              {german ? "Datenschutzhinweise" : "KVKK Aydınlatma Metni"}
+            <Link to={english ? "/en/privacy" : german ? "/de/datenschutz" : "/kvkk"} className="hover:underline">
+              {english ? "Privacy notice" : german ? "Datenschutzhinweise" : "KVKK Aydınlatma Metni"}
             </Link>
           </div>
         </div>
@@ -67,20 +67,20 @@ export function CookieConsent({ german = false }: { german?: boolean }) {
             onClick={() => setCookieConsent("accepted")}
             className="rounded-full bg-primary px-5 py-3 text-sm font-black text-primary-foreground transition hover:opacity-90"
           >
-            {german ? "Alle akzeptieren" : "Kabul et"}
+            {english ? "Accept all" : german ? "Alle akzeptieren" : "Kabul et"}
           </button>
           <button
             type="button"
             onClick={() => setCookieConsent("necessary")}
             className="rounded-full border border-border bg-background px-5 py-3 text-sm font-bold text-foreground transition hover:bg-muted"
           >
-            {german ? "Nur notwendige Cookies" : "Sadece zorunlu"}
+            {english ? "Essential cookies only" : german ? "Nur notwendige Cookies" : "Sadece zorunlu"}
           </button>
         </div>
       </div>
       {status ? (
         <p className="mt-3 text-[11px] text-muted-foreground">
-          {german
+          {english ? (status === "accepted" ? "All cookies accepted" : "Essential cookies only") : german
             ? status === "accepted"
               ? "Alle Cookies akzeptiert"
               : "Nur notwendige Cookies"

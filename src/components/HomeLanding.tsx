@@ -17,7 +17,7 @@ import { InterviewReels } from "@/components/InterviewReels";
 import { SiteNav, SiteFooter } from "@/components/SiteNav";
 import { averageRating, listEventReviews, type EventReview } from "@/lib/event-reviews";
 import { GermanySite } from "@/components/germany/GermanySite";
-import { homeText, germanFaq, germanArchive } from "@/lib/home-language";
+import { homeText, germanFaq, germanArchive, englishHomeText, englishFaq, englishArchive } from "@/lib/home-language";
 import { WHATSAPP_CHANNEL_URL } from "@/components/WhatsAppChannelCta";
 
 const communityGalleryImageOrder = [25, 24, 23, 21, 20, 19, 2, 3, 27, 26, 8, 14, 13, 7, 9, 12, 15];
@@ -68,16 +68,16 @@ const faq = [
   },
 ];
 
-export function HomeLanding({ german = false }: { german?: boolean }) {
+export function HomeLanding({ german = false, english = false }: { german?: boolean; english?: boolean }) {
   const content = (
     <>
-      <Hero german={german} />
-      <Nedir german={german} />
-      <InterviewReels german={german} />
-      <EventReviewsFlow german={german} />
-      <PastEvents german={german} />
-      <Gallery german={german} />
-      <FAQ german={german} />
+      <Hero german={german} english={english} />
+      <Nedir german={german} english={english} />
+      <InterviewReels german={german} english={english} />
+      <EventReviewsFlow german={german} english={english} />
+      <PastEvents german={german} english={english} />
+      <Gallery german={german} english={english} />
+      <FAQ german={german} english={english} />
     </>
   );
   if (german)
@@ -207,11 +207,12 @@ function eventCountry(eventId: string) {
 const eventMetaById = Object.fromEntries(pastEvents.map((event) => [event.id, event]));
 
 const turkishTitles = ["networking club", "notworking club", "network community"];
+const englishTitles = ["Networking club", "New connections", "A community"];
 const germanTitles = ["Networking-Club", "Neue Kontakte", "Eine Community"];
 
-function Hero({ german }: { german: boolean }) {
-  const t = homeText(german);
-  const heroTitleVariants = german ? germanTitles : turkishTitles;
+function Hero({ german, english }: { german: boolean; english: boolean }) {
+  const t = english ? (text: string) => englishHomeText[text] ?? text : homeText(german);
+  const heroTitleVariants = english ? englishTitles : german ? germanTitles : turkishTitles;
   const [titleIndex, setTitleIndex] = useState(0);
   const [displayTitle, setDisplayTitle] = useState(heroTitleVariants[0]);
 
@@ -262,7 +263,7 @@ function Hero({ german }: { german: boolean }) {
     <section className="relative">
       <div className="mx-auto max-w-5xl px-4 pb-8 pt-5 text-center sm:px-5 sm:pb-10 sm:pt-10">
         <p className="hero-dates">
-          <span className="hero-date-pulse">{german ? "4. Dezember" : "22 Kasım"}</span>
+          <span className="hero-date-pulse">{english ? "22 Nov · 4 Dec" : german ? "4. Dezember" : "22 Kasım"}</span>
         </p>
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
 
@@ -282,34 +283,25 @@ function Hero({ german }: { german: boolean }) {
         <section className="hero-upcoming" aria-label={t("Sonraki etkinlikler")}>
           <p className="mt-6 text-xs text-muted-foreground">{t("Sonraki buluşmalar")}</p>
           <div className="hero-event-links hero-upcoming-links">
-            {(german
+            {(english
               ? [
-                  {
-                    date: munichEvent.date,
-                    name: "Bühne",
-                    subtitle: munichEvent.city,
-                    to: munichEvent.path,
-                  },
+                  { date: "22 November", name: "Stage", subtitle: "Stories of failure and networking · Türkiye", to: "/en/22-november", flag: "🇹🇷", cta: "Get tickets" },
+                  { date: "4 December", name: "Stage", subtitle: "Munich, Germany", to: "/en/4-december", flag: "🇩🇪", cta: "Coming soon" },
                 ]
-              : [
-                  {
-                    date: "22 Kasım",
-                    name: "Sahne",
-                    subtitle: "Başarısızlık hikâyeleri ve networking",
-                    to: "/22-kasim" as const,
-                  },
-                ]
-            ).map(({ date, name, subtitle, to }) => (
+              : german
+                ? [{ date: munichEvent.date, name: "Bühne", subtitle: munichEvent.city, to: munichEvent.path, flag: "🇩🇪", cta: munichEvent.status }]
+                : [{ date: "22 Kasım", name: "Sahne", subtitle: "Başarısızlık hikâyeleri ve networking", to: "/22-kasim", flag: "🇹🇷", cta: "Bilet al" }]
+            ).map(({ date, name, subtitle, to, flag, cta }) => (
               <Link
                 key={to}
                 to={to}
                 data-analytics="click"
                 data-analytics-label={`${date} ${name}`}
                 aria-label={`${date} notwork ${name}`}
-                className="hero-event-link"
+                className="hero-event-link hero-event-link-contrast"
               >
                 <span className="hero-event-date">
-                  {date.toLocaleUpperCase(german ? "de-DE" : "tr-TR")} / 2026
+                  <span aria-hidden="true">{flag}</span>{" "}{date.toLocaleUpperCase(english ? "en-GB" : german ? "de-DE" : "tr-TR")} / 2026
                 </span>
                 <span className="hero-event-name">{name}</span>
                 <span className="hero-event-subtitle">{subtitle}</span>
@@ -320,13 +312,13 @@ function Hero({ german }: { german: boolean }) {
                 />
                 <span className="hero-event-buy">
                   <Ticket size={15} strokeWidth={1.7} aria-hidden="true" />
-                  {german ? munichEvent.status : "Bilet al"}
+                  {cta}
                 </span>
               </Link>
             ))}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            {german ? "Informationen zur Anmeldung folgen." : "Biletler satışta."}
+            {english ? "Tickets for 22 November are available." : german ? "Informationen zur Anmeldung folgen." : "Biletler satışta."}
           </p>
           <a
             href={WHATSAPP_CHANNEL_URL}
@@ -339,7 +331,7 @@ function Hero({ german }: { german: boolean }) {
             className="mt-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-3 text-sm font-semibold text-foreground"
           >
             <MessageCircle size={17} aria-hidden="true" />{" "}
-            {german ? "WhatsApp-Gruppe beitreten" : "WhatsApp grubuna katıl"}
+            {english ? "Join the WhatsApp group" : german ? "WhatsApp-Gruppe beitreten" : "WhatsApp grubuna katıl"}
           </a>
         </section>
       </div>
@@ -347,13 +339,13 @@ function Hero({ german }: { german: boolean }) {
   );
 }
 
-function Nedir({ german }: { german: boolean }) {
-  const t = homeText(german);
+function Nedir({ german, english }: { german: boolean; english: boolean }) {
+  const t = english ? (text: string) => englishHomeText[text] ?? text : homeText(german);
   const [activeSlide, setActiveSlide] = useState(0);
   const slides = [
     {
-      name: german ? "Bühne" : "sahne",
-      href: german ? munichEvent.path : ("/22-kasim" as const),
+      name: english ? "Stage" : german ? "Bühne" : "sahne",
+      href: english ? "/en/22-november" : german ? munichEvent.path : ("/22-kasim" as const),
       items: [
         {
           n: "01",
@@ -375,7 +367,7 @@ function Nedir({ german }: { german: boolean }) {
     },
     {
       name: "fast",
-      href: german ? ("/de/events" as const) : ("/etkinlikler" as const),
+      href: english ? "/en/events" : german ? ("/de/events" as const) : ("/etkinlikler" as const),
       items: [
         {
           n: "01",
@@ -410,7 +402,7 @@ function Nedir({ german }: { german: boolean }) {
             {t("Bir notwork eventinde")}
           </div>
           <h2 className="mt-2 font-display font-bold text-3xl sm:text-5xl text-foreground max-w-2xl">
-            {german
+            {english ? `What to expect at notwork ${activeEvent.name}` : german
               ? `${activeEvent.name} · ${t("deneyiminde seni ne bekliyor?")}`
               : `${activeEvent.name} deneyiminde seni ne bekliyor?`}
           </h2>
@@ -504,7 +496,7 @@ function Nedir({ german }: { german: boolean }) {
               key={slide.name}
               type="button"
               onClick={() => setActiveSlide(index)}
-              aria-label={`${slide.name} ${german ? "anzeigen" : "akışını göster"}`}
+              aria-label={`${slide.name} ${english ? "show" : german ? "anzeigen" : "akışını göster"}`}
               className={`h-1.5 rounded-full transition-all ${
                 activeSlide === index ? "w-8 bg-primary" : "w-3 bg-border"
               }`}
@@ -522,8 +514,8 @@ function Nedir({ german }: { german: boolean }) {
   );
 }
 
-function PastEvents({ german }: { german: boolean }) {
-  const t = homeText(german);
+function PastEvents({ german, english }: { german: boolean; english: boolean }) {
+  const t = english ? (text: string) => englishHomeText[text] ?? text : homeText(german);
   const [reviewsByEvent, setReviewsByEvent] = useState<Record<string, EventReview[]>>({});
 
   useEffect(() => {
@@ -565,7 +557,7 @@ function PastEvents({ german }: { german: boolean }) {
           )}
         </p>
         <Link
-          to={german ? "/de/events" : "/etkinlikler"}
+          to={english ? "/en/events" : german ? "/de/events" : "/etkinlikler"}
           className="inline-flex w-fit rounded-full border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm font-black text-primary-deep transition hover:bg-primary hover:text-primary-foreground sm:px-5 sm:py-3"
         >
           {t("Tüm etkinlikleri gör")}
@@ -575,7 +567,7 @@ function PastEvents({ german }: { german: boolean }) {
       <div className="-mx-4 overflow-x-auto px-4 pb-3 [scrollbar-width:thin] sm:-mx-5 sm:px-5 sm:pb-4">
         <div className="flex snap-x gap-3 sm:gap-4">
           {pastEvents.map((event) => {
-            const localized = german ? germanArchive[event.id] : undefined;
+            const localized = (english ? englishArchive : german ? germanArchive : {})[event.id];
             const eventReviews = reviewsByEvent[event.id] || [];
             const eventAverage = averageRating(eventReviews);
             const eventPhoto = eventReviews.find((review) => review.photoDataUrl)?.photoDataUrl;
@@ -585,7 +577,7 @@ function PastEvents({ german }: { german: boolean }) {
                   {eventPhoto && (
                     <img
                       src={eventPhoto}
-                      alt={`${localized?.title ?? event.title} · ${german ? "Eventfoto" : "etkinlik fotoğrafı"}`}
+                      alt={`${localized?.title ?? event.title} · ${english ? "Event photo" : german ? "Eventfoto" : "etkinlik fotoğrafı"}`}
                       loading="lazy"
                       className="absolute inset-0 h-full w-full object-cover opacity-75 transition duration-500 group-hover:scale-105"
                     />
@@ -649,8 +641,8 @@ function PastEvents({ german }: { german: boolean }) {
             return event.href ? (
               <Link
                 key={event.date}
-                to={german ? "/de/archiv/$eventId" : event.href}
-                params={german ? { eventId: event.id } : undefined}
+                to={english ? "/en/archive/$eventId" : german ? "/de/archiv/$eventId" : event.href}
+                params={german || english ? { eventId: event.id } : undefined}
                 className="shrink-0"
               >
                 {card}
@@ -671,8 +663,8 @@ function renderEventStars(rating: number) {
   return "★".repeat(rating) + "☆".repeat(Math.max(0, 5 - rating));
 }
 
-function EventReviewsFlow({ german }: { german: boolean }) {
-  const t = homeText(german);
+function EventReviewsFlow({ german, english }: { german: boolean; english: boolean }) {
+  const t = english ? (text: string) => englishHomeText[text] ?? text : homeText(german);
   const [reviews, setReviews] = useState<EventReview[]>([]);
   const [expandedReviews, setExpandedReviews] = useState<Record<string, boolean>>({});
 
@@ -727,7 +719,7 @@ function EventReviewsFlow({ german }: { german: boolean }) {
                   {review.photoDataUrl && (
                     <img
                       src={review.photoDataUrl}
-                      alt={`${german ? "Eventfoto" : review.eventTitle + " yorumu"}`}
+                      alt={`${english ? "Event photo" : german ? "Eventfoto" : review.eventTitle + " yorumu"}`}
                       loading="lazy"
                       className="photo-review-image"
                     />
@@ -738,16 +730,16 @@ function EventReviewsFlow({ german }: { german: boolean }) {
                   <div className="photo-review-overlay">
                     <span
                       className="photo-review-stars"
-                      aria-label={`${review.rating} / 5 ${german ? "Sterne" : "yıldız"}`}
+                      aria-label={`${review.rating} / 5 ${english ? "stars" : german ? "Sterne" : "yıldız"}`}
                     >
                       {renderEventStars(review.rating)}
                     </span>
                     <strong>{review.name || t("notwork katılımcısı")}</strong>
                     <span>
                       {(country === "DE" && `${munichEvent.date} ${munichEvent.year}`) ||
-                        (german && germanArchive[review.eventId]?.date) ||
+                        (english && englishArchive[review.eventId]?.date) || (german && germanArchive[review.eventId]?.date) ||
                         event?.date ||
-                        (german ? "notwork Event" : review.eventTitle)}
+                        (english || german ? "notwork event" : review.eventTitle)}
                     </span>
                   </div>
                 </div>
@@ -784,8 +776,8 @@ function EventReviewsFlow({ german }: { german: boolean }) {
   );
 }
 
-function Gallery({ german }: { german: boolean }) {
-  const t = homeText(german);
+function Gallery({ german, english }: { german: boolean; english: boolean }) {
+  const t = english ? (text: string) => englishHomeText[text] ?? text : homeText(german);
   const sliderRef = useRef<HTMLDivElement>(null);
   const resumeAutoScrollAtRef = useRef(0);
   const loop = [...gallery, ...gallery];
@@ -875,7 +867,7 @@ function Gallery({ german }: { german: boolean }) {
               <img
                 key={`${src}-${i}`}
                 src={src}
-                alt={`notwork ${german ? "Eventfoto" : "event anı"} ${(i % gallery.length) + 1}`}
+                alt={`notwork ${english ? "Event photo" : german ? "Eventfoto" : "event anı"} ${(i % gallery.length) + 1}`}
                 loading="lazy"
                 width={1024}
                 height={1024}
@@ -890,8 +882,8 @@ function Gallery({ german }: { german: boolean }) {
   );
 }
 
-function FAQ({ german }: { german: boolean }) {
-  const t = homeText(german);
+function FAQ({ german, english }: { german: boolean; english: boolean }) {
+  const t = english ? (text: string) => englishHomeText[text] ?? text : homeText(german);
   return (
     <section className="mx-auto mt-14 max-w-3xl px-4 sm:mt-24 sm:px-5">
       <h2 className="font-display font-bold text-3xl sm:text-4xl text-center">
@@ -901,7 +893,7 @@ function FAQ({ german }: { german: boolean }) {
         {t("Aklında kalan her şey, hızlıca.")}
       </p>
       <div className="mt-5 divide-y divide-border rounded-2xl border border-border bg-card sm:mt-8">
-        {(german ? germanFaq : faq).map((f, i) => (
+        {(english ? englishFaq : german ? germanFaq : faq).map((f, i) => (
           <FaqItem key={i} q={f.q} a={f.a} defaultOpen={i === 0} />
         ))}
       </div>

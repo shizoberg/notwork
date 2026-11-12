@@ -1,3 +1,4 @@
+import { isEnglishPath } from "@/lib/english-site";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -138,7 +139,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   return (
-    <html lang={pathname === "/de" || pathname.startsWith("/de/") ? "de" : "tr"}>
+    <html lang={isEnglishPath(pathname) ? "en" : pathname === "/de" || pathname.startsWith("/de/") ? "de" : "tr"}>
       <head>
         <HeadContent />
       </head>
@@ -180,9 +181,9 @@ function RootComponent() {
           <Outlet />
         )}
         {publicPage && !eventApp && !demo && <MobileDock />}
-        {!hideWhatsAppChannel && !demo && <WhatsAppChannelCta german={german} />}
+        {!hideWhatsAppChannel && !demo && <WhatsAppChannelCta german={german} english={isEnglishPath(pathname)} />}
       </div>
-      <CookieConsent german={german} />
+      <CookieConsent german={german} english={isEnglishPath(pathname)} />
     </QueryClientProvider>
   );
 }

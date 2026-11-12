@@ -206,7 +206,7 @@ function errorMessage(error: unknown, german: boolean) {
 }
 
 export function MemberProfilePage({ registration = false }: { registration?: boolean } = {}) {
-  const { german } = useProfileLanguage();
+  const { german, english } = useProfileLanguage();
   const [profile, setProfile] = useState<NotworkMemberProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -214,7 +214,7 @@ export function MemberProfilePage({ registration = false }: { registration?: boo
     setProfile(memberProfile);
     if (
       !memberProfile.mustChangePassword &&
-      promptForAnnouncements(memberProfile, german ? "/de/profil" : "/profil")
+      promptForAnnouncements(memberProfile, english ? "/en/profile" : german ? "/de/profil" : "/profil")
     )
       return;
     const returnTo = getSafeReturnTo(german);
@@ -238,7 +238,7 @@ export function MemberProfilePage({ registration = false }: { registration?: boo
     return () => {
       active = false;
     };
-  }, [german]);
+  }, [english, german]);
 
   return (
     <div className="member-profile-page min-h-screen text-foreground">
@@ -275,7 +275,7 @@ function LoginPanel({
   onLoggedIn: (profile: NotworkMemberProfile) => void;
   onRegistered: (profile: NotworkMemberProfile) => void;
 }) {
-  const { t, german } = useProfileLanguage();
+  const { t, german, english } = useProfileLanguage();
   const [mode, setMode] = useState<"login" | "register" | "forgot">(
     registration ? "register" : "login",
   );
@@ -340,7 +340,7 @@ function LoginPanel({
             value={identity}
             onChange={(event) => setIdentity(event.target.value)}
             className="profile-input"
-            placeholder={german ? "Benutzername oder E-Mail-Adresse" : "kullaniciadi veya e-posta"}
+            placeholder={english ? "Username or email" : german ? "Benutzername oder E-Mail-Adresse" : "kullaniciadi veya e-posta"}
           />
         </Field>
         <Field label={t("Şifre")}>
@@ -392,7 +392,7 @@ function LoginPanel({
           <Plus className="h-5 w-5" /> {t("Yeni profil oluştur")}
         </button>
         <Link
-          to={german ? "/de/networking" : "/networking"}
+          to={english ? "/en/networking" : german ? "/de/networking" : "/networking"}
           className="flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> {t("Networking’e dön")}
@@ -409,7 +409,7 @@ function RegisterPanel({
   onBack: () => void;
   onRegistered: (profile: NotworkMemberProfile) => void;
 }) {
-  const { t, german } = useProfileLanguage();
+  const { t, german, english } = useProfileLanguage();
   const [country, setCountry] = useState<"DE" | "TR" | undefined>(german ? "DE" : undefined);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -727,7 +727,7 @@ function RegisterPanel({
         <p className="rounded-2xl border border-primary/15 bg-primary/5 p-4 text-xs font-semibold leading-5 text-muted-foreground">
           {t("Kişisel verilerinin nasıl işlendiğini")}{" "}
           <Link
-            to={german ? "/de/datenschutz" : "/kvkk"}
+            to={english ? "/en/privacy" : german ? "/de/datenschutz" : "/kvkk"}
             className="font-black text-foreground underline underline-offset-2"
           >
             {t("KVKK Aydınlatma Metni")}
@@ -748,7 +748,7 @@ function RegisterPanel({
               "Profil bilgilerimin notwork networking ağı, business kart ve üye referans sistemi içinde seçtiğim görünürlükte paylaşılmasına açık rıza veriyorum.",
             )}{" "}
             <Link
-              to={german ? "/de/einwilligung" : "/acik-riza"}
+              to={english ? "/en/consent" : german ? "/de/einwilligung" : "/acik-riza"}
               className="font-black text-foreground underline underline-offset-2"
             >
               {t("Açık Rıza Metni")}
@@ -786,9 +786,9 @@ function RegistrationQuestion({
   onChange: (value: string) => void;
   placeholder: string;
 }) {
-  const { german } = useProfileLanguage();
+  const { german, english } = useProfileLanguage();
   return (
-    <Field label={label} hint={`${value.length}/500 · ${german ? "mind. 140" : "en az 140"}`}>
+    <Field label={label} hint={`${value.length}/500 · ${english ? "min. 140" : german ? "mind. 140" : "en az 140"}`}>
       <textarea
         required
         minLength={140}
@@ -810,7 +810,7 @@ function PasswordPanel({
   profile: NotworkMemberProfile;
   onChanged: (profile: NotworkMemberProfile) => void;
 }) {
-  const { t, german } = useProfileLanguage();
+  const { t, german, english } = useProfileLanguage();
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -902,7 +902,7 @@ function ProfileEditor({
   profile: NotworkMemberProfile;
   onProfileChange: (profile: NotworkMemberProfile | null) => void;
 }) {
-  const { t, german } = useProfileLanguage();
+  const { t, german, english } = useProfileLanguage();
   const [draft, setDraft] = useState(() => profileDraft(profile));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -912,7 +912,7 @@ function ProfileEditor({
   const [connections, setConnections] = useState<NotworkMemberConnection[]>([]);
   const [connectionsLoading, setConnectionsLoading] = useState(true);
   const photoInput = useRef<HTMLInputElement>(null);
-  const publicCardUrl = `https://notwork.me${german ? "/de" : ""}/u/${encodeURIComponent(profile.username)}`;
+  const publicCardUrl = `https://notwork.me${english ? "/en" : german ? "/de" : ""}/u/${encodeURIComponent(profile.username)}`;
 
   useEffect(() => {
     let active = true;
@@ -1185,7 +1185,7 @@ function ProfileEditor({
                     ) : null}
                     {connection.publicProfileEnabled && connection.username ? (
                       <Link
-                        to={german ? "/de/u/$username" : "/u/$username"}
+                        to={english ? "/en/u/$username" : german ? "/de/u/$username" : "/u/$username"}
                         params={{ username: connection.username }}
                         className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground px-3 text-xs font-black text-background"
                       >
@@ -1307,7 +1307,7 @@ function ProfileEditor({
                       setDraft({ ...draft, skills });
                     }}
                     className="profile-input"
-                    placeholder={`${german ? "Fähigkeit" : "Yetenek"} ${index + 1}`}
+                    placeholder={`${english ? "Skill" : german ? "Fähigkeit" : "Yetenek"} ${index + 1}`}
                   />
                   <IconButton
                     label={t("Yeteneği sil")}
@@ -1513,7 +1513,7 @@ function ProfileEditor({
                   <Copy className="h-4 w-4" /> {copied ? t("kopyalandı") : t("linki kopyala")}
                 </button>
                 <a
-                  href={`${german ? "/de" : ""}/u/${encodeURIComponent(profile.username)}`}
+                  href={`${english ? "/en" : german ? "/de" : ""}/u/${encodeURIComponent(profile.username)}`}
                   target="_blank"
                   rel="noreferrer"
                   aria-disabled={!profile.publicProfileEnabled}

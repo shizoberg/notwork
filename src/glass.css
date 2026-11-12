@@ -6215,3 +6215,29 @@ html[data-notwork-entry-ready="true"] .event-entry-dock {
   .regional-home-content { animation: notwork-region-in 330ms cubic-bezier(.2,.8,.2,1) both; }
   @keyframes notwork-region-in { from { opacity: .55; translate: 0 5px; } }
 }
+
+.site-region-toggle { width: 96px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.site-region-thumb { width: calc((100% - 6px) / 3); }
+.site-region-toggle[data-region="en"] .site-region-thumb { translate: 200% 0; }
+
+.hero-upcoming .hero-event-link.hero-event-link-contrast {
+  background: linear-gradient(135deg, #122638, #1b3549);
+  border-color: #335268;
+  color: #f4f9ff;
+}
+.hero-event-link-contrast .hero-event-name { color: #f4f9ff; }
+.hero-event-link-contrast .hero-event-date { color: #b9d8e9; }
+.hero-event-link-contrast .hero-event-subtitle { color: #d5e3ed; }
+.hero-event-link-contrast .hero-event-buy { background: #a9ddf0; color: #112d3c; }
+.hero-event-link-contrast:hover .hero-event-buy { background: #d2f0fb; }
+
+@media (min-width: 900px) {
+  .glass-site .desktop-site-header-centered {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    padding-inline: 14px;
+  }
+  .desktop-site-header-centered .desktop-site-brand { grid-area: 1 / 2; }
+  .desktop-site-header-centered .desktop-site-links { grid-area: 1 / 1; justify-self: start; }
+  .desktop-site-header-centered .desktop-site-actions { grid-area: 1 / 3; justify-self: end; }
+}

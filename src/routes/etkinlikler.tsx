@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import { SiteFooter, SiteNav } from "@/components/SiteNav";
 import { munichEvent } from "@/lib/munich-event";
-import { germanArchive } from "@/lib/home-language";
+import { englishArchive, germanArchive } from "@/lib/home-language";
 import { CountryTag } from "@/components/CountryTag";
 import { createSeo } from "@/lib/seo";
 
@@ -288,14 +288,27 @@ export const germanCatalog: EventCatalogItem[] = [
     }),
 ];
 
-export function EventsCatalogPage({ german = false }: { german?: boolean } = {}) {
-  const locale = german ? "de-DE" : "tr-TR";
+export const englishCatalog: EventCatalogItem[] = [
+  { ...catalogEvents[0], date: "22 November 2026", title: "notwork Stage", summary: "Stories of failure, an interactive word cloud and networking with notwork Match.", participants: "Tickets on sale", href: "/en/22-november" },
+  { ...germanCatalog[0], date: "4 December 2026", venue: "Munich", title: "notwork Stage", summary: "Stories of failure and networking in Munich.", href: "/en/4-december" },
+  ...catalogEvents.filter((event) => englishArchive[event.id]).map((event) => ({
+    ...event,
+    date: englishArchive[event.id].date,
+    title: englishArchive[event.id].title,
+    summary: englishArchive[event.id].text,
+    participants: event.participants.replace("katılımcı", "attendees").replace("Sınırlı kontenjan", "Limited capacity"),
+    href: `/en/archive/${event.id}`,
+  })),
+];
+
+export function EventsCatalogPage({ german = false, english = false }: { german?: boolean; english?: boolean } = {}) {
+  const locale = english ? "en-GB" : german ? "de-DE" : "tr-TR";
   const [activeFilter, setActiveFilter] = useState("Tümü");
   const [activeScope, setActiveScope] = useState<"all" | "upcoming" | "past">("all");
   const [query, setQuery] = useState("");
 
   const visibleEvents = useMemo(() => {
-    return (german ? germanCatalog : catalogEvents).filter(
+    return (english ? englishCatalog : german ? germanCatalog : catalogEvents).filter(
       (event) =>
         (activeScope === "all" ||
           (activeScope === "upcoming"
@@ -311,7 +324,7 @@ export function EventsCatalogPage({ german = false }: { german?: boolean } = {})
           .toLocaleLowerCase(locale)
           .includes(query.trim().toLocaleLowerCase(locale)),
     );
-  }, [activeFilter, activeScope, german, locale, query]);
+  }, [activeFilter, activeScope, english, german, locale, query]);
 
   const upcomingEvents = visibleEvents.filter((event) => upcomingEventIds.has(event.id));
   const pastEvents = visibleEvents.filter((event) => !upcomingEventIds.has(event.id));
@@ -322,13 +335,13 @@ export function EventsCatalogPage({ german = false }: { german?: boolean } = {})
       <main className="mx-auto max-w-5xl px-4 pb-24 pt-5 sm:px-5 sm:pb-20 sm:pt-16">
         <section>
           <div className="text-[11px] font-black uppercase tracking-[0.2em] text-primary-deep sm:text-sm">
-            {german ? "notwork / Kalender" : "notwork / takvim"}
+            {english ? "notwork / Calendar" : german ? "notwork / Kalender" : "notwork / takvim"}
           </div>
           <h1 className="mt-2 font-display text-4xl font-black leading-none tracking-[-0.055em] sm:mt-4 sm:text-6xl">
-            {german ? "Events" : "etkinlikler"}
+            {english || german ? "Events" : "etkinlikler"}
           </h1>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground sm:mt-3 sm:text-base">
-            {german
+            {english ? "Find upcoming meetups and revisit past notwork nights." : german
               ? "Entdecke das nächste Treffen und vergangene notwork Abende an einem Ort."
               : "Sıradaki buluşmayı ve geçmiş notwork gecelerini tek akışta gör."}
           </p>
@@ -338,7 +351,7 @@ export function EventsCatalogPage({ german = false }: { german?: boolean } = {})
           <div className="flex items-center justify-between gap-3">
             <div
               className="flex rounded-full border border-border bg-card p-1"
-              aria-label={german ? "Eventzeitraum" : "Etkinlik dönemi"}
+              aria-label={english ? "Event period" : german ? "Eventzeitraum" : "Etkinlik dönemi"}
             >
               {(
                 [
@@ -358,30 +371,30 @@ export function EventsCatalogPage({ german = false }: { german?: boolean } = {})
                       : "text-foreground/60 hover:text-foreground"
                   }`}
                 >
-                  {german
+                  {english ? { all: "All", upcoming: "Upcoming", past: "Past" }[scope] : german
                     ? { all: "Alle", upcoming: "Kommende", past: "Vergangene" }[scope]
                     : label}
                 </button>
               ))}
             </div>
             <span className="shrink-0 text-xs font-semibold text-muted-foreground sm:text-sm">
-              {visibleEvents.length} {german ? "Events" : "etkinlik"}
+              {visibleEvents.length} {english || german ? "Events" : "etkinlik"}
             </span>
           </div>
           <div className="mt-3 grid grid-cols-[minmax(0,1fr)_128px] gap-2 sm:grid-cols-[1fr_220px]">
             <label className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 text-muted-foreground">
               <Search size={17} aria-hidden="true" />
-              <span className="sr-only">{german ? "Events suchen" : "Etkinlik ara"}</span>
+              <span className="sr-only">{english ? "Search events" : german ? "Events suchen" : "Etkinlik ara"}</span>
               <input
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder={german ? "Events suchen" : "Etkinlik ara"}
+                placeholder={english ? "Search events" : german ? "Events suchen" : "Etkinlik ara"}
                 className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
               />
             </label>
             <label className="sr-only" htmlFor="event-catalog-filter">
-              {german ? "Ort oder Thema auswählen" : "Yer veya tema seç"}
+              {english ? "Choose a place or topic" : german ? "Ort oder Thema auswählen" : "Yer veya tema seç"}
             </label>
             <select
               id="event-catalog-filter"
@@ -389,10 +402,10 @@ export function EventsCatalogPage({ german = false }: { german?: boolean } = {})
               onChange={(event) => setActiveFilter(event.target.value)}
               className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-semibold text-foreground outline-none focus:border-primary"
             >
-              {(german ? ["Tümü", "2026", munichEvent.city, ...filters.slice(2)] : filters).map(
+              {(english || german ? ["Tümü", "2026", munichEvent.city, ...filters.slice(2)] : filters).map(
                 (filter) => (
                   <option key={filter} value={filter}>
-                    {filter === "Tümü" ? (german ? "Ort / Thema" : "Yer / tema") : filter}
+                    {filter === "Tümü" ? (english ? "Place / topic" : german ? "Ort / Thema" : "Yer / tema") : filter}
                   </option>
                 ),
               )}
@@ -403,23 +416,25 @@ export function EventsCatalogPage({ german = false }: { german?: boolean } = {})
         {visibleEvents.length ? (
           <>
             <CatalogSection
-              title={german ? "Kommende Events" : "Yaklaşan"}
-              eyebrow={german ? "Das nächste Treffen" : "sıradaki buluşma"}
+              title={english ? "Upcoming events" : german ? "Kommende Events" : "Yaklaşan"}
+              eyebrow={english ? "The next meetup" : german ? "Das nächste Treffen" : "sıradaki buluşma"}
               events={upcomingEvents}
               german={german}
+              english={english}
               upcoming
             />
             <CatalogSection
-              title={german ? "Vergangene Events" : "Geçmiş etkinlikler"}
-              eyebrow={german ? "notwork Archiv" : "notwork arşivi"}
+              title={english ? "Past events" : german ? "Vergangene Events" : "Geçmiş etkinlikler"}
+              eyebrow={english ? "notwork archive" : german ? "notwork Archiv" : "notwork arşivi"}
               events={pastEvents}
               german={german}
+              english={english}
             />
           </>
         ) : (
           <div className="border-b border-border py-16 text-center">
             <p className="font-display text-xl font-black">
-              {german ? "Keine Events gefunden." : "Bu aramada etkinlik bulunamadı."}
+              {english ? "No events found." : german ? "Keine Events gefunden." : "Bu aramada etkinlik bulunamadı."}
             </p>
             <button
               type="button"
@@ -430,7 +445,7 @@ export function EventsCatalogPage({ german = false }: { german?: boolean } = {})
               }}
               className="mt-3 text-sm font-bold text-primary-deep underline underline-offset-4"
             >
-              {german ? "Filter zurücksetzen" : "Filtreleri temizle"}
+              {english ? "Clear filters" : german ? "Filter zurücksetzen" : "Filtreleri temizle"}
             </button>
           </div>
         )}
@@ -446,12 +461,14 @@ function CatalogSection({
   events,
   upcoming = false,
   german = false,
+  english = false,
 }: {
   title: string;
   eyebrow: string;
   events: EventCatalogItem[];
   upcoming?: boolean;
   german?: boolean;
+  english?: boolean;
 }) {
   if (!events.length) return null;
 
@@ -470,7 +487,7 @@ function CatalogSection({
       </div>
       <ol className="divide-y divide-border/70 border-y border-border/70">
         {events.map((event) => (
-          <EventListRow key={event.id} event={event} upcoming={upcoming} german={german} />
+          <EventListRow key={event.id} event={event} upcoming={upcoming} german={german} english={english} />
         ))}
       </ol>
     </section>
@@ -481,10 +498,12 @@ function EventListRow({
   event,
   upcoming,
   german,
+  english,
 }: {
   event: EventCatalogItem;
   upcoming: boolean;
   german: boolean;
+  english: boolean;
 }) {
   const [day, month] = event.date.split(" ");
   const content = (
@@ -521,7 +540,7 @@ function EventListRow({
       <div className="min-w-0 flex-1">
         {upcoming ? (
           <span className="mb-1 inline-block text-[10px] font-black uppercase tracking-[0.15em] text-primary-deep">
-            {german ? "Nächstes Event" : "Sıradaki etkinlik"}
+            {english ? "Upcoming event" : german ? "Nächstes Event" : "Sıradaki etkinlik"}
           </span>
         ) : null}
         <h3 className="font-display text-base font-black leading-tight tracking-[-0.03em] sm:text-xl">
@@ -544,7 +563,7 @@ function EventListRow({
           />
         ) : (
           <span className="text-[10px] font-semibold text-muted-foreground">
-            {german ? "Archiv" : "Arşiv"}
+            {english ? "Archive" : german ? "Archiv" : "Arşiv"}
           </span>
         )}
         <span
@@ -565,7 +584,7 @@ function EventListRow({
       {event.href ? (
         <Link
           to={event.href}
-          aria-label={`${event.title}, ${event.date}, ${german ? "Details öffnen" : "detayları aç"}`}
+          aria-label={`${event.title}, ${event.date}, ${english ? "View details" : german ? "Details öffnen" : "detayları aç"}`}
           className={`group flex items-center gap-3 py-3 transition hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary sm:gap-6 sm:px-3 sm:py-5 ${upcoming ? "bg-primary/5" : ""}`}
         >
           {content}

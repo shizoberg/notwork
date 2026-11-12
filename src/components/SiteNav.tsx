@@ -1,3 +1,4 @@
+import { englishPath, englishPaths, isEnglishPath } from "@/lib/english-site";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { type MouseEvent, useEffect, useRef, useState } from "react";
 import {
@@ -86,13 +87,13 @@ export function RegionSwitch({
 }) {
   const { pathname, searchStr } = useLocation();
   const navigate = useNavigate();
-  const [pendingRegion, setPendingRegion] = useState<"de" | "tr">();
+  const [pendingRegion, setPendingRegion] = useState<"de" | "tr" | "en">();
   const transitionTimer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(transitionTimer.current), []);
 
   function changeRegion(
     event: MouseEvent<HTMLAnchorElement>,
-    region: "de" | "tr",
+    region: "de" | "tr" | "en",
     to: string,
     search?: { mode: string },
   ) {
@@ -103,7 +104,7 @@ export function RegionSwitch({
       event.metaKey ||
       event.shiftKey ||
       event.altKey ||
-      german === (region === "de") ||
+      region === (english ? "en" : german ? "de" : "tr") ||
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
     )
       return;
@@ -115,34 +116,34 @@ export function RegionSwitch({
     }, 155);
   }
 
-  const registerInTurkey =
-    pathname === "/profil" && new URLSearchParams(searchStr).get("mode") === "register";
-  const registerInGermany = pathname === "/de/registrieren";
-  const turkeySearch = registerInGermany || registerInTurkey ? { mode: "register" } : undefined;
-  const germany =
-    (registerInTurkey ? "/de/registrieren" : undefined) ??
-    regionalPages[pathname] ??
-    (pathname.startsWith("/u/") ? `/de${pathname}` : "/de");
-  const turkey =
-    Object.keys(regionalPages).find((key) => regionalPages[key] === pathname) ??
-    (registerInGermany ? "/profil" : undefined) ??
-    (pathname.startsWith("/de/u/") ? pathname.slice(3) : "/");
+  const english = isEnglishPath(pathname);
+  const source = Object.keys(regionalPages).find((key) => regionalPages[key] === pathname) ??
+    Object.keys(englishPaths).find((key) => englishPaths[key] === pathname) ??
+    (pathname.startsWith("/de/u/") || pathname.startsWith("/en/u/") ? pathname.slice(3) : pathname);
+  const registration = pathname === "/de/registrieren" || pathname === "/en/register" ||
+    (pathname === "/profil" && new URLSearchParams(searchStr).get("mode") === "register");
+  const turkeySearch = registration ? { mode: "register" } : undefined;
+  const germany = registration ? "/de/registrieren" : regionalPages[source] ??
+    (source.startsWith("/u/") ? `/de${source}` : "/de");
+  const turkey = registration ? "/profil" : source === "/de/4-dezember" ? "/22-kasim" :
+    source.startsWith("/de") || source.startsWith("/en") ? "/" : source;
+  const englishTarget = registration ? "/en/register" : englishPath(source);
   if (inMenu) {
     return (
       <>
         <DropdownMenuLabel className="flex items-center gap-2 px-3 pb-1 pt-2 text-xs text-muted-foreground">
           <Globe2 size={15} aria-hidden="true" />
-          {german ? "Sprache und Region" : "Dil ve bölge"}
+          {english ? "Language and region" : german ? "Sprache und Region" : "Dil ve bölge"}
         </DropdownMenuLabel>
         <DropdownMenuItem asChild className="min-h-11 gap-2 rounded-xl px-3">
           <Link
             to={turkey}
             search={turkeySearch}
             lang="tr"
-            aria-current={german ? undefined : "true"}
+            aria-current={german || english ? undefined : "true"}
           >
             <span aria-hidden="true">🇹🇷</span> Türkçe
-            {!german && (
+            {!german && !english && (
               <Check size={15} aria-hidden="true" className="ml-auto text-primary-deep" />
             )}
           </Link>
@@ -153,14 +154,20 @@ export function RegionSwitch({
             {german && <Check size={15} aria-hidden="true" className="ml-auto text-primary-deep" />}
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild className="min-h-11 gap-2 rounded-xl px-3">
+          <Link to={englishTarget} lang="en" aria-current={english ? "true" : undefined}>
+            <Globe2 size={15} aria-hidden="true" /> English
+            {english && <Check size={15} aria-hidden="true" className="ml-auto text-primary-deep" />}
+          </Link>
+        </DropdownMenuItem>
       </>
     );
   }
   return (
     <nav
       className={`site-region-toggle ${className}`}
-      data-region={pendingRegion ?? (german ? "de" : "tr")}
-      aria-label={german ? "Sprache und Region" : "Dil ve bölge"}
+      data-region={pendingRegion ?? (english ? "en" : german ? "de" : "tr")}
+      aria-label={english ? "Language and region" : german ? "Sprache und Region" : "Dil ve bölge"}
     >
       <span className="site-region-thumb" aria-hidden="true" />
       <Link
@@ -169,7 +176,7 @@ export function RegionSwitch({
         lang="tr"
         aria-label="Türkçe"
         activeOptions={{ exact: true }}
-        aria-current={german ? undefined : "true"}
+        aria-current={german || english ? undefined : "true"}
         onClick={(event) => changeRegion(event, "tr", turkey, turkeySearch)}
       >
         TR
@@ -184,6 +191,9 @@ export function RegionSwitch({
       >
         DE
       </Link>
+      <Link to={englishTarget} lang="en" aria-label="English" activeOptions={{ exact: true }} aria-current={english ? "true" : undefined} onClick={(event) => changeRegion(event, "en", englishTarget)}>
+        EN
+      </Link>
     </nav>
   );
 }
@@ -196,6 +206,7 @@ export function SiteNav({
   german?: boolean;
 }) {
   const location = useLocation();
+  const english = isEnglishPath(location.pathname);
   const [memberLoggedIn, setMemberLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -224,27 +235,27 @@ export function SiteNav({
   }, [variant]);
 
   if (variant !== "default") return <EventSiteNav variant={variant} />;
-  const home = german ? "/de" : "/";
+  const home = english ? "/en" : german ? "/de" : "/";
   const labels: Record<string, string> = {
-    "/notwork-nedir": "Was ist notwork?",
+    "/notwork-nedir": english ? "About" : "Was ist notwork?",
     "/etkinlikler": "Events",
     "/networking": "Networking",
-    "/sunum-yukle": "Vortrag halten",
-    "/ntw": "Event live",
-    "/sponsor": "Sponsoring",
+    "/sunum-yukle": english ? "Speak at an event" : "Vortrag halten",
+    "/ntw": english ? "Live event" : "Event live",
+    "/sponsor": english ? "Sponsor" : "Sponsoring",
     "/merch": "Merch",
   };
 
   return (
     <header className="site-header-shell sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-md">
       <div
-        className="desktop-site-header mx-auto hidden max-w-6xl items-center sm:flex"
+        className="desktop-site-header desktop-site-header-centered mx-auto hidden max-w-6xl items-center sm:flex"
         style={desktopGlassStyle}
       >
         <Link
           to={home}
           className="desktop-site-brand"
-          aria-label={german ? "notwork Startseite" : "notwork ana sayfa"}
+          aria-label={english ? "notwork home" : german ? "notwork Startseite" : "notwork ana sayfa"}
         >
           <img
             src="/brand/notwork-logo.png"
@@ -253,10 +264,10 @@ export function SiteNav({
           />
         </Link>
 
-        <nav className="desktop-site-links" aria-label={german ? "Hauptmenü" : "Ana menü"}>
+        <nav className="desktop-site-links" aria-label={english ? "Main navigation" : german ? "Hauptmenü" : "Ana menü"}>
           {desktopLinks.map((item) => {
             const Icon = item.icon;
-            const target = regionalPath(item.to, german);
+            const target = english ? englishPath(item.to) : regionalPath(item.to, german);
             const active =
               item.to === "/etkinlikler"
                 ? location.pathname === home || location.pathname === target
@@ -269,7 +280,7 @@ export function SiteNav({
                 className={`desktop-site-link${active ? " is-active" : ""}`}
               >
                 <Icon size={15} strokeWidth={1.8} aria-hidden="true" />
-                <span>{german ? labels[item.to] : item.label}</span>
+                <span>{english || german ? labels[item.to] : item.label}</span>
               </Link>
             );
           })}
@@ -278,10 +289,10 @@ export function SiteNav({
               <button
                 type="button"
                 className="desktop-site-menu"
-                aria-label={german ? "Weitere Seiten öffnen" : "Diğer sayfaları aç"}
+                aria-label={english ? "Open menu" : german ? "Weitere Seiten öffnen" : "Diğer sayfaları aç"}
               >
                 <Menu size={15} strokeWidth={1.8} aria-hidden="true" />
-                <span>Menü</span>
+                <span>{english ? "Menu" : "Menü"}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -290,25 +301,25 @@ export function SiteNav({
               className="glass-menu desktop-site-dropdown w-60 p-2"
             >
               <DropdownMenuLabel className="px-3 py-2 text-[0.65rem] uppercase tracking-[0.16em] text-foreground/40">
-                {german ? "Weitere Seiten" : "Diğer"}
+                {english ? "More pages" : german ? "Weitere Seiten" : "Diğer"}
               </DropdownMenuLabel>
               <DropdownMenuItem asChild className="rounded-xl p-0">
                 <a
-                  href={german ? "/de#galeri" : "/#galeri"}
+                  href={english ? "/en#galeri" : german ? "/de#galeri" : "/#galeri"}
                   className="flex min-h-11 items-center gap-3 px-3 text-sm"
                 >
                   <Images size={17} strokeWidth={1.7} />
-                  {german ? "Galerie" : "Galeri"}
+                  {english ? "Gallery" : german ? "Galerie" : "Galeri"}
                 </a>
               </DropdownMenuItem>
               {desktopMenuLinks.map(({ to, label, icon: Icon }) => (
                 <DropdownMenuItem key={to} asChild className="rounded-xl p-0">
                   <Link
-                    to={regionalPath(to, german)}
+                    to={english ? englishPath(to) : regionalPath(to, german)}
                     className="flex min-h-11 items-center gap-3 px-3 text-sm"
                   >
                     <Icon size={17} strokeWidth={1.7} />
-                    {german ? labels[to] : label}
+                    {english || german ? labels[to] : label}
                   </Link>
                 </DropdownMenuItem>
               ))}
@@ -320,11 +331,11 @@ export function SiteNav({
           <RegionSwitch german={german} />
           {memberLoggedIn === false ? (
             <Link
-              to={german ? "/de/registrieren" : "/profil"}
-              search={german ? {} : { mode: "register" }}
+              to={english ? "/en/register" : german ? "/de/registrieren" : "/profil"}
+              search={english || german ? {} : { mode: "register" }}
               className="desktop-site-join"
             >
-              {german ? "Mitglied werden" : "notwork ol"}
+              {english ? "Join notwork" : german ? "Mitglied werden" : "notwork ol"}
             </Link>
           ) : null}
           <ProfileLink german={german} className="desktop-profile-button" />
@@ -340,11 +351,12 @@ export function SiteNav({
 }
 
 function BrandLink({ className = "", german = false }: { className?: string; german?: boolean }) {
+  const english = isEnglishPath(useLocation().pathname);
   return (
     <Link
-      to={german ? "/de" : "/"}
+      to={english ? "/en" : german ? "/de" : "/"}
       className={`notwork-logo-link ${className}`}
-      aria-label={german ? "notwork Startseite" : "notwork ana sayfa"}
+      aria-label={english ? "notwork home" : german ? "notwork Startseite" : "notwork ana sayfa"}
     >
       <img src="/brand/notwork-logo.png" alt="notwork" className="notwork-logo mobile-site-logo" />
     </Link>
@@ -360,11 +372,12 @@ function ProfileLink({
   dark?: boolean;
   german?: boolean;
 }) {
+  const english = isEnglishPath(useLocation().pathname);
   return (
     <Link
-      to={german ? "/de/profil" : "/profil"}
-      aria-label={german ? "Zum Profil" : "Üye profiline git"}
-      title={german ? "Profil" : "Üye profili"}
+      to={english ? "/en/profile" : german ? "/de/profil" : "/profil"}
+      aria-label={english ? "Open profile" : german ? "Zum Profil" : "Üye profiline git"}
+      title={english ? "Profile" : german ? "Profil" : "Üye profili"}
       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
         dark
           ? "border-white/20 bg-white/10 text-white hover:bg-white/20"
@@ -387,18 +400,19 @@ function MobileSiteMenu({
   showRegion = false,
 }: { german?: boolean; showRegion?: boolean } = {}) {
   const [open, setOpen] = useState(false);
+  const english = isEnglishPath(useLocation().pathname);
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label={german ? "Menü öffnen" : "Site menüsünü aç"}
+          aria-label={english ? "Open menu" : german ? "Menü öffnen" : "Site menüsünü aç"}
           className={`inline-flex h-11 items-center justify-center gap-1.5 justify-self-start rounded-full border border-white/90 bg-white/55 text-xs sm:hidden ${showRegion ? "w-14" : "w-11"}`}
         >
           <Menu size={18} strokeWidth={1.6} aria-hidden="true" />
           {showRegion && (
             <span className="text-[0.63rem] font-bold text-primary-deep" aria-hidden="true">
-              {german ? "DE" : "TR"}
+              {english ? "EN" : german ? "DE" : "TR"}
             </span>
           )}
         </button>
@@ -420,17 +434,17 @@ function MobileSiteMenu({
         ].map(({ to, label, icon: Icon }) => (
           <DropdownMenuItem key={to} asChild className="rounded-2xl p-0">
             <Link
-              to={regionalPath(to, german)}
+              to={english ? englishPath(to) : regionalPath(to, german)}
               onClick={() => setOpen(false)}
               className="flex min-h-12 items-center gap-3 px-3 text-sm"
             >
               <Icon size={18} strokeWidth={1.5} />
-              {german
+              {english ? { "/notwork-nedir": "About notwork", "/merch": "Merch", "/sponsor": "Sponsor", "/sunum-yukle": "Speak at an event" }[to] : german
                 ? {
-                    "/notwork-nedir": "Was ist notwork?",
+                    "/notwork-nedir": english ? "About" : "Was ist notwork?",
                     "/merch": "Merch",
-                    "/sponsor": "Sponsoring",
-                    "/sunum-yukle": "Vortrag halten",
+                    "/sponsor": english ? "Sponsor" : "Sponsoring",
+                    "/sunum-yukle": english ? "Speak at an event" : "Vortrag halten",
                   }[to]
                 : label}
             </Link>
@@ -439,10 +453,10 @@ function MobileSiteMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="rounded-2xl p-0">
           <a
-            href={german ? "/de#galeri" : "/#galeri"}
+            href={english ? "/en#galeri" : german ? "/de#galeri" : "/#galeri"}
             className="flex min-h-12 items-center gap-3 px-3 text-sm"
           >
-            {german ? "Galerie ↗" : "Galeri ↗"}
+            {english ? "Gallery ↗" : german ? "Galerie ↗" : "Galeri ↗"}
           </a>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="rounded-2xl p-0">
@@ -552,13 +566,14 @@ function EventSiteNav({ variant }: { variant: Exclude<SiteNavVariant, "default">
 }
 
 export function SiteFooter({ german = false }: { german?: boolean } = {}) {
+  const english = isEnglishPath(useLocation().pathname);
   return (
     <footer className="simple-footer">
       <div className="simple-footer-top">
         <Link
-          to={german ? "/de" : "/"}
+          to={english ? "/en" : german ? "/de" : "/"}
           className="notwork-logo-link"
-          aria-label={german ? "notwork Startseite" : "notwork ana sayfa"}
+          aria-label={english ? "notwork home" : german ? "notwork Startseite" : "notwork ana sayfa"}
         >
           <img
             src="/brand/notwork-logo.png"
@@ -584,31 +599,31 @@ export function SiteFooter({ german = false }: { german?: boolean } = {}) {
             <Youtube size={19} />
           </a>
           <a href="mailto:berk@notwork.me" className="text-xs">
-            {german ? "Kontakt ↗" : "İletişim ↗"}
+            {english ? "Contact ↗" : german ? "Kontakt ↗" : "İletişim ↗"}
           </a>
         </div>
       </div>
       <div className="simple-footer-bottom">
         <span>© {new Date().getFullYear()} notwork</span>
-        <Link to={regionalPath("/duyurular", german)}>{german ? "Mitteilungen" : "Duyurular"}</Link>
-        <Link to={regionalPath("/dokumantasyon", german)}>
-          {german ? "Dokumentation" : "Dokümantasyon"}
+        <Link to={english ? englishPath("/duyurular") : regionalPath("/duyurular", german)}>{english ? "Announcements" : german ? "Mitteilungen" : "Duyurular"}</Link>
+        <Link to={english ? englishPath("/dokumantasyon") : regionalPath("/dokumantasyon", german)}>
+          {english ? "Documentation" : german ? "Dokumentation" : "Dokümantasyon"}
         </Link>
         <details>
-          <summary>{german ? "Datenschutz und Einstellungen" : "Gizlilik ve tercihler"}</summary>
+          <summary>{english ? "Privacy and preferences" : german ? "Datenschutz und Einstellungen" : "Gizlilik ve tercihler"}</summary>
           <div className="footer-legal">
-            <Link to={regionalPath("/kvkk", german)}>{german ? "Datenschutz" : "KVKK"}</Link>
-            <Link to={regionalPath("/acik-riza", german)}>
-              {german ? "Einwilligung" : "Açık rıza"}
+            <Link to={english ? englishPath("/kvkk") : regionalPath("/kvkk", german)}>{english ? "Privacy" : german ? "Datenschutz" : "KVKK"}</Link>
+            <Link to={english ? englishPath("/acik-riza") : regionalPath("/acik-riza", german)}>
+              {english ? "Consent" : german ? "Einwilligung" : "Açık rıza"}
             </Link>
-            <Link to={regionalPath("/cerez-politikasi", german)}>
-              {german ? "Cookie-Richtlinie" : "Çerez politikası"}
+            <Link to={english ? englishPath("/cerez-politikasi") : regionalPath("/cerez-politikasi", german)}>
+              {english ? "Cookie policy" : german ? "Cookie-Richtlinie" : "Çerez politikası"}
             </Link>
             <button
               type="button"
               onClick={() => window.dispatchEvent(new Event(COOKIE_CONSENT_OPEN_EVENT))}
             >
-              {german ? "Cookie-Einstellungen" : "Çerez tercihleri"}
+              {english ? "Cookie preferences" : german ? "Cookie-Einstellungen" : "Çerez tercihleri"}
             </button>
           </div>
         </details>

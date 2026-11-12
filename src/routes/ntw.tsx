@@ -16,7 +16,7 @@ export const Route = createFileRoute("/ntw")({
   component: NtwPage,
 });
 
-export function NtwPage({ german = false }: { german?: boolean } = {}) {
+export function NtwPage({ german = false, english = false }: { german?: boolean; english?: boolean } = {}) {
   const [activeEvent, setActiveEvent] = useState<NotworkEvent | null>(null);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export function NtwPage({ german = false }: { german?: boolean } = {}) {
             <img src="/community/23.jpg" alt="" />
           </div>
           <div className="ntw-bubble bubble-two">↗</div>
-          <div className="ntw-bubble bubble-three">{german ? "hallo" : "merhaba"}</div>
+          <div className="ntw-bubble bubble-three">{english ? "hello" : german ? "hallo" : "merhaba"}</div>
           <div className="ntw-bubble bubble-four">
             <img src="/community/17.jpg" alt="" />
           </div>
@@ -64,19 +64,19 @@ export function NtwPage({ german = false }: { german?: boolean } = {}) {
         </div>
         <div className="ntw-waiting-copy">
           <div className="ntw-glass-mark">ntw</div>
-          <p className="ntw-eyebrow">{german ? "Sei dabei" : "o an orada ol"}</p>
+          <p className="ntw-eyebrow">{english ? "Join in" : german ? "Sei dabei" : "o an orada ol"}</p>
           <h1>
-            {german ? "Hier entstehen" : "bağlantılar"}
+            {english ? "New connections" : german ? "Hier entstehen" : "bağlantılar"}
             <br />
-            {german ? "neue Kontakte." : "birazdan canlanır."}
+            {english ? "start here." : german ? "neue Kontakte." : "birazdan canlanır."}
           </h1>
           <p>
-            {german ? "Am selben Ort · neue Menschen" : "Aynı mekân · yeni insanlar"}
+            {english ? "One place · new people" : german ? "Am selben Ort · neue Menschen" : "Aynı mekân · yeni insanlar"}
             <br />
-            {german ? "Persönliche Begegnungen" : "Gerçek zamanlı karşılaşmalar"}
+            {english ? "Meet in person" : german ? "Persönliche Begegnungen" : "Gerçek zamanlı karşılaşmalar"}
           </p>
-          <Link className="ntw-availability" to={german ? munichEvent.path : "/etkinlikler"}>
-            {german ? "4. Dezember · München ↗" : "Yaklaşan etkinlikler ↗"}
+          <Link className="ntw-availability" to={english ? "/en/events" : german ? munichEvent.path : "/etkinlikler"}>
+            {english ? "Upcoming events ↗" : german ? "4. Dezember · München ↗" : "Yaklaşan etkinlikler ↗"}
           </Link>
         </div>
       </main>
