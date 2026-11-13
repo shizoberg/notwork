@@ -109,6 +109,20 @@ export default async (request: Request, _context: Context) => {
           ? await getMemberProfileBySession(readMemberSessionCookie(request))
           : null;
 
+      if (action === "launchDeviceResume") {
+        if (database.eventSlug !== "14-kasim-2026") return new Response("Geçersiz etkinlik", { status: 403 });
+        const token = request.headers.get("cookie")?.match(/(?:^|;\s*)launch_device=([a-f0-9-]{36})(?:;|$)/)?.[1];
+        const registration = token && await getRegistrationByToken(store, token);
+        const contact = registration && await store.get(
+          `${database.keyPrefix}/guest-contacts/${registration.participant.id}.json`,
+          { type: "json", consistency: "strong" },
+        ) as { email?: string } | null;
+        if (!registration || registration.participant.status !== "registered" || !contact?.email ||
+            normalizeEmail(contact.email) !== normalizeEmail(clean(input.email, 120))) {
+          return new Response("Bu tarayıcıda kayıt doğrulanamadı. İlk kayıt yaptığın tarayıcıyı kullan veya etkinlik ekibine danış.", { status: 401 });
+        }
+        return json({ ...registration, accessToken: token });
+      }
       if (action === "launchSignIn" || action === "launchSignInComplete") {
         if (database.eventSlug !== "14-kasim-2026") return new Response("Geçersiz etkinlik", { status: 403 });
         if (action === "launchSignIn") {
@@ -159,7 +173,10 @@ export default async (request: Request, _context: Context) => {
             { id: registration.participant.id }, { onlyIfNew: true },
           );
         }
-        return json(registration, { status: 201 });
+        const secure = isLocalRequest(request) ? "" : "; Secure";
+        return json(registration, { status: 201, headers: {
+          "Set-Cookie": `launch_device=${registration.accessToken}; Path=/api/event-products/network; HttpOnly; SameSite=Lax; Max-Age=604800${secure}`,
+        } });
       }
 
       if (action === "register") {

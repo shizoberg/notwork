@@ -66,6 +66,7 @@ function LaunchSpace() {
   const [tab, setTab] = useState<Tab>("home");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [deviceResume, setDeviceResume] = useState(false);
   const [signInLink, setSignInLink] = useState("");
   useEffect(() => {
     const hash = new URLSearchParams(location.hash.slice(1));
@@ -335,7 +336,9 @@ function LaunchSpace() {
     setBusy(true);
     setError("");
     try {
-      const result = await network("launchSignInComplete", { accessToken: signInLink });
+      const result = signInLink
+        ? await network("launchSignInComplete", { accessToken: signInLink })
+        : await network("launchDeviceResume", { email: email.trim() });
       accept(result);
       setSignInLink("");
     } catch (error) {
@@ -484,16 +487,20 @@ function LaunchSpace() {
             </div>
             <p>Alanını hazırlıyoruz…</p>
           </div>
-        ) : signInLink ? (
+        ) : signInLink || (deviceResume && !registration) ? (
           <section className="ls-enter">
             <LaunchEventHeader flow={flow} />
             <form className="ls-form ls-panel" onSubmit={recoverSession}>
               <h1>Etkinliğe geri dön</h1>
+              {!signInLink && <label>E-posta
+                <input type="email" required autoComplete="email" value={email}
+                  onChange={(event) => setEmail(event.target.value)} />
+              </label>}
               <button className="ls-primary" disabled={busy}>
                 {busy ? "Bekle…" : "Oturumu aç"}
               </button>
               <button type="button" className="ls-secondary" onClick={() => {
-                setSignInLink(""); setError("");
+                setSignInLink(""); setDeviceResume(false); setError("");
               }}>Kayıt ekranına dön</button>
             </form>
           </section>
@@ -511,6 +518,7 @@ function LaunchSpace() {
               <h1>{registrationQuestion?.title || (registrationStep === 4 ? "Tanışmaya hazırsın" : flow.welcomeTitle)}</h1>
               {registrationStep === 0 && <>
                 <p className="ls-muted">{flow.welcomeText}</p>
+                <button type="button" className="ls-secondary" onClick={() => setDeviceResume(true)}>Kaydım var</button>
                 <label>Adın ve soyadın
                   <input required maxLength={100} autoComplete="name" value={name}
                     onChange={(event) => setName(event.target.value)} />
