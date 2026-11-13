@@ -222,6 +222,9 @@ try {
   });
   assert.equal(update.status, 200);
   assert.deepEqual(update.data.myAnswers, changed);
+  assert.equal(update.data.results[0].total, participantCount);
+  assert.equal(update.data.results[0].counts[1].count, 1);
+
   const updatedTotals = (await call(poll, { action: "admin", password })).data;
   assert.equal(updatedTotals.total, participantCount);
   assert.equal(updatedTotals.results[0].counts[1].count, 1);

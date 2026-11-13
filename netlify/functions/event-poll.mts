@@ -242,7 +242,8 @@ export default async (request: Request) => {
             config: launch ? { ...state.config, isOpen: true } : state.config,
             total,
             ...(participantId ? { submitted: Boolean(state.ballots[participantId]), ...(launch ? { myAnswers: state.ballots[participantId] } : {}) } : {}),
-            ...(admin ? { results } : { published }),
+            ...((admin || (launch && participantId && state.ballots[participantId])) ? { results } : {}),
+            ...(!admin ? { published } : {}),
             ...(admin && launch
               ? {
                   announcement: state.announcement ?? null,

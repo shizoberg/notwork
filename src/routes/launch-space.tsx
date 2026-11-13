@@ -770,11 +770,10 @@ function LaunchSpace() {
               </section>
             ) : (
               <section className="ls-enter">
-                <p className="ls-eyebrow">{flow.organizerName}</p>
                 {!poll ? (
                   <p role="status">Anket yükleniyor…</p>
                 ) : poll.submitted && !editingVote ? (
-                  <div className="ls-center">
+                  <div className="ls-center ls-vote-confirmation">
                     <div className="ls-success">
                       <Check size={34} />
                     </div>
@@ -786,6 +785,22 @@ function LaunchSpace() {
                     <p className="ls-muted">
                       Oyun kaydedildi. Dilersen daha sonra değiştirebilirsin.
                     </p>
+                    <div className="ls-vote-results" aria-label="Oylama sonuçları">
+                      {poll.results?.map(({ question, total, counts }) => (
+                        <section key={question.id} className="ls-panel">
+                          <h2>{question.title}</h2>
+                          <p className="ls-caption">{total} oy</p>
+                          <ul>
+                            {counts.map(({ label, count }) => (
+                              <li key={label}>
+                                <span>{label}</span>
+                                <strong>{count} oy · {total ? Math.round(count / total * 100) : 0}%</strong>
+                              </li>
+                            ))}
+                          </ul>
+                        </section>
+                      ))}
+                    </div>
                     <div className="ls-vote-actions">
                     {poll.config.isOpen && (
                       <button className="ls-secondary" onClick={() => {
