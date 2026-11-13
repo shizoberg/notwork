@@ -1884,56 +1884,6 @@ export async function launchProfilePhoto(
   return { photo: (await store.get(key, { consistency: "strong" })) || "" };
 }
 
-export async function requestLaunchSignIn(
-  store: ReturnType<typeof getEventNetworkStore>,
-  requestedEmail: string,
-) {
-  const email = normalizeEmail(requestedEmail);
-  if (!isValidEmail(email)) throw Error("Geçerli bir e-posta adresi yaz.");
-  const { gmailStatus, sendGmailOnce } = await import("./_gmail.mjs");
-  if (!(await gmailStatus()).connected) throw Error("Giriş e-postası servisi şu an kullanılamıyor.");
-  const prefix = getNetworkPrefix();
-  const indexKey = `${prefix}/guest-email-index/${hashToken(email)}.json`;
-  const indexed = await store.get(indexKey, { type: "json", consistency: "strong" }) as { id: string } | null;
-  let id = indexed?.id;
-  if (!id) {
-    const { blobs } = await store.list({ prefix: `${prefix}/guest-contacts/` });
-    for (let i = 0; i < blobs.length && !id; i += 20) {
-      const contacts = await Promise.all(blobs.slice(i, i + 20).map(async ({ key }) => ({
-        key, row: await store.get(key, { type: "json" }) as { email: string } | null,
-      })));
-      const match = contacts.find(({ row }) => row?.email && normalizeEmail(row.email) === email);
-      if (match) id = match.key.split("/").pop()?.replace(/\.json$/, "");
-    }
-    if (id) await store.setJSON(indexKey, { id }, { onlyIfNew: true });
-  }
-  const existing = id
-    ? await store.get(participantKey(id), { type: "json", consistency: "strong" }) as EventNetworkRegistration | null
-    : null;
-  if (!existing || existing.participant.status !== "registered") return;
-  const allowed = await atomicState(store, `${prefix}/sign-in-limits/${hashToken(email)}.json`,
-    () => ({ next: 0 }), (state) => {
-      if (state.next > Date.now()) return false;
-      state.next = Date.now() + 300_000;
-      return true;
-    });
-  if (!allowed) return;
-  const token = crypto.randomUUID() + crypto.randomUUID();
-  const key = `${prefix}/sign-in/${hashToken(token)}.json`;
-  await store.setJSON(key, { id, expires: Date.now() + 15 * 60_000 });
-  const url = `https://notwork.me/launch-space#sign-in=${token}`;
-  const delivery = await sendGmailOnce(`launch-sign-in:${hashToken(token)}`, {
-    to: [email],
-    subject: "Launchspace · Etkinliğe geri dön",
-    text: `Etkinliğe dönmek için 15 dakika içinde aç: ${url}\nBu isteği sen yapmadıysan e-postayı yok sayabilirsin.`,
-    html: `<p><a href="${url}">Launchspace’e geri dön</a></p><p>Bağlantı 15 dakika geçerlidir ve bir kez kullanılabilir.</p>`,
-  }, { transactional: true });
-  if (!["accepted", "uncertain"].includes(delivery.status)) {
-    await store.delete(key);
-    throw Error("Giriş bağlantısı gönderilemedi. Biraz sonra tekrar dene.");
-  }
-}
-
 export async function completeLaunchSignIn(
   store: ReturnType<typeof getEventNetworkStore>,
   token: string,

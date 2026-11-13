@@ -5,7 +5,6 @@ import {
   saveLaunchGroupSelfie,
   launchSpacePeople,
   launchProfilePhoto,
-  requestLaunchSignIn,
   completeLaunchSignIn,
   normalizeEmail,
   hashToken,
@@ -113,8 +112,7 @@ export default async (request: Request, _context: Context) => {
       if (action === "launchSignIn" || action === "launchSignInComplete") {
         if (database.eventSlug !== "14-kasim-2026") return new Response("Geçersiz etkinlik", { status: 403 });
         if (action === "launchSignIn") {
-          await requestLaunchSignIn(store, clean(input.email, 120));
-          return json({ ok: true });
+          return new Response("Etkinlik sırasında giriş e-postaları kapalı.", { status: 403 });
         }
         const registration = await completeLaunchSignIn(store, clean(input.accessToken, 100));
         return registration ? json(registration) : new Response("Bağlantı geçersiz veya süresi dolmuş.", { status: 401 });
@@ -139,7 +137,7 @@ export default async (request: Request, _context: Context) => {
         if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail))
           return new Response("Geçerli bir e-posta adresi yaz.", { status: 400 });
         if (contactEmail && await store.get(indexKey, { consistency: "strong" }))
-          return new Response("Bu e-postayla etkinlik kaydı var. Kaydım var seçeneğinden giriş bağlantısı iste.", { status: 409 });
+          return new Response("Bu e-postayla etkinlik kaydı var. İlk kayıt yaptığın tarayıcıdan dön veya etkinlik ekibine danış.", { status: 409 });
         const [firstName, ...rest] = name.split(/\s+/);
         const registration = await registerNetworkProfile(store, {
           firstName,

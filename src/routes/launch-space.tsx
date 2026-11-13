@@ -66,8 +66,6 @@ function LaunchSpace() {
   const [tab, setTab] = useState<Tab>("home");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [recovering, setRecovering] = useState(false);
-  const [recoveryMessage, setRecoveryMessage] = useState("");
   const [signInLink, setSignInLink] = useState("");
   useEffect(() => {
     const hash = new URLSearchParams(location.hash.slice(1));
@@ -336,16 +334,10 @@ function LaunchSpace() {
     event.preventDefault();
     setBusy(true);
     setError("");
-    setRecoveryMessage("");
     try {
-      if (signInLink) {
-        const result = await network("launchSignInComplete", { accessToken: signInLink });
-        accept(result);
-        setSignInLink("");
-      } else {
-        await network("launchSignIn", { email: email.trim() });
-        setRecoveryMessage("Bu adresle kayıt varsa giriş bağlantısı e-postana gönderildi.");
-      }
+      const result = await network("launchSignInComplete", { accessToken: signInLink });
+      accept(result);
+      setSignInLink("");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Giriş yapılamadı.");
     } finally {
@@ -492,21 +484,16 @@ function LaunchSpace() {
             </div>
             <p>Alanını hazırlıyoruz…</p>
           </div>
-        ) : signInLink || (recovering && !registration) ? (
+        ) : signInLink ? (
           <section className="ls-enter">
             <LaunchEventHeader flow={flow} />
             <form className="ls-form ls-panel" onSubmit={recoverSession}>
               <h1>Etkinliğe geri dön</h1>
-              {!signInLink && <label>E-posta
-                <input type="email" required autoComplete="email" value={email}
-                  onChange={(event) => setEmail(event.target.value)} />
-              </label>}
               <button className="ls-primary" disabled={busy}>
-                {busy ? "Bekle…" : signInLink ? "Oturumu aç" : "Giriş bağlantısı gönder"}
+                {busy ? "Bekle…" : "Oturumu aç"}
               </button>
-              {recoveryMessage && <p role="status">{recoveryMessage}</p>}
               <button type="button" className="ls-secondary" onClick={() => {
-                setSignInLink(""); setRecovering(false); setError("");
+                setSignInLink(""); setError("");
               }}>Kayıt ekranına dön</button>
             </form>
           </section>
@@ -524,9 +511,6 @@ function LaunchSpace() {
               <h1>{registrationQuestion?.title || (registrationStep === 4 ? "Tanışmaya hazırsın" : flow.welcomeTitle)}</h1>
               {registrationStep === 0 && <>
                 <p className="ls-muted">{flow.welcomeText}</p>
-                <button type="button" className="ls-secondary" onClick={() => setRecovering(true)}>
-                  Kaydım var · e-postayla giriş
-                </button>
                 <label>Adın ve soyadın
                   <input required maxLength={100} autoComplete="name" value={name}
                     onChange={(event) => setName(event.target.value)} />
