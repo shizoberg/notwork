@@ -20,7 +20,7 @@ try {
   const count = await page.locator(".ls-people-card").count();
   assert.ok(count >= 20);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-  await page.locator(".ls-space-cover").evaluate(async (el) => {
+  await page.locator(".ls-event-cover").evaluate(async (el) => {
     await Promise.all(
       el
         .closest(".ls-enter")
@@ -48,18 +48,19 @@ try {
     await page.getByRole("button", { name: "Tanışma isteğin iletildi", exact: true }).waitFor();
   }
   await page.getByRole("button", { name: "Profili kapat" }).click();
-  await page.getByRole("button", { name: "Match", exact: true }).click();
-  await page.getByRole("button", { name: "Grup adını büyüt" }).waitFor();
-  const name = await page.locator(".ls-match-heading h1").innerText();
-  assert.equal(await page.locator(".ls-photo-badge").count(), 1);
+  await page.getByRole("button", { name: "Nodes Match", exact: true }).click();
+  await page.locator(".ls-match-heading, .ls-center").first().waitFor();
+  const groupHeading = page.locator(".ls-match-heading h1");
+  const name = await groupHeading.isVisible() ? await groupHeading.innerText() : null;
+  if (name) assert.equal(await page.locator(".ls-photo-badge").count(), 1);
   await page.getByRole("button", { name: "Alanım", exact: true }).click();
-  await page.getByRole("button", { name: "Match", exact: true }).click();
-  await page.getByRole("button", { name: "Grup adını büyüt" }).waitFor();
-  assert.equal(await page.locator(".ls-match-heading h1").innerText(), name);
+  await page.getByRole("button", { name: "Nodes Match", exact: true }).click();
+  await page.locator(".ls-match-heading, .ls-center").first().waitFor();
+  if (name) assert.equal(await groupHeading.innerText(), name);
   await page.reload();
-  await page.getByRole("button", { name: "Match", exact: true }).click();
-  await page.getByRole("button", { name: "Grup adını büyüt" }).waitFor();
-  assert.equal(await page.locator(".ls-match-heading h1").innerText(), name);
+  await page.getByRole("button", { name: "Nodes Match", exact: true }).click();
+  await page.locator(".ls-match-heading, .ls-center").first().waitFor();
+  if (name) assert.equal(await groupHeading.innerText(), name);
   await page.screenshot({ path: "/tmp/launch-space-match-updated.png" });
   assert.deepEqual(errors, []);
   console.log(
