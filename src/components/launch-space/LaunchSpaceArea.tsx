@@ -1,6 +1,6 @@
 import { LaunchAvatar } from "./LaunchAvatar";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import { Bell, ArrowRight, DoorOpen, Network, Presentation, Route, Search, Users, X } from "lucide-react";
+import { Check, CircleHelp, RefreshCw, Bell, ArrowRight, DoorOpen, Network, Presentation, Route, Search, Users, X } from "lucide-react";
 import { LaunchEventHeader } from "./LaunchEventHeader";
 import type { LaunchFlow } from "@/lib/launch-flow";
 
@@ -53,6 +53,7 @@ export function LaunchSpaceArea({
   const [people, setPeople] = useState<Person[]>([]);
   const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(pageSize);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [inbox, setInbox] = useState(false);
   const [meetingPlace, setMeetingPlace] = useState("");
   const [meetingMessage, setMeetingMessage] = useState("");
@@ -232,10 +233,10 @@ export function LaunchSpaceArea({
         </div>
       )}
       <section className="ls-directory-product" aria-label="Etkinliktekiler">
-      <p className="ls-eyebrow">Etkinliktekiler</p>
       <div className="ls-directory-heading">
         <h2>Birlikte aynı alandayız.</h2>
-        <button
+        <div className="ls-directory-tools">
+        <button aria-label="Katılımcıları yenile" title="Katılımcıları yenile"
           disabled={loading}
           onClick={() => {
             setLoading(true);
@@ -246,14 +247,17 @@ export function LaunchSpaceArea({
               .finally(() => setLoading(false));
           }}
         >
-          Yenile
+          <RefreshCw size={18} className={loading ? "ls-refreshing" : undefined} />
         </button>
+        <button aria-label="Tanışma yardımı" aria-expanded={helpOpen} onClick={() => setHelpOpen(!helpOpen)}><CircleHelp size={18} /></button>
+        </div>
       </div>
+      {helpOpen && <p className="ls-directory-help">Profili açıp tanışma isteği gönder. Tik, istek gönderdiğin kişileri gösterir. Yenile düğmesi katılımcıları günceller.</p>}
       <label className="ls-people-search">
         <Search size={18} />
         <input
           aria-label="Katılımcı ara"
-          placeholder="İsim, alan veya aradığın bağlantı"
+          placeholder="İsim veya alan ara"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -286,17 +290,9 @@ export function LaunchSpaceArea({
                 {p.isSelf ? " · sen" : ""}
               </strong>
               <small>{p.offers.join(" · ") || "Katılımcı"}</small>
-              {(p.sent || p.received) && (
-                <span className="ls-person-status">
-                  {p.sent && p.received
-                    ? "Tanışma karşılıklı ✓"
-                    : p.received
-                      ? "Seninle tanışmak istiyor"
-                      : p.sent
-                        ? "Tanışma isteğin iletildi"
-                        : ""}
-                </span>
-              )}
+              {(p.sent || p.received) && <span className="ls-request-marker" title={p.sent ? "Tanışma isteğin iletildi" : "Seninle tanışmak istiyor"} aria-label={p.sent ? "İstek gönderildi" : "Gelen istek"}>
+                {p.sent ? <Check size={14} /> : <Bell size={14} />}
+              </span>}
             </button>
           ))}
         </div>
@@ -353,7 +349,7 @@ export function LaunchSpaceArea({
       {selected && (
         <div className="ls-person-overlay" onClick={() => setSelected(null)}>
           <section
-            className="ls-profile-sheet"
+            className={`ls-profile-sheet${editing ? " ls-compose-sheet" : ""}`}
             style={categoryColor(selected.offers[0] || "Katılımcı")}
             role="dialog"
             aria-modal="true"
@@ -369,22 +365,24 @@ export function LaunchSpaceArea({
               <X />
             </button>
             <span className="ls-people-avatar">{personPhoto ? <img src={personPhoto} alt="" /> : selected.name[0]}</span>
-            {!selected.isSelf && (
+            {!editing && !selected.isSelf && (
               <button className="ls-secondary ls-dialog-action" disabled={reasonPending}
                 onClick={() => void showReason(selected)}>
                 {reasonPending ? "Hazırlanıyor…" : "Neden tanışmalıyım?"}
               </button>
             )}
             <h2>{selected.name}</h2>
+            {!editing && <>
             {reason.startsWith(selected.id + ":") && <p role="status">{reason.slice(selected.id.length + 1)}</p>}
             <span className="ls-code">{selected.code}</span>
             <p>{selected.intro}</p>
             <small>PAYLAŞABİLECEKLERİ</small>
             <p>{selected.offersDetail || selected.offers.join(" · ")}</p>
             {selected.needs && <><small>BU BULUŞMADA ARADIĞI</small><p>{selected.needs}</p></>}
+            </>}
             {!selected.isSelf && (
               <div className="ls-introduction-actions">
-                {[["Gelen istek", selected.incoming], ["Gönderdiğin istek", selected.outgoing]].map(([label, proposal]) => {
+                {!editing && [["Gelen istek", selected.incoming], ["Gönderdiğin istek", selected.outgoing]].map(([label, proposal]) => {
                   const detail = proposal as Proposal | undefined;
                   if (!detail) return null;
                   return <div className="ls-proposal" key={String(label)}>

@@ -1797,3 +1797,23 @@
 .launch-space .ls-apps > button[data-app="match"] { background: #172d37; border-color: #416d80; }
 .launch-space .ls-apps > button[data-app="match"] h2 { color: #b7e4f7; }
 .launch-space .ls-apps > button[data-app="match"] .ls-app-icon { background: #254959; color: #b7e4f7; }
+
+.launch-space .ls-people-card { position: relative; align-self: start; }
+.launch-space .ls-people-card > strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; min-height: 2.6em; line-height: 1.3; }
+.launch-space .ls-people-card > small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.launch-space .ls-request-marker { position: absolute; top: 3px; right: 3px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #b6dccb; color: #163c30; border: 2px solid #111c20; }
+.launch-space .ls-directory-heading h2 { flex: 1; min-width: 0; font-size: clamp(20px, 5vw, 28px); }
+.launch-space .ls-directory-tools { display: flex; gap: 6px; flex-shrink: 0; }
+.launch-space .ls-directory-tools button { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid #365259; border-radius: 10px; background: #1a2b31; }
+.launch-space .ls-directory-help { font-size: 13px; color: #b9cbd3; line-height: 1.5; }
+.launch-space .ls-directory-product .ls-people-search { height: 46px; padding: 0 12px; }
+.launch-space .ls-directory-product .ls-people-search input { border: none !important; background: transparent !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; height: 42px; min-height: 0; font-size: 14px; width: 100%; }
+.launch-space .ls-people-search svg { flex-shrink: 0; }
+.launch-space .ls-compose-sheet { width: min(100%, 430px); padding: 18px; }
+.launch-space .ls-compose-sheet > .ls-people-avatar { width: 40px; height: 40px; margin-bottom: 8px; }
+.launch-space .ls-compose-sheet h2 { font-size: 21px; margin: 0 0 12px; }
+.launch-space .ls-compose-sheet .ls-form { gap: 10px; }
+.launch-space .ls-compose-sheet .ls-form label { font-size: 13px; gap: 5px; }
+.launch-space .ls-compose-sheet .ls-form input { min-height: 42px; padding: 10px 12px; font-size: 14px; }
+.launch-space .ls-compose-sheet .ls-form textarea { height: 72px; min-height: 72px; padding: 10px 12px; font-size: 14px; }
+.launch-space .ls-compose-sheet .ls-dialog-action { min-height: 42px; padding: 10px 12px; margin: 0; font-size: 14px; }
