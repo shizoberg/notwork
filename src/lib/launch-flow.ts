@@ -12,6 +12,11 @@ export type LaunchFlow = {
   nextLabel: string;
   finishLabel: string;
   categoryLabel: string;
+  matchLabel: string;
+  votesLabel: string;
+  voteReminder: string;
+  routeLabel: string;
+  showSelfie: boolean;
   categories: string[];
   schedule: { time: string; label: string }[];
   apps: LaunchApp[];
@@ -30,6 +35,11 @@ export const defaultLaunchFlow: LaunchFlow = {
   nextLabel: "Devam et",
   finishLabel: "Kaydı tamamla",
   categoryLabel: "Katkı alanın",
+  matchLabel: "Nodes Match",
+  votesLabel: "Nodes Votes",
+  voteReminder: "Lütfen oyunu tüm sunumlar bittikten sonra kullan.",
+  routeLabel: "Tanışma rotan",
+  showSelfie: true,
   categories: [
     "networking",
     "teknoloji",
@@ -40,8 +50,9 @@ export const defaultLaunchFlow: LaunchFlow = {
     "araştırma",
   ],
   schedule: [
-    { time: "18:00", label: "Başlangıç" },
+    { time: "18:00", label: "Giriş ve networking" },
     { time: "19:00", label: "Sunumlar" },
+    { time: "20:00", label: "Networking · 22.00’ye kadar" },
   ],
   apps: ["match", "poll"],
   questions: [
@@ -120,6 +131,11 @@ export function validateLaunchFlow(value: LaunchFlow): LaunchFlow {
     nextLabel: line(value.nextLabel, 48),
     finishLabel: line(value.finishLabel, 48),
     categoryLabel: line(value.categoryLabel, 48),
+    matchLabel: line(value.matchLabel ?? defaultLaunchFlow.matchLabel, 32),
+    votesLabel: line(value.votesLabel ?? defaultLaunchFlow.votesLabel, 32),
+    voteReminder: line(value.voteReminder ?? defaultLaunchFlow.voteReminder, 180),
+    routeLabel: line(value.routeLabel ?? defaultLaunchFlow.routeLabel, 60),
+    showSelfie: value.showSelfie !== false,
     categories: options(value.categories, true),
     apps: [...value.apps],
     schedule: value.schedule

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { ArrowRight, Check, Search, Users, X } from "lucide-react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { ArrowRight, Check, DoorOpen, Network, Presentation, Route, Search, Users, X } from "lucide-react";
 import { LaunchEventHeader } from "./LaunchEventHeader";
 import type { LaunchFlow } from "@/lib/launch-flow";
 
@@ -30,6 +30,8 @@ export function LaunchSpaceArea({
   event,
   token,
   goal,
+  firstName,
+  avatar,
   flow,
   datasetId,
   children,
@@ -37,6 +39,8 @@ export function LaunchSpaceArea({
   event: string;
   token: string;
   goal: string;
+  firstName: string;
+  avatar?: string;
   flow: LaunchFlow;
   datasetId?: string;
   children?: ReactNode;
@@ -44,7 +48,7 @@ export function LaunchSpaceArea({
   const [people, setPeople] = useState<Person[]>([]);
   const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(pageSize);
-  const moreRef = useRef<HTMLButtonElement>(null);
+  const [routeOpen, setRouteOpen] = useState(false);
   const [selected, setSelected] = useState<Person | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -112,37 +116,39 @@ export function LaunchSpaceArea({
       .toLocaleLowerCase("tr-TR")
       .includes(query.toLocaleLowerCase("tr-TR")),
   );
+  const suggested = people.filter((person) => !person.isSelf && !person.sent).slice(0, 3);
   useEffect(() => {
-    const marker = moreRef.current;
-    if (!marker || typeof IntersectionObserver === "undefined") return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          observer.disconnect();
-          setVisibleCount((count) => Math.min(count + pageSize, filtered.length));
-        }
-      },
-      { rootMargin: "0px 0px 100px 0px" },
-    );
-    observer.observe(marker);
-    return () => observer.disconnect();
-  }, [visibleCount, filtered.length, query]);
+    if (!routeOpen) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setRouteOpen(false);
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [routeOpen]);
   const incoming = people.filter((p) => p.received && !p.sent);
   return (
     <div className="ls-space-area">
-      <LaunchEventHeader flow={flow} />
-      <details className="ls-panel ls-area-info">
+      <LaunchEventHeader flow={flow} avatar={avatar} initials={firstName[0]} />
+      <p className="ls-eyebrow">Hoş geldin, {firstName}</p>
+      <details className="ls-panel ls-area-info" open>
         <summary>Etkinlik bilgileri</summary>
         <p className="ls-muted ls-flow-copy">{flow.welcomeText}</p>
         <ul className="ls-nodes-votes">
-          {flow.schedule.map(({ time, label }, index) => (
-            <li key={index}>
-              <strong>{time.replace(":", ".")}</strong>
-              <span>{label}</span>
-            </li>
-          ))}
+          {flow.schedule.map(({ time, label }, index) => {
+            const Icon = index === 0 ? DoorOpen : index === 1 ? Presentation : Network;
+            return (
+              <li key={index}>
+                <strong><Icon size={15} aria-hidden="true" /> {time.replace(":", ".")}</strong>
+                <span>{label}</span>
+              </li>
+            );
+          })}
         </ul>
-        {goal && <p className="ls-caption">Bu buluşmadaki amacın · {goal}</p>}
+        <h3>Etkinlik amacım</h3>
+        <p className="ls-caption">{goal || flow.welcomeText}</p>
+        <button className="ls-secondary" onClick={() => setRouteOpen(true)}>
+          <Route size={16} /> {flow.routeLabel} <ArrowRight size={15} />
+        </button>
       </details>
       {children}
       {incoming.length > 0 && (
@@ -232,11 +238,10 @@ export function LaunchSpaceArea({
       )}
       {visibleCount < filtered.length && (
         <button
-          ref={moreRef}
           className="ls-people-more"
           onClick={() => setVisibleCount((count) => Math.min(count + pageSize, filtered.length))}
         >
-          {Math.min(pageSize, filtered.length - visibleCount)} kişi daha göster
+          {Math.min(pageSize, filtered.length - visibleCount)} kişi daha gör
         </button>
       )}
       <p className="ls-caption" aria-live="polite">
@@ -244,6 +249,22 @@ export function LaunchSpaceArea({
       </p>
       {!loading && filtered.length === 0 && (
         <p className="ls-muted">Bu aramada kimseyi bulamadık.</p>
+      )}
+      {routeOpen && (
+        <div className="ls-person-overlay" onClick={() => setRouteOpen(false)}>
+          <section className="ls-profile-sheet" role="dialog" aria-modal="true"
+            aria-label={flow.routeLabel} onClick={(event) => event.stopPropagation()}>
+            <button autoFocus className="ls-profile-close" aria-label="Rotayı kapat" onClick={() => setRouteOpen(false)}><X /></button>
+            <h2>{flow.routeLabel}</h2>
+            <p>{suggested.length ? "Bu kişilerle tanışmak iyi bir başlangıç olabilir." : "Yeni katılımcılar geldikçe tanışabileceğin kişiler burada görünecek."}</p>
+            {suggested.map((person) => (
+              <button key={person.id} className="ls-secondary" onClick={() => {
+                setRouteOpen(false);
+                setSelected(person);
+              }}>{person.name} <ArrowRight size={15} /></button>
+            ))}
+          </section>
+        </div>
       )}
       {selected && (
         <div className="ls-person-overlay" onClick={() => setSelected(null)}>

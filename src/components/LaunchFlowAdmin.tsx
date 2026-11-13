@@ -7,9 +7,7 @@ import {
   type LaunchFlow,
 } from "@/lib/launch-flow";
 
-const splitLines = (text: string) => text.split("\n");
 const cleanLines = (lines: string[]) => lines.map((line) => line.trim()).filter(Boolean);
-const questionNames = ["Kendini tanıtma", "Sunabileceği katkı", "Aradığı bağlantı"];
 
 export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => void }) {
   const [flow, setFlow] = useState<LaunchFlow>();
@@ -99,10 +97,7 @@ export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => v
         Katılımcı ekranını aç ↗
       </a>
       <ol className="ls-flow-steps">
-        <li>Karşılama ve profil girişi</li>
-        <li>Katılımcı bilgileri</li>
-        <li>Üç kayıt sorusu</li>
-        <li>Kayıt onayı</li>
+        <li>İsim ve etkinlik onayı</li>
         <li>Alanım ve etkinlik uygulamaları</li>
       </ol>
       {flow ? (
@@ -110,12 +105,12 @@ export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => v
           <aside className="ls-editor-preview" aria-label="Katılımcı önizlemesi">
             <p className="ls-eyebrow">Katılımcı önizlemesi</p>
             <div className="ls-preview-steps">
-              {["Giriş", "Soru 1", "Soru 2", "Soru 3", "Program", "Onay"].map((label, index) => (
+              {["Kayıt", "Program"].map((label, index) => (
                 <button
                   key={label}
                   type="button"
-                  aria-pressed={preview === index - 1}
-                  onClick={() => setPreview(index - 1)}
+                  aria-pressed={preview === (index === 0 ? -1 : 3)}
+                  onClick={() => setPreview(index === 0 ? -1 : 3)}
                 >
                   {label}
                 </button>
@@ -131,31 +126,9 @@ export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => v
                 <h3>{flow.welcomeTitle}</h3>
                 <p className="ls-flow-copy">{flow.welcomeText}</p>
                 <span className="ls-preview-choice">{flow.registerLabel}</span>
-                <span className="ls-preview-choice">{flow.loginLabel}</span>
+                <span className="ls-preview-choice">Adın ve soyadın · etkinlik onayı</span>
               </>
-            ) : preview < 3 ? (
-              <>
-                <h3>{flow.questions[preview].title}</h3>
-                <p>{flow.questions[preview].label}</p>
-                {cleanLines(flow.questions[preview].options).length ? (
-                  cleanLines(flow.questions[preview].options).map((option, index) => (
-                    <span className="ls-preview-choice" key={index}>
-                      ○ {option}
-                    </span>
-                  ))
-                ) : (
-                  <span className="ls-preview-choice ls-preview-textarea">
-                    {flow.questions[preview].placeholder || "Yanıtını yaz"}
-                  </span>
-                )}
-                {preview === 1 && (
-                  <span className="ls-preview-choice">
-                    {flow.categoryLabel} · {cleanLines(flow.categories).join(" / ")}
-                  </span>
-                )}
-                <span className="ls-preview-choice ls-preview-next">{flow.nextLabel}</span>
-              </>
-            ) : preview === 3 ? (
+            ) : (
               <>
                 <h3>Etkinlik programı</h3>
                 <ul className="ls-nodes-votes">
@@ -165,13 +138,7 @@ export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => v
                     </li>
                   ))}
                 </ul>
-                <p>{flow.apps.map((app) => (app === "match" ? "Match" : "Anket")).join(" → ")}</p>
-              </>
-            ) : (
-              <>
-                <h3>Tanışmaya hazırsın.</h3>
-                <span className="ls-preview-choice">□ Etkinlik onayı</span>
-                <span className="ls-preview-choice ls-preview-next">{flow.finishLabel}</span>
+                <p>{flow.apps.map((app) => (app === "match" ? flow.matchLabel : flow.votesLabel)).join(" → ")}</p>
               </>
             )}
           </aside>
@@ -244,100 +211,29 @@ export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => v
                     onChange={(e) => edit({ welcomeText: e.target.value })}
                   />
                 </label>
+                <label className="ls-check">
+                  <input type="checkbox" checked={flow.showSelfie} onChange={(event) => edit({ showSelfie: event.target.checked })} />
+                  <span>İsteğe bağlı grup selfiesini göster</span>
+                </label>
                 {(
                   [
                     ["registerLabel", "Kayıt butonu"],
-                    ["loginLabel", "Mevcut profil butonu"],
-                    ["nextLabel", "İlerleme butonu"],
-                    ["finishLabel", "Kaydı tamamlama butonu"],
+                    ["matchLabel", "Eşleşme adı"],
+                    ["votesLabel", "Oylama adı"],
+                    ["voteReminder", "Oylama hatırlatması"],
+                    ["routeLabel", "Tanışma rotası butonu"],
                   ] as const
                 ).map(([key, label]) => (
                   <label key={key}>
                     {label}
                     <input
                       required
-                      maxLength={48}
+                      maxLength={key === "voteReminder" ? 180 : key === "routeLabel" ? 60 : 48}
                       value={flow[key]}
                       onChange={(e) => edit({ [key]: e.target.value })}
                     />
                   </label>
                 ))}
-              </details>
-              <details>
-                <summary>Kayıt soruları ve cevap seçenekleri</summary>
-                <p className="ls-caption">
-                  Her satıra bir cevap yaz. Liste boşsa katılımcı kendi cevabını yazar.
-                </p>
-                {flow.questions.map((question, index) => {
-                  function update(patch: Partial<typeof question>) {
-                    edit({
-                      questions: flow!.questions.map((item, i) =>
-                        i === index ? { ...item, ...patch } : item,
-                      ),
-                    });
-                  }
-                  return (
-                    <section
-                      key={index}
-                      className="ls-flow-question"
-                      onFocus={() => setPreview(index)}
-                    >
-                      <h3>
-                        {index + 1}. soru · {questionNames[index]}
-                      </h3>
-                      <label>
-                        Ekran başlığı
-                        <input
-                          required
-                          maxLength={90}
-                          value={question.title}
-                          onChange={(e) => update({ title: e.target.value })}
-                        />
-                      </label>
-                      <label>
-                        Katılımcıya sorulan soru
-                        <input
-                          required
-                          maxLength={140}
-                          value={question.label}
-                          onChange={(e) => update({ label: e.target.value })}
-                        />
-                      </label>
-                      <label>
-                        Yanıt kutusunda görünen ipucu
-                        <input
-                          maxLength={160}
-                          value={question.placeholder}
-                          onChange={(e) => update({ placeholder: e.target.value })}
-                        />
-                      </label>
-                      <label>
-                        Seçim butonları · her satıra bir seçenek
-                        <textarea
-                          value={question.options.join("\n")}
-                          onChange={(e) => update({ options: splitLines(e.target.value) })}
-                        />
-                      </label>
-                    </section>
-                  );
-                })}
-                <label>
-                  Katkı alanı başlığı
-                  <input
-                    required
-                    maxLength={48}
-                    value={flow.categoryLabel}
-                    onChange={(e) => edit({ categoryLabel: e.target.value })}
-                  />
-                </label>
-                <label>
-                  Katkı alanı seçenekleri
-                  <textarea
-                    required
-                    value={flow.categories.join("\n")}
-                    onChange={(e) => edit({ categories: splitLines(e.target.value) })}
-                  />
-                </label>
               </details>
               <details onFocus={() => setPreview(3)}>
                 <summary>Program ve uygulama sırası</summary>
@@ -405,8 +301,8 @@ export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => v
                       })
                     }
                   >
-                    <option value="match">Match → Anket</option>
-                    <option value="poll">Anket → Match</option>
+                    <option value="match">{flow.matchLabel} → {flow.votesLabel}</option>
+                    <option value="poll">{flow.votesLabel} → {flow.matchLabel}</option>
                   </select>
                 </label>
               </details>

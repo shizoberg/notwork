@@ -2,6 +2,7 @@ import type { Config, Context } from "@netlify/functions";
 import { readFile } from "node:fs/promises";
 import {
   clean,
+  saveLaunchGroupSelfie,
   launchSpacePeople,
   eventChat,
   completeActiveMatchByToken,
@@ -102,6 +103,29 @@ export default async (request: Request, _context: Context) => {
         action === "register" || action === "resume"
           ? await getMemberProfileBySession(readMemberSessionCookie(request))
           : null;
+
+      if (action === "launchGuest" || action === "groupSelfie") {
+        if (database.eventSlug !== "14-kasim-2026")
+          return new Response("Bu işlem Launchspace’e özel", { status: 403 });
+        if (action === "groupSelfie") {
+          await saveLaunchGroupSelfie(store, input);
+          return json({ ok: true });
+        }
+        const name = clean(input.firstName, 100);
+        if (!name || input.eventConsent !== true)
+          return new Response("İsim ve etkinlik onayı gerekli", { status: 400 });
+        const [firstName, ...rest] = name.split(/\s+/);
+        const registration = await registerNetworkProfile(store, {
+          firstName,
+          lastName: rest.join(" "),
+          email: `guest-${crypto.randomUUID()}@launchspace.invalid`,
+          offers: ["networking"],
+          needTag: "networking",
+          attendedEvent: database.eventSlug,
+          eventConsent: true,
+        }, { allowSingleName: true });
+        return json(registration, { status: 201 });
+      }
 
       if (action === "register") {
         if (

@@ -24,6 +24,17 @@ type State = Vote & {
   announcement?: LaunchAnnouncement;
   previousPolls?: (Vote & { id: string })[];
 };
+function upgradeUnansweredLaunchPoll(state: State, launch: boolean) {
+  const question = state.config.questions[0];
+  const placeholders = ["Firma bir", "Firma iki", "Firma üç", "Firma dört", "Firma beş"];
+  if (
+    launch && !Object.keys(state.ballots).length && state.config.questions.length === 1 &&
+    question?.id === "q1" && question.options.length === placeholders.length &&
+    placeholders.every((option, index) => question.options[index] === option)
+  ) {
+    state.config.questions = [{ ...question, options: launchCompanyQuestions[0].options }];
+  }
+}
 const adminActions = ["admin", "configure", "open", "publish", "reset", "newPoll", "announce"];
 const mutations = ["configure", "open", "publish", "reset", "submit", "newPoll", "announce"];
 
@@ -131,6 +142,7 @@ export default async (request: Request) => {
           return new Response("Geçersiz işlem", { status: 400 });
         if (mutations.includes(action)) {
           await atomicState<State, void>(store, key, initialState, (state) => {
+            upgradeUnansweredLaunchPoll(state, launch);
             if (
               action !== "submit" &&
               action !== "announce" &&
@@ -140,7 +152,7 @@ export default async (request: Request) => {
             if (action === "submit") {
               if (input.questionVersion !== (state.config.questionVersion || 1))
                 throw Error("Anket soruları güncellendi, soruları yenile");
-              if (state.ballots[participantId]) return;
+              if (!launch && state.ballots[participantId]) return;
               if (!state.config.isOpen) throw Error("Anket henüz açık değil");
               if (
                 !Array.isArray(input.answers) ||
@@ -151,7 +163,7 @@ export default async (request: Request) => {
                 )
               )
                 throw Error("Her soruyu geçerli bir seçenekle cevapla");
-              if (Object.keys(state.ballots).length >= 2000) throw Error("Anket kapasitesi doldu");
+              if (!state.ballots[participantId] && Object.keys(state.ballots).length >= 2000) throw Error("Anket kapasitesi doldu");
               state.ballots[participantId] = input.answers;
             } else {
               if (action === "announce") {
@@ -219,6 +231,7 @@ export default async (request: Request) => {
           });
         }
         const state = await readAtomicState<State>(store, key, initialState);
+        upgradeUnansweredLaunchPoll(state, launch);
         state.config.questionVersion ||= 1;
         const total = Object.keys(state.ballots).length;
         const results = resultsFor(state);
@@ -228,7 +241,7 @@ export default async (request: Request) => {
           {
             config: state.config,
             total,
-            ...(participantId ? { submitted: Boolean(state.ballots[participantId]) } : {}),
+            ...(participantId ? { submitted: Boolean(state.ballots[participantId]), ...(launch ? { myAnswers: state.ballots[participantId] } : {}) } : {}),
             ...(admin ? { results } : { published }),
             ...(admin && launch
               ? {

@@ -34,9 +34,15 @@ try {
     const text = await r.text();
     return { status: r.status, data: r.ok ? JSON.parse(text) : text };
   };
+  const guest = await call(handler, { action: "launchGuest", firstName: "Tekİsim", eventConsent: true, event: other.slug });
+  assert.equal(guest.status, 403);
+  const missingConsent = await call(handler, { action: "launchGuest", firstName: "Tekİsim" });
+  assert.equal(missingConsent.status, 400);
   const participants = [];
   for (let i = 0; i < participantCount; i++) {
-    const r = await call(handler, {
+    const r = i === 0
+      ? await call(handler, { action: "launchGuest", firstName: "Tekİsim", eventConsent: true })
+      : await call(handler, {
       action: "register",
       firstName: "Demo",
       lastName: `Kişi ${i}`,
@@ -118,6 +124,10 @@ try {
   assert.equal(r.status, 200);
   r = await call(handler, { action: "chatRead", accessToken: outsider.accessToken, groupId: g.id });
   assert.ok(r.status >= 400);
+  const selfie = { action: "groupSelfie", groupId: g.id, photoDataUrl: "data:image/jpeg;base64,/9j/2Q==" };
+  assert.equal((await call(handler, { ...selfie, accessToken: member.accessToken })).status, 200);
+  assert.ok((await call(handler, { ...selfie, accessToken: outsider.accessToken })).status >= 400);
+  assert.equal((await call(handler, { action: "match", accessToken: member.accessToken })).data.group.rematchApprovedParticipantIds.length, 0);
   r = await call(handler, { action: "me", accessToken: member.accessToken });
   assert.equal(r.data.participant.id, member.participant.id);
   r = await call(poll, { action: "admin", password: "wrong" });
@@ -155,6 +165,16 @@ try {
     answers,
   });
   assert.equal((await call(poll, { action: "admin", password })).data.total, participantCount);
+  const changed = [state.config.questions[0].options[1]];
+  const update = await call(poll, {
+    action: "submit", accessToken: participants[0].accessToken,
+    questionVersion: state.config.questionVersion, answers: changed,
+  });
+  assert.equal(update.status, 200);
+  assert.deepEqual(update.data.myAnswers, changed);
+  const updatedTotals = (await call(poll, { action: "admin", password })).data;
+  assert.equal(updatedTotals.total, participantCount);
+  assert.equal(updatedTotals.results[0].counts[1].count, 1);
   r = await call(poll, { action: "stage" });
   assert.equal(r.data.published, null);
   assert.equal(r.data.results, undefined);

@@ -47,7 +47,7 @@ export const launchCompanyQuestions: PollQuestion[] = [
   {
     id: "q1",
     title: "Hangi firmanın sunumunu en başarılı buldun?",
-    options: ["Firma bir", "Firma iki", "Firma üç", "Firma dört", "Firma beş"],
+    options: ["Bankacı", "Cinepals", "Getfund", "Hexbench", "Finkap"],
   },
 ];
 export const defaultPollQuestions: PollQuestion[] = [
@@ -106,6 +106,7 @@ export type PollPayload = {
   previousPolls?: ArchivedPoll[];
   config: PollConfig;
   submitted?: boolean;
+  myAnswers?: string[];
   total: number;
   results?: PollResult[];
   published?: PollResult | null;

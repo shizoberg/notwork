@@ -30,7 +30,7 @@ export const Route = createFileRoute("/adminlaunch")({
 type MatchOverview = {
   registeredCount: number;
   matching: { status: "waiting" | "running" | "open"; total: number; processed: number };
-  groups: { id: string; groupName: string; round: number; memberNames: string[] }[];
+  groups: { id: string; groupName: string; round: number; memberNames: string[]; approvedMemberNames?: string[] }[];
 };
 
 export function LaunchAdminPanel() {
@@ -235,9 +235,9 @@ export function LaunchAdminPanel() {
                           <strong>
                             {p.profile.firstName} {p.profile.lastName}
                           </strong>
-                          <p className="ls-caption">{p.intro}</p>
-                          <p className="ls-caption">Katkı: {p.offersDetail}</p>
-                          <p className="ls-caption">Aradığı: {p.needs}</p>
+                          {p.intro && <p className="ls-caption">{p.intro}</p>}
+                          {p.offersDetail && <p className="ls-caption">Katkı: {p.offersDetail}</p>}
+                          {p.needs && <p className="ls-caption">Aradığı: {p.needs}</p>}
                         </article>
                       ))}
                   </div>
@@ -304,7 +304,7 @@ export function LaunchAdminPanel() {
                         <span className="ls-caption">{group.round}. tur</span>
                         <ul>
                           {group.memberNames.map((name, index) => (
-                            <li key={index}>{name}</li>
+                            <li key={index}>{name}{group.approvedMemberNames?.includes(name) ? " · ✓ Onayladı" : ""}</li>
                           ))}
                         </ul>
                       </article>

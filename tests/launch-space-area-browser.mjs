@@ -12,10 +12,9 @@ try {
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto(base + "/launch-space");
-  await page.getByRole("button", { name: "Profilim var · giriş yap" }).click();
-  await page.getByLabel("E-posta veya kullanıcı adı").fill("hazir@demo.example.org");
-  await page.getByLabel("Şifren").fill("LaunchSpaceDemo2026!");
-  await page.getByRole("button", { name: "Giriş yap", exact: true }).click();
+  await page.getByLabel("Adın ve soyadın").fill("Alan Test");
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Etkinliğe kayıt ol" }).click();
   await page.locator(".ls-people-card").first().waitFor();
   assert.equal(await page.locator(".ls-demo").innerText(), "launchspace");
   const count = await page.locator(".ls-people-card").count();
@@ -33,6 +32,8 @@ try {
   await page.locator(".ls-directory-heading").scrollIntoViewIfNeeded();
   await page.screenshot({ path: "/tmp/launch-space-people-mobile.png" });
   await page.locator(".ls-people-more").scrollIntoViewIfNeeded();
+  assert.equal(await page.locator(".ls-people-card").count(), count);
+  await page.locator(".ls-people-more").click();
   await page.waitForFunction(() => document.querySelectorAll(".ls-people-card").length >= 30);
   assert.ok((await page.locator(".ls-people-card").count()) >= 30);
   await page.getByLabel("Katılımcı ara").fill("Ada");

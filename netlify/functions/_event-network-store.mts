@@ -777,6 +777,7 @@ async function buildActiveMatchGroup(
 export async function registerNetworkProfile(
   store: ReturnType<typeof getEventNetworkStore>,
   input: NetworkInput,
+  { allowSingleName = false } = {},
 ) {
   const now = new Date().toISOString();
   const email = clean(input.email, 120);
@@ -790,7 +791,7 @@ export async function registerNetworkProfile(
   const needTag = clean(input.needTag, 40).toLocaleLowerCase("tr-TR");
   const attendedEvent = clean(input.attendedEvent, 80).toLocaleLowerCase("tr-TR");
 
-  if (!firstName || !lastName) throw new Error("Ad ve soyad gerekli");
+  if (!firstName || (!lastName && !allowSingleName)) throw new Error("Ad ve soyad gerekli");
   if (!isValidEmail(emailNormalized)) throw new Error("Geçerli e-posta gerekli");
   if (offers.length === 0) throw new Error("En az bir yardımcı olabileceğin konu gerekli");
   if (
@@ -1146,6 +1147,7 @@ export async function listActiveMatchGroups(
     score: group.score,
     reason: group.reason,
     memberNames: group.participantIds.map((id) => names.get(id) || "Katılımcı"),
+    approvedMemberNames: (group.rematchApprovedParticipantIds || []).map((id) => names.get(id) || "Katılımcı"),
   }));
 }
 
@@ -1754,4 +1756,21 @@ export async function launchSpacePeople(
       received: Boolean(state.requests[`${r.participant.id}:${self.participant.id}`]),
     })),
   };
+}
+
+/** Event-owned selfie. Uploading it does not approve a rematch. */
+export async function saveLaunchGroupSelfie(
+  store: ReturnType<typeof getEventNetworkStore>,
+  input: NetworkInput,
+) {
+  const registration = await getRegistrationByToken(store, clean(input.accessToken, 100));
+  const match = registration && await getActiveMatch(store, registration.participant.id);
+  if (!match || match.id !== input.groupId) throw new Error("Aktif grup bulunamadı");
+  const photo = input.photoDataUrl;
+  if (typeof photo !== "string" || photo.length > 1_100_000 ||
+      !/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo))
+    throw new Error("Geçerli bir grup fotoğrafı seç");
+  await store.setJSON(`${getNetworkPrefix()}/group-selfies/${match.id}.json`, {
+    photo, participantId: registration.participant.id, savedAt: new Date().toISOString(),
+  });
 }

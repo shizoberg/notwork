@@ -77,7 +77,7 @@ export function LaunchAnnouncementAdmin() {
             value={text}
             disabled={!ready || busy}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Örn. Sunumlar beş dakika içinde başlıyor."
+            placeholder="Hoş geldiniz! Sunumlar 19.00’da başlıyor. Sonrasında Nodes Votes üzerinden oyunuzu kullanabilirsiniz."
           />
         </label>
         <div className="ls-actions">
