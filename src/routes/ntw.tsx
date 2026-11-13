@@ -1,9 +1,10 @@
-import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { EventMatch } from "@/components/EventMatch";
 import { SiteNav } from "@/components/SiteNav";
 import { getPublicEventContext, type NotworkEvent } from "@/lib/event-registry";
 import { munichEvent } from "@/lib/munich-event";
+import { resolveEventEntry } from "@/lib/event-entry-links";
 import { createSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/ntw")({
@@ -17,6 +18,9 @@ export const Route = createFileRoute("/ntw")({
 });
 
 export function NtwPage({ german = false, english = false }: { german?: boolean; english?: boolean } = {}) {
+  const navigate = useNavigate();
+  const [entryCode, setEntryCode] = useState("");
+  const [entryError, setEntryError] = useState(false);
   const [activeEvent, setActiveEvent] = useState<NotworkEvent | null>(null);
 
   useEffect(() => {
@@ -39,10 +43,6 @@ export function NtwPage({ german = false, english = false }: { german?: boolean;
       window.clearInterval(timer);
     };
   }, [german]);
-
-  if (!german && activeEvent) {
-    return <Navigate to="/linkler" search={{ eventId: activeEvent.id }} replace />;
-  }
 
   return (
     <div className="ntw-shell">
@@ -75,6 +75,44 @@ export function NtwPage({ german = false, english = false }: { german?: boolean;
             <br />
             {english ? "Meet in person" : german ? "Persönliche Begegnungen" : "Gerçek zamanlı karşılaşmalar"}
           </p>
+          <form className="ntw-code-entry" onSubmit={(event) => {
+            event.preventDefault();
+            const entry = resolveEventEntry(entryCode);
+            if (!entry) {
+              setEntryError(true);
+              return;
+            }
+            void navigate({ to: entry.path });
+          }}>
+            <label htmlFor="ntw-event-code">{english ? "Event code" : german ? "Eventcode" : "Etkinlik kodu"}</label>
+            <div>
+              <input
+                id="ntw-event-code"
+                autoComplete="off"
+                autoCapitalize="none"
+                maxLength={32}
+                required
+                value={entryCode}
+                onChange={(event) => {
+                  setEntryCode(event.target.value);
+                  setEntryError(false);
+                }}
+                aria-invalid={entryError}
+                aria-describedby={entryError ? "ntw-code-error" : undefined}
+              />
+              <button type="submit">{english ? "Enter" : german ? "Öffnen" : "Giriş yap"}</button>
+            </div>
+            {entryError && (
+              <p id="ntw-code-error" role="alert">
+                {english ? "Event code not found." : german ? "Eventcode nicht gefunden." : "Etkinlik kodu bulunamadı."}
+              </p>
+            )}
+          </form>
+          {activeEvent && (
+            <Link className="ntw-availability" to="/linkler" search={{ eventId: activeEvent.id }}>
+              {english ? "Open live event ↗" : "Açık etkinliğe gir ↗"}
+            </Link>
+          )}
           <Link className="ntw-availability" to={english ? "/en/events" : german ? munichEvent.path : "/etkinlikler"}>
             {english ? "Upcoming events ↗" : german ? "4. Dezember · München ↗" : "Yaklaşan etkinlikler ↗"}
           </Link>

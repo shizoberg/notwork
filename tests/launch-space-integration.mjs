@@ -3,6 +3,9 @@ import { functionSandbox } from "./helpers/function-sandbox.mjs";
 process.env.NTW_AI_ENABLED = "false";
 process.env.MEMBER_PROFILE_STORE = "launch-test-profiles";
 process.env.MEMBER_SOURCE_STORE = "launch-test-members";
+const participantCount = Number(process.env.LAUNCH_TEST_PARTICIPANTS || 200);
+const groupCount = Math.floor(participantCount / 3);
+const matchedCount = groupCount * 3;
 const password = "LaunchSpaceTest2026!";
 const sandbox = await functionSandbox({ adminPassword: password });
 const originalFetch = globalThis.fetch;
@@ -32,7 +35,7 @@ try {
     return { status: r.status, data: r.ok ? JSON.parse(text) : text };
   };
   const participants = [];
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < participantCount; i++) {
     const r = await call(handler, {
       action: "register",
       firstName: "Demo",
@@ -45,10 +48,18 @@ try {
       needTag: "networking",
       attendedEvent: event.slug,
       eventConsent: true,
-      aiAnalysisConsent: i >= 94,
+      aiAnalysisConsent: i >= participantCount - 6,
     });
     assert.equal(r.status, 201, r.data);
     participants.push(r.data);
+  }
+  const directoryReads = await Promise.all(
+    participants.map(({ accessToken }) => call(handler, { action: "people", accessToken })),
+  );
+  for (const response of directoryReads) {
+    assert.equal(response.status, 200, response.data);
+    assert.equal(response.data.people.length, participantCount);
+    assert.equal(response.data.people.filter((person) => person.isSelf).length, 1);
   }
   let r = await call(handler, { action: "match", accessToken: participants[0].accessToken });
   assert.equal(r.data.waitingReason, "admin");
@@ -67,15 +78,16 @@ try {
   assert.equal(aiCalls, 1, "Launchspace tries the API once and then falls back on quota failure");
   const groups = new Map();
   let matched = 0;
-  for (const p of participants) {
-    const r = await call(handler, { action: "match", accessToken: p.accessToken });
+  const matchResults = await Promise.all(participants.map((p) => call(handler, { action: "match", accessToken: p.accessToken })));
+  for (const r of matchResults) {
+    assert.equal(r.status, 200, r.data);
     if (r.data.group) {
       matched++;
       groups.set(r.data.group.id, r.data.group);
       assert.equal(r.data.group.members.length, 3);
     }
   }
-  assert.equal(matched, 99);
+  assert.equal(matched, matchedCount);
   assert.ok(participants.every((p) => /^[A-HJ-NP-Z][0-9]{3}$/.test(p.participant.publicCode)));
   for (const group of groups.values())
     assert.equal(group.members.filter((m) => m.isPhotoOwner).length, 1);
@@ -87,9 +99,9 @@ try {
     assert.deepEqual(stable.data.groups.map((g) => g.id).sort(), originalIds);
   }
 
-  assert.equal(groups.size, 33);
+  assert.equal(groups.size, groupCount);
   const grouped = [...groups.values()];
-  assert.equal(new Set(grouped.flatMap((g) => g.members.map((m) => m.participantId))).size, 99);
+  assert.equal(new Set(grouped.flatMap((g) => g.members.map((m) => m.participantId))).size, matchedCount);
   const g = grouped[0],
     m = g.members[0];
   const member = participants.find((p) => p.participant.id === m.participantId);
@@ -134,15 +146,15 @@ try {
     JSON.stringify(results.filter((r) => r.status !== 200)),
   );
   state = (await call(poll, { action: "admin", password })).data;
-  assert.equal(state.total, 100);
-  assert.ok(state.results.every((r) => r.counts[0].count === 100));
+  assert.equal(state.total, participantCount);
+  assert.ok(state.results.every((r) => r.counts[0].count === participantCount));
   await call(poll, {
     action: "submit",
     accessToken: participants[0].accessToken,
     questionVersion: state.config.questionVersion,
     answers,
   });
-  assert.equal((await call(poll, { action: "admin", password })).data.total, 100);
+  assert.equal((await call(poll, { action: "admin", password })).data.total, participantCount);
   r = await call(poll, { action: "stage" });
   assert.equal(r.data.published, null);
   assert.equal(r.data.results, undefined);
@@ -156,7 +168,7 @@ try {
     })
   ).data;
   r = await call(poll, { action: "stage" });
-  assert.equal(r.data.published.total, 100);
+  assert.equal(r.data.published.total, participantCount);
   assert.equal(state.config.questionVersion, 1);
   assert.equal(r.data.published.question.id, state.config.questions[0].id);
   assert.ok(!JSON.stringify(r.data).includes("demo-0@"));
@@ -186,7 +198,7 @@ try {
   assert.equal(r.status, 400);
   await registry.updateEvent(event.id, { products: { matchlab: { dataMode: "demo" } } });
   r = await call(poll, { action: "admin", password });
-  assert.equal(r.data.total, 100);
+  assert.equal(r.data.total, participantCount);
   const deniedReset = await handler(
     new Request("https://notwork.me/api/event-products/network", {
       method: "POST",
@@ -215,11 +227,11 @@ try {
     assert.equal(repaired.participant.accessTokenHash, row.participant.accessTokenHash);
     assert.equal((await network.getNextMatchGroup(store, member.accessToken)).group.id, g.id);
     const codes = (await network.listRegistrations(store)).map((r) => r.participant.publicCode);
-    assert.equal(new Set(codes).size, 100);
+    assert.equal(new Set(codes).size, participantCount);
   });
   // Directory: event members only, contact/session fields never leave the server.
   r = await call(handler, { action: "people", accessToken: member.accessToken });
-  assert.equal(r.data.people.length, 100);
+  assert.equal(r.data.people.length, participantCount);
   assert.equal(JSON.stringify(r.data).includes("demo-0@"), false);
   assert.equal(JSON.stringify(r.data).includes("accessToken"), false);
   assert.ok((await call(handler, { action: "people" })).status >= 400);
@@ -285,7 +297,7 @@ try {
   });
   r = await call(poll, { action: "stage" });
   assert.equal(r.status, 200);
-  assert.equal(r.data.published.total, 100);
+  assert.equal(r.data.published.total, participantCount);
   const datasets = await sandbox.load("_launch-datasets");
   const current = await registry.getEvent(event.id);
   const original = await datasets.getLaunchDatasets(current);
@@ -319,7 +331,7 @@ try {
     id: original.active.id,
   });
   stage = await call(poll, { action: "stage" });
-  assert.equal(stage.data.published.total, 100);
+  assert.equal(stage.data.published.total, participantCount);
   assert.ok((await call(admin, { action: "matchOverview", password })).data.groups.length > 0);
   const activePoll = await call(poll, { action: "admin", password });
   const nextQuestion = { title: "Yeni sunum oylaması", options: ["A", "B"] };
@@ -334,7 +346,7 @@ try {
   assert.equal(newPoll.status, 200);
   assert.equal(newPoll.data.total, 0);
   assert.equal(newPoll.data.config.isOpen, true);
-  assert.equal(newPoll.data.previousPolls[0].total, 100);
+  assert.equal(newPoll.data.previousPolls[0].total, participantCount);
   const staleVote = await call(poll, {
     action: "submit",
     datasetId: original.active.id,
@@ -363,7 +375,7 @@ try {
   );
   assert.equal((await datasets.getLaunchBulletin(current, original.active)).announcement, null);
   console.log(
-    "PASS: real handlers, 100 participants → 33 disjoint groups + 1 waiting; admin launch; session recovery; private chat; 100 concurrent ballots; idempotency; stage publication; auth; event/demo/live isolation; rematch and dataset switch isolation; new vote and announcement bulletin. No production data/AI.",
+    `PASS: ${participantCount} sequential registrations, ${groupCount} disjoint groups, ${participantCount - matchedCount} waiting, concurrent Match reads and ballots, private chat, stage publication and dataset isolation. No production data/AI.`,
   );
 } finally {
   globalThis.fetch = originalFetch;

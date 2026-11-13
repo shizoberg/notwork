@@ -261,12 +261,25 @@ function LaunchSpace() {
   }
   useEffect(() => {
     if (tab !== "match" || !token) return;
-    const refresh = () => {
-      if (!document.hidden) void loadMatch().catch((e) => setError(e.message));
+    let pending = false;
+    let active = true;
+    const refresh = async () => {
+      if (document.hidden || pending) return;
+      pending = true;
+      try {
+        await loadMatch();
+      } catch (error) {
+        if (active) setError(error instanceof Error ? error.message : "Eşleşme yüklenemedi");
+      } finally {
+        pending = false;
+      }
     };
-    refresh();
-    const timer = setInterval(refresh, 10000);
-    return () => clearInterval(timer);
+    void refresh();
+    const timer = setInterval(refresh, 10000 + Math.floor(Math.random() * 4000));
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
   }, [tab, token]);
   useEffect(() => {
     if (!group || tab !== "match") {
@@ -285,7 +298,7 @@ function LaunchSpace() {
     };
     setMessages([]);
     void refresh();
-    const timer = setInterval(refresh, 7000);
+    const timer = setInterval(refresh, 7000 + Math.floor(Math.random() * 4000));
     return () => {
       current = false;
       clearInterval(timer);
@@ -659,6 +672,7 @@ function LaunchSpace() {
                   HOŞ GELDİN, {registration.profile.firstName.toLocaleUpperCase("tr-TR")}
                 </p>
                 <LaunchSpaceArea
+                  event={novemberEventSlug}
                   token={token}
                   goal={registration.needs}
                   flow={flow}

@@ -881,6 +881,7 @@ export async function registerNetworkProfile(
       }),
       store.set(tokenKey(accessTokenHash), participant.id),
     ]);
+    directoryCache.delete(getNetworkPrefix());
     await upsertGeneralNetworkingMember(registration);
 
     return registration;
@@ -952,6 +953,7 @@ export async function registerNetworkProfile(
     }),
     store.set(tokenKey(accessTokenHash), participant.id),
   ]);
+  directoryCache.delete(getNetworkPrefix());
   await upsertGeneralNetworkingMember(registration);
 
   return registration;
@@ -1694,6 +1696,26 @@ export async function repairParticipantCodes(store: ReturnType<typeof getEventNe
 }
 
 // The event directory exposes only event-profile fields, never session or contact data.
+// Coalesce directory requests within each warm function instance and dataset.
+const directoryCache = new Map<
+  string,
+  { expiresAt: number; rows: Promise<EventNetworkRegistration[]> }
+>();
+
+function directoryRegistrations(store: ReturnType<typeof getEventNetworkStore>) {
+  const key = getNetworkPrefix();
+  const now = Date.now();
+  const cached = directoryCache.get(key);
+  if (cached && cached.expiresAt > now) return cached.rows;
+  if (directoryCache.size >= 32) directoryCache.clear();
+  const rows = listRegistrations(store).catch((error) => {
+    if (directoryCache.get(key)?.rows === rows) directoryCache.delete(key);
+    throw error;
+  });
+  directoryCache.set(key, { expiresAt: now + 5000, rows });
+  return rows;
+}
+
 export async function launchSpacePeople(
   store: ReturnType<typeof getEventNetworkStore>,
   accessToken: string,
@@ -1702,7 +1724,7 @@ export async function launchSpacePeople(
   const self = await getRegistrationByToken(store, accessToken);
   if (!self || self.participant.status !== "registered")
     throw new Error("Etkinlik oturumu gerekli");
-  const rows = (await listRegistrations(store)).filter(
+  const rows = (await (targetId ? listRegistrations(store) : directoryRegistrations(store))).filter(
     (r) => r.participant.status === "registered",
   );
   const key = `${getNetworkPrefix()}/introductions-v1.json`;

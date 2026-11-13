@@ -1636,3 +1636,11 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+.ls-people-card .ls-people-avatar,
+.ls-profile-sheet .ls-people-avatar {
+  background: linear-gradient(140deg, hsl(var(--ls-category-hue) 45% 31%), hsl(var(--ls-category-hue) 36% 18%));
+  border-color: hsl(var(--ls-category-hue) 50% 57% / .65);
+  color: hsl(var(--ls-category-hue) 70% 91%);
+}
+.ls-people-card small { color: hsl(var(--ls-category-hue) 64% 78%); }

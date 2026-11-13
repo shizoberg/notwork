@@ -73,6 +73,9 @@ const demoPeople = [
   ["Arda", "Topluluk", "arda@demo.example.org"],
   ["Duru", "Strateji", "duru@demo.example.org"],
 ];
+for (let i = 1; i <= 24; i++) {
+  demoPeople.push(["Katılımcı", String(i), `area-${i}@demo.example.org`]);
+}
 const network = await sandbox.load("_event-network-store");
 const ctx = await sandbox.load("_event-product-context");
 const existing = await ctx.runWithEventRequestContext(novemberEventSlug, "matchlab", () =>
@@ -230,7 +233,7 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === "/__launch-space") {
       res.setHeader("content-type", "text/html;charset=utf-8");
       res.end(
-        `<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Launch Space · yerel test</title><style>body{background:#0d0e10;color:#eef3f7;font:16px system-ui;max-width:700px;margin:50px auto;padding:24px;line-height:1.7}a{display:inline-block;color:#9bc8dc;padding:12px;border:1px solid #35373c;border-radius:14px;margin:5px}code{color:#d8c6ff}</style><h1>Launch Space · 14 Kasım 18.00</h1><p>Yalnızca yerel, ayrı demo verileri. Canlı veriye ve ücretli AI'ya bağlantı yok.</p><a href="/launch-space">Katılımcı ekranı</a><a href="/launch-space-kontrol">Organizatör</a><a href="/launch-space-sahne">Sahne</a><a href="/admin">Genel admin</a><p>Admin/test şifresi: <code>${password}</code></p><p>Profili var, etkinlik kaydı yok: <code>kayitli@demo.example.org</code><br>Profili ve etkinlik kaydı var: <code>hazir@demo.example.org</code><br>Şifre aynı. Yeni kayıt için farklı bir <code>@demo.example.org</code> adresi kullan.</p><p>11 örnek katılımcı hazır. Katılımcı kendi bilgilerini doldurunca admin “Herkes hazır · eşleştir” butonuna basar. Anketi ayrıca açıp sonuçları sahneye yayınla.</p><p>Veriler yalnızca bu bilgisayardaki .local/launch-space altında saklanır. Sunucu ve tarayıcı yeniden açıldığında demo kayıtları korunur.</p>`,
+        `<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>Launch Space · yerel test</title><style>body{background:#0d0e10;color:#eef3f7;font:16px system-ui;max-width:700px;margin:50px auto;padding:24px;line-height:1.7}a{display:inline-block;color:#9bc8dc;padding:12px;border:1px solid #35373c;border-radius:14px;margin:5px}code{color:#d8c6ff}</style><h1>Launch Space · 14 Kasım 18.00</h1><p>Yalnızca yerel, ayrı demo verileri. Canlı veriye ve ücretli AI'ya bağlantı yok.</p><a href="/launch-space">Katılımcı ekranı</a><a href="/launch-space-kontrol">Organizatör</a><a href="/launch-space-sahne">Sahne</a><a href="/admin">Genel admin</a><p>Admin/test şifresi: <code>${password}</code></p><p>Profili var, etkinlik kaydı yok: <code>kayitli@demo.example.org</code><br>Profili ve etkinlik kaydı var: <code>hazir@demo.example.org</code><br>Şifre aynı. Yeni kayıt için farklı bir <code>@demo.example.org</code> adresi kullan.</p><p>Örnek katılımcılar hazır. Katılımcı kendi bilgilerini doldurunca admin “Herkes hazır · eşleştir” butonuna basar. Anketi ayrıca açıp sonuçları sahneye yayınla.</p><p>Veriler yalnızca bu bilgisayardaki .local/launch-space altında saklanır. Sunucu ve tarayıcı yeniden açıldığında demo kayıtları korunur.</p>`,
       );
       return;
     }

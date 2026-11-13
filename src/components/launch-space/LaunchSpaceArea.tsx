@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { ArrowRight, Check, Search, Users, X } from "lucide-react";
 import { LaunchEventHeader } from "./LaunchEventHeader";
 import type { LaunchFlow } from "@/lib/launch-flow";
-import { novemberEventSlug } from "@/lib/event-poll";
+
 
 type Person = {
   id: string;
@@ -16,13 +16,25 @@ type Person = {
   sent: boolean;
   received: boolean;
 };
+const pageSize = 20;
+
+function categoryColor(category: string) {
+  let hue = 0;
+  for (const letter of category.toLocaleLowerCase("tr-TR")) {
+    hue = (hue * 31 + letter.charCodeAt(0)) % 360;
+  }
+  return { "--ls-category-hue": hue } as CSSProperties;
+}
+
 export function LaunchSpaceArea({
+  event,
   token,
   goal,
   flow,
   datasetId,
   children,
 }: {
+  event: string;
   token: string;
   goal: string;
   flow: LaunchFlow;
@@ -31,7 +43,7 @@ export function LaunchSpaceArea({
 }) {
   const [people, setPeople] = useState<Person[]>([]);
   const [query, setQuery] = useState("");
-  const [visibleCount, setVisibleCount] = useState(10);
+  const [visibleCount, setVisibleCount] = useState(pageSize);
   const moreRef = useRef<HTMLButtonElement>(null);
   const [selected, setSelected] = useState<Person | null>(null);
   const [error, setError] = useState("");
@@ -43,7 +55,7 @@ export function LaunchSpaceArea({
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        event: novemberEventSlug,
+        event,
         datasetId,
         action: targetId ? "introduce" : "people",
         accessToken: token,
@@ -68,7 +80,7 @@ export function LaunchSpaceArea({
     return () => {
       active = false;
     };
-  }, [token]);
+  }, [event, datasetId, token]);
   useEffect(() => {
     if (!selected) return;
     const previous = document.body.style.overflow;
@@ -107,7 +119,7 @@ export function LaunchSpaceArea({
       ([entry]) => {
         if (entry.isIntersecting) {
           observer.disconnect();
-          setVisibleCount((count) => Math.min(count + 10, filtered.length));
+          setVisibleCount((count) => Math.min(count + pageSize, filtered.length));
         }
       },
       { rootMargin: "0px 0px 100px 0px" },
@@ -166,7 +178,7 @@ export function LaunchSpaceArea({
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
-            setVisibleCount(10);
+            setVisibleCount(pageSize);
           }}
         />
       </label>
@@ -185,6 +197,7 @@ export function LaunchSpaceArea({
             <button
               className="ls-people-card"
               key={p.id}
+              style={categoryColor(p.offers[0] || "Katılımcı")}
               onClick={() => setSelected(p)}
               aria-label={`${p.name}${p.isSelf ? " · sen" : ""} · profili aç`}
             >
@@ -221,9 +234,9 @@ export function LaunchSpaceArea({
         <button
           ref={moreRef}
           className="ls-people-more"
-          onClick={() => setVisibleCount((count) => Math.min(count + 10, filtered.length))}
+          onClick={() => setVisibleCount((count) => Math.min(count + pageSize, filtered.length))}
         >
-          {Math.min(10, filtered.length - visibleCount)} kişi daha göster
+          {Math.min(pageSize, filtered.length - visibleCount)} kişi daha göster
         </button>
       )}
       <p className="ls-caption" aria-live="polite">
@@ -236,6 +249,7 @@ export function LaunchSpaceArea({
         <div className="ls-person-overlay" onClick={() => setSelected(null)}>
           <section
             className="ls-profile-sheet"
+            style={categoryColor(selected.offers[0] || "Katılımcı")}
             role="dialog"
             aria-modal="true"
             aria-label={selected.name + " profili"}
