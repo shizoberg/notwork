@@ -621,7 +621,6 @@ function LaunchSpace() {
               </section>
             ) : tab === "match" ? (
               <section className="ls-enter">
-                <p className="ls-eyebrow">{flow.matchLabel}</p>
                 {!group ? (
                   <div className="ls-center">
                     <div className="ls-orbit ls-search">
