@@ -53,7 +53,7 @@ const initial = (launch: boolean): State => ({
   config: {
     revision: 1,
     questionVersion: 1,
-    isOpen: false,
+    isOpen: launch,
     publishedQuestion: null,
     questions: launch ? launchCompanyQuestions : defaultPollQuestions,
   },
@@ -153,7 +153,7 @@ export default async (request: Request) => {
               if (input.questionVersion !== (state.config.questionVersion || 1))
                 throw Error("Anket soruları güncellendi, soruları yenile");
               if (!launch && state.ballots[participantId]) return;
-              if (!state.config.isOpen) throw Error("Anket henüz açık değil");
+              if (!launch && !state.config.isOpen) throw Error("Anket henüz açık değil");
               if (
                 !Array.isArray(input.answers) ||
                 input.answers.length !== state.config.questions.length ||
@@ -239,7 +239,7 @@ export default async (request: Request) => {
           state.config.publishedQuestion === null ? null : results[state.config.publishedQuestion];
         return Response.json(
           {
-            config: state.config,
+            config: launch ? { ...state.config, isOpen: true } : state.config,
             total,
             ...(participantId ? { submitted: Boolean(state.ballots[participantId]), ...(launch ? { myAnswers: state.ballots[participantId] } : {}) } : {}),
             ...(admin ? { results } : { published }),

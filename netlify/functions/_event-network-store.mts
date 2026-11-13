@@ -18,7 +18,7 @@ import { syncMemberEventCode } from "./_member-profile-store.mjs";
 import { participantDisplayCode } from "./_participant-code.mjs";
 import { matchChatKey } from "./_match-chat.mjs";
 import { matchGroupName } from "./_match-group-name.mjs";
-import { generateMatchAnalysis, rerankMatchCandidates } from "./_ntw-ai.mjs";
+import { generateIntroductionReason, generateMatchAnalysis, rerankMatchCandidates } from "./_ntw-ai.mjs";
 
 type EventNetworkProfile = {
   id: string;
@@ -1773,4 +1773,41 @@ export async function saveLaunchGroupSelfie(
   await store.setJSON(`${getNetworkPrefix()}/group-selfies/${match.id}.json`, {
     photo, participantId: registration.participant.id, savedAt: new Date().toISOString(),
   });
+}
+
+export async function launchIntroductionReason(
+  store: ReturnType<typeof getEventNetworkStore>,
+  accessToken: string,
+  targetId: string,
+) {
+  if (!process.env.OPENAI_API_KEY || process.env.NTW_AI_ENABLED === "false") return "";
+  const viewer = await getRegistrationByToken(store, accessToken);
+  if (!viewer?.aiConsent?.analysis || viewer.participant.status !== "registered" ||
+      viewer.participant.id === targetId || !/^[a-zA-Z0-9_-]{1,100}$/.test(targetId)) return "";
+  const target = await store.get(participantKey(targetId), {
+    type: "json", consistency: "strong",
+  }) as EventNetworkRegistration | null;
+  if (!target?.aiConsent?.analysis || target.participant.status !== "registered") return "";
+
+  const context = (row: EventNetworkRegistration) => ({
+    offers: row.offers.slice(0, 5),
+    contribution: row.offersDetail.slice(0, 300),
+    needs: row.needs.slice(0, 300),
+  });
+  if ((!viewer.offersDetail && !viewer.needs) || (!target.offersDetail && !target.needs)) return "";
+
+  const prefix = getNetworkPrefix();
+  const key = `${prefix}/introduction-reasons/${viewer.participant.id}/${target.participant.id}.json`;
+  const claim = await atomicState(store, key, () => ({ until: 0, reason: "" }), (state) => {
+    if (state.until > Date.now()) return { cached: true, reason: state.reason };
+    state.until = Date.now() + 60_000;
+    return { cached: false, reason: "" };
+  });
+  if (claim.cached) return claim.reason;
+  const reason = await generateIntroductionReason(prefix, context(viewer), context(target));
+  if (reason) await atomicState(store, key, () => ({ until: 0, reason: "" }), (state) => {
+    state.reason = reason;
+    state.until = Date.now() + 60 * 60_000;
+  });
+  return reason;
 }

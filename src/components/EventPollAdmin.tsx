@@ -407,13 +407,6 @@ export function EventPollAdmin({
           <div className="my-4 flex flex-wrap gap-2">
             <button
               disabled={busy}
-              className="rounded-full bg-primary px-4 py-2 text-sm font-semibold"
-              onClick={() => void act("open", { isOpen: !data.config.isOpen })}
-            >
-              {data.config.isOpen ? "Yanıt alımını durdur" : "Anketi aç"}
-            </button>
-            <button
-              disabled={busy}
               className="rounded-full border px-4 py-2 text-sm"
               onClick={() => void act("publish", { questionIndex: null })}
             >

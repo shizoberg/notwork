@@ -95,7 +95,7 @@ export async function changeLaunchDataset(
         config: {
           revision: 1,
           questionVersion: 1,
-          isOpen: false,
+          isOpen: true,
           publishedQuestion: null,
           questions: previousPoll.config?.questions ?? launchCompanyQuestions,
         },

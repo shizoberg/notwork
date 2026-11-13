@@ -347,6 +347,17 @@ function LaunchSpace() {
         <span className="ls-demo">launchspace</span>
       </header>
       <main className="ls-main">
+        <div className="ls-program-ticker" aria-label="Etkinlik akışı">
+          <div className="ls-program-track">
+            {[false, true].map((copy) => (
+              <div className="ls-program-items" key={String(copy)} aria-hidden={copy || undefined}>
+                {flow.schedule.map(({ time, label }, index) => (
+                  <span key={index}>{time.replace(":", ".")} · {label}</span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
         {(announcement || (voteNotice && !hasCurrentVote && tab !== "poll")) && (
           <div className="ls-bulletins" aria-live="polite">
             {announcement && (
@@ -382,7 +393,7 @@ function LaunchSpace() {
             <section className="ls-profile-sheet" role="dialog" aria-modal="true" aria-label={flow.votesLabel}>
               <h2>{flow.votesLabel}</h2>
               <p>{flow.voteReminder}</p>
-              <button autoFocus className="ls-primary" onClick={() => setVoteReminder(false)}>Anladım</button>
+              <button autoFocus className="ls-primary ls-dialog-action" onClick={() => setVoteReminder(false)}>Anladım</button>
             </section>
           </div>
         )}
@@ -425,15 +436,6 @@ function LaunchSpace() {
           </section>
         ) : (
           <>
-            {tab !== "home" && (
-              <div className="ls-flowbar" aria-label="Etkinlik akışı">
-                {flow.schedule.map(({ time, label }, index) => (
-                  <span key={index}>
-                    {time.replace(":", ".")} · {label}
-                  </span>
-                ))}
-              </div>
-            )}
             {tab === "home" ? (
               <section className="ls-enter">
                 <LaunchSpaceArea

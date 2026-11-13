@@ -38,7 +38,7 @@ export const defaultLaunchFlow: LaunchFlow = {
   matchLabel: "Nodes Match",
   votesLabel: "Nodes Votes",
   voteReminder: "Lütfen oyunu tüm sunumlar bittikten sonra kullan.",
-  routeLabel: "Tanışma rotan",
+  routeLabel: "Network Rota",
   showSelfie: true,
   categories: [
     "networking",

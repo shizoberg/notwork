@@ -4,6 +4,7 @@ import {
   clean,
   saveLaunchGroupSelfie,
   launchSpacePeople,
+  launchIntroductionReason,
   eventChat,
   completeActiveMatchByToken,
   rateActiveMatch,
@@ -173,6 +174,16 @@ export default async (request: Request, _context: Context) => {
         const registration = await getRegistrationByToken(store, clean(input.accessToken, 100));
         if (!registration) return new Response("Kayıt bulunamadı", { status: 404 });
         return json(registration);
+      }
+
+      if (action === "introductionReason") {
+        if (database.eventSlug !== "14-kasim-2026")
+          return new Response("Bu alan etkinliğe özel", { status: 403 });
+        const reason = await launchIntroductionReason(
+          store, clean(input.accessToken, 100),
+          clean((input as NetworkInput & { targetId?: string }).targetId, 100),
+        );
+        return json({ reason });
       }
 
       if (action === "people" || action === "introduce") {

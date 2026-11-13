@@ -53,6 +53,32 @@ export function LaunchSpaceArea({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [reason, setReason] = useState("");
+  const [reasonPending, setReasonPending] = useState(false);
+
+  useEffect(() => {
+    setReason("");
+    setReasonPending(false);
+  }, [selected?.id]);
+
+  async function showReason(person: Person) {
+    setReasonPending(true);
+    try {
+      const response = await fetch("/api/event-products/network", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event, datasetId, action: "introductionReason", accessToken: token, targetId: person.id }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setReason(data.reason ? `${person.id}:${data.reason}` : "");
+      }
+    } catch {
+      setReason("");
+    } finally {
+      setReasonPending(false);
+    }
+  }
   async function request(targetId?: string) {
     const response = await fetch("/api/event-products/network", {
       method: "POST",
@@ -86,18 +112,18 @@ export function LaunchSpaceArea({
     };
   }, [event, datasetId, token]);
   useEffect(() => {
-    if (!selected) return;
+    if (!selected && !routeOpen) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const escape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelected(null);
+      if (e.key === "Escape") { setSelected(null); setRouteOpen(false); }
     };
     window.addEventListener("keydown", escape);
     return () => {
       document.body.style.overflow = previous;
       window.removeEventListener("keydown", escape);
     };
-  }, [selected?.id]);
+  }, [selected?.id, routeOpen]);
   async function introduce(person: Person) {
     setSending(true);
     setError("");
@@ -117,14 +143,6 @@ export function LaunchSpaceArea({
       .includes(query.toLocaleLowerCase("tr-TR")),
   );
   const suggested = people.filter((person) => !person.isSelf && !person.sent).slice(0, 3);
-  useEffect(() => {
-    if (!routeOpen) return;
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setRouteOpen(false);
-    }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [routeOpen]);
   const incoming = people.filter((p) => p.received && !p.sent);
   return (
     <div className="ls-space-area">
@@ -144,12 +162,14 @@ export function LaunchSpaceArea({
             );
           })}
         </ul>
+      </details>
+      <section className="ls-panel ls-route-card">
         <h3>Etkinlik amacım</h3>
         <p className="ls-caption">{goal || flow.welcomeText}</p>
-        <button className="ls-secondary" onClick={() => setRouteOpen(true)}>
-          <Route size={16} /> {flow.routeLabel} <ArrowRight size={15} />
+        <button className="ls-secondary ls-dialog-action" onClick={() => setRouteOpen(true)}>
+          <Route size={16} /> <span>{flow.routeLabel}</span> <ArrowRight size={15} />
         </button>
-      </details>
+      </section>
       {children}
       {incoming.length > 0 && (
         <div className="ls-intro-notice">
@@ -258,10 +278,10 @@ export function LaunchSpaceArea({
             <h2>{flow.routeLabel}</h2>
             <p>{suggested.length ? "Bu kişilerle tanışmak iyi bir başlangıç olabilir." : "Yeni katılımcılar geldikçe tanışabileceğin kişiler burada görünecek."}</p>
             {suggested.map((person) => (
-              <button key={person.id} className="ls-secondary" onClick={() => {
+              <button key={person.id} className="ls-secondary ls-dialog-action" onClick={() => {
                 setRouteOpen(false);
                 setSelected(person);
-              }}>{person.name} <ArrowRight size={15} /></button>
+              }}><span>{person.name}</span> <ArrowRight size={15} /></button>
             ))}
           </section>
         </div>
@@ -285,17 +305,23 @@ export function LaunchSpaceArea({
               <X />
             </button>
             <span className="ls-people-avatar">{selected.name[0]}</span>
+            {!selected.isSelf && (
+              <button className="ls-secondary ls-dialog-action" disabled={reasonPending}
+                onClick={() => void showReason(selected)}>
+                {reasonPending ? "Hazırlanıyor…" : "Neden tanışmalıyım?"}
+              </button>
+            )}
             <h2>{selected.name}</h2>
+            {reason.startsWith(selected.id + ":") && <p role="status">{reason.slice(selected.id.length + 1)}</p>}
             <span className="ls-code">{selected.code}</span>
             <p>{selected.intro}</p>
             <small>PAYLAŞABİLECEKLERİ</small>
             <p>{selected.offersDetail || selected.offers.join(" · ")}</p>
-            <small>BU BULUŞMADA ARADIĞI</small>
-            <p>{selected.needs}</p>
+            {selected.needs && <><small>BU BULUŞMADA ARADIĞI</small><p>{selected.needs}</p></>}
             {!selected.isSelf && (
               <>
                 <button
-                  className="ls-primary"
+                  className="ls-primary ls-dialog-action"
                   disabled={sending || selected.sent}
                   onClick={() => void introduce(selected)}
                 >

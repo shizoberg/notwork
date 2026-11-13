@@ -130,6 +130,11 @@ try {
   assert.equal((await call(handler, { action: "match", accessToken: member.accessToken })).data.group.rematchApprovedParticipantIds.length, 0);
   r = await call(handler, { action: "me", accessToken: member.accessToken });
   assert.equal(r.data.participant.id, member.participant.id);
+  const noReason = await call(handler, {
+    action: "introductionReason", accessToken: member.accessToken, targetId: outsider.participant.id,
+  });
+  assert.deepEqual(noReason.data, { reason: "" });
+
   r = await call(poll, { action: "admin", password: "wrong" });
   assert.equal(r.status, 401);
   r = await call(poll, { action: "submit", answers: [] });
@@ -344,7 +349,7 @@ try {
   assert.equal(stage.data.database.datasetId, fresh.id);
   assert.equal(stage.data.total, 0);
   assert.equal(stage.data.published, null);
-  assert.equal(stage.data.config.isOpen, false);
+  assert.equal(stage.data.config.isOpen, true);
   assert.deepEqual(stage.data.config.questions, state.config.questions);
   await datasets.changeLaunchDataset(current, {
     action: "activateDataset",
@@ -387,7 +392,7 @@ try {
   assert.equal(bulletin.vote.title, nextQuestion.title);
   const blankBulletin = await datasets.getLaunchBulletin(current, fresh);
   assert.equal(blankBulletin.announcement, null);
-  assert.equal(blankBulletin.vote, null);
+  assert.equal(blankBulletin.vote.title, state.config.questions[0].title);
   assert.equal(
     (await call(poll, { action: "announce", password, datasetId: original.active.id, text: "" }))
       .status,
