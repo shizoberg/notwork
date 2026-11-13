@@ -5,6 +5,10 @@ import {
   saveLaunchGroupSelfie,
   launchSpacePeople,
   launchProfilePhoto,
+  requestLaunchSignIn,
+  completeLaunchSignIn,
+  normalizeEmail,
+  hashToken,
   launchIntroductionReason,
   eventChat,
   completeActiveMatchByToken,
@@ -106,6 +110,15 @@ export default async (request: Request, _context: Context) => {
           ? await getMemberProfileBySession(readMemberSessionCookie(request))
           : null;
 
+      if (action === "launchSignIn" || action === "launchSignInComplete") {
+        if (database.eventSlug !== "14-kasim-2026") return new Response("Geçersiz etkinlik", { status: 403 });
+        if (action === "launchSignIn") {
+          await requestLaunchSignIn(store, clean(input.email, 120));
+          return json({ ok: true });
+        }
+        const registration = await completeLaunchSignIn(store, clean(input.accessToken, 100));
+        return registration ? json(registration) : new Response("Bağlantı geçersiz veya süresi dolmuş.", { status: 401 });
+      }
       if (action === "launchProfilePhoto") {
         if (database.eventSlug !== "14-kasim-2026")
           return new Response("Bu alan etkinliğe özel", { status: 403 });
@@ -138,6 +151,10 @@ export default async (request: Request, _context: Context) => {
         const contactEmail = clean(input.email, 120);
         if (contactEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
           await store.setJSON(`${database.keyPrefix}/guest-contacts/${registration.participant.id}.json`, { email: contactEmail });
+          await store.setJSON(
+            `${database.keyPrefix}/guest-email-index/${hashToken(normalizeEmail(contactEmail))}.json`,
+            { id: registration.participant.id }, { onlyIfNew: true },
+          );
         }
         return json(registration, { status: 201 });
       }

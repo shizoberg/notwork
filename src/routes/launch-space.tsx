@@ -66,6 +66,17 @@ function LaunchSpace() {
   const [tab, setTab] = useState<Tab>("home");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [recovering, setRecovering] = useState(false);
+  const [recoveryMessage, setRecoveryMessage] = useState("");
+  const [signInLink, setSignInLink] = useState("");
+  useEffect(() => {
+    const hash = new URLSearchParams(location.hash.slice(1));
+    const link = hash.get("sign-in");
+    if (link) {
+      setSignInLink(link);
+      history.replaceState(history.state, "", location.pathname + location.search);
+    }
+  }, []);
   const [registrationStep, setRegistrationStep] = useState(0);
   const [responses, setResponses] = useState(["", "", ""]);
   const [category, setCategory] = useState("");
@@ -90,7 +101,6 @@ function LaunchSpace() {
   const [poll, setPoll] = useState<PollPayload | null>(null),
     [answers, setAnswers] = useState<string[]>([]),
     [question, setQuestion] = useState(0);
-  const [showResults, setShowResults] = useState(false);
   const pollLength = poll?.config.questions.length ?? 1;
   const pollQuestion = poll?.config.questions[Math.min(question, pollLength - 1)];
   useEffect(() => {
@@ -285,7 +295,7 @@ function LaunchSpace() {
     try {
       if (!file.type.startsWith("image/") || file.size > 12_000_000) throw Error("12 MB altında bir fotoğraf seç.");
       const bitmap = await createImageBitmap(file);
-      const scale = Math.min(1, 320 / Math.max(bitmap.width, bitmap.height));
+      const scale = Math.min(1, 256 / Math.max(bitmap.width, bitmap.height));
       const canvas = document.createElement("canvas");
       canvas.width = Math.max(1, Math.round(bitmap.width * scale));
       canvas.height = Math.max(1, Math.round(bitmap.height * scale));
@@ -293,12 +303,17 @@ function LaunchSpace() {
       if (!context) { bitmap.close(); throw Error("Fotoğraf işlenemedi."); }
       context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
       bitmap.close();
-      const photo = canvas.toDataURL("image/jpeg", 0.68);
+      let photo = canvas.toDataURL("image/jpeg", 0.68);
+      for (const quality of [0.55, 0.42, 0.28]) {
+        if (photo.length <= 40000) break;
+        photo = canvas.toDataURL("image/jpeg", quality);
+      }
+      if (photo.length > 40000) throw Error("Fotoğraf küçültülemedi.");
       await network("launchProfilePhoto", { accessToken, photoDataUrl: photo });
       setAvatar(photo);
       setPhotoNotice("");
     } catch {
-      setPhotoNotice("Fotoğraf yüklenemedi. Alanım’dan tekrar deneyebilirsin.");
+      setPhotoNotice("Profil fotoğrafı yüklenemedi.");
     }
   }
 
@@ -317,6 +332,27 @@ function LaunchSpace() {
     if (!r.ok) throw Error(await r.text());
     return r.json();
   }
+  async function recoverSession(event: React.FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    setRecoveryMessage("");
+    try {
+      if (signInLink) {
+        const result = await network("launchSignInComplete", { accessToken: signInLink });
+        accept(result);
+        setSignInLink("");
+      } else {
+        await network("launchSignIn", { email: email.trim() });
+        setRecoveryMessage("Bu adresle kayıt varsa giriş bağlantısı e-postana gönderildi.");
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Giriş yapılamadı.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   useEffect(() => {
     if (tab !== "poll" || !token) return;
     let current = true;
@@ -353,9 +389,8 @@ function LaunchSpace() {
   const announcement = dataset?.bulletin?.announcement;
   const voteNotice = dataset?.bulletin?.vote;
   const hasCurrentVote = poll?.submitted && poll.config.questionVersion === voteNotice?.version;
-  function openVotes(results = false) {
-    setShowResults(results);
-    setVoteReminder(!results);
+  function openVotes() {
+    setVoteReminder(true);
     setTab("poll");
   }
 
@@ -457,6 +492,24 @@ function LaunchSpace() {
             </div>
             <p>Alanını hazırlıyoruz…</p>
           </div>
+        ) : signInLink || (recovering && !registration) ? (
+          <section className="ls-enter">
+            <LaunchEventHeader flow={flow} />
+            <form className="ls-form ls-panel" onSubmit={recoverSession}>
+              <h1>Etkinliğe geri dön</h1>
+              {!signInLink && <label>E-posta
+                <input type="email" required autoComplete="email" value={email}
+                  onChange={(event) => setEmail(event.target.value)} />
+              </label>}
+              <button className="ls-primary" disabled={busy}>
+                {busy ? "Bekle…" : signInLink ? "Oturumu aç" : "Giriş bağlantısı gönder"}
+              </button>
+              {recoveryMessage && <p role="status">{recoveryMessage}</p>}
+              <button type="button" className="ls-secondary" onClick={() => {
+                setSignInLink(""); setRecovering(false); setError("");
+              }}>Kayıt ekranına dön</button>
+            </form>
+          </section>
         ) : !registration ? (
           <section className="ls-enter">
             <LaunchEventHeader flow={flow} />
@@ -471,6 +524,9 @@ function LaunchSpace() {
               <h1>{registrationQuestion?.title || (registrationStep === 4 ? "Tanışmaya hazırsın" : flow.welcomeTitle)}</h1>
               {registrationStep === 0 && <>
                 <p className="ls-muted">{flow.welcomeText}</p>
+                <button type="button" className="ls-secondary" onClick={() => setRecovering(true)}>
+                  Kaydım var · e-postayla giriş
+                </button>
                 <label>Adın ve soyadın
                   <input required maxLength={100} autoComplete="name" value={name}
                     onChange={(event) => setName(event.target.value)} />
@@ -542,23 +598,7 @@ function LaunchSpace() {
                     </div>
                     <span className="ls-code">{registration.participant.publicCode}</span>
                   </div>
-                  <label className="ls-photo-retry">Profil fotoğrafı · isteğe bağlı
-                    <input type="file" accept="image/*" onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) void saveProfilePhoto(file, token);
-                    }} />
-                  </label>
                   {photoNotice && <p role="status" className="ls-caption">{photoNotice}</p>}
-                  <button
-                    className="ls-results-link"
-                    onClick={() => {
-                      openVotes(true);
-                    }}
-                  >
-                    <Radio size={17} />
-                    Oylama sonuçları
-                    <ArrowRight size={16} />
-                  </button>
                   <p className="ls-section-label">BU BULUŞMADAKİ DENEYİMLERİN</p>
                   <div className="ls-apps">
                     {flow.apps.map((app) => (
@@ -738,19 +778,9 @@ function LaunchSpace() {
               </section>
             ) : (
               <section className="ls-enter">
-                <div className="ls-poll-switch">
-                  <button aria-pressed={!showResults} onClick={() => setShowResults(false)}>
-                    {flow.votesLabel}
-                  </button>
-                  <button aria-pressed={showResults} onClick={() => setShowResults(true)}>
-                    Oylama sonuçları
-                  </button>
-                </div>
                 <p className="ls-eyebrow">{flow.organizerName}</p>
                 {!poll ? (
                   <p role="status">Anket yükleniyor…</p>
-                ) : showResults ? (
-                  <PublishedResults poll={poll} />
                 ) : poll.submitted && !editingVote ? (
                   <div className="ls-center">
                     <div className="ls-success">
@@ -762,12 +792,9 @@ function LaunchSpace() {
                       topluluğa karıştı.
                     </h1>
                     <p className="ls-muted">
-                      Oyun kaydedildi. Sonuçlar paylaşıldığında buradan görebilirsin.
+                      Oyun kaydedildi. Dilersen daha sonra değiştirebilirsin.
                     </p>
                     <div className="ls-vote-actions">
-                    <button onClick={() => setShowResults(true)} className="ls-primary">
-                      Sonuçları gör
-                    </button>
                     {poll.config.isOpen && (
                       <button className="ls-secondary" onClick={() => {
                         setAnswers(poll.myAnswers || []);
@@ -922,45 +949,5 @@ function LaunchSpace() {
         </div>
       ) : null}
     </div>
-  );
-}
-
-function PublishedResults({ poll }: { poll: PollPayload }) {
-  const result = poll.published;
-  if (!result)
-    return (
-      <div className="ls-center">
-        <Radio size={40} />
-        <h2>Sonuçlar birazdan burada.</h2>
-        <p className="ls-muted">Organizatörün yayınladığı soru burada da görünecek.</p>
-      </div>
-    );
-  return (
-    <section className="ls-mobile-results">
-      <p className="ls-caption">CANLI · {result.total} YANIT</p>
-      <h2>{result.question.title}</h2>
-      <div className="ls-result-bars">
-        {result.counts.map((c, i) => {
-          const percent = result.total ? (c.count / result.total) * 100 : 0;
-          return (
-            <div className="ls-result-bar" key={c.label}>
-              <div
-                className={`ls-result-fill ls-result-color-${i % 5}`}
-                style={{ width: `${percent}%` }}
-              />
-              <span className="ls-result-name">{c.label}</span>
-              <span className="ls-result-value">
-                <strong>
-                  {Math.round(percent)}
-                  <small>%</small>
-                </strong>
-                <span>{c.count} oy</span>
-              </span>
-            </div>
-          );
-        })}
-      </div>
-      <p className="ls-caption">Yalnızca toplu sonuçlar · otomatik güncellenir.</p>
-    </section>
   );
 }

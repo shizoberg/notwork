@@ -1876,10 +1876,73 @@ export async function launchProfilePhoto(
   const key = `${getNetworkPrefix()}/profile-photos/${targetId || viewer.participant.id}.jpg`;
   if (typeof input.photoDataUrl === "string" && !targetId) {
     const photo = input.photoDataUrl;
-    if (photo.length > 180_000 || !/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo))
+    if (photo.length > 40_000 || !/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo))
       throw Error("Fotoğraf çok büyük veya geçersiz");
     await store.set(key, photo);
     return { photo: "" };
   }
   return { photo: (await store.get(key, { consistency: "strong" })) || "" };
+}
+
+export async function requestLaunchSignIn(
+  store: ReturnType<typeof getEventNetworkStore>,
+  requestedEmail: string,
+) {
+  const email = normalizeEmail(requestedEmail);
+  if (!isValidEmail(email)) throw Error("Geçerli bir e-posta adresi yaz.");
+  const { gmailStatus, sendGmailOnce } = await import("./_gmail.mjs");
+  if (!(await gmailStatus()).connected) throw Error("Giriş e-postası servisi şu an kullanılamıyor.");
+  const prefix = getNetworkPrefix();
+  const indexKey = `${prefix}/guest-email-index/${hashToken(email)}.json`;
+  const indexed = await store.get(indexKey, { type: "json", consistency: "strong" }) as { id: string } | null;
+  let id = indexed?.id;
+  if (!id) {
+    const { blobs } = await store.list({ prefix: `${prefix}/guest-contacts/` });
+    for (let i = 0; i < blobs.length && !id; i += 20) {
+      const contacts = await Promise.all(blobs.slice(i, i + 20).map(async ({ key }) => ({
+        key, row: await store.get(key, { type: "json" }) as { email: string } | null,
+      })));
+      const match = contacts.find(({ row }) => row?.email && normalizeEmail(row.email) === email);
+      if (match) id = match.key.split("/").pop()?.replace(/\.json$/, "");
+    }
+    if (id) await store.setJSON(indexKey, { id }, { onlyIfNew: true });
+  }
+  const existing = id
+    ? await store.get(participantKey(id), { type: "json", consistency: "strong" }) as EventNetworkRegistration | null
+    : null;
+  if (!existing || existing.participant.status !== "registered") return;
+  const claim = await store.setJSON(
+    `${prefix}/sign-in-limits/${Math.floor(Date.now() / 300_000)}/${hashToken(email)}.json`,
+    { at: Date.now() }, { onlyIfNew: true },
+  );
+  if (!claim.modified) return;
+  const token = crypto.randomUUID() + crypto.randomUUID();
+  const key = `${prefix}/sign-in/${hashToken(token)}.json`;
+  await store.setJSON(key, { id, expires: Date.now() + 15 * 60_000 });
+  const url = `https://notwork.me/launch-space#sign-in=${token}`;
+  const delivery = await sendGmailOnce(`launch-sign-in:${hashToken(token)}`, {
+    to: [email],
+    subject: "Launchspace · Etkinliğe geri dön",
+    text: `Etkinliğe dönmek için 15 dakika içinde aç: ${url}\nBu isteği sen yapmadıysan e-postayı yok sayabilirsin.`,
+    html: `<p><a href="${url}">Launchspace’e geri dön</a></p><p>Bağlantı 15 dakika geçerlidir ve bir kez kullanılabilir.</p>`,
+  }, { transactional: true });
+  if (!["accepted", "uncertain"].includes(delivery.status)) {
+    await store.delete(key);
+    throw Error("Giriş bağlantısı gönderilemedi. Biraz sonra tekrar dene.");
+  }
+}
+
+export async function completeLaunchSignIn(
+  store: ReturnType<typeof getEventNetworkStore>,
+  token: string,
+) {
+  if (!/^[a-f0-9-]{72}$/.test(token)) return null;
+  const key = `${getNetworkPrefix()}/sign-in/${hashToken(token)}.json`;
+  const row = await store.get(key, { type: "json", consistency: "strong" }) as { id: string; expires: number } | null;
+  if (!row || row.expires <= Date.now()) return null;
+  const registration = await store.get(participantKey(row.id), { type: "json", consistency: "strong" }) as EventNetworkRegistration | null;
+  if (!registration || registration.participant.status !== "registered") return null;
+  const claim = await store.setJSON(`${key}.used`, { at: Date.now() }, { onlyIfNew: true });
+  if (!claim.modified) return null;
+  return resumeNetworkProfile(store, registration.profile.emailNormalized);
 }

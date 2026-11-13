@@ -59,7 +59,7 @@ try {
     assert.equal(r.status, 201, r.data);
     participants.push(r.data);
   }
-  const photo = "data:image/jpeg;base64," + "a".repeat(135_000);
+  const photo = "data:image/jpeg;base64," + "a".repeat(39_000);
   const uploads = await Promise.all(participants.map(({ accessToken }) =>
     call(handler, { action: "launchProfilePhoto", accessToken, photoDataUrl: photo }),
   ));
@@ -75,6 +75,19 @@ try {
   assert.equal(inbox.data.people.find((person) => person.id === participants[0].participant.id).incoming.message, "Mavi gömlek");
   const unrelated = await call(handler, { action: "people", accessToken: participants[2].accessToken });
   assert.ok(!JSON.stringify(unrelated.data).includes("Mavi gömlek"));
+  const recoveryToken = crypto.randomUUID() + crypto.randomUUID();
+  await context.runWithEventRequestContext(event.slug, "matchlab", async () => {
+    const store = network.getEventNetworkStore();
+    const prefix = network.getEventNetworkDatasetInfo().keyPrefix;
+    await store.setJSON(`${prefix}/sign-in/${network.hashToken(recoveryToken)}.json`, {
+      id: participants[0].participant.id, expires: Date.now() + 60_000,
+    });
+  });
+  const recovered = await call(handler, { action: "launchSignInComplete", accessToken: recoveryToken });
+  assert.equal(recovered.status, 200);
+  assert.equal(recovered.data.participant.id, participants[0].participant.id);
+  assert.equal((await call(handler, { action: "launchSignInComplete", accessToken: recoveryToken })).status, 401);
+  participants[0] = recovered.data;
   const directoryReads = await Promise.all(
     participants.map(({ accessToken }) => call(handler, { action: "people", accessToken })),
   );
