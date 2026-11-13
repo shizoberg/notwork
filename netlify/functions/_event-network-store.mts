@@ -1911,11 +1911,13 @@ export async function requestLaunchSignIn(
     ? await store.get(participantKey(id), { type: "json", consistency: "strong" }) as EventNetworkRegistration | null
     : null;
   if (!existing || existing.participant.status !== "registered") return;
-  const claim = await store.setJSON(
-    `${prefix}/sign-in-limits/${Math.floor(Date.now() / 300_000)}/${hashToken(email)}.json`,
-    { at: Date.now() }, { onlyIfNew: true },
-  );
-  if (!claim.modified) return;
+  const allowed = await atomicState(store, `${prefix}/sign-in-limits/${hashToken(email)}.json`,
+    () => ({ next: 0 }), (state) => {
+      if (state.next > Date.now()) return false;
+      state.next = Date.now() + 300_000;
+      return true;
+    });
+  if (!allowed) return;
   const token = crypto.randomUUID() + crypto.randomUUID();
   const key = `${prefix}/sign-in/${hashToken(token)}.json`;
   await store.setJSON(key, { id, expires: Date.now() + 15 * 60_000 });
@@ -1942,7 +1944,11 @@ export async function completeLaunchSignIn(
   if (!row || row.expires <= Date.now()) return null;
   const registration = await store.get(participantKey(row.id), { type: "json", consistency: "strong" }) as EventNetworkRegistration | null;
   if (!registration || registration.participant.status !== "registered") return null;
-  const claim = await store.setJSON(`${key}.used`, { at: Date.now() }, { onlyIfNew: true });
-  if (!claim.modified) return null;
+  const claimed = await atomicState(store, `${key}.used`, () => ({ at: 0 }), (state) => {
+    if (state.at) return false;
+    state.at = Date.now();
+    return true;
+  });
+  if (!claimed) return null;
   return resumeNetworkProfile(store, registration.profile.emailNormalized);
 }

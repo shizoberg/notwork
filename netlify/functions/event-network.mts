@@ -134,6 +134,12 @@ export default async (request: Request, _context: Context) => {
         const name = clean(input.firstName, 100);
         if (!name || input.eventConsent !== true)
           return new Response("İsim ve etkinlik onayı gerekli", { status: 400 });
+        const contactEmail = clean(input.email, 120);
+        const indexKey = `${database.keyPrefix}/guest-email-index/${hashToken(normalizeEmail(contactEmail))}.json`;
+        if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail))
+          return new Response("Geçerli bir e-posta adresi yaz.", { status: 400 });
+        if (contactEmail && await store.get(indexKey, { consistency: "strong" }))
+          return new Response("Bu e-postayla etkinlik kaydı var. Kaydım var seçeneğinden giriş bağlantısı iste.", { status: 409 });
         const [firstName, ...rest] = name.split(/\s+/);
         const registration = await registerNetworkProfile(store, {
           firstName,
@@ -148,11 +154,10 @@ export default async (request: Request, _context: Context) => {
           attendedEvent: database.eventSlug,
           eventConsent: true,
         }, { allowSingleName: true });
-        const contactEmail = clean(input.email, 120);
-        if (contactEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+        if (contactEmail) {
           await store.setJSON(`${database.keyPrefix}/guest-contacts/${registration.participant.id}.json`, { email: contactEmail });
           await store.setJSON(
-            `${database.keyPrefix}/guest-email-index/${hashToken(normalizeEmail(contactEmail))}.json`,
+            indexKey,
             { id: registration.participant.id }, { onlyIfNew: true },
           );
         }

@@ -83,10 +83,12 @@ try {
       id: participants[0].participant.id, expires: Date.now() + 60_000,
     });
   });
-  const recovered = await call(handler, { action: "launchSignInComplete", accessToken: recoveryToken });
-  assert.equal(recovered.status, 200);
+  const recoveryAttempts = await Promise.all(Array.from({ length: 6 }, () =>
+    call(handler, { action: "launchSignInComplete", accessToken: recoveryToken }),
+  ));
+  assert.deepEqual(recoveryAttempts.map((response) => response.status).sort(), [200, 401, 401, 401, 401, 401]);
+  const recovered = recoveryAttempts.find((response) => response.status === 200);
   assert.equal(recovered.data.participant.id, participants[0].participant.id);
-  assert.equal((await call(handler, { action: "launchSignInComplete", accessToken: recoveryToken })).status, 401);
   participants[0] = recovered.data;
   const directoryReads = await Promise.all(
     participants.map(({ accessToken }) => call(handler, { action: "people", accessToken })),
@@ -151,6 +153,20 @@ try {
     messageId: crypto.randomUUID(),
   });
   assert.equal(r.status, 200);
+  const groupRecovery = crypto.randomUUID() + crypto.randomUUID();
+  await context.runWithEventRequestContext(event.slug, "matchlab", async () => {
+    const store = network.getEventNetworkStore();
+    await store.setJSON(`${network.getEventNetworkDatasetInfo().keyPrefix}/sign-in/${network.hashToken(groupRecovery)}.json`, {
+      id: member.participant.id, expires: Date.now() + 60_000,
+    });
+  });
+  const reconnected = await call(handler, { action: "launchSignInComplete", accessToken: groupRecovery });
+  assert.equal(reconnected.status, 200);
+  const resumedGroup = await call(handler, { action: "match", accessToken: reconnected.data.accessToken });
+  assert.equal(resumedGroup.data.group.id, g.id);
+  const sameChat = await call(handler, { action: "chatRead", groupId: g.id, accessToken: reconnected.data.accessToken });
+  assert.equal(sameChat.status, 200);
+  assert.ok(JSON.stringify(sameChat.data).includes("Yalnızca bizim grup"));
   r = await call(handler, { action: "chatRead", accessToken: outsider.accessToken, groupId: g.id });
   assert.ok(r.status >= 400);
   const selfie = { action: "groupSelfie", groupId: g.id, photoDataUrl: "data:image/jpeg;base64,/9j/2Q==" };
