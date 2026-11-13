@@ -126,7 +126,7 @@ export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => v
                 <h3>{flow.welcomeTitle}</h3>
                 <p className="ls-flow-copy">{flow.welcomeText}</p>
                 <span className="ls-preview-choice">{flow.registerLabel}</span>
-                <span className="ls-preview-choice">Adın ve soyadın · etkinlik onayı</span>
+                <span className="ls-preview-choice">İsim ve e-posta · üç soru · etkinlik onayı</span>
               </>
             ) : (
               <>
@@ -234,6 +234,28 @@ export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => v
                     />
                   </label>
                 ))}
+              </details>
+              <details>
+                <summary>Kayıt soruları ve katkı alanları</summary>
+                {flow.questions.map((question, index) => (
+                  <section key={index} className="ls-flow-question">
+                    {(["title", "label", "placeholder"] as const).map((field) => (
+                      <label key={field}>{field === "title" ? "Başlık" : field === "label" ? "Soru" : "İpucu"}
+                        <input value={question[field]} onChange={(event) => edit({
+                          questions: flow.questions.map((row, i) => i === index ? { ...row, [field]: event.target.value } : row),
+                        })} />
+                      </label>
+                    ))}
+                    <label>Seçenekler · her satıra bir seçenek
+                      <textarea value={question.options.join("\n")} onChange={(event) => edit({
+                        questions: flow.questions.map((row, i) => i === index ? { ...row, options: event.target.value.split("\n") } : row),
+                      })} />
+                    </label>
+                  </section>
+                ))}
+                <label>Katkı alanları · her satıra bir alan
+                  <textarea value={flow.categories.join("\n")} onChange={(event) => edit({ categories: event.target.value.split("\n") })} />
+                </label>
               </details>
               <details onFocus={() => setPreview(3)}>
                 <summary>Program ve uygulama sırası</summary>

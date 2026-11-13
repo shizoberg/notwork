@@ -65,6 +65,14 @@ function LaunchSpace() {
     [token, setToken] = useState("");
   const [tab, setTab] = useState<Tab>("home");
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [registrationStep, setRegistrationStep] = useState(0);
+  const [responses, setResponses] = useState(["", "", ""]);
+  const [category, setCategory] = useState("");
+  const [aiConsent, setAiConsent] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<File>();
+  const [photoNotice, setPhotoNotice] = useState("");
+  const registrationQuestion = flow.questions[registrationStep - 1];
   const [avatar, setAvatar] = useState("");
   const [editingVote, setEditingVote] = useState(false);
   const [voteReminder, setVoteReminder] = useState(false);
@@ -189,8 +197,13 @@ function LaunchSpace() {
     setError("");
     setBusy(true);
     try {
-      const r = await network("launchGuest", { firstName: name.trim(), eventConsent: consent });
+      const r = await network("launchGuest", {
+        firstName: name.trim(), email: email.trim(), eventConsent: consent,
+        intro: responses[0], offersDetail: responses[1], needs: responses[2],
+        offers: [category || flow.categories[0]], aiAnalysisConsent: aiConsent,
+      });
       accept(r);
+      if (profilePhoto && r.accessToken) void saveProfilePhoto(profilePhoto, r.accessToken);
       setComplete(true);
       setTimeout(() => setComplete(false), 1800);
     } catch (e) {
@@ -257,6 +270,37 @@ function LaunchSpace() {
       clearInterval(timer);
     };
   }, [tab, group?.id, token]);
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    void network("launchProfilePhoto", {}).then(({ photo }) => {
+      if (active && photo) setAvatar(photo);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [token, dataset?.id]);
+
+  async function saveProfilePhoto(file: File, accessToken: string) {
+    setPhotoNotice("Fotoğraf yükleniyor…");
+    try {
+      if (!file.type.startsWith("image/") || file.size > 12_000_000) throw Error("12 MB altında bir fotoğraf seç.");
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, 320 / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const context = canvas.getContext("2d");
+      if (!context) { bitmap.close(); throw Error("Fotoğraf işlenemedi."); }
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close();
+      const photo = canvas.toDataURL("image/jpeg", 0.68);
+      await network("launchProfilePhoto", { accessToken, photoDataUrl: photo });
+      setAvatar(photo);
+      setPhotoNotice("");
+    } catch {
+      setPhotoNotice("Fotoğraf yüklenemedi. Alanım’dan tekrar deneyebilirsin.");
+    }
+  }
+
   async function network(action: string, rest: Record<string, unknown>) {
     const r = await fetch("/api/event-products/network", {
       method: "POST",
@@ -415,21 +459,59 @@ function LaunchSpace() {
             <LaunchEventHeader flow={flow} />
             <form className="ls-form ls-panel" onSubmit={(event) => {
               event.preventDefault();
-              if (name.trim() && consent && !busy) void submit();
+              if (busy) return;
+              if (registrationStep < 4) setRegistrationStep(registrationStep + 1);
+              else if (consent) void submit();
             }}>
-              <h1>{flow.welcomeTitle}</h1>
-              <p className="ls-muted">{flow.welcomeText}</p>
-              <label>Adın ve soyadın
-                <input required maxLength={100} autoComplete="name" value={name}
-                  onChange={(event) => setName(event.target.value)} />
-              </label>
-              <label className="ls-check">
-                <input type="checkbox" required checked={consent}
-                  onChange={(event) => setConsent(event.target.checked)} />
-                <span>Adımın etkinlik katılımcı listesinde görünmesini ve eşleşmede kullanılmasını kabul ediyorum. <a href="/kvkk" target="_blank" rel="noreferrer">Aydınlatma metni</a></span>
-              </label>
-              <button className="ls-primary" disabled={busy || !name.trim() || !consent}>
-                {busy ? "Kaydediliyor…" : flow.registerLabel} <ArrowRight size={18} />
+              {registrationStep > 0 && <button type="button" className="ls-secondary" onClick={() => setRegistrationStep(registrationStep - 1)}>Geri</button>}
+              <p className="ls-caption">{registrationStep + 1} / 5</p>
+              <h1>{registrationQuestion?.title || (registrationStep === 4 ? "Tanışmaya hazırsın" : flow.welcomeTitle)}</h1>
+              {registrationStep === 0 && <>
+                <p className="ls-muted">{flow.welcomeText}</p>
+                <label>Adın ve soyadın
+                  <input required maxLength={100} autoComplete="name" value={name}
+                    onChange={(event) => setName(event.target.value)} />
+                </label>
+                <label>E-posta
+                  <input required type="email" maxLength={120} autoComplete="email" value={email}
+                    onChange={(event) => setEmail(event.target.value)} />
+                </label>
+              </>}
+              {registrationQuestion && <>
+                <label>{registrationQuestion.label}
+                  {registrationQuestion.options.length > 0 ? (
+                    <select required value={responses[registrationStep - 1]} onChange={(event) =>
+                      setResponses((current) => current.map((value, index) => index === registrationStep - 1 ? event.target.value : value))}>
+                      <option value="">Seç</option>
+                      {registrationQuestion.options.map((option) => <option key={option}>{option}</option>)}
+                    </select>
+                  ) : (
+                    <textarea required maxLength={1000} placeholder={registrationQuestion.placeholder}
+                      value={responses[registrationStep - 1]} onChange={(event) =>
+                        setResponses((current) => current.map((value, index) => index === registrationStep - 1 ? event.target.value : value))} />
+                  )}
+                </label>
+                {registrationStep === 2 && <label>{flow.categoryLabel}
+                  <select value={category || flow.categories[0]} onChange={(event) => setCategory(event.target.value)}>
+                    {flow.categories.map((option) => <option key={option}>{option}</option>)}
+                  </select>
+                </label>}
+              </>}
+              {registrationStep === 4 && <>
+                <label>Profil fotoğrafı · isteğe bağlı
+                  <input type="file" accept="image/*" onChange={(event) => setProfilePhoto(event.target.files?.[0])} />
+                </label>
+                <label className="ls-check">
+                  <input type="checkbox" required checked={consent} onChange={(event) => setConsent(event.target.checked)} />
+                  <span>Adımın ve eklediğim fotoğrafın katılımcılara görünmesini, yanıtlarımın eşleşmede kullanılmasını kabul ediyorum. <a href="/kvkk" target="_blank" rel="noreferrer">Aydınlatma metni</a></span>
+                </label>
+                <label className="ls-check">
+                  <input type="checkbox" checked={aiConsent} onChange={(event) => setAiConsent(event.target.checked)} />
+                  <span>İsteğe bağlı · katkı ve ihtiyaç yanıtlarım OpenAI ile tanışma önerilerinde kullanılabilir.</span>
+                </label>
+              </>}
+              <button className="ls-primary" disabled={busy || (registrationStep === 4 && !consent)}>
+                {busy ? "Kaydediliyor…" : registrationStep === 4 ? flow.registerLabel : flow.nextLabel} <ArrowRight size={18} />
               </button>
               {mode === "demo" && <p className="ls-caption">Demo · yalnızca örnek bilgiler kullan.</p>}
             </form>
@@ -457,6 +539,13 @@ function LaunchSpace() {
                     </div>
                     <span className="ls-code">{registration.participant.publicCode}</span>
                   </div>
+                  <label className="ls-photo-retry">Profil fotoğrafı · isteğe bağlı
+                    <input type="file" accept="image/*" onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) void saveProfilePhoto(file, token);
+                    }} />
+                  </label>
+                  {photoNotice && <p role="status" className="ls-caption">{photoNotice}</p>}
                   <button
                     className="ls-results-link"
                     onClick={() => {
@@ -665,6 +754,7 @@ function LaunchSpace() {
                     <p className="ls-muted">
                       Oyun kaydedildi. Sonuçlar paylaşıldığında buradan görebilirsin.
                     </p>
+                    <div className="ls-vote-actions">
                     <button onClick={() => setShowResults(true)} className="ls-primary">
                       Sonuçları gör
                     </button>
@@ -676,8 +766,9 @@ function LaunchSpace() {
                       }}>Oyumu değiştir</button>
                     )}
                     <button onClick={() => setTab("home")} className="ls-secondary">
-                      Deneyimlere dön
+                      Alanıma dön
                     </button>
+                    </div>
                   </div>
                 ) : !poll.config.isOpen ? (
                   <div className="ls-center">

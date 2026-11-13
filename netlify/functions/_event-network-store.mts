@@ -154,6 +154,8 @@ export type NetworkInput = {
   rating?: number;
   comment?: string;
   photoDataUrl?: string;
+  meetingPlace?: string;
+  introductionMessage?: string;
   consent?: boolean;
   eventConsent?: boolean;
   aiAnalysisConsent?: boolean;
@@ -1722,6 +1724,7 @@ export async function launchSpacePeople(
   store: ReturnType<typeof getEventNetworkStore>,
   accessToken: string,
   targetId?: string,
+  proposal?: NetworkInput,
 ) {
   const self = await getRegistrationByToken(store, accessToken);
   if (!self || self.participant.status !== "registered")
@@ -1730,7 +1733,7 @@ export async function launchSpacePeople(
     (r) => r.participant.status === "registered",
   );
   const key = `${getNetworkPrefix()}/introductions-v1.json`;
-  type Introductions = { requests: Record<string, { from: string; to: string; at: string }> };
+  type Introductions = { requests: Record<string, { from: string; to: string; at: string; updatedAt?: string; place?: string; message?: string }> };
   const empty = (): Introductions => ({ requests: {} });
   let state: Introductions;
   if (targetId) {
@@ -1738,7 +1741,16 @@ export async function launchSpacePeople(
       throw new Error("Bu etkinlikte geçerli bir kişi seç");
     state = await atomicState(store, key, empty, (s) => {
       const id = `${self.participant.id}:${targetId}`;
-      s.requests[id] ||= { from: self.participant.id, to: targetId, at: new Date().toISOString() };
+      const now = new Date().toISOString();
+      const prior = s.requests[id];
+      const place = clean(proposal?.meetingPlace, 120);
+      const message = clean(proposal?.introductionMessage, 300);
+      if (!prior || (proposal && (prior.place !== place || prior.message !== message))) {
+        s.requests[id] = {
+          from: self.participant.id, to: targetId, at: prior?.at || now,
+          updatedAt: now, place, message,
+        };
+      }
       return s;
     });
   } else state = await readAtomicState(store, key, empty);
@@ -1752,6 +1764,8 @@ export async function launchSpacePeople(
       offersDetail: r.offersDetail,
       needs: r.needs,
       isSelf: r.participant.id === self.participant.id,
+      outgoing: state.requests[`${self.participant.id}:${r.participant.id}`],
+      incoming: state.requests[`${r.participant.id}:${self.participant.id}`],
       sent: Boolean(state.requests[`${self.participant.id}:${r.participant.id}`]),
       received: Boolean(state.requests[`${r.participant.id}:${self.participant.id}`]),
     })),
@@ -1810,4 +1824,23 @@ export async function launchIntroductionReason(
     state.until = Date.now() + 60 * 60_000;
   });
   return reason;
+}
+
+export async function launchProfilePhoto(
+  store: ReturnType<typeof getEventNetworkStore>,
+  input: NetworkInput,
+  targetId?: string,
+) {
+  const viewer = await getRegistrationByToken(store, clean(input.accessToken, 100));
+  if (!viewer || viewer.participant.status !== "registered") throw Error("Etkinlik oturumu gerekli");
+  if (targetId && !/^[a-zA-Z0-9_-]{1,100}$/.test(targetId)) return { photo: "" };
+  const key = `${getNetworkPrefix()}/profile-photos/${targetId || viewer.participant.id}.jpg`;
+  if (typeof input.photoDataUrl === "string" && !targetId) {
+    const photo = input.photoDataUrl;
+    if (photo.length > 180_000 || !/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo))
+      throw Error("Fotoğraf çok büyük veya geçersiz");
+    await store.set(key, photo);
+    return { photo: "" };
+  }
+  return { photo: (await store.get(key, { consistency: "strong" })) || "" };
 }

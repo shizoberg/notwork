@@ -59,6 +59,22 @@ try {
     assert.equal(r.status, 201, r.data);
     participants.push(r.data);
   }
+  const photo = "data:image/jpeg;base64," + "a".repeat(135_000);
+  const uploads = await Promise.all(participants.map(({ accessToken }) =>
+    call(handler, { action: "launchProfilePhoto", accessToken, photoDataUrl: photo }),
+  ));
+  assert.ok(uploads.every((response) => response.status === 200));
+  const photos = await Promise.all(participants.map(({ accessToken }) =>
+    call(handler, { action: "launchProfilePhoto", accessToken }),
+  ));
+  assert.ok(photos.every((response) => response.status === 200 && response.data.photo === photo));
+  const pair = { action: "introduce", accessToken: participants[0].accessToken, targetId: participants[1].participant.id };
+  await call(handler, { ...pair, meetingPlace: "Giriş", introductionMessage: "Lacivert ceket" });
+  await call(handler, { ...pair, meetingPlace: "Sahne", introductionMessage: "Mavi gömlek" });
+  const inbox = await call(handler, { action: "people", accessToken: participants[1].accessToken });
+  assert.equal(inbox.data.people.find((person) => person.id === participants[0].participant.id).incoming.message, "Mavi gömlek");
+  const unrelated = await call(handler, { action: "people", accessToken: participants[2].accessToken });
+  assert.ok(!JSON.stringify(unrelated.data).includes("Mavi gömlek"));
   const directoryReads = await Promise.all(
     participants.map(({ accessToken }) => call(handler, { action: "people", accessToken })),
   );

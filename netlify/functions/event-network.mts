@@ -4,6 +4,7 @@ import {
   clean,
   saveLaunchGroupSelfie,
   launchSpacePeople,
+  launchProfilePhoto,
   launchIntroductionReason,
   eventChat,
   completeActiveMatchByToken,
@@ -105,6 +106,11 @@ export default async (request: Request, _context: Context) => {
           ? await getMemberProfileBySession(readMemberSessionCookie(request))
           : null;
 
+      if (action === "launchProfilePhoto") {
+        if (database.eventSlug !== "14-kasim-2026")
+          return new Response("Bu alan etkinliğe özel", { status: 403 });
+        return json(await launchProfilePhoto(store, input, clean((input as NetworkInput & { targetId?: string }).targetId, 100) || undefined));
+      }
       if (action === "launchGuest" || action === "groupSelfie") {
         if (database.eventSlug !== "14-kasim-2026")
           return new Response("Bu işlem Launchspace’e özel", { status: 403 });
@@ -120,11 +126,19 @@ export default async (request: Request, _context: Context) => {
           firstName,
           lastName: rest.join(" "),
           email: `guest-${crypto.randomUUID()}@launchspace.invalid`,
-          offers: ["networking"],
+          offers: input.offers?.length ? input.offers : ["networking"],
+          intro: input.intro,
+          offersDetail: input.offersDetail,
+          needs: input.needs,
+          aiAnalysisConsent: input.aiAnalysisConsent === true,
           needTag: "networking",
           attendedEvent: database.eventSlug,
           eventConsent: true,
         }, { allowSingleName: true });
+        const contactEmail = clean(input.email, 120);
+        if (contactEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+          await store.setJSON(`${database.keyPrefix}/guest-contacts/${registration.participant.id}.json`, { email: contactEmail });
+        }
         return json(registration, { status: 201 });
       }
 
@@ -201,6 +215,7 @@ export default async (request: Request, _context: Context) => {
             action === "introduce"
               ? clean((input as NetworkInput & { targetId?: string }).targetId, 100)
               : undefined,
+            action === "introduce" ? input : undefined,
           ),
         );
       }

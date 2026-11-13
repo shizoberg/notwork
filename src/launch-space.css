@@ -1728,3 +1728,15 @@
   .ls-program-ticker { overflow-x: auto; }
   .ls-program-items[aria-hidden="true"] { display: none; }
 }
+
+.ls-vote-actions { display: grid; gap: 10px; width: min(100%, 360px); margin-inline: auto; }
+.ls-vote-actions button { width: 100%; min-height: 46px; margin: 0; }
+.ls-route-step { display: grid; grid-template-columns: 30px minmax(0, 1fr) 16px; align-items: center; gap: 10px; width: 100%; margin-top: 8px; text-align: left; }
+.ls-route-step strong, .ls-route-step small { display: block; overflow-wrap: anywhere; }
+.ls-route-step small { color: var(--ls-blue); font-size: 11px; }
+.ls-route-step-number { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #263e50; }
+.ls-proposal { padding: 12px; margin-block: 8px; border: 1px solid var(--ls-line); border-radius: 12px; }
+.ls-proposal small { display: block; color: var(--ls-blue); margin-block: 3px; }
+.ls-photo-retry { display: block; font-size: 12px; margin-block: 10px; }
+.ls-photo-retry input { display: block; max-width: 100%; }
+.ls-people-avatar img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }

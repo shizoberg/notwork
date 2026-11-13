@@ -1,8 +1,10 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import { ArrowRight, Check, DoorOpen, Network, Presentation, Route, Search, Users, X } from "lucide-react";
+import { ArrowRight, DoorOpen, Network, Presentation, Route, Search, Users, X } from "lucide-react";
 import { LaunchEventHeader } from "./LaunchEventHeader";
 import type { LaunchFlow } from "@/lib/launch-flow";
 
+
+type Proposal = { at: string; updatedAt?: string; place?: string; message?: string };
 
 type Person = {
   id: string;
@@ -15,6 +17,8 @@ type Person = {
   isSelf: boolean;
   sent: boolean;
   received: boolean;
+  incoming?: Proposal;
+  outgoing?: Proposal;
 };
 const pageSize = 20;
 
@@ -48,6 +52,11 @@ export function LaunchSpaceArea({
   const [people, setPeople] = useState<Person[]>([]);
   const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(pageSize);
+  const [inbox, setInbox] = useState(false);
+  const [meetingPlace, setMeetingPlace] = useState("");
+  const [meetingMessage, setMeetingMessage] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [personPhoto, setPersonPhoto] = useState("");
   const [routeOpen, setRouteOpen] = useState(false);
   const [selected, setSelected] = useState<Person | null>(null);
   const [error, setError] = useState("");
@@ -90,6 +99,7 @@ export function LaunchSpaceArea({
         action: targetId ? "introduce" : "people",
         accessToken: token,
         targetId,
+        ...(targetId ? { meetingPlace, introductionMessage: meetingMessage } : {}),
       }),
     });
     if (!response.ok) throw new Error(await response.text());
@@ -112,18 +122,33 @@ export function LaunchSpaceArea({
     };
   }, [event, datasetId, token]);
   useEffect(() => {
-    if (!selected && !routeOpen) return;
+    setMeetingPlace(selected?.outgoing?.place || "");
+    setMeetingMessage(selected?.outgoing?.message || "");
+    setEditing(false);
+    setPersonPhoto("");
+    if (!selected) return;
+    let active = true;
+    void fetch("/api/event-products/network", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event, datasetId, action: "launchProfilePhoto", accessToken: token, targetId: selected.id }),
+    }).then((response) => response.ok ? response.json() : null).then((data) => {
+      if (active && data?.photo) setPersonPhoto(data.photo);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [selected?.id, datasetId, event, token]);
+  useEffect(() => {
+    if (!selected && !routeOpen && !inbox) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const escape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { setSelected(null); setRouteOpen(false); }
+      if (e.key === "Escape") { setSelected(null); setRouteOpen(false); setInbox(false); }
     };
     window.addEventListener("keydown", escape);
     return () => {
       document.body.style.overflow = previous;
       window.removeEventListener("keydown", escape);
     };
-  }, [selected?.id, routeOpen]);
+  }, [selected?.id, routeOpen, inbox]);
   async function introduce(person: Person) {
     setSending(true);
     setError("");
@@ -131,6 +156,7 @@ export function LaunchSpaceArea({
       const rows = await request(person.id);
       setPeople(rows);
       setSelected(rows.find((p) => p.id === person.id) || null);
+      setEditing(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "İstek gönderilemedi");
     } finally {
@@ -142,12 +168,29 @@ export function LaunchSpaceArea({
       .toLocaleLowerCase("tr-TR")
       .includes(query.toLocaleLowerCase("tr-TR")),
   );
-  const suggested = people.filter((person) => !person.isSelf && !person.sent).slice(0, 3);
+  const self = people.find((person) => person.isSelf);
+  const words = (value: string) => new Set(value.toLocaleLowerCase("tr-TR").match(/[\p{L}]{4,}/gu) || []);
+  const needs = words(self?.needs || "");
+  const score = (person: Person) => [...words(`${person.offers.join(" ")} ${person.offersDetail}`)]
+    .filter((word) => needs.has(word)).length;
+  const suggested = people.filter((person) => !person.isSelf && !person.sent)
+    .sort((a, b) => score(b) - score(a)).slice(0, 3);
+  const requests = people.filter((person) => person.sent || person.received);
+  const formatTime = (value: string) => new Intl.DateTimeFormat("tr-TR", {
+    dateStyle: "short", timeStyle: "short", timeZone: "Europe/Istanbul",
+  }).format(new Date(value));
   const incoming = people.filter((p) => p.received && !p.sent);
   return (
     <div className="ls-space-area">
       <LaunchEventHeader flow={flow} avatar={avatar} initials={firstName[0]} />
       <p className="ls-eyebrow">Hoş geldin, {firstName}</p>
+      <button className="ls-secondary ls-dialog-action" onClick={() => {
+        setInbox(true);
+        void request().then(setPeople).catch(() => {});
+      }}>
+        <Users size={17} /> Tanışma isteklerim {incoming.length > 0 && <strong>{incoming.length}</strong>}
+        <ArrowRight size={16} />
+      </button>
       <details className="ls-panel ls-area-info" open>
         <summary>Etkinlik bilgileri</summary>
         <p className="ls-muted ls-flow-copy">{flow.welcomeText}</p>
@@ -276,13 +319,31 @@ export function LaunchSpaceArea({
             aria-label={flow.routeLabel} onClick={(event) => event.stopPropagation()}>
             <button autoFocus className="ls-profile-close" aria-label="Rotayı kapat" onClick={() => setRouteOpen(false)}><X /></button>
             <h2>{flow.routeLabel}</h2>
-            <p>{suggested.length ? "Bu kişilerle tanışmak iyi bir başlangıç olabilir." : "Yeni katılımcılar geldikçe tanışabileceğin kişiler burada görünecek."}</p>
-            {suggested.map((person) => (
-              <button key={person.id} className="ls-secondary ls-dialog-action" onClick={() => {
+            <p>{suggested.length ? "Etkinlikte aradığın bağlantılardan başla. Bir adım seç, profili incele ve tanışmak için yer öner." : "Yeni katılımcılar geldikçe tanışabileceğin kişiler burada görünecek."}</p>
+            {suggested.map((person, index) => (
+              <button key={person.id} className="ls-secondary ls-route-step" onClick={() => {
                 setRouteOpen(false);
                 setSelected(person);
-              }}><span>{person.name}</span> <ArrowRight size={15} /></button>
+              }}><span className="ls-route-step-number">{index + 1}</span><span><strong>{person.name}</strong><small>{person.offers.join(" · ")}</small></span><ArrowRight size={16} /></button>
             ))}
+          </section>
+        </div>
+      )}
+      {inbox && !selected && (
+        <div className="ls-person-overlay" onClick={() => setInbox(false)}>
+          <section className="ls-profile-sheet" role="dialog" aria-modal="true" aria-label="Tanışma isteklerim" onClick={(event) => event.stopPropagation()}>
+            <button autoFocus className="ls-profile-close" aria-label="İstekleri kapat" onClick={() => setInbox(false)}><X /></button>
+            <h2>Tanışma isteklerim</h2>
+            {requests.length === 0 && <p>Henüz tanışma isteğin yok.</p>}
+            {requests.map((person) => {
+              const request = person.incoming || person.outgoing;
+              return <button key={person.id} className="ls-secondary ls-route-step" onClick={() => setSelected(person)}>
+                <Users size={16} /><span><strong>{person.name}</strong><small>
+                  {person.sent && person.received ? "Karşılıklı" : person.received ? "Gelen istek" : "Gönderdiğin istek"}
+                  {request && ` · ${formatTime(request.at)}`}
+                </small></span><ArrowRight size={16} />
+              </button>;
+            })}
           </section>
         </div>
       )}
@@ -304,7 +365,7 @@ export function LaunchSpaceArea({
             >
               <X />
             </button>
-            <span className="ls-people-avatar">{selected.name[0]}</span>
+            <span className="ls-people-avatar">{personPhoto ? <img src={personPhoto} alt="" /> : selected.name[0]}</span>
             {!selected.isSelf && (
               <button className="ls-secondary ls-dialog-action" disabled={reasonPending}
                 onClick={() => void showReason(selected)}>
@@ -319,31 +380,38 @@ export function LaunchSpaceArea({
             <p>{selected.offersDetail || selected.offers.join(" · ")}</p>
             {selected.needs && <><small>BU BULUŞMADA ARADIĞI</small><p>{selected.needs}</p></>}
             {!selected.isSelf && (
-              <>
-                <button
-                  className="ls-primary ls-dialog-action"
-                  disabled={sending || selected.sent}
-                  onClick={() => void introduce(selected)}
-                >
-                  {sending ? (
-                    "Gönderiliyor…"
-                  ) : selected.sent && selected.received ? (
-                    <>
-                      <Check size={17} /> Tanışma karşılıklı
-                    </>
-                  ) : selected.sent ? (
-                    "Tanışma isteğin iletildi"
-                  ) : selected.received ? (
-                    "Ben de tanışmak isterim"
-                  ) : (
-                    "Tanışmak isterim"
-                  )}
-                </button>
-                <p className="ls-caption">
-                  Karşılıklı tanışma isteğinde kodlarınızla birbirinizi bulabilirsiniz. Match grubun
-                  aynı kalır.
-                </p>
-              </>
+              <div className="ls-introduction-actions">
+                {[["Gelen istek", selected.incoming], ["Gönderdiğin istek", selected.outgoing]].map(([label, proposal]) => {
+                  const detail = proposal as Proposal | undefined;
+                  if (!detail) return null;
+                  return <div className="ls-proposal" key={String(label)}>
+                    <strong>{String(label)}</strong>
+                    <small>{formatTime(detail.at)}{detail.updatedAt && detail.updatedAt !== detail.at ? ` · Düzenlendi ${formatTime(detail.updatedAt)}` : ""}</small>
+                    {detail.place && <p>Buluşma yeri · {detail.place}</p>}
+                    {detail.message && <p>{detail.message}</p>}
+                  </div>;
+                })}
+                {!editing ? (
+                  <button className="ls-primary ls-dialog-action" onClick={() => {
+                    if (!selected.sent) setMeetingPlace(selected.incoming?.place || "");
+                    setEditing(true);
+                  }}>
+                    {selected.sent ? "Mesajı ve konumu düzenle" : selected.received ? "Ben de tanışmak isterim" : "Tanışmak isterim"}
+                  </button>
+                ) : (
+                  <form className="ls-form" onSubmit={(event) => { event.preventDefault(); void introduce(selected); }}>
+                    <label>Buluşma yeri
+                      <input maxLength={120} required placeholder="Örn. girişteki karşılama masası" value={meetingPlace} onChange={(event) => setMeetingPlace(event.target.value)} />
+                    </label>
+                    <label>Seni nasıl tanısın?
+                      <textarea maxLength={300} required placeholder="Örn. Üstümde lacivert ceket var, sahnenin sağındayım." value={meetingMessage} onChange={(event) => setMeetingMessage(event.target.value)} />
+                    </label>
+                    <button className="ls-primary ls-dialog-action" disabled={sending || !meetingPlace.trim() || !meetingMessage.trim()}>{sending ? "Kaydediliyor…" : selected.sent ? "Değişiklikleri kaydet" : "İsteği gönder"}</button>
+                    <button type="button" className="ls-secondary ls-dialog-action" onClick={() => setEditing(false)}>Vazgeç</button>
+                  </form>
+                )}
+                {error && <p role="alert">{error}</p>}
+              </div>
             )}
           </section>
         </div>
