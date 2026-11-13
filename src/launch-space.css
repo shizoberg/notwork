@@ -1758,3 +1758,12 @@
 .ls-vote-results ul { padding: 0; margin: 0; list-style: none; }
 .ls-vote-results li { display: flex; justify-content: space-between; gap: 10px; padding-block: 9px; border-top: 1px solid var(--ls-line); }
 .ls-vote-results li strong { flex-shrink: 0; color: var(--ls-blue); font-size: 13px; }
+
+/* Participant results share the stage chart's five colors and proportional fills. */
+.ls-vote-results .ls-panel { padding: 16px; }
+.ls-vote-results .ls-result-bars { margin-top: 16px; gap: 10px; }
+.ls-vote-results .ls-result-bar { min-height: 76px; padding: 14px 16px; gap: 12px; }
+.ls-vote-results .ls-result-name { font-size: clamp(17px, 5vw, 23px); }
+.ls-vote-results .ls-result-value { min-width: 60px; }
+.ls-vote-results .ls-result-value strong { font-size: 26px; }
+.ls-vote-results .ls-result-value > span { font-size: 12px; }

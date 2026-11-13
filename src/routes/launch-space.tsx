@@ -256,7 +256,7 @@ function LaunchSpace() {
       active = false;
       clearInterval(timer);
     };
-  }, [tab, token]);
+  }, [tab, token, dataset?.id]);
   useEffect(() => {
     if (!group || tab !== "match") {
       setMessages([]);
@@ -367,7 +367,7 @@ function LaunchSpace() {
       current = false;
       clearInterval(timer);
     };
-  }, [tab, token]);
+  }, [tab, token, dataset?.id]);
   async function rotate() {
     if (!group) return;
     setBusy(true);
@@ -790,14 +790,24 @@ function LaunchSpace() {
                         <section key={question.id} className="ls-panel">
                           <h2>{question.title}</h2>
                           <p className="ls-caption">{total} oy</p>
-                          <ul>
-                            {counts.map(({ label, count }) => (
-                              <li key={label}>
-                                <span>{label}</span>
-                                <strong>{count} oy · {total ? Math.round(count / total * 100) : 0}%</strong>
-                              </li>
-                            ))}
-                          </ul>
+                          <div className="ls-result-bars">
+                            {counts.map(({ label, count }, index) => {
+                              const percent = total ? count / total * 100 : 0;
+                              return (
+                                <div className="ls-result-bar" key={label} role="meter"
+                                  aria-label={label} aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}
+                                  aria-valuetext={`${count} oy, yüzde ${Math.round(percent)}`}>
+                                  <div className={`ls-result-fill ls-result-color-${index % 5}`}
+                                    style={{ width: `${percent}%` }} aria-hidden="true" />
+                                  <span className="ls-result-name">{label}</span>
+                                  <span className="ls-result-value">
+                                    <strong>{Math.round(percent)}<small>%</small></strong>
+                                    <span>{count} oy</span>
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </section>
                       ))}
                     </div>
