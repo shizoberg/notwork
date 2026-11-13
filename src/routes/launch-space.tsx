@@ -597,6 +597,7 @@ function LaunchSpace() {
                     {flow.apps.map((app) => (
                       <button
                         key={app}
+                        data-app={app}
                         onClick={() => {
                           setError("");
                           if (app === "poll") openVotes();
