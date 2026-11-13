@@ -1,5 +1,6 @@
+import { LaunchAvatar } from "./LaunchAvatar";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import { ArrowRight, DoorOpen, Network, Presentation, Route, Search, Users, X } from "lucide-react";
+import { Bell, ArrowRight, DoorOpen, Network, Presentation, Route, Search, Users, X } from "lucide-react";
 import { LaunchEventHeader } from "./LaunchEventHeader";
 import type { LaunchFlow } from "@/lib/launch-flow";
 
@@ -122,6 +123,13 @@ export function LaunchSpaceArea({
     };
   }, [event, datasetId, token]);
   useEffect(() => {
+    let active = true;
+    const timer = setInterval(() => {
+      if (!document.hidden) void request().then((rows) => { if (active) setPeople(rows); }).catch(() => {});
+    }, 15000);
+    return () => { active = false; clearInterval(timer); };
+  }, [event, datasetId, token]);
+  useEffect(() => {
     setMeetingPlace(selected?.outgoing?.place || "");
     setMeetingMessage(selected?.outgoing?.message || "");
     setEditing(false);
@@ -188,10 +196,10 @@ export function LaunchSpaceArea({
         setInbox(true);
         void request().then(setPeople).catch(() => {});
       }}>
-        <Users size={17} /> Tanışma isteklerim {incoming.length > 0 && <strong>{incoming.length}</strong>}
+        <Users size={17} /> Tanışma isteklerim {incoming.length > 0 && <span className="ls-inbox-badge" aria-label={`${incoming.length} yeni tanışma isteği`}><Bell size={15} /><strong>{incoming.length}</strong></span>}
         <ArrowRight size={16} />
       </button>
-      <details className="ls-panel ls-area-info" open>
+      <details className="ls-panel ls-area-info">
         <summary>Etkinlik bilgileri</summary>
         <p className="ls-muted ls-flow-copy">{flow.welcomeText}</p>
         <ul className="ls-nodes-votes">
@@ -223,6 +231,8 @@ export function LaunchSpaceArea({
           </button>
         </div>
       )}
+      <section className="ls-directory-product" aria-label="Etkinliktekiler">
+      <p className="ls-eyebrow">Etkinliktekiler</p>
       <div className="ls-directory-heading">
         <h2>Birlikte aynı alandayız.</h2>
         <button
@@ -270,15 +280,7 @@ export function LaunchSpaceArea({
               onClick={() => setSelected(p)}
               aria-label={`${p.name}${p.isSelf ? " · sen" : ""} · profili aç`}
             >
-              <span className="ls-people-avatar">
-                {p.name
-                  .split(" ")
-                  .filter(Boolean)
-                  .map((n) => n[0])
-                  .slice(0, 2)
-                  .join("")
-                  .toLocaleUpperCase("tr-TR")}
-              </span>
+              <LaunchAvatar event={event} datasetId={datasetId} token={token} id={p.id} name={p.name} className="ls-people-avatar" />
               <strong>
                 {p.name}
                 {p.isSelf ? " · sen" : ""}
@@ -313,6 +315,7 @@ export function LaunchSpaceArea({
       {!loading && filtered.length === 0 && (
         <p className="ls-muted">Bu aramada kimseyi bulamadık.</p>
       )}
+      </section>
       {routeOpen && (
         <div className="ls-person-overlay" onClick={() => setRouteOpen(false)}>
           <section className="ls-profile-sheet" role="dialog" aria-modal="true"
@@ -320,11 +323,11 @@ export function LaunchSpaceArea({
             <button autoFocus className="ls-profile-close" aria-label="Rotayı kapat" onClick={() => setRouteOpen(false)}><X /></button>
             <h2>{flow.routeLabel}</h2>
             <p>{suggested.length ? "Etkinlikte aradığın bağlantılardan başla. Bir adım seç, profili incele ve tanışmak için yer öner." : "Yeni katılımcılar geldikçe tanışabileceğin kişiler burada görünecek."}</p>
-            {suggested.map((person, index) => (
+            {suggested.map((person) => (
               <button key={person.id} className="ls-secondary ls-route-step" onClick={() => {
                 setRouteOpen(false);
                 setSelected(person);
-              }}><span className="ls-route-step-number">{index + 1}</span><span><strong>{person.name}</strong><small>{person.offers.join(" · ")}</small></span><ArrowRight size={16} /></button>
+              }}><LaunchAvatar event={event} datasetId={datasetId} token={token} id={person.id} name={person.name} /><span><strong>{person.name}</strong><small>{person.offers.join(" · ")}</small></span><ArrowRight size={16} /></button>
             ))}
           </section>
         </div>

@@ -1,3 +1,4 @@
+import { LaunchAvatar } from "@/components/launch-space/LaunchAvatar";
 import { fetchActiveLaunchDataset, type ActiveLaunchDataset } from "@/lib/launch-dataset";
 import { defaultLaunchFlow, getLaunchFlow } from "@/lib/launch-flow";
 import { createFileRoute } from "@tanstack/react-router";
@@ -581,7 +582,7 @@ function LaunchSpace() {
                   datasetId={dataset?.id}
                 >
                   <div className="ls-person">
-                    <div className="ls-avatar">{registration.profile.firstName[0]}</div>
+                    <div className="ls-avatar">{avatar ? <img src={avatar} alt="Profil fotoğrafın" /> : registration.profile.firstName[0]}</div>
                     <div>
                       <strong>
                         {registration.profile.firstName} {registration.profile.lastName}
@@ -655,7 +656,7 @@ function LaunchSpace() {
                     <div className="ls-members">
                       {group.members.map((m) => (
                         <div key={m.participantId}>
-                          <span className="ls-avatar">{m.name[0]}</span>
+                          <LaunchAvatar event={novemberEventSlug} datasetId={dataset?.id} token={token} id={m.participantId} name={m.name} />
                           <strong>
                             {m.name}
                             {m.isCurrentUser ? " · sen" : ""}

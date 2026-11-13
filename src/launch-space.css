@@ -1767,3 +1767,21 @@
 .ls-vote-results .ls-result-value { min-width: 60px; }
 .ls-vote-results .ls-result-value strong { font-size: 26px; }
 .ls-vote-results .ls-result-value > span { font-size: 12px; }
+
+/* Clear product accents and recognizable, cropped faces. */
+.launch-space .ls-avatar { overflow: hidden; flex-shrink: 0; }
+.launch-space .ls-avatar img, .launch-space .ls-people-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.launch-space .ls-members .ls-avatar { width: clamp(58px, 18vw, 88px); height: clamp(58px, 18vw, 88px); margin-inline: auto; }
+.launch-space .ls-route-card { background: #241c30; border-color: #655078; }
+.launch-space .ls-route-card h3, .launch-space .ls-route-card .ls-dialog-action { color: #e2c6fa; }
+.launch-space .ls-route-card .ls-dialog-action { background: #362741; border-color: #735588; }
+.launch-space .ls-apps > button { border-color: #675b32; background: #242218; }
+.launch-space .ls-apps .ls-app-icon { color: #f2d77b; background: #40391e; }
+.launch-space .ls-apps h2 { color: #f2d77b; }
+.launch-space .ls-directory-product { border: 1px solid #365259; background: #111c20; border-radius: 24px; padding: clamp(14px, 3vw, 24px); margin-top: 24px; }
+.launch-space .ls-directory-heading { align-items: center; gap: 12px; }
+.launch-space .ls-directory-heading h2 { font-size: clamp(21px, 5.5vw, 30px); }
+.launch-space .ls-people-search input { border: 0; background: transparent; box-shadow: none; padding: 0; border-radius: 0; min-width: 0; }
+.launch-space .ls-inbox-badge { display: inline-flex; align-items: center; gap: 5px; background: #f2d77b; color: #211d10; border-radius: 999px; padding: 4px 9px; margin-left: auto; }
+@media (max-width: 440px) { .launch-space .ls-directory-product .ls-people-grid { column-gap: 8px; } }
+.launch-space .ls-route-step .ls-avatar { width: 44px; height: 44px; font-size: 16px; }
