@@ -108,6 +108,7 @@ export function selectMatchCandidates<T extends MatchableRegistration>(
   rows: T[],
   seenParticipantIds: Set<string>,
   round: number,
+  compatible: (a: T, b: T) => boolean = () => true,
 ) {
   const ranked: ScoredMatchCandidate<T>[] = rows
     .map((row) => ({
@@ -133,6 +134,7 @@ export function selectMatchCandidates<T extends MatchableRegistration>(
     for (let secondIndex = firstIndex + 1; secondIndex < pool.length; secondIndex += 1) {
       const first = pool[firstIndex];
       const second = pool[secondIndex];
+      if (!compatible(first.row, second.row)) continue;
       const repeatPenalty = (first.seen ? 1_000 : 0) + (second.seen ? 1_000 : 0);
       const score =
         first.score +

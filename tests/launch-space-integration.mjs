@@ -317,22 +317,48 @@ try {
   const peers = g.members
     .filter((m) => m.participantId !== member.participant.id)
     .map((m) => participants.find((p) => p.participant.id === m.participantId));
-  r = await vote(peers[0]);
-  assert.equal(r.data.released, false);
-  assert.equal(r.data.approvedCount, 2);
-  assert.equal(
-    (await call(handler, { action: "match", accessToken: member.accessToken })).data.group.id,
-    g.id,
-  );
-  r = await vote(peers[1]);
-  assert.equal(r.data.released, true);
-  assert.equal(r.data.approvedCount, 3);
+  const approvals = await Promise.all([vote(peers[0]), vote(peers[1])]);
+  assert.ok(approvals.every((response) => response.status === 200));
+  assert.deepEqual(approvals.map(({ data }) => data.approvedCount).sort(), [2, 3]);
+  assert.equal(approvals.filter(({ data }) => data.released).length, 1);
   assert.ok(
     (await call(handler, { action: "chatRead", accessToken: member.accessToken, groupId: g.id }))
       .status >= 400,
   );
   r = await call(handler, { action: "match", accessToken: otherMember.accessToken });
   assert.equal(r.data.group.id, otherGroup.id);
+  const formerMembers = new Set(g.members.map((person) => person.participantId));
+  const initialGroupByPerson = new Map(grouped.flatMap((group) =>
+    group.members.map((person) => [person.participantId, group.id]),
+  ));
+  const rematches = await Promise.all([member, ...peers].map((person) =>
+    call(handler, { action: "match", accessToken: person.accessToken }),
+  ));
+  assert.ok(rematches.every(({ status }) => status === 200));
+  const newGroups = [...new Map(rematches.flatMap(({ data }) => data.group ? [[data.group.id, data.group]] : [])).values()];
+  assert.equal(newGroups.length, 1, "Only one newly compatible trio fits the five free participants");
+  assert.equal(newGroups[0].members.filter((person) => formerMembers.has(person.participantId)).length, 1);
+  assert.equal(newGroups[0].members.length, 3);
+  const rematched = [member, ...peers].find((person) =>
+    newGroups[0].members.some((entry) => entry.participantId === person.participant.id),
+  );
+  assert.equal((await vote(rematched)).status, 200);
+  const retained = await call(handler, { action: "match", accessToken: rematched.accessToken });
+  assert.equal(retained.data.group.id, newGroups[0].id);
+  assert.equal(retained.data.group.rematchApprovedParticipantIds.length, 0);
+
+  assert.ok(newGroups[0].members.every((a, index, members) => members.slice(index + 1).every((b) =>
+    !initialGroupByPerson.has(a.participantId) ||
+    initialGroupByPerson.get(a.participantId) !== initialGroupByPerson.get(b.participantId),
+  )));
+  const waiting = [member, ...peers].filter((person) =>
+    !newGroups[0].members.some((m) => m.participantId === person.participant.id),
+  );
+  assert.equal(waiting.length, 2);
+  for (const person of waiting) {
+    const result = await call(handler, { action: "match", accessToken: person.accessToken });
+    assert.equal(result.data.group, null);
+  }
   await registry.updateEvent(event.id, {
     products: { matchlab: { enabled: false, visible: false } },
   });
@@ -415,6 +441,19 @@ try {
     200,
   );
   assert.equal((await datasets.getLaunchBulletin(current, original.active)).announcement, null);
+  await registry.updateEvent(event.id, { products: { matchlab: { enabled: true, visible: true } } });
+  const lateArrival = () => call(handler, {
+    action: "launchGuest", firstName: "Son Katılımcı",
+    eventConsent: true, datasetId: original.active.id,
+  });
+  assert.equal((await lateArrival()).status, 201);
+  assert.equal((await call(handler, { action: "match", accessToken: waiting[0].accessToken })).data.group, null);
+  assert.equal((await lateArrival()).status, 201);
+  const lateMatch = await call(handler, { action: "match", accessToken: waiting[0].accessToken });
+  assert.equal(lateMatch.status, 200);
+  assert.equal(lateMatch.data.group.members.length, 3);
+  assert.ok(!lateMatch.data.group.members.some((person) => person.participantId === waiting[1].participant.id));
+  assert.equal((await call(handler, { action: "match", accessToken: waiting[1].accessToken })).data.group, null);
   console.log(
     `PASS: ${participantCount} sequential registrations, ${groupCount} disjoint groups, ${participantCount - matchedCount} waiting, concurrent Match reads and ballots, private chat, stage publication and dataset isolation. No production data/AI.`,
   );

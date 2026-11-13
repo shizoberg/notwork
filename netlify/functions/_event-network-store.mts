@@ -17,7 +17,7 @@ import { scorePair, selectMatchCandidates, stableTieBreaker } from "./_matchmaki
 import { syncMemberEventCode } from "./_member-profile-store.mjs";
 import { participantDisplayCode } from "./_participant-code.mjs";
 import { matchChatKey } from "./_match-chat.mjs";
-import { matchGroupName } from "./_match-group-name.mjs";
+import { isLaunchGroupName, matchGroupName } from "./_match-group-name.mjs";
 import { generateIntroductionReason, generateMatchAnalysis, rerankMatchCandidates } from "./_ntw-ai.mjs";
 
 type EventNetworkProfile = {
@@ -701,7 +701,7 @@ async function getActiveMatch(
   const state = await readAtomicState(
     store,
     `${getNetworkPrefix()}/room-index-v2.json`,
-    emptyRooms<StoredActiveMatch>,
+    emptyMatchRooms,
   );
   return state?.groups[state.members[participantId]] || null;
 }
@@ -713,6 +713,22 @@ async function hasActiveMatch(
   return Boolean(await getActiveMatch(store, participantId));
 }
 
+type MatchRooms = RoomIndex<StoredActiveMatch> & { pairHistory?: Record<string, true>; rounds?: Record<string, number> };
+const emptyMatchRooms = (): MatchRooms => emptyRooms<StoredActiveMatch>();
+const launchNamesEnabled = () => getNetworkEventSlug() === "14-kasim-2026";
+const pairKey = (a: string, b: string) => a < b ? `${a}:${b}` : `${b}:${a}`;
+
+function groupPairs(ids: string[]) {
+  return ids.flatMap((a, index) => ids.slice(index + 1).map((b) => pairKey(a, b)));
+}
+
+function displayGroupName(match: StoredActiveMatch) {
+  const launch = launchNamesEnabled();
+  return match.groupName && (!launch || isLaunchGroupName(match.groupName))
+    ? match.groupName
+    : matchGroupName(match.id, [], launch);
+}
+
 async function writeActiveMatch(
   store: ReturnType<typeof getEventNetworkStore>,
   match: StoredActiveMatch,
@@ -720,14 +736,22 @@ async function writeActiveMatch(
   return atomicState(
     store,
     `${getNetworkPrefix()}/room-index-v2.json`,
-    emptyRooms<StoredActiveMatch>,
+    emptyMatchRooms,
     (state) => {
       if (match.participantIds.some((id) => state.members[id])) return false;
-      match.groupName = matchGroupName(
-        match.id,
-        Object.values(state.groups).map((group) => group.groupName || matchGroupName(group.id)),
-      );
-      return claimRoom(state, match);
+      const launch = launchNamesEnabled();
+      const pairs = launch ? groupPairs(match.participantIds) : [];
+      if (pairs.some((key) => state.pairHistory?.[key])) return false;
+      match.groupName = matchGroupName(match.id, Object.values(state.groups).map(displayGroupName), launch);
+      if (!claimRoom(state, match)) return false;
+      if (launch) {
+        state.pairHistory ||= {};
+        for (const key of pairs) state.pairHistory[key] = true;
+        state.rounds ||= {};
+        match.round = Math.max(match.round, ...match.participantIds.map((id) => (state.rounds?.[id] ?? 0) + 1));
+        for (const id of match.participantIds) state.rounds[id] = match.round;
+      }
+      return true;
     },
   );
 }
@@ -752,7 +776,7 @@ async function buildActiveMatchGroup(
 
   return {
     id: match.id,
-    groupName: match.groupName || matchGroupName(match.id),
+    groupName: displayGroupName(match),
     groupSize: rows.length,
     round: match.round,
     score: match.score,
@@ -1134,7 +1158,7 @@ export async function listActiveMatchGroups(
   const state = await readAtomicState(
     store,
     `${getNetworkPrefix()}/room-index-v2.json`,
-    emptyRooms<StoredActiveMatch>,
+    emptyMatchRooms,
   );
   const names = new Map(
     registrations.map((registration) => [
@@ -1144,7 +1168,7 @@ export async function listActiveMatchGroups(
   );
   return Object.values(state?.groups || {}).map((group) => ({
     id: group.id,
-    groupName: group.groupName || matchGroupName(group.id),
+    groupName: displayGroupName(group),
     round: group.round,
     score: group.score,
     reason: group.reason,
@@ -1328,7 +1352,7 @@ async function matchRegistration(
     const roomIndex = await readAtomicState(
       store,
       `${getNetworkPrefix()}/room-index-v2.json`,
-      emptyRooms<StoredActiveMatch>,
+      emptyMatchRooms,
     );
     const currentGroupId = roomIndex?.members[current.participant.id];
     const currentActiveMatch = currentGroupId ? roomIndex?.groups[currentGroupId] : null;
@@ -1342,8 +1366,11 @@ async function matchRegistration(
     }
 
     const activeParticipantIds = new Set(Object.keys(roomIndex?.members || {}));
+    const strict = launchNamesEnabled();
+    const compatible = (a: EventNetworkRegistration, b: EventNetworkRegistration) =>
+      !strict || !roomIndex.pairHistory?.[pairKey(a.participant.id, b.participant.id)];
     const availableCandidates = candidateRows.filter(
-      (candidate) => !activeParticipantIds.has(candidate.participant.id),
+      (candidate) => !activeParticipantIds.has(candidate.participant.id) && compatible(current, candidate),
     );
     waitingCount = availableCandidates.length + 1;
     if (availableCandidates.length < 2) break;
@@ -1358,6 +1385,7 @@ async function matchRegistration(
       availableCandidates,
       cursor.seen,
       nextRound,
+      compatible,
     );
     let selected = deterministicSelected;
     const aiAllowed = batch ? batch.aiRemaining > 0 : rows.length <= 6;
@@ -1389,7 +1417,7 @@ async function matchRegistration(
           const aiSelected = aiIds
             .map((id) => aiShortlist.find((candidate) => candidate.row.participant.id === id))
             .filter(Boolean) as typeof aiShortlist;
-          if (aiSelected.length === groupSize - 1) selected = aiSelected;
+          if (aiSelected.length === groupSize - 1 && compatible(aiSelected[0].row, aiSelected[1].row)) selected = aiSelected;
         }
       }
     }
@@ -1440,7 +1468,7 @@ async function matchRegistration(
           await atomicState(
             store,
             `${getNetworkPrefix()}/room-index-v2.json`,
-            emptyRooms<StoredActiveMatch>,
+            emptyMatchRooms,
             (state) => {
               if (state.groups[groupId]) {
                 state.groups[groupId].aiAnalysis = aiAnalysis;
@@ -1463,15 +1491,16 @@ async function matchRegistration(
     }
 
     try {
-      await rememberGroupForEveryParticipant(store, groupRegistrations);
+      if (!launchNamesEnabled()) await rememberGroupForEveryParticipant(store, groupRegistrations);
+
     } catch (error) {
       console.error("Match geçmişi yazılamadı", error);
     }
     const group: EventNetworkMatchGroup = {
       id: groupId,
-      groupName: storedMatch.groupName || matchGroupName(groupId),
+      groupName: displayGroupName(storedMatch),
       groupSize,
-      round: nextRound,
+      round: storedMatch.round,
       score,
       reason,
       aiAnalysis: storedMatch.aiAnalysis,
@@ -1586,12 +1615,16 @@ export async function rotateActiveMatchByToken(
   if (!groupId) throw new Error("Grup kimliği gerekli");
   const activeMatch = await getActiveMatch(store, registration.participant.id);
   if (!activeMatch) return { ok: true as const, released: false };
-  if (activeMatch.id !== groupId) throw new Error("Grubun değişti. Yeni eşleşmeni aç.");
-  await ensureGroupSeenForEveryParticipant(store, activeMatch);
+  const strict = launchNamesEnabled();
+  if (activeMatch.id !== groupId) {
+    if (strict) return { ok: true as const, released: false };
+    throw new Error("Grubun değişti. Yeni eşleşmeni aç.");
+  }
+  if (!strict) await ensureGroupSeenForEveryParticipant(store, activeMatch);
   return atomicState(
     store,
     `${getNetworkPrefix()}/room-index-v2.json`,
-    emptyRooms<StoredActiveMatch>,
+    emptyMatchRooms,
     (state) => {
       const group = state.groups[groupId];
       if (
@@ -1607,7 +1640,13 @@ export async function rotateActiveMatchByToken(
         group.participantIds.includes(id),
       );
       const all = group.participantIds.every((id) => approved.includes(id));
-      if (all) releaseRoom(state, registration.participant.id, groupId);
+      if (all) {
+        if (strict) {
+          state.pairHistory ||= {};
+          for (const key of groupPairs(group.participantIds)) state.pairHistory[key] = true;
+        }
+        releaseRoom(state, registration.participant.id, groupId);
+      }
       return {
         ok: true as const,
         released: all,

@@ -77,6 +77,7 @@ function LaunchSpace() {
   const [editingVote, setEditingVote] = useState(false);
   const [voteReminder, setVoteReminder] = useState(false);
   const [selfieStatus, setSelfieStatus] = useState("");
+  const [selfie, setSelfie] = useState("");
   const [consent, setConsent] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -222,7 +223,7 @@ function LaunchSpace() {
         ? ""
         : (r as { waitingReason?: string }).waitingReason === "admin"
           ? "Herkes hazır olduğunda organizatör eşleştirmeyi başlatacak."
-          : `Havuzda ${r.waitingCount ?? 1} kişi var. Üç kişi olduğunda eşleşmen hazır olacak.`,
+          : `Havuzda ${r.waitingCount ?? 1} kişi var. Uygun bir üçlü oluştuğunda eşleşmen hazır olacak.`,
     );
   }
   useEffect(() => {
@@ -372,13 +373,15 @@ function LaunchSpace() {
       if (!context) { image.close(); throw Error("Fotoğraf işlenemedi."); }
       context.drawImage(image, 0, 0, canvas.width, canvas.height);
       image.close();
-      await network("groupSelfie", { groupId: group.id, photoDataUrl: canvas.toDataURL("image/jpeg", .7) });
+      const photo = canvas.toDataURL("image/jpeg", .7);
+      await network("groupSelfie", { groupId: group.id, photoDataUrl: photo });
+      setSelfie(photo);
       setSelfieStatus("Grup selfien kaydedildi.");
     } catch (error) {
       setSelfieStatus(error instanceof Error ? error.message : "Fotoğraf kaydedilemedi.");
     }
   }
-  useEffect(() => setSelfieStatus(""), [group?.id]);
+  useEffect(() => { setSelfieStatus(""); setSelfie(""); }, [group?.id]);
   return (
     <div className="launch-space">
       <header className="ls-header">
@@ -607,6 +610,7 @@ function LaunchSpace() {
                   </div>
                 ) : (
                   <>
+                    <section className="ls-panel ls-match-group" aria-label="Eşleşme grubun">
                     <div className="ls-match-heading">
                       <div>
                         <p className="ls-caption">SENİN GRUBUN</p>
@@ -616,15 +620,6 @@ function LaunchSpace() {
                         Grup adını büyüt
                       </button>
                     </div>
-                    {flow.showSelfie && (
-                      <div className="ls-group-selfie">
-                        <label><Camera size={17} /> Grup selfiesi <small>İsteğe bağlı</small>
-                          <input type="file" accept="image/*" capture="user"
-                            onChange={(event) => void uploadSelfie(event.target.files?.[0])} />
-                        </label>
-                        {selfieStatus && <p className="ls-caption" role="status">{selfieStatus}</p>}
-                      </div>
-                    )}
                     <div className="ls-members">
                       {group.members.map((m) => (
                         <div key={m.participantId}>
@@ -644,7 +639,11 @@ function LaunchSpace() {
                         </div>
                       ))}
                     </div>
-                    <p className="ls-muted">{group.aiAnalysis || group.reason}</p>
+                    <div className="ls-match-purpose">
+                      <h2>Grup amacı</h2>
+                      <p className="ls-muted">{group.aiAnalysis || group.reason}</p>
+                    </div>
+                    </section>
                     <section className="ls-chat">
                       <h2>
                         <MessageCircle size={18} />
@@ -696,10 +695,20 @@ function LaunchSpace() {
                         </button>
                       </form>
                     </section>
-                    <div className="ls-panel">
-                      <p className="ls-eyebrow">SOHBETİ BAŞLAT</p>
-                      <p>{group.conversationPrompt}</p>
-                    </div>
+                    <section className="ls-panel ls-rematch-panel">
+                      <h2>Yeni eşleşme</h2>
+                      {flow.showSelfie && (
+                        <div className="ls-group-selfie">
+                          <label className="ls-secondary ls-selfie-button">
+                            <Camera size={17} aria-hidden="true" /> Fotoğraf çek
+                            <input type="file" accept="image/*" capture="user" aria-label="Grup selfiesi"
+                              onChange={(event) => void uploadSelfie(event.target.files?.[0])} />
+                          </label>
+                          <p className="ls-caption">Grup selfiesi · isteğe bağlı</p>
+                          {selfie && <img className="ls-selfie-preview" src={selfie} alt="Grup selfiesi" />}
+                          {selfieStatus && <p className="ls-caption" role="status">{selfieStatus}</p>}
+                        </div>
+                      )}
                     <p className="ls-caption">
                       Yeni eşleşme: {(group.rematchApprovedParticipantIds || []).length}/
                       {group.members.length} onay. Grubunuz herkes onayladığında dağılır.
@@ -723,6 +732,7 @@ function LaunchSpace() {
                           : "Yeni eşleşmeyi onayla"}
                       <ArrowRight size={17} />
                     </button>
+                    </section>
                   </>
                 )}
               </section>
@@ -766,7 +776,7 @@ function LaunchSpace() {
                       }}>Oyumu değiştir</button>
                     )}
                     <button onClick={() => setTab("home")} className="ls-secondary">
-                      Alanıma dön
+                      My Space’e dön
                     </button>
                     </div>
                   </div>
@@ -859,7 +869,7 @@ function LaunchSpace() {
             <nav className="ls-nav" aria-label="Etkinlik uygulamaları">
               {(
                 [
-                  { id: "home", label: "Alanım", icon: UserRound },
+                  { id: "home", label: "My Space", icon: UserRound },
                   ...flow.apps.map((id) => ({
                     id,
                     label: id === "match" ? flow.matchLabel : flow.votesLabel,
