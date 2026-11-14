@@ -747,7 +747,6 @@ function LaunchSpace() {
                           <small className="ls-member-code">{m.publicCode}</small>
                           {m.jobTitle && <small className="ls-member-title" data-profile-field="title">{m.jobTitle}</small>}
                           {m.intro && <details className="ls-member-intro" data-profile-field="intro"><summary aria-label={`${m.name} tanıtımını aç`}>{m.intro}</summary><p>{m.intro}</p></details>}
-                          <small>{group.rematchApprovedParticipantIds?.includes(m.participantId) ? "✓ Onayladı" : "Onay bekleniyor"}</small>
                           {m.isPhotoOwner ? (
                             <span className="ls-photo-badge">
                               <Camera size={12} />
@@ -829,26 +828,14 @@ function LaunchSpace() {
                         </div>
                       )}
                     <p className="ls-caption">
-                      Yeni eşleşme: {(group.rematchApprovedParticipantIds || []).length}/
-                      {group.members.length} onay. Grubunuz herkes onayladığında dağılır.
+                      Ayrıldığında bu grup dağılır ve üyeler yeniden havuza döner. Diğer üyelerin onayı gerekmez.
                     </p>
                     <button
                       className="ls-secondary ls-full"
-                      disabled={
-                        busy ||
-                        (group.rematchApprovedParticipantIds || []).includes(
-                          registration.participant.id,
-                        )
-                      }
+                      disabled={busy}
                       onClick={() => void rotate()}
                     >
-                      {busy
-                        ? "Onayın kaydediliyor…"
-                        : (group.rematchApprovedParticipantIds || []).includes(
-                              registration.participant.id,
-                            )
-                          ? "Onayladın · diğer üyeler bekleniyor"
-                          : "Yeni eşleşmeyi onayla"}
+                      {busy ? "Yeni eşleşme aranıyor…" : "Gruptan ayrıl · yeni eşleşme bul"}
                       <ArrowRight size={17} />
                     </button>
                     </section>

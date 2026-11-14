@@ -1750,7 +1750,8 @@ export async function rotateActiveMatchByToken(
       const approved = group.rematchApprovedParticipantIds.filter((id) =>
         group.participantIds.includes(id),
       );
-      const all = group.participantIds.every((id) => approved.includes(id));
+      // Launchspace participants can leave immediately; absent members cannot block them.
+      const all = strict || group.participantIds.every((id) => approved.includes(id));
       if (all) {
         if (strict) {
           state.pairHistory ||= {};

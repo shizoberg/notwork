@@ -354,19 +354,13 @@ try {
     groupId: g.id,
   });
   assert.equal(r.status, 200);
-  assert.equal(r.data.released, false);
-  const vote = (p) =>
-    call(handler, { action: "rotateMatch", accessToken: p.accessToken, groupId: g.id });
-  r = await vote(member);
-  assert.equal(r.data.approvedCount, 1);
-  assert.equal(r.data.released, false);
+  assert.equal(r.data.released, true, "A single participant leaves without peer approval");
+  const vote = (p) => call(handler, { action: "rotateMatch", accessToken: p.accessToken, groupId: g.id });
   const peers = g.members
     .filter((m) => m.participantId !== member.participant.id)
     .map((m) => participants.find((p) => p.participant.id === m.participantId));
-  const approvals = await Promise.all([vote(peers[0]), vote(peers[1])]);
-  assert.ok(approvals.every((response) => response.status === 200));
-  assert.deepEqual(approvals.map(({ data }) => data.approvedCount).sort(), [2, 3]);
-  assert.equal(approvals.filter(({ data }) => data.released).length, 1);
+  const retries = await Promise.all([vote(member), vote(peers[0]), vote(peers[1])]);
+  assert.ok(retries.every(response => response.status === 200 && response.data.released === false), "Stale/repeated leave requests do not release another group");
   assert.ok(
     (await call(handler, { action: "chatRead", accessToken: member.accessToken, groupId: g.id }))
       .status >= 400,
