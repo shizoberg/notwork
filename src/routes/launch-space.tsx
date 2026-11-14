@@ -503,10 +503,11 @@ function LaunchSpace() {
         ) : signInLink || (deviceResume && !registration) ? (
           <section className="ls-enter">
             <LaunchEventHeader flow={flow} />
-            <form className="ls-form ls-panel" onSubmit={recoverSession}>
+            <form className="ls-form ls-panel ls-entry-form ls-return-form" onSubmit={recoverSession}>
               <h1>Etkinliğe geri dön</h1>
+              <p className="ls-entry-description">Kayıt olduğun e-postayla kaldığın yerden devam et.</p>
               {!signInLink && <label>E-posta
-                <input type="email" required autoComplete="email" value={email}
+                <input type="email" required autoComplete="email" placeholder="E-posta adresin" value={email}
                   onChange={(event) => setEmail(event.target.value)} />
               </label>}
               <button className="ls-primary" disabled={busy}>
@@ -520,7 +521,7 @@ function LaunchSpace() {
         ) : !registration ? (
           <section className="ls-enter">
             <LaunchEventHeader flow={flow} />
-            <form className="ls-form ls-panel" onSubmit={(event) => {
+            <form className="ls-form ls-panel ls-entry-form" onSubmit={(event) => {
               event.preventDefault();
               if (busy) return;
               if (registrationStep < 4) setRegistrationStep(registrationStep + 1);
