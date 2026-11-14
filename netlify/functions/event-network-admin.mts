@@ -8,6 +8,7 @@ import { readFile } from "node:fs/promises";
 import type { Config, Context } from "@netlify/functions";
 import {
   getEventNetworkDatasetInfo,
+  createLaunchRecovery,
   getMatchLaunchState,
   startMatchLaunch,
   processMatchLaunch,
@@ -45,7 +46,7 @@ export default async (request: Request, _context: Context) => {
       return new Response("Yetkisiz erişim", { status: 401 });
     if (scoped) {
       if (
-        !["matchReport", "matchReportPhoto", "list", "matchOverview", "startMatching", "processMatching", "repairCodes"].includes(
+        !["recoverParticipant", "matchReport", "matchReportPhoto", "list", "matchOverview", "startMatching", "processMatching", "repairCodes"].includes(
           input.action || "list",
         )
       )
@@ -66,6 +67,9 @@ export default async (request: Request, _context: Context) => {
         }
         if (input.datasetId && input.datasetId !== getEventNetworkDatasetInfo().datasetId)
           return new Response("Veri seti değişti. Sayfayı yenile.", { status: 409 });
+        if (input.action === "recoverParticipant") {
+          return Response.json(await createLaunchRecovery(store, input.participantId || ""), { headers: { "cache-control": "no-store, private" } });
+        }
         if (input.action === "startMatching" || input.action === "processMatching") {
           if (!eventIdentifier) return new Response("Etkinlik gerekli", { status: 400 });
           const matching =

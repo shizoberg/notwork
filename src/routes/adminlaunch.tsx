@@ -46,15 +46,16 @@ export function LaunchAdminPanel() {
     [error, setError] = useState(""),
     [count, setCount] = useState<number | null>(null),
     [busy, setBusy] = useState(false);
-  async function request(action: string) {
+  async function request(action: string, extra: Record<string, unknown> = {}) {
     const r = await fetch("/api/admin/event-products/network", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         action,
+        ...extra,
         event: novemberEventSlug,
         password,
-        datasetId: ["startMatching", "processMatching"].includes(action) ? datasetId : undefined,
+        datasetId: ["startMatching", "processMatching", "recoverParticipant"].includes(action) ? datasetId : undefined,
       }),
     });
     if (!r.ok) throw Error(await r.text());
@@ -62,6 +63,7 @@ export function LaunchAdminPanel() {
   }
   const [participants, setParticipants] = useState<
     Array<{
+      participant: { id: string };
       profile: { firstName: string; lastName: string };
       intro: string;
       jobTitle?: string;
@@ -73,6 +75,7 @@ export function LaunchAdminPanel() {
     "event" | "flow" | "match" | "poll" | "database" | "announcement" | "report"
   >("event");
   const [flow, setFlow] = useState(defaultLaunchFlow);
+  const [recovery, setRecovery] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
   const [username, setUsername] = useState("");
   async function auth(action: string) {
@@ -253,6 +256,11 @@ export function LaunchAdminPanel() {
                           {p.intro && <p className="ls-caption">{p.intro}</p>}
                           {p.offersDetail && <p className="ls-caption">Katkı: {p.offersDetail}</p>}
                           {p.needs && <p className="ls-caption">Aradığı: {p.needs}</p>}
+                          <button className="ls-secondary" type="button" onClick={async () => {
+                            try { const result = await request("recoverParticipant", { participantId: p.participant.id }); setRecovery(values => ({ ...values, [p.participant.id]: result.path })); }
+                            catch(e) { setError(e instanceof Error ? e.message : "Giriş kurtarılamadı"); }
+                          }}>Girişi kurtar · {p.profile.firstName} {p.profile.lastName}</button>
+                          {recovery[p.participant.id] && <p><a className="ls-secondary" href={recovery[p.participant.id]} target="_blank" rel="noreferrer">{p.profile.firstName} için oturumu aç ↗</a><small> Tek kullanımlık · 15 dakika · yalnızca bu katılımcıyla paylaş.</small></p>}
                         </article>
                       ))}
                   </div>

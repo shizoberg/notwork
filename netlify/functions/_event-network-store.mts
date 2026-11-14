@@ -170,10 +170,12 @@ export type NetworkInput = {
 };
 
 export type NetworkAdminInput = {
+  participantId?: string;
   photoKey?: string;
   password?: string;
   action?:
     | "list"
+    | "recoverParticipant"
     | "matchReport"
     | "matchReportPhoto"
     | "matchOverview"
@@ -2001,6 +2003,16 @@ export async function launchProfilePhoto(
     return { photo: "" };
   }
   return { photo: (await store.get(key, { consistency: "strong" })) || "" };
+}
+
+export async function createLaunchRecovery(store: ReturnType<typeof getEventNetworkStore>, participantId: string) {
+  if (getEventNetworkDatasetInfo().eventSlug !== "14-kasim-2026") throw Error("Geçersiz etkinlik");
+  if (!/^[a-zA-Z0-9_-]{1,100}$/.test(participantId)) throw Error("Geçersiz katılımcı");
+  const row = await store.get(participantKey(participantId), { type: "json", consistency: "strong" }) as EventNetworkRegistration | null;
+  if (!row || row.participant.status !== "registered") throw Error("Kayıt bulunamadı");
+  const token = randomUUID() + randomUUID();
+  await store.setJSON(`${getNetworkPrefix()}/sign-in/${hashToken(token)}.json`, { id: participantId, expires: Date.now() + 15 * 60_000 });
+  return { path: `/launch-space#sign-in=${token}` };
 }
 
 export async function completeLaunchSignIn(

@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { functionSandbox } from './helpers/function-sandbox.mjs';
 process.env.NTW_AI_ENABLED = 'false';
-const sandbox = await functionSandbox();
+const adminPassword = "local-recovery-test";
+const sandbox = await functionSandbox({ adminPassword });
 try {
   const registry = await sandbox.load('_event-registry-store');
   const datasets = await sandbox.load('_launch-datasets');
@@ -79,6 +80,18 @@ try {
   await assert.rejects(call({action:'launchDeviceResume',email:'edited@example.org'}));
   await assert.rejects(call({action:'launchDeviceResume',accessToken:people[0].accessToken,email:'wrong@example.org'}));
   assert.equal((await match(restored)).group.id,before.group.id);
+  const admin = (await sandbox.load('event-network-admin')).default;
+  const rescue = async (password) => admin(new Request('http://127.0.0.1/api/admin/test', {
+    method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'recoverParticipant',event:event.slug,password,participantId:people[0].participant.id})}), {});
+  assert.equal((await rescue('wrong')).status,401);
+  const rescueResponse = await rescue(adminPassword);
+  assert.equal(rescueResponse.status,200);
+  const rescueToken = (await rescueResponse.json()).path.split('sign-in=')[1];
+  const rescuePerson = await call({action:'launchSignInComplete',accessToken:rescueToken});
+  assert.equal(rescuePerson.participant.id,people[0].participant.id);
+  assert.equal((await match(rescuePerson)).group.id,before.group.id);
+  await assert.rejects(call({action:'launchSignInComplete',accessToken:rescueToken}));
+  console.log('PASS admin recovery: authorized only, one use, preserved existing identity and match');
   console.log('PASS recovery: token backup, cookie backup, stale cookie fallback, same group; email alone cannot access another account');
   console.log('PASS profile: fields persist, own token only, duplicate email rejected, contact private, group/code/session preserved, peers see changes');
   console.log('PASS: first 20 auto-start, 200 arrivals, 66 stable trios + 2 waiting, concurrent retries preserve memberships');
