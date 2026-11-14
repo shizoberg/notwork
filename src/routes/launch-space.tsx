@@ -98,6 +98,8 @@ function LaunchSpace() {
   const [photoNotice, setPhotoNotice] = useState("");
   const registrationQuestion = flow.questions[registrationStep - 1];
   const [avatar, setAvatar] = useState("");
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileNotice, setProfileNotice] = useState("");
   const [editingVote, setEditingVote] = useState(false);
   const [voteReminder, setVoteReminder] = useState(false);
   const [selfieStatus, setSelfieStatus] = useState("");
@@ -216,6 +218,29 @@ function LaunchSpace() {
     localStorage.removeItem(draftKeyFor(id));
     setToken(r.accessToken);
     setRegistration(r);
+  }
+  async function openProfileEditor() {
+    setBusy(true); setProfileNotice("");
+    try {
+      const { registration: r, email: contactEmail } = await network("launchProfile", {});
+      setName(`${r.profile.firstName} ${r.profile.lastName}`.trim());
+      setEmail(contactEmail); setJobTitle(r.jobTitle || "");
+      setResponses([r.intro || "", r.offersDetail || "", r.needs || ""]);
+      setCategory(r.offers[0] || flow.categories[0]); setAiConsent(r.aiConsent?.analysis === true);
+      setEditingProfile(true);
+    } catch (e) { setProfileNotice(e instanceof Error ? e.message : "Profil açılamadı."); }
+    finally { setBusy(false); }
+  }
+  async function saveProfile() {
+    setBusy(true); setProfileNotice("");
+    try {
+      const result = await network("launchProfileUpdate", { firstName: name.trim(), email: email.trim(), jobTitle,
+        intro: responses[0], offersDetail: responses[1], needs: responses[2], offers: [category], aiAnalysisConsent: aiConsent });
+      accept(result.registration);
+      setEditingProfile(false); setProfileNotice("Bilgilerin güncellendi.");
+      void loadMatch().catch(() => {});
+    } catch (e) { setProfileNotice(e instanceof Error ? e.message : "Kaydedilemedi."); }
+    finally { setBusy(false); }
   }
   async function submit() {
     setError("");
@@ -623,6 +648,20 @@ function LaunchSpace() {
                     </div>
                     <span className="ls-code">{registration.participant.publicCode}</span>
                   </div>
+                  <button type="button" className="ls-secondary" disabled={busy} onClick={openProfileEditor}>Profilimi düzenle</button>
+                  {editingProfile && <form className="ls-profile-editor" onSubmit={e => { e.preventDefault(); void saveProfile(); }}>
+                    <h2>Profil bilgilerin</h2>
+                    <label>Ad soyad<input required maxLength={100} value={name} onChange={e => setName(e.target.value)} autoComplete="name" /></label>
+                    <label>E-posta<input type="email" maxLength={120} value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" /></label>
+                    <label data-profile-field="title">Ünvan / yaptığın iş<input required maxLength={100} value={jobTitle} onChange={e => setJobTitle(e.target.value)} /></label>
+                    <label>Alan<select value={category} onChange={e => setCategory(e.target.value)}>{Array.from(new Set([category, ...flow.categories])).filter(Boolean).map(c => <option key={c}>{c}</option>)}</select></label>
+                    {["Kendini tanımlayan cümle", "Paylaşabileceklerin", "Bu buluşmada aradığın"].map((label, index) => <label key={label} data-profile-field={["intro", "offers", "needs"][index]}>{flow.questions[index]?.label || label}<textarea maxLength={4000} rows={3} value={responses[index]} onChange={e => setResponses(values => values.map((v, i) => i === index ? e.target.value : v))} /></label>)}
+                    <label>Profil fotoğrafı · seçince kaydedilir<input type="file" accept="image/*" onChange={e => { const file = e.target.files?.[0]; if (file) void saveProfilePhoto(file, token); }} /></label>
+                    {avatar && <button type="button" className="ls-secondary" onClick={async () => { try { await network("launchProfilePhoto", { photoDataUrl: "" }); setAvatar(""); setPhotoNotice("Fotoğraf kaldırıldı."); } catch { setPhotoNotice("Fotoğraf kaldırılamadı."); } }}>Fotoğrafı kaldır</button>}
+                    <label className="ls-editor-consent"><input type="checkbox" checked={aiConsent} onChange={e => setAiConsent(e.target.checked)} />Gelişmiş network deneyimini aç</label>
+                    <div className="ls-editor-actions"><button type="submit" disabled={busy}>{busy ? "Kaydediliyor…" : "Değişiklikleri kaydet"}</button><button type="button" className="ls-secondary" disabled={busy} onClick={() => setEditingProfile(false)}>Vazgeç</button></div>
+                  </form>}
+                  {profileNotice && <p role="status">{profileNotice}</p>}
                   {photoNotice && <p role="status" className="ls-caption">{photoNotice}</p>}
                   <p className="ls-section-label">BU BULUŞMADAKİ DENEYİMLERİN</p>
                   <div className="ls-apps">

@@ -49,5 +49,27 @@ try {
   for(const r of results) if(original.has(r.registration.participant.id)) assert.equal(r.group.id, original.get(r.registration.participant.id),'New arrivals preserve existing groups');
   const again = await Promise.all(people.map(match));
   assert.deepEqual(again.map(r=>r.group?.id),results.map(r=>r.group?.id),'Polling never reruns completed matches');
+  const before = results[0];
+  const edited = await call({action:'launchProfileUpdate', accessToken:people[0].accessToken,
+    firstName:'Edited Participant', email:'edited@example.org', jobTitle:'New title', intro:'New introduction',
+    offers:['teknoloji'], offersDetail:'New offer', needs:'New goal', aiAnalysisConsent:true, targetId:people[1].participant.id});
+  assert.equal(edited.registration.participant.id,people[0].participant.id);
+  assert.equal(edited.registration.participant.publicCode,people[0].participant.publicCode);
+  assert.equal(edited.registration.accessToken,people[0].accessToken);
+  const persisted = await call({action:'launchProfile',accessToken:people[0].accessToken});
+  assert.equal(persisted.email,'edited@example.org');
+  assert.equal(persisted.registration.intro,'New introduction');
+  assert.equal(persisted.registration.jobTitle,'New title');
+  assert.equal((await match(people[0])).group.id,before.group.id);
+  const peer = await match(people.find(p=>p.participant.id===before.group.members.find(m=>m.participantId!==people[0].participant.id).participantId));
+  assert.equal(peer.group.members.find(m=>m.participantId===people[0].participant.id).jobTitle,'New title');
+  const other = await call({action:'launchProfile',accessToken:people[1].accessToken});
+  assert.equal(other.registration.profile.firstName,'Auto');
+  await assert.rejects(call({action:'launchProfileUpdate',accessToken:'invalid', firstName:'Intruder',jobTitle:'No'}));
+  await assert.rejects(call({action:'launchProfileUpdate',accessToken:people[1].accessToken,firstName:'Other',jobTitle:'Title',email:'edited@example.org'}));
+  const directory = await call({action:'people',accessToken:people[1].accessToken});
+  assert.equal(directory.people.find(p=>p.id===people[0].participant.id).jobTitle,'New title');
+  assert.ok(!JSON.stringify(directory).includes('edited@example.org'));
+  console.log('PASS profile: fields persist, own token only, duplicate email rejected, contact private, group/code/session preserved, peers see changes');
   console.log('PASS: first 20 auto-start, 200 arrivals, 66 stable trios + 2 waiting, concurrent retries preserve memberships');
 } finally { await sandbox.cleanup(); }

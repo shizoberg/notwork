@@ -1004,6 +1004,50 @@ export async function registerNetworkProfile(
   return registration;
 }
 
+// Only the authenticated participant may edit their event profile. Match identity stays fixed.
+export async function editLaunchProfile(store: ReturnType<typeof getEventNetworkStore>, input: NetworkInput) {
+  const row = await getRegistrationByToken(store, clean(input.accessToken, 100));
+  if (!row || row.participant.status !== "registered") throw Error("Etkinlik oturumu gerekli");
+  const contactKey = `${getNetworkPrefix()}/guest-contacts/${row.participant.id}.json`;
+  const contact = await store.get(contactKey, { type: "json", consistency: "strong" }) as { email?: string } | null;
+  if (input.action === "launchProfile") return { registration: row, email: contact?.email || "" };
+  const name = clean(input.firstName, 100);
+  const jobTitle = clean(input.jobTitle, 100);
+  const email = normalizeEmail(clean(input.email, 120));
+  if (!name || !jobTitle) throw Error("Ad soyad ve ünvan gerekli.");
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw Error("Geçerli bir e-posta yaz.");
+  if (email) {
+    const key = `${getNetworkPrefix()}/guest-email-index/${hashToken(email)}.json`;
+    await store.setJSON(key, { id: row.participant.id }, { onlyIfNew: true });
+    const owner = await store.get(key, { type: "json", consistency: "strong" }) as { id: string };
+    if (owner.id !== row.participant.id) throw Error("Bu e-posta başka bir etkinlik kaydında kullanılıyor.");
+  }
+  const [firstName, ...rest] = name.split(/\s+/);
+  const now = new Date().toISOString();
+  const updated = {
+    ...row, accessToken: undefined,
+    profile: { ...row.profile, firstName, lastName: rest.join(" "), updatedAt: now },
+    participant: { ...row.participant, updatedAt: now },
+    jobTitle, intro: clean(input.intro, 4000), offersDetail: clean(input.offersDetail, 4000), needs: clean(input.needs, 4000),
+    offers: (input.offers || row.offers).slice(0, 10).map(value => clean(value, 100)).filter(Boolean),
+    aiConsent: { version: "2026-09-17" as const, analysis: input.aiAnalysisConsent === true, modelImprovement: row.aiConsent?.modelImprovement === true, recordedAt: now },
+  };
+  await Promise.all([
+    store.setJSON(participantKey(row.participant.id), updated),
+    store.setJSON(profileKey(row.profile.emailNormalized), updated),
+    store.setJSON(detailKey(row.participant.id), { intro: updated.intro, jobTitle, offers: updated.offers, offersDetail: updated.offersDetail, needs: updated.needs, needTag: row.needTag, updatedAt: now }),
+    store.setJSON(contactKey, { email }),
+  ]);
+  if (contact?.email && normalizeEmail(contact.email) !== email) {
+    const oldKey = `${getNetworkPrefix()}/guest-email-index/${hashToken(normalizeEmail(contact.email))}.json`;
+    const owner = await store.get(oldKey, { type: "json", consistency: "strong" }) as { id: string } | null;
+    if (owner?.id === row.participant.id) await store.delete(oldKey);
+  }
+  directoryCache.delete(getNetworkPrefix());
+  await upsertGeneralNetworkingMember(updated);
+  return { registration: { ...updated, accessToken: clean(input.accessToken, 100) }, email };
+}
+
 export async function eventChat(
   store: ReturnType<typeof getEventNetworkStore>,
   accessToken: string,
@@ -1950,6 +1994,7 @@ export async function launchProfilePhoto(
   const key = `${getNetworkPrefix()}/profile-photos/${targetId || viewer.participant.id}.jpg`;
   if (typeof input.photoDataUrl === "string" && !targetId) {
     const photo = input.photoDataUrl;
+    if (!photo) { await store.delete(key); return { photo: "" }; }
     if (photo.length > 40_000 || !/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo))
       throw Error("Fotoğraf çok büyük veya geçersiz");
     await store.set(key, photo);

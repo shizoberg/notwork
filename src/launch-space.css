@@ -1928,3 +1928,11 @@
 .launch-space .ls-report-member>div { min-width:0; } .launch-space .ls-report-member>span { flex-shrink:0; color:#f1d592; }
 .launch-space .ls-report-photo { margin-top:12px; } .launch-space .ls-report-photo img { display:block; max-width:100%; max-height:360px; border-radius:12px; object-fit:contain; }
 .launch-space .ls-report-distribution>div { display:flex; gap:12px; align-items:center; margin:8px 0; } .launch-space .ls-report-distribution progress { flex:1; min-width:0; accent-color:#9bc8dc; }
+
+.ls-profile-editor { display:grid; gap:16px; padding:20px; margin-top:16px; border:1px solid #3c4850; border-radius:24px; background:#181e23; min-width:0; }
+.ls-profile-editor h2 { font-size:24px; margin:0; }
+.ls-profile-editor label { display:grid; gap:8px; font-size:14px; min-width:0; }
+.ls-profile-editor input:not([type=checkbox]), .ls-profile-editor select, .ls-profile-editor textarea { width:100%; min-width:0; box-sizing:border-box; font-size:16px; }
+.ls-profile-editor .ls-editor-consent { display:flex; align-items:center; gap:10px; }
+.ls-editor-actions { display:flex; flex-wrap:wrap; gap:12px; }
+.ls-editor-actions button { flex:1; min-width:140px; font-size:16px; }

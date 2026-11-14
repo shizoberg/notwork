@@ -7,6 +7,7 @@ import {
   saveLaunchGroupSelfie,
   launchSpacePeople,
   launchProfilePhoto,
+  editLaunchProfile,
   completeLaunchSignIn,
   normalizeEmail,
   hashToken,
@@ -132,6 +133,10 @@ export default async (request: Request, _context: Context) => {
         }
         const registration = await completeLaunchSignIn(store, clean(input.accessToken, 100));
         return registration ? json(registration) : new Response("Bağlantı geçersiz veya süresi dolmuş.", { status: 401 });
+      }
+      if (action === "launchProfile" || action === "launchProfileUpdate") {
+        if (database.eventSlug !== "14-kasim-2026") return new Response("Geçersiz etkinlik", { status: 403 });
+        return json(await editLaunchProfile(store, input));
       }
       if (action === "launchProfilePhoto") {
         if (database.eventSlug !== "14-kasim-2026")
