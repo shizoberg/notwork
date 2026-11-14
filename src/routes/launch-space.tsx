@@ -55,6 +55,17 @@ export function NodeMark() {
   );
 }
 function LaunchSpace() {
+  const [introVisible, setIntroVisible] = useState(false);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    try {
+      if (sessionStorage.getItem("nodes-launch-welcome")) return;
+      sessionStorage.setItem("nodes-launch-welcome", "1");
+    } catch { /* Storage can be unavailable in private browsers. */ }
+    setIntroVisible(true);
+    const timer = setTimeout(() => setIntroVisible(false), 1600);
+    return () => clearTimeout(timer);
+  }, []);
   const [flow, setFlow] = useState(defaultLaunchFlow);
 
   const [ready, setReady] = useState(false),
@@ -415,6 +426,7 @@ function LaunchSpace() {
   useEffect(() => { setSelfieStatus(""); setSelfie(""); }, [group?.id]);
   return (
     <div className="launch-space">
+      {introVisible && <div className="ls-welcome-portal" aria-hidden="true"><div className="ls-welcome-mark"><NodeMark /><strong>nodes</strong><small>by notwork</small></div></div>}
       <header className="ls-header">
         <a href="/launch-space" className="ls-brand">
           <NodeMark />
@@ -516,7 +528,8 @@ function LaunchSpace() {
             }}>
               {registrationStep > 0 && <button type="button" className="ls-secondary" onClick={() => setRegistrationStep(registrationStep - 1)}>Geri</button>}
               <p className="ls-caption">{registrationStep + 1} / 5</p>
-              <h1>{registrationQuestion?.title || (registrationStep === 4 ? "Tanışmaya hazırsın" : flow.welcomeTitle)}</h1>
+              {registrationStep === 0 && <p className="ls-welcome-message">Her etkinliğin merkezinde sen varsın.</p>}
+              <h1>{registrationStep === 0 ? "Hoş geldin" : registrationQuestion?.title || "Tanışmaya hazırsın"}</h1>
               {registrationStep === 0 && <>
                 <p className="ls-muted">{flow.welcomeText}</p>
                 <button type="button" className="ls-secondary" onClick={() => setDeviceResume(true)}>Kaydım var</button>
