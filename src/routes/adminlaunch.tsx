@@ -299,7 +299,7 @@ export function LaunchAdminPanel() {
                   </button>
                 </div>
                 <p className="ls-caption">
-                  Aktif eşleşmeler korunur. Yeni katılımcılar ortak havuza katılır.
+                  Canlı veri setinde ilk 20 kayıt tamamlanınca otomatik başlar. Sonrasında yeni gelenler boşta olanlarla eşleşir; mevcut gruplar korunur. Test veri setinde manuel başlatılır.
                 </p>
                 {matchError && (
                   <p className="ls-caption" role="status">

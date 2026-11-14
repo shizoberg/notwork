@@ -244,13 +244,17 @@ function LaunchSpace() {
     setWaiting(
       r.status === "ready"
         ? ""
+        : (r as { waitingReason?: string }).waitingReason === "threshold"
+          ? "İlk 20 kişi kaydını tamamladığında eşleşmeler otomatik başlayacak."
+        : (r as { waitingReason?: string }).waitingReason === "matching"
+          ? "Eşleşmeler hazırlanıyor. Birazdan grubun burada."
         : (r as { waitingReason?: string }).waitingReason === "admin"
           ? "Herkes hazır olduğunda organizatör eşleştirmeyi başlatacak."
           : `Havuzda ${r.waitingCount ?? 1} kişi var. Uygun bir üçlü oluştuğunda eşleşmen hazır olacak.`,
     );
   }
   useEffect(() => {
-    if (tab !== "match" || !token) return;
+    if ((tab !== "match" && tab !== "home") || !token) return;
     let pending = false;
     let active = true;
     const refresh = async () => {

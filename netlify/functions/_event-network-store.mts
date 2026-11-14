@@ -1241,6 +1241,37 @@ export async function getMatchLaunchState(store: ReturnType<typeof getEventNetwo
   return readAtomicState(store, `${getNetworkPrefix()}/match-launch.json`, initialMatchLaunch);
 }
 
+export function automaticMatchThreshold() {
+  const dataset = getEventNetworkDatasetInfo();
+  return dataset.eventSlug === "14-kasim-2026" && dataset.mode === "live" ? 20 : 0;
+}
+
+// One short worker at a time. The threshold opens the pool once; it never resets rooms.
+export async function advanceAutomaticMatchLaunch(store: ReturnType<typeof getEventNetworkStore>) {
+  let state = await getMatchLaunchState(store);
+  if (!automaticMatchThreshold() || state.status === "open") return state;
+  if (state.status === "waiting") {
+    const count = (await listRegistrations(store)).filter(r => r.participant.status === "registered").length;
+    if (count < automaticMatchThreshold()) return state;
+  }
+  const owner = randomUUID();
+  const key = `${getNetworkPrefix()}/auto-match-worker.json`;
+  const claimed = await atomicState(store, key, () => ({ owner: "", until: 0 }), lock => {
+    if (lock.until > Date.now()) return false;
+    lock.owner = owner; lock.until = Date.now() + 45_000; return true;
+  });
+  if (!claimed) return getMatchLaunchState(store);
+  try {
+    state = await getMatchLaunchState(store);
+    if (state.status === "waiting") await startMatchLaunch(store);
+    return await processMatchLaunch(store);
+  } finally {
+    await atomicState(store, key, () => ({ owner: "", until: 0 }), lock => {
+      if (lock.owner === owner) { lock.owner = ""; lock.until = 0; }
+    });
+  }
+}
+
 export async function startMatchLaunch(store: ReturnType<typeof getEventNetworkStore>) {
   const rows = (await listRegistrations(store)).filter(
     (row) => row.participant.status === "registered",
@@ -1303,6 +1334,7 @@ export async function getNextMatchGroup(
 ) {
   const current = await getRegistrationByToken(store, accessToken);
   if (!current) return null;
+  await advanceAutomaticMatchLaunch(store);
   const activeMatch = await getActiveMatch(store, current.participant.id);
   if (activeMatch) {
     return {
@@ -1316,7 +1348,8 @@ export async function getNextMatchGroup(
   if (launch.status !== "open") {
     return {
       status: "empty",
-      waitingReason: launch.status === "waiting" ? "admin" : "matching",
+      waitingReason: launch.status === "waiting" ? (automaticMatchThreshold() ? "threshold" : "admin") : "matching",
+      startThreshold: automaticMatchThreshold(),
       registration: current,
       presence: "open" as const,
       group: null,

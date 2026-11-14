@@ -1,0 +1,53 @@
+import assert from 'node:assert/strict';
+import { functionSandbox } from './helpers/function-sandbox.mjs';
+process.env.NTW_AI_ENABLED = 'false';
+const sandbox = await functionSandbox();
+try {
+  const registry = await sandbox.load('_event-registry-store');
+  const datasets = await sandbox.load('_launch-datasets');
+  const context = await sandbox.load('_event-product-context');
+  const network = await sandbox.load('_event-network-store');
+  const handler = (await sandbox.load('event-network')).default;
+  const event = await registry.createEvent((await sandbox.loadLib('event-poll')).novemberEventDraft);
+  await datasets.changeLaunchDataset(event, {action:'createDataset', name:'Isolated live test', mode:'live', activate:true});
+  const call = async (input) => {
+    const response = await handler(new Request('http://127.0.0.1/api/test', {method:'POST', headers:{'content-type':'application/json',origin:'http://127.0.0.1'}, body:JSON.stringify({event:event.slug,...input})}), {});
+    const body = await response.text();
+    assert.ok(response.ok, body);
+    return JSON.parse(body);
+  };
+  const people = [];
+  const register = async () => {
+    const person = await call({action:'launchGuest',firstName:`Auto Person ${people.length}`,email:`auto-${people.length}@example.org`,jobTitle:'Designer',intro:'I build products with people',offers:['tasarım'],offersDetail:'Designing products',needs:'Meeting software developers',eventConsent:true});
+    people.push(person); return person;
+  };
+  const match = person => call({action:'match',accessToken:person.accessToken});
+  for(let i=0;i<19;i++) await register();
+  assert.equal((await match(people[0])).waitingReason,'threshold');
+  const state = () => context.runWithEventRequestContext(event.slug,'matchlab',()=>network.getMatchLaunchState(network.getEventNetworkStore()));
+  assert.equal((await state()).status,'waiting');
+  await register();
+  assert.notEqual((await state()).status,'waiting');
+  for(let i=0;i<5 && (await state()).status!=='open';i++) await Promise.all(people.map(match));
+  assert.equal((await state()).status,'open');
+  let results = await Promise.all(people.map(match));
+  const original = new Map(results.filter(r=>r.group).map(r=>[r.registration.participant.id,r.group.id]));
+  assert.equal(original.size,18);
+  assert.equal(new Set(original.values()).size,6);
+  await register();
+  results = await Promise.all(people.map(match));
+  assert.ok(results.every(r=>r.group));
+  assert.equal(new Set(results.map(r=>r.group.id)).size,7);
+  for(let i=21;i<200;i++) await register();
+  results = await Promise.all(people.map(match));
+  const groups = new Map(results.filter(r=>r.group).map(r=>[r.group.id,r.group]));
+  assert.equal(groups.size,66);
+  assert.equal(results.filter(r=>!r.group).length,2);
+  const memberIds = [...groups.values()].flatMap(g=>g.members.map(m=>m.participantId));
+  assert.equal(memberIds.length,198);
+  assert.equal(new Set(memberIds).size,198,'No participant in multiple groups');
+  for(const r of results) if(original.has(r.registration.participant.id)) assert.equal(r.group.id, original.get(r.registration.participant.id),'New arrivals preserve existing groups');
+  const again = await Promise.all(people.map(match));
+  assert.deepEqual(again.map(r=>r.group?.id),results.map(r=>r.group?.id),'Polling never reruns completed matches');
+  console.log('PASS: first 20 auto-start, 200 arrivals, 66 stable trios + 2 waiting, concurrent retries preserve memberships');
+} finally { await sandbox.cleanup(); }

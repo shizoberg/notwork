@@ -2,6 +2,8 @@ import type { Config, Context } from "@netlify/functions";
 import { readFile } from "node:fs/promises";
 import {
   clean,
+  advanceAutomaticMatchLaunch,
+  automaticMatchThreshold,
   saveLaunchGroupSelfie,
   launchSpacePeople,
   launchProfilePhoto,
@@ -173,6 +175,12 @@ export default async (request: Request, _context: Context) => {
             indexKey,
             { id: registration.participant.id }, { onlyIfNew: true },
           );
+        }
+        if (automaticMatchThreshold()) {
+          try {
+            const launch = await advanceAutomaticMatchLaunch(store);
+            if (launch.status === "open") await getNextMatchGroup(store, registration.accessToken!);
+          } catch (error) { console.error("Otomatik eşleşme sonraki istekte sürdürülecek", error); }
         }
         const secure = isLocalRequest(request) ? "" : "; Secure";
         return json(registration, { status: 201, headers: {
