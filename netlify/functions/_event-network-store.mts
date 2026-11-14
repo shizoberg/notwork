@@ -170,9 +170,12 @@ export type NetworkInput = {
 };
 
 export type NetworkAdminInput = {
+  photoKey?: string;
   password?: string;
   action?:
     | "list"
+    | "matchReport"
+    | "matchReportPhoto"
     | "matchOverview"
     | "matchQuality"
     | "resetDemo"

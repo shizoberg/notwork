@@ -1,3 +1,4 @@
+import { MatchReportAdmin } from "@/components/launch-space/MatchReportAdmin";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
@@ -69,7 +70,7 @@ export function LaunchAdminPanel() {
     }>
   >([]);
   const [section, setSection] = useState<
-    "event" | "flow" | "match" | "poll" | "database" | "announcement"
+    "event" | "flow" | "match" | "poll" | "database" | "announcement" | "report"
   >("event");
   const [flow, setFlow] = useState(defaultLaunchFlow);
   const [query, setQuery] = useState("");
@@ -188,6 +189,7 @@ export function LaunchAdminPanel() {
                   ["flow", "Kayıt ve akış", SlidersHorizontal],
                   ["match", "Match", Network],
                   ["poll", "Anket", BarChart3],
+                  ["report", "Eşleşme raporu", BarChart3],
                   ["database", "Veri setleri", Database],
                   ["announcement", "Duyuru", Megaphone],
                 ] as const
@@ -326,6 +328,7 @@ export function LaunchAdminPanel() {
                 )}
               </div>
             )}
+            {section === "report" && <MatchReportAdmin event={novemberEventSlug} password={password} />}
             {section === "announcement" && <LaunchAnnouncementAdmin key={datasetId} />}
             {section === "database" && (
               <LaunchDatasetAdmin

@@ -38,9 +38,9 @@ export function getStore({ name }) {
     async delete(key) {
       rows.delete(key);
     },
-    async list({ prefix = "", directories = false } = {}) {
+    list({ prefix = "", directories = false, paginate = false } = {}) {
       metrics.lists++;
-      return {
+      const page = {
         directories: directories
           ? [
               ...new Set(
@@ -52,6 +52,11 @@ export function getStore({ name }) {
           : [],
         blobs: [...rows.keys()].filter((key) => key.startsWith(prefix)).map((key) => ({ key })),
       };
+      if (paginate) return (async function* () {
+        if (!page.blobs.length) yield page;
+        for (let i = 0; i < page.blobs.length; i += 50) yield { ...page, blobs: page.blobs.slice(i, i + 50) };
+      })();
+      return Promise.resolve(page);
     },
   };
   stores.set(name, store);

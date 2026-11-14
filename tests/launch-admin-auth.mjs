@@ -157,6 +157,9 @@ try {
   assert.equal(r.status, 400);
   r = await call(poll, { action: "admin", event: other.id }, cookie);
   assert.equal(r.status, 401);
+  assert.equal((await call(net, { action: "matchReport", event: event.id }, cookie)).status, 200);
+  assert.equal((await call(net, { action: "matchReport", event: other.id }, cookie)).status, 401);
+  assert.equal((await call(net, { action: "matchReport", event: event.id })).status, 401);
   r = await call(net, { action: "matchOverview", event: event.id }, cookie);
   assert.equal(r.status, 200);
   const overview = await r.json();

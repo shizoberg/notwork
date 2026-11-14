@@ -1,3 +1,4 @@
+import { eventMatchReport } from "./_event-match-report.mjs";
 import { getMatchQuality } from "./_match-quality.mjs";
 import { listEvents } from "./_event-registry-store.mjs";
 import { getEventReviewStore } from "./_event-review-store.mjs";
@@ -44,7 +45,7 @@ export default async (request: Request, _context: Context) => {
       return new Response("Yetkisiz erişim", { status: 401 });
     if (scoped) {
       if (
-        !["list", "matchOverview", "startMatching", "processMatching", "repairCodes"].includes(
+        !["matchReport", "matchReportPhoto", "list", "matchOverview", "startMatching", "processMatching", "repairCodes"].includes(
           input.action || "list",
         )
       )
@@ -55,11 +56,14 @@ export default async (request: Request, _context: Context) => {
       const result = await getMatchQuality(getEventNetworkStore(), getEventReviewStore(), await listEvents());
       return Response.json(result, { headers: { "cache-control": "no-store, private" } });
     }
-    return runWithEventRequestContext(
+    return await runWithEventRequestContext(
       eventIdentifier,
       "matchlab",
       async () => {
         const store = getEventNetworkStore();
+        if (input.action === "matchReport" || input.action === "matchReportPhoto") {
+          return Response.json(await eventMatchReport(store, input.datasetId, input.action === "matchReportPhoto" ? input.photoKey : undefined), { headers: { "cache-control": "no-store, private" } });
+        }
         if (input.datasetId && input.datasetId !== getEventNetworkDatasetInfo().datasetId)
           return new Response("Veri seti değişti. Sayfayı yenile.", { status: 409 });
         if (input.action === "startMatching" || input.action === "processMatching") {

@@ -387,6 +387,18 @@ try {
     const selfies = await store.list({ prefix: `${prefix}/selfie-archive/${g.id}/` });
     assert.equal(selfies.blobs.length, 2, "Every uploaded selfie survives rematching");
   });
+  const reportResponse = await call(admin, { action: "matchReport", password });
+  assert.equal(reportResponse.status, 200);
+  const reportGroup = reportResponse.data.groups.find(row => row.id === g.id);
+  assert.equal(reportGroup.members.find(row => row.id === member.participant.id).rating, 4);
+  assert.equal(reportGroup.selfies.length, 2);
+  assert.equal(reportResponse.data.summary.average, 4);
+  assert.ok(!JSON.stringify(reportResponse.data).includes(member.accessToken));
+  assert.ok(!JSON.stringify(reportResponse.data).includes("data:image"));
+  const photoReport = await call(admin, { action: "matchReportPhoto", password, photoKey: reportGroup.selfies[0].key });
+  assert.equal(photoReport.status, 200);
+  assert.equal(photoReport.data.photo, selfie.photoDataUrl);
+  assert.ok((await call(admin, { action: "matchReportPhoto", password, photoKey: "../../secret.json" })).status >= 400);
   const formerMembers = new Set(g.members.map((person) => person.participantId));
   const initialGroupByPerson = new Map(grouped.flatMap((group) =>
     group.members.map((person) => [person.participantId, group.id]),
@@ -436,6 +448,14 @@ try {
     activate: true,
   });
   const fresh = created.active;
+  const oldReport = await call(admin, { action: "matchReport", password, datasetId: original.active.id });
+  assert.equal(oldReport.status, 200);
+  assert.equal(oldReport.data.summary.ratings, 1);
+  assert.equal(oldReport.data.summary.selfies, 2);
+  const emptyReport = await call(admin, { action: "matchReport", password, datasetId: fresh.id });
+  assert.equal(emptyReport.data.summary.groups, 0);
+  assert.equal((await datasets.getLaunchDatasets(current)).active.id, fresh.id, "Reading archives never activates them");
+
   assert.equal(fresh.name, "Etkinlik");
   assert.equal(fresh.mode, "live");
   assert.equal(
