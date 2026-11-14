@@ -81,6 +81,7 @@ export type EventNetworkMatchMember = {
 };
 
 export type EventNetworkMatchGroup = {
+  myRating?: number;
   id: string;
   groupName: string;
   groupSize: number;

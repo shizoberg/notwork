@@ -176,7 +176,14 @@ try {
   assert.ok(JSON.stringify(sameChat.data).includes("Yalnızca bizim grup"));
   r = await call(handler, { action: "chatRead", accessToken: outsider.accessToken, groupId: g.id });
   assert.ok(r.status >= 400);
+  assert.equal((await call(handler, { action: "rateMatch", accessToken: member.accessToken, groupId: g.id, rating: 5 })).status, 200);
+  assert.equal((await call(handler, { action: "match", accessToken: member.accessToken })).data.group.myRating, 5);
+  assert.equal((await call(handler, { action: "rateMatch", accessToken: member.accessToken, groupId: g.id, rating: 4 })).status, 200);
+  assert.equal((await call(handler, { action: "match", accessToken: member.accessToken })).data.group.myRating, 4);
+  assert.equal((await call(handler, { action: "rateMatch", accessToken: outsider.accessToken, groupId: g.id, rating: 5 })).status, 403);
+  assert.ok((await call(handler, { action: "rateMatch", accessToken: member.accessToken, groupId: g.id, rating: 6 })).status >= 400);
   const selfie = { action: "groupSelfie", groupId: g.id, photoDataUrl: "data:image/jpeg;base64,/9j/2Q==" };
+  assert.equal((await call(handler, { ...selfie, accessToken: member.accessToken })).status, 200);
   assert.equal((await call(handler, { ...selfie, accessToken: member.accessToken })).status, 200);
   assert.ok((await call(handler, { ...selfie, accessToken: outsider.accessToken })).status >= 400);
   assert.equal((await call(handler, { action: "match", accessToken: member.accessToken })).data.group.rematchApprovedParticipantIds.length, 0);
@@ -366,6 +373,20 @@ try {
   );
   r = await call(handler, { action: "match", accessToken: otherMember.accessToken });
   assert.equal(r.data.group.id, otherGroup.id);
+  await context.runWithEventRequestContext(event.slug, "matchlab", async () => {
+    const store = network.getEventNetworkStore();
+    const prefix = network.getEventNetworkDatasetInfo().keyPrefix;
+    const feedback = await store.get(`${prefix}/match-feedback/${g.id}/${member.participant.id}.json`, { type: "json" });
+    assert.equal(feedback.rating, 4);
+    assert.equal(feedback.groupId, g.id);
+    const history = await store.get(`${prefix}/match-history/${g.id}.json`, { type: "json" });
+    assert.ok(history);
+    const snapshots = await store.get(`${prefix}/match-profile-snapshots/${g.id}.json`, { type: "json" });
+    assert.equal(snapshots.members.length, 3);
+    assert.ok(!JSON.stringify(snapshots).includes(member.accessToken));
+    const selfies = await store.list({ prefix: `${prefix}/selfie-archive/${g.id}/` });
+    assert.equal(selfies.blobs.length, 2, "Every uploaded selfie survives rematching");
+  });
   const formerMembers = new Set(g.members.map((person) => person.participantId));
   const initialGroupByPerson = new Map(grouped.flatMap((group) =>
     group.members.map((person) => [person.participantId, group.id]),

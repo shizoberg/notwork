@@ -1910,3 +1910,9 @@
 .launch-space .ls-profile-close { width: 40px; height: 40px; top: 12px; right: 12px; border-radius: 12px; background: #f0f3f5; color: #121c24; border: 1px solid #fff; box-shadow: 0 4px 16px #0005; display: grid; place-items: center; padding: 0; z-index: 2; }
 .launch-space .ls-profile-close svg { width: 21px; height: 21px; }
 .launch-space .ls-profile-close:focus-visible { outline: 3px solid #9bc8dc; outline-offset: 3px; }
+.launch-space .ls-rating-stars { display: flex; gap: 8px; margin: 12px 0; }
+.launch-space .ls-rating-stars button { width: 44px; height: 44px; min-width: 0; padding: 9px; display: grid; place-items: center; border: 1px solid #46515b; border-radius: 12px; background: #1b232a; color: #8b9aa6; }
+.launch-space .ls-rating-stars button.is-rated { color: #f1d592; border-color: #967840; background: #30291c; }
+.launch-space .ls-rating-stars button:focus-visible { outline: 2px solid #9bc8dc; outline-offset: 3px; }
+.launch-space .ls-rating-stars button:disabled { opacity: .6; }
+.launch-space .ls-rating-stars svg { width: 24px; height: 24px; }

@@ -1,3 +1,4 @@
+import { MatchRating } from "@/components/launch-space/MatchRating";
 import { LaunchAvatar } from "@/components/launch-space/LaunchAvatar";
 import { fetchActiveLaunchDataset, type ActiveLaunchDataset } from "@/lib/launch-dataset";
 import { defaultLaunchFlow, getLaunchFlow } from "@/lib/launch-flow";
@@ -757,6 +758,7 @@ function LaunchSpace() {
                         </button>
                       </form>
                     </section>
+                    <MatchRating key={group.id} initialRating={group.myRating} onRate={rating => network("rateMatch", { groupId: group.id, rating })} />
                     <section className="ls-panel ls-rematch-panel">
                       <h2>Yeni eşleşme</h2>
                       {flow.showSelfie && (

@@ -9,7 +9,7 @@ import {
   type RoomIndex,
 } from "./_atomic-state.mjs";
 import { recordMarketingPreference } from "./_announcements.mjs";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import { getEventProductRuntimeContext } from "./_event-product-context.mjs";
 import { getEventReviewStore } from "./_event-review-store.mjs";
@@ -781,9 +781,11 @@ async function buildActiveMatchGroup(
     )
   ).filter(Boolean) as EventNetworkRegistration[];
   const groupPresence = presenceMap ?? (await getPresenceMap(store, rows));
+  const feedback = await store.get(matchFeedbackKey(getNetworkPrefix(), match.id, current.participant.id), { type: "json", consistency: "strong" }) as { rating?: number } | null;
 
   return {
     id: match.id,
+    myRating: feedback?.rating,
     groupName: displayGroupName(match),
     groupSize: rows.length,
     round: match.round,
@@ -1500,6 +1502,10 @@ async function matchRegistration(
     }
 
     try {
+      await store.setJSON(`${getNetworkPrefix()}/match-profile-snapshots/${groupId}.json`, {
+        schemaVersion: 1, scope: getNetworkPrefix(), groupId, recordedAt: generatedAt,
+        members: groupRegistrations.map(r => ({ participantId: r.participant.id, name: `${r.participant.firstName} ${r.participant.lastName}`.trim(), jobTitle: r.jobTitle || "", intro: r.intro, offers: r.offers, offersDetail: r.offersDetail, needs: r.needs })),
+      }, { onlyIfNew: true });
       await store.setJSON(`${getNetworkPrefix()}/match-history/${groupId}.json`, storedMatch, {
         onlyIfNew: true,
       });
@@ -1566,6 +1572,12 @@ export async function rateActiveMatch(
   if (!Number.isInteger(input.rating) || input.rating! < 1 || input.rating! > 5)
     throw new Error("Puan 1–5 arasında olmalı");
   await store.setJSON(matchFeedbackKey(getNetworkPrefix(), active.id, registration.participant.id), {
+    schemaVersion: 1,
+    scope: getNetworkPrefix(),
+    groupId: active.id,
+    participantId: registration.participant.id,
+    participantIds: active.participantIds,
+    round: active.round,
     rating: input.rating,
     modelImprovement: input.modelImprovementConsent === true,
     recordedAt: new Date().toISOString(),
@@ -1841,7 +1853,15 @@ export async function saveLaunchGroupSelfie(
   if (typeof photo !== "string" || photo.length > 1_100_000 ||
       !/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo))
     throw new Error("Geçerli bir grup fotoğrafı seç");
+  const record = {
+    schemaVersion: 1, scope: getNetworkPrefix(), groupId: match.id,
+    participantIds: match.participantIds, round: match.round,
+    photo, participantId: registration.participant.id, savedAt: new Date().toISOString(),
+  };
+  await store.setJSON(`${getNetworkPrefix()}/selfie-archive/${match.id}/${randomUUID()}.json`, record);
   await store.setJSON(`${getNetworkPrefix()}/group-selfies/${match.id}.json`, {
+    schemaVersion: 1, scope: getNetworkPrefix(), groupId: match.id,
+    participantIds: match.participantIds, round: match.round,
     photo, participantId: registration.participant.id, savedAt: new Date().toISOString(),
   });
 }
