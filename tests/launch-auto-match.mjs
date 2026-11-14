@@ -10,8 +10,8 @@ try {
   const handler = (await sandbox.load('event-network')).default;
   const event = await registry.createEvent((await sandbox.loadLib('event-poll')).novemberEventDraft);
   await datasets.changeLaunchDataset(event, {action:'createDataset', name:'Isolated live test', mode:'live', activate:true});
-  const call = async (input) => {
-    const response = await handler(new Request('http://127.0.0.1/api/test', {method:'POST', headers:{'content-type':'application/json',origin:'http://127.0.0.1'}, body:JSON.stringify({event:event.slug,...input})}), {});
+  const call = async (input, extraHeaders = {}) => {
+    const response = await handler(new Request('http://127.0.0.1/api/test', {method:'POST', headers:{'content-type':'application/json',origin:'http://127.0.0.1', ...extraHeaders}, body:JSON.stringify({event:event.slug,...input})}), {});
     const body = await response.text();
     assert.ok(response.ok, body);
     return JSON.parse(body);
@@ -70,6 +70,16 @@ try {
   const directory = await call({action:'people',accessToken:people[1].accessToken});
   assert.equal(directory.people.find(p=>p.id===people[0].participant.id).jobTitle,'New title');
   assert.ok(!JSON.stringify(directory).includes('edited@example.org'));
+  const restored = await call({action:'launchDeviceResume', accessToken:people[0].accessToken, email:'edited@example.org'});
+  assert.equal(restored.participant.id,people[0].participant.id);
+  const cookieRestored = await call({action:'launchDeviceResume'}, {cookie:`launch_device=${people[0].accessToken}`});
+  assert.equal(cookieRestored.participant.id,people[0].participant.id);
+  const staleCookie = await call({action:'launchDeviceResume',accessToken:people[0].accessToken,email:'edited@example.org'}, {cookie:`launch_device=${people[1].accessToken}`});
+  assert.equal(staleCookie.participant.id,people[0].participant.id);
+  await assert.rejects(call({action:'launchDeviceResume',email:'edited@example.org'}));
+  await assert.rejects(call({action:'launchDeviceResume',accessToken:people[0].accessToken,email:'wrong@example.org'}));
+  assert.equal((await match(restored)).group.id,before.group.id);
+  console.log('PASS recovery: token backup, cookie backup, stale cookie fallback, same group; email alone cannot access another account');
   console.log('PASS profile: fields persist, own token only, duplicate email rejected, contact private, group/code/session preserved, peers see changes');
   console.log('PASS: first 20 auto-start, 200 arrivals, 66 stable trios + 2 waiting, concurrent retries preserve memberships');
 } finally { await sandbox.cleanup(); }

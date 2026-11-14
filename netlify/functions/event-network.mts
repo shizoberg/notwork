@@ -114,18 +114,22 @@ export default async (request: Request, _context: Context) => {
 
       if (action === "launchDeviceResume") {
         if (database.eventSlug !== "14-kasim-2026") return new Response("Geçersiz etkinlik", { status: 403 });
-        const token = request.headers.get("cookie")?.match(/(?:^|;\s*)launch_device=([a-f0-9-]{36})(?:;|$)/)?.[1];
-        const registration = token && await getRegistrationByToken(store, token);
-        const contact = registration && await store.get(
-          `${database.keyPrefix}/guest-contacts/${registration.participant.id}.json`,
-          { type: "json", consistency: "strong" },
-        ) as { email?: string } | null;
-        if (!registration || registration.participant.status !== "registered" || !contact?.email ||
-            normalizeEmail(contact.email) !== normalizeEmail(clean(input.email, 120))) {
-          return new Response("Bu tarayıcıda kayıt doğrulanamadı. İlk kayıt yaptığın tarayıcıyı kullan veya etkinlik ekibine danış.", { status: 401 });
+        const cookieToken = request.headers.get("cookie")?.match(/(?:^|;\s*)launch_device=([a-f0-9-]{36})(?:;|$)/)?.[1];
+        const tokens = [...new Set([clean(input.accessToken, 100), cookieToken].filter(Boolean))] as string[];
+        for (const token of tokens) {
+          const registration = await getRegistrationByToken(store, token);
+          if (!registration || registration.participant.status !== "registered") continue;
+          const contact = await store.get(`${database.keyPrefix}/guest-contacts/${registration.participant.id}.json`,
+            { type: "json", consistency: "strong" }) as { email?: string } | null;
+          const email = contact?.email || registration.profile.email;
+          if (input.email && normalizeEmail(email) !== normalizeEmail(clean(input.email, 120))) continue;
+          return json({ ...registration, accessToken: token }, { headers: {
+            "Set-Cookie": `launch_device=${token}; Path=/api/event-products/network; HttpOnly; SameSite=Lax; Max-Age=604800${isLocalRequest(request) ? "" : "; Secure"}`,
+          } });
         }
-        return json({ ...registration, accessToken: token });
+        return new Response("Bu cihazdaki oturum bulunamadı. Kayıt olduğun tarayıcıyı kullan veya etkinlik ekibinden mevcut kaydını geri açmasını iste. Yeniden kayıt oluşturma.", { status: 401 });
       }
+
       if (action === "launchSignIn" || action === "launchSignInComplete") {
         if (database.eventSlug !== "14-kasim-2026") return new Response("Geçersiz etkinlik", { status: 403 });
         if (action === "launchSignIn") {
@@ -238,7 +242,9 @@ export default async (request: Request, _context: Context) => {
       if (action === "me") {
         const registration = await getRegistrationByToken(store, clean(input.accessToken, 100));
         if (!registration) return new Response("Kayıt bulunamadı", { status: 404 });
-        return json(registration);
+        return json(registration, database.eventSlug === "14-kasim-2026" ? { headers: {
+          "Set-Cookie": `launch_device=${clean(input.accessToken, 100)}; Path=/api/event-products/network; HttpOnly; SameSite=Lax; Max-Age=604800${isLocalRequest(request) ? "" : "; Secure"}`,
+        } } : undefined);
       }
 
       if (action === "introductionReason") {

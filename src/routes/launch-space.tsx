@@ -136,6 +136,18 @@ function LaunchSpace() {
         setDataset(currentDataset);
         const currentSelection = { ...eventSelection, datasetId: currentDataset.id };
         const saved = localStorage.getItem(tokenKeyFor(currentDataset.id));
+        // Cookie backup also restores a session when browser storage was cleared.
+        if (!saved) {
+          try {
+            const response = await fetch("/api/event-products/network", { method: "POST", headers: { "content-type": "application/json" },
+              body: JSON.stringify({ ...currentSelection, action: "launchDeviceResume" }) });
+            if (response.ok) {
+              const recovered = await response.json();
+              if (alive.current) { accept(recovered, currentDataset.id); setReady(true); }
+              return;
+            }
+          } catch { /* Registration stays available during transient failures. */ }
+        }
         const draft = localStorage.getItem(draftKeyFor(currentDataset.id));
         if (draft) {
           try {
@@ -381,7 +393,7 @@ function LaunchSpace() {
     try {
       const result = signInLink
         ? await network("launchSignInComplete", { accessToken: signInLink })
-        : await network("launchDeviceResume", { email: email.trim() });
+        : await network("launchDeviceResume", { email: email.trim(), accessToken: token || localStorage.getItem(tokenKeyFor(dataset?.id)) || "" });
       accept(result);
       setSignInLink("");
     } catch (error) {
@@ -536,7 +548,7 @@ function LaunchSpace() {
             <LaunchEventHeader flow={flow} />
             <form className="ls-form ls-panel ls-entry-form ls-return-form" onSubmit={recoverSession}>
               <h1>Etkinliğe geri dön</h1>
-              <p className="ls-entry-description">Kayıt olduğun e-postayla kaldığın yerden devam et.</p>
+              <p className="ls-entry-description">Kayıt olduğun cihazda e-postanı yazarak kaldığın yerden devam et.</p>
               {!signInLink && <label>E-posta
                 <input type="email" required autoComplete="email" placeholder="E-posta adresin" value={email}
                   onChange={(event) => setEmail(event.target.value)} />
