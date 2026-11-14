@@ -87,6 +87,8 @@ type EventNetworkMatchMember = {
   participantId: string;
   publicCode: string;
   name: string;
+  jobTitle?: string;
+  intro?: string;
   offers: string[];
   needs: string;
   needTag: string;
@@ -392,6 +394,8 @@ async function upsertGeneralNetworkingMember(registration: EventNetworkRegistrat
   const member: NetworkMemberRow = {
     id: existing?.id || registration.profile.id,
     name: displayName(registration),
+    jobTitle: registration.jobTitle || "",
+    intro: registration.intro || "",
     country: existing?.country,
     title: registration.needTag
       ? `${eventLabel} katılımcısı · ${registration.needTag}`
@@ -625,6 +629,8 @@ function toMatchMember(
     participantId: registration.participant.id,
     publicCode: registration.participant.publicCode,
     name: displayName(registration),
+    jobTitle: registration.jobTitle || "",
+    intro: registration.intro || "",
     offers: registration.offers,
     needs: registration.needs,
     needTag: registration.needTag,
@@ -1050,6 +1056,8 @@ export async function eventChat(
         id,
         participantId: registration.participant.id,
         name: displayName(registration),
+    jobTitle: registration.jobTitle || "",
+    intro: registration.intro || "",
         code: registration.participant.publicCode,
         text: message,
         createdAt: new Date().toISOString(),

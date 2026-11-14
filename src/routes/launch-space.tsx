@@ -688,7 +688,9 @@ function LaunchSpace() {
                             {m.name}
                             {m.isCurrentUser ? " · sen" : ""}
                           </strong>
-                          <small>{m.publicCode}</small>
+                          <small className="ls-member-code">{m.publicCode}</small>
+                          {m.jobTitle && <small className="ls-member-title">{m.jobTitle}</small>}
+                          {m.intro && <details className="ls-member-intro"><summary aria-label={`${m.name} tanıtımını aç`}>{m.intro}</summary><p>{m.intro}</p></details>}
                           <small>{group.rematchApprovedParticipantIds?.includes(m.participantId) ? "✓ Onayladı" : "Onay bekleniyor"}</small>
                           {m.isPhotoOwner ? (
                             <span className="ls-photo-badge">

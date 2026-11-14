@@ -124,6 +124,11 @@ try {
       matched++;
       groups.set(r.data.group.id, r.data.group);
       assert.equal(r.data.group.members.length, 3);
+      const titled = r.data.group.members.find(m => m.participantId === participants[0].participant.id);
+      if (titled) {
+        assert.equal(titled.jobTitle, "Ürün tasarımcısı");
+        assert.equal(titled.intro, "Fikirleri anlaşılır ürünlere dönüştürüyorum.");
+      }
     }
   }
   assert.equal(matched, matchedCount);

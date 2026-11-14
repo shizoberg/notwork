@@ -69,6 +69,8 @@ export type EventNetworkMatchMember = {
   participantId: string;
   publicCode: string;
   name: string;
+  jobTitle?: string;
+  intro?: string;
   offers: string[];
   needs: string;
   needTag: string;

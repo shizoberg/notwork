@@ -366,22 +366,21 @@ export function LaunchSpaceArea({
             >
               <X />
             </button>
-            <span className="ls-people-avatar">{personPhoto ? <img src={personPhoto} alt="" /> : selected.name[0]}</span>
-            {!editing && !selected.isSelf && (
-              <button className="ls-secondary ls-dialog-action" disabled={reasonPending}
-                onClick={() => void showReason(selected)}>
-                {reasonPending ? "Hazırlanıyor…" : "Neden tanışmalıyım?"}
-              </button>
-            )}
-            <h2>{selected.name}</h2>
-            {selected.jobTitle && <p className="ls-profile-title">{selected.jobTitle}</p>}
+            <div className="ls-profile-identity">
+              <span className="ls-people-avatar">{personPhoto ? <img src={personPhoto} alt="" /> : selected.name[0]}</span>
+              <div><h2>{selected.name}</h2><span className="ls-code">{selected.code}</span></div>
+            </div>
             {!editing && <>
-            {reason.startsWith(selected.id + ":") && <p role="status">{reason.slice(selected.id.length + 1)}</p>}
-            <span className="ls-code">{selected.code}</span>
-            <p>{selected.intro}</p>
-            <small>PAYLAŞABİLECEKLERİ</small>
-            <p>{selected.offersDetail || selected.offers.join(" · ")}</p>
-            {selected.needs && <><small>BU BULUŞMADA ARADIĞI</small><p>{selected.needs}</p></>}
+              <div className="ls-profile-fields">
+                <section><h3>Unvan / yaptığı iş</h3><p>{selected.jobTitle || selected.offers.join(" · ") || "Henüz eklenmedi"}</p></section>
+                <section><h3>Kendi sözleriyle</h3><p>{selected.intro || "Henüz tanıtım cümlesi eklenmedi."}</p></section>
+                <section><h3>Paylaşabilecekleri</h3><p>{selected.offersDetail || selected.offers.join(" · ")}</p></section>
+                {selected.needs && <section><h3>Bu buluşmada aradığı</h3><p>{selected.needs}</p></section>}
+              </div>
+              {!selected.isSelf && <button className="ls-secondary ls-dialog-action ls-reason-action" disabled={reasonPending} onClick={() => void showReason(selected)}>
+                {reasonPending ? "Hazırlanıyor…" : "Neden tanışmalıyım?"}
+              </button>}
+              {reason.startsWith(selected.id + ":") && <p role="status" className="ls-profile-reason">{reason.slice(selected.id.length + 1)}</p>}
             </>}
             {!selected.isSelf && (
               <div className="ls-introduction-actions">

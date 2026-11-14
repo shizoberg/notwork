@@ -1877,3 +1877,23 @@
 .launch-space .ls-profile-example small { display: block; font-size: 10px; color: #9bc8dc; margin-bottom: 8px; }
 .launch-space .ls-profile-example strong { font-size: 14px; }
 .launch-space .ls-profile-example p { font-size: 13px; color: #c5d8e2; line-height: 1.5; margin: 8px 0 0; }
+.launch-space .ls-profile-identity { display: flex; align-items: center; gap: 14px; padding: 14px 48px 14px 14px; background: #222c33; border: 1px solid #3d4c56; border-radius: 16px; margin-bottom: 12px; }
+.launch-space .ls-profile-identity .ls-people-avatar { width: 56px; height: 56px; margin: 0; flex-shrink: 0; }
+.launch-space .ls-profile-identity > div { min-width: 0; }
+.launch-space .ls-profile-identity h2 { font-size: 23px; line-height: 1.2; margin: 0 0 7px; padding: 0; overflow-wrap: anywhere; }
+.launch-space .ls-profile-identity .ls-code { font-size: 12px; letter-spacing: 2px; }
+.launch-space .ls-profile-fields { display: grid; gap: 9px; }
+.launch-space .ls-profile-fields section { background: #161e24; border: 1px solid #34434e; border-radius: 13px; padding: 12px 14px; }
+.launch-space .ls-profile-fields h3 { margin: 0 0 6px; color: #9bc8dc; font-size: 11px; font-weight: 500; letter-spacing: .6px; }
+.launch-space .ls-profile-fields p { margin: 0; color: #e0e6eb; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.launch-space .ls-reason-action { margin-block: 12px; min-height: 42px; padding: 10px; font-size: 14px; }
+.launch-space .ls-profile-reason { padding: 12px; background: #30273d; border-radius: 12px; font-size: 13px; }
+.launch-space .ls-members .ls-member-code { padding: 4px 8px; border: 1px solid #3b4d58; border-radius: 8px; margin-block: 4px; }
+.launch-space .ls-members .ls-member-title { color: #d6e6ef; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+.launch-space .ls-member-intro { width: 100%; padding: 7px 4px; background: #202e37; border-radius: 8px; font-size: 10px; }
+.launch-space .ls-member-intro summary { cursor: pointer; color: #acd1e3; }
+.launch-space .ls-member-intro p { font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; margin: 8px 0 0; }
+.launch-space .ls-compose-sheet .ls-profile-identity { padding: 10px 40px 10px 10px; margin-bottom: 10px; }
+.launch-space .ls-compose-sheet .ls-profile-identity .ls-people-avatar { width: 36px; height: 36px; }
+.launch-space .ls-compose-sheet .ls-profile-identity h2 { font-size: 18px; }
+.launch-space .ls-member-intro summary { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; line-height: 1.5; }
