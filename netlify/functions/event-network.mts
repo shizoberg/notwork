@@ -159,6 +159,7 @@ export default async (request: Request, _context: Context) => {
           email: `guest-${crypto.randomUUID()}@launchspace.invalid`,
           offers: input.offers?.length ? input.offers : ["networking"],
           intro: input.intro,
+          jobTitle: input.jobTitle,
           offersDetail: input.offersDetail,
           needs: input.needs,
           aiAnalysisConsent: input.aiAnalysisConsent === true,

@@ -12,6 +12,7 @@ type Person = {
   name: string;
   code: string;
   intro: string;
+  jobTitle?: string;
   offers: string[];
   offersDetail: string;
   needs: string;
@@ -173,7 +174,7 @@ export function LaunchSpaceArea({
     }
   }
   const filtered = people.filter((p) =>
-    `${p.name} ${p.intro} ${p.offers.join(" ")} ${p.needs}`
+    `${p.name} ${p.jobTitle || ""} ${p.intro} ${p.offers.join(" ")} ${p.needs}`
       .toLocaleLowerCase("tr-TR")
       .includes(query.toLocaleLowerCase("tr-TR")),
   );
@@ -275,7 +276,7 @@ export function LaunchSpaceArea({
           Topluluğun hazırlanıyor…
         </p>
       ) : (
-        <div className="ls-people-grid">
+        <div className="ls-people-grid ls-people-list">
           {filtered.slice(0, visibleCount).map((p) => (
             <button
               className="ls-people-card"
@@ -285,11 +286,12 @@ export function LaunchSpaceArea({
               aria-label={`${p.name}${p.isSelf ? " · sen" : ""} · profili aç`}
             >
               <LaunchAvatar event={event} datasetId={datasetId} token={token} id={p.id} name={p.name} className="ls-people-avatar" />
-              <strong>
+              <span className="ls-person-copy"><strong>
                 {p.name}
                 {p.isSelf ? " · sen" : ""}
               </strong>
-              <small>{p.offers.join(" · ") || "Katılımcı"}</small>
+              <small>{p.jobTitle || p.offers.join(" · ") || "Katılımcı"}</small>
+              <span className="ls-person-intro">{p.intro || "Henüz kendini tanıtmadı."}</span></span>
               {(p.sent || p.received) && <span className="ls-request-marker" title={p.sent ? "Tanışma isteğin iletildi" : "Seninle tanışmak istiyor"} aria-label={p.sent ? "İstek gönderildi" : "Gelen istek"}>
                 {p.sent ? <Check size={14} /> : <Bell size={14} />}
               </span>}
@@ -372,6 +374,7 @@ export function LaunchSpaceArea({
               </button>
             )}
             <h2>{selected.name}</h2>
+            {selected.jobTitle && <p className="ls-profile-title">{selected.jobTitle}</p>}
             {!editing && <>
             {reason.startsWith(selected.id + ":") && <p role="status">{reason.slice(selected.id.length + 1)}</p>}
             <span className="ls-code">{selected.code}</span>

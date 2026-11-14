@@ -52,6 +52,7 @@ type EventNetworkRegistration = {
   participant: EventParticipant;
   offers: string[];
   intro: string;
+  jobTitle?: string;
   offersDetail: string;
   needs: string;
   needTag: string;
@@ -146,6 +147,7 @@ export type NetworkInput = {
   email?: string;
   offers?: string[];
   intro?: string;
+  jobTitle?: string;
   offersDetail?: string;
   needs?: string;
   needTag?: string;
@@ -812,6 +814,7 @@ export async function registerNetworkProfile(
   const lastName = clean(input.lastName, 50);
   const offers = normalizeOffers(input.offers);
   const intro = cleanFreeform(input.intro);
+  const jobTitle = clean(input.jobTitle, 100);
   const offersDetail = cleanFreeform(input.offersDetail);
   const needs = cleanFreeform(input.needs);
   const needTag = clean(input.needTag, 40).toLocaleLowerCase("tr-TR");
@@ -886,6 +889,7 @@ export async function registerNetworkProfile(
       participant,
       offers,
       intro,
+      jobTitle,
       offersDetail,
       needs,
       needTag,
@@ -900,6 +904,7 @@ export async function registerNetworkProfile(
       store.setJSON(detailKey(participant.id), {
         offers,
         intro,
+      jobTitle,
         offersDetail,
         needs,
         needTag,
@@ -958,6 +963,7 @@ export async function registerNetworkProfile(
     participant,
     offers,
     intro,
+    jobTitle,
     offersDetail,
     needs,
     needTag,
@@ -972,6 +978,7 @@ export async function registerNetworkProfile(
     store.setJSON(detailKey(participant.id), {
       offers,
       intro,
+      jobTitle,
       offersDetail,
       needs,
       needTag,
@@ -1080,6 +1087,7 @@ export async function resumeNetworkProfile(
     profile: { ...existing.profile, username, updatedAt: now },
     participant: { ...existing.participant, accessTokenHash, updatedAt: now },
     intro: existing.intro || "",
+    jobTitle: existing.jobTitle || "",
     offersDetail: existing.offersDetail || "",
     accessToken,
   };
@@ -1121,6 +1129,7 @@ export async function getRegistrationByToken(
       attendedEvent: existing.profile.attendedEvent || getNetworkEventSlug(),
     },
     intro: existing.intro || "",
+    jobTitle: existing.jobTitle || "",
     offersDetail: existing.offersDetail || "",
   };
   await Promise.all([
@@ -1799,6 +1808,7 @@ export async function launchSpacePeople(
       name: `${r.profile.firstName} ${r.profile.lastName}`.trim(),
       code: r.participant.publicCode,
       intro: r.intro,
+      jobTitle: r.jobTitle || "",
       offers: r.offers,
       offersDetail: r.offersDetail,
       needs: r.needs,

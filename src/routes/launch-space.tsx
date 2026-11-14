@@ -88,6 +88,7 @@ function LaunchSpace() {
       history.replaceState(history.state, "", location.pathname + location.search);
     }
   }, []);
+  const [jobTitle, setJobTitle] = useState("");
   const [registrationStep, setRegistrationStep] = useState(0);
   const [responses, setResponses] = useState(["", "", ""]);
   const [category, setCategory] = useState("");
@@ -221,7 +222,7 @@ function LaunchSpace() {
     try {
       const r = await network("launchGuest", {
         firstName: name.trim(), email: email.trim(), eventConsent: consent,
-        intro: responses[0], offersDetail: responses[1], needs: responses[2],
+        jobTitle, intro: responses[0], offersDetail: responses[1], needs: responses[2],
         offers: [category || flow.categories[0]], aiAnalysisConsent: aiConsent,
       });
       accept(r);
@@ -544,6 +545,17 @@ function LaunchSpace() {
                 </label>
               </>}
               {registrationQuestion && <>
+                {registrationStep === 1 && <>
+                  <aside className="ls-profile-example" aria-label="Örnek profil">
+                    <small>ÖRNEK PROFİL</small><strong>Ece Yılmaz · Ürün tasarımcısı</strong>
+                    <p>“Karmaşık fikirleri insanların kolayca kullanabildiği ürünlere dönüştürüyorum.”</p>
+                  </aside>
+                  <label>Unvanın / yaptığın iş
+                    <input required maxLength={100} placeholder="Örn. Ürün tasarımcısı" value={jobTitle} onChange={event => setJobTitle(event.target.value)} />
+                  </label>
+                  <p className="ls-caption">Unvanının yanına seni anlatan bir cümle ekle. Ne yaptığını kendi sözlerinle anlat.</p>
+                </>}
+
                 <label>{registrationQuestion.label}
                   {registrationQuestion.options.length > 0 ? (
                     <select required value={responses[registrationStep - 1]} onChange={(event) =>
@@ -601,6 +613,7 @@ function LaunchSpace() {
                       <strong>
                         {registration.profile.firstName} {registration.profile.lastName}
                       </strong>
+                      {registration.jobTitle && <small>{registration.jobTitle}</small>}
                       <p>{registration.intro}</p>
                     </div>
                     <span className="ls-code">{registration.participant.publicCode}</span>

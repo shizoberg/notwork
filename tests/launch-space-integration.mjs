@@ -34,14 +34,14 @@ try {
     const text = await r.text();
     return { status: r.status, data: r.ok ? JSON.parse(text) : text };
   };
-  const guest = await call(handler, { action: "launchGuest", firstName: "Tekİsim", eventConsent: true, event: other.slug });
+  const guest = await call(handler, { action: "launchGuest", firstName: "Tekİsim", jobTitle: "Ürün tasarımcısı", intro: "Fikirleri anlaşılır ürünlere dönüştürüyorum.", eventConsent: true, event: other.slug });
   assert.equal(guest.status, 403);
   const missingConsent = await call(handler, { action: "launchGuest", firstName: "Tekİsim" });
   assert.equal(missingConsent.status, 400);
   const participants = [];
   for (let i = 0; i < participantCount; i++) {
     const r = i === 0
-      ? await call(handler, { action: "launchGuest", firstName: "Tekİsim", eventConsent: true })
+      ? await call(handler, { action: "launchGuest", firstName: "Tekİsim", jobTitle: "Ürün tasarımcısı", intro: "Fikirleri anlaşılır ürünlere dönüştürüyorum.", eventConsent: true })
       : await call(handler, {
       action: "register",
       firstName: "Demo",
@@ -57,6 +57,7 @@ try {
       aiAnalysisConsent: i >= participantCount - 6,
     });
     assert.equal(r.status, 201, r.data);
+    if (i === 0) assert.equal(r.data.jobTitle, "Ürün tasarımcısı");
     participants.push(r.data);
   }
   const photo = "data:image/jpeg;base64," + "a".repeat(39_000);
@@ -96,6 +97,7 @@ try {
   for (const response of directoryReads) {
     assert.equal(response.status, 200, response.data);
     assert.equal(response.data.people.length, participantCount);
+    assert.equal(response.data.people.find(p => p.id === participants[0].participant.id).jobTitle, "Ürün tasarımcısı");
     assert.equal(response.data.people.filter((person) => person.isSelf).length, 1);
   }
   let r = await call(handler, { action: "match", accessToken: participants[0].accessToken });

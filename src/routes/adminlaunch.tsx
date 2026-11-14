@@ -63,6 +63,7 @@ export function LaunchAdminPanel() {
     Array<{
       profile: { firstName: string; lastName: string };
       intro: string;
+      jobTitle?: string;
       needs: string;
       offersDetail: string;
     }>
@@ -246,6 +247,7 @@ export function LaunchAdminPanel() {
                           <strong>
                             {p.profile.firstName} {p.profile.lastName}
                           </strong>
+                          {p.jobTitle && <p className="ls-caption">{p.jobTitle}</p>}
                           {p.intro && <p className="ls-caption">{p.intro}</p>}
                           {p.offersDetail && <p className="ls-caption">Katkı: {p.offersDetail}</p>}
                           {p.needs && <p className="ls-caption">Aradığı: {p.needs}</p>}

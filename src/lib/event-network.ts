@@ -30,6 +30,7 @@ export type EventNetworkRegistration = {
   participant: EventParticipant;
   offers: string[];
   intro: string;
+  jobTitle?: string;
   offersDetail: string;
   needs: string;
   needTag: string;
