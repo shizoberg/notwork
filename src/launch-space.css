@@ -1897,3 +1897,16 @@
 .launch-space .ls-compose-sheet .ls-profile-identity .ls-people-avatar { width: 36px; height: 36px; }
 .launch-space .ls-compose-sheet .ls-profile-identity h2 { font-size: 18px; }
 .launch-space .ls-member-intro summary { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; line-height: 1.5; }
+/* Stable field colors connect each registration question with the saved profile. */
+.launch-space [data-profile-field="title"] { --field-bg: #30291c; --field-border: #79633b; --field-ink: #f1d592; }
+.launch-space [data-profile-field="intro"] { --field-bg: #292137; --field-border: #6d5586; --field-ink: #dcc3f5; }
+.launch-space [data-profile-field="offers"] { --field-bg: #1c302b; --field-border: #3e7562; --field-ink: #aee1cb; }
+.launch-space [data-profile-field="needs"] { --field-bg: #1c2b3a; --field-border: #456b8d; --field-ink: #b7d9f5; }
+.launch-space .ls-profile-fields section[data-profile-field], .launch-space label.ls-question-field { background: var(--field-bg); border: 1px solid var(--field-border); border-radius: 14px; padding: 14px; color: var(--field-ink); }
+.launch-space .ls-profile-fields section[data-profile-field] h3 { color: var(--field-ink); }
+.launch-space .ls-question-field input, .launch-space .ls-question-field textarea, .launch-space .ls-question-field select { border-color: var(--field-border); background: #101419; }
+.launch-space .ls-members [data-profile-field] { background: var(--field-bg); border: 1px solid var(--field-border); color: var(--field-ink); border-radius: 8px; padding: 6px; }
+.launch-space .ls-member-intro[data-profile-field] summary { color: var(--field-ink); }
+.launch-space .ls-profile-close { width: 40px; height: 40px; top: 12px; right: 12px; border-radius: 12px; background: #f0f3f5; color: #121c24; border: 1px solid #fff; box-shadow: 0 4px 16px #0005; display: grid; place-items: center; padding: 0; z-index: 2; }
+.launch-space .ls-profile-close svg { width: 21px; height: 21px; }
+.launch-space .ls-profile-close:focus-visible { outline: 3px solid #9bc8dc; outline-offset: 3px; }

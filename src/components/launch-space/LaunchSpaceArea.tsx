@@ -372,10 +372,10 @@ export function LaunchSpaceArea({
             </div>
             {!editing && <>
               <div className="ls-profile-fields">
-                <section><h3>Unvan / yaptığı iş</h3><p>{selected.jobTitle || selected.offers.join(" · ") || "Henüz eklenmedi"}</p></section>
-                <section><h3>Kendi sözleriyle</h3><p>{selected.intro || "Henüz tanıtım cümlesi eklenmedi."}</p></section>
-                <section><h3>Paylaşabilecekleri</h3><p>{selected.offersDetail || selected.offers.join(" · ")}</p></section>
-                {selected.needs && <section><h3>Bu buluşmada aradığı</h3><p>{selected.needs}</p></section>}
+                <section data-profile-field="title"><h3>Unvan / yaptığı iş</h3><p>{selected.jobTitle || selected.offers.join(" · ") || "Henüz eklenmedi"}</p></section>
+                <section data-profile-field="intro"><h3>Kendi sözleriyle</h3><p>{selected.intro || "Henüz tanıtım cümlesi eklenmedi."}</p></section>
+                <section data-profile-field="offers"><h3>Paylaşabilecekleri</h3><p>{selected.offersDetail || selected.offers.join(" · ")}</p></section>
+                {selected.needs && <section data-profile-field="needs"><h3>Bu buluşmada aradığı</h3><p>{selected.needs}</p></section>}
               </div>
               {!selected.isSelf && <button className="ls-secondary ls-dialog-action ls-reason-action" disabled={reasonPending} onClick={() => void showReason(selected)}>
                 {reasonPending ? "Hazırlanıyor…" : "Neden tanışmalıyım?"}

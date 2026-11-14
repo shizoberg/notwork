@@ -550,13 +550,13 @@ function LaunchSpace() {
                     <small>ÖRNEK PROFİL</small><strong>Ece Yılmaz · Ürün tasarımcısı</strong>
                     <p>“Karmaşık fikirleri insanların kolayca kullanabildiği ürünlere dönüştürüyorum.”</p>
                   </aside>
-                  <label>Unvanın / yaptığın iş
+                  <label className="ls-question-field" data-profile-field="title">Unvanın / yaptığın iş
                     <input required maxLength={100} placeholder="Örn. Ürün tasarımcısı" value={jobTitle} onChange={event => setJobTitle(event.target.value)} />
                   </label>
                   <p className="ls-caption">Unvanının yanına seni anlatan bir cümle ekle. Ne yaptığını kendi sözlerinle anlat.</p>
                 </>}
 
-                <label>{registrationQuestion.label}
+                <label className="ls-question-field" data-profile-field={registrationStep === 1 ? "intro" : registrationStep === 2 ? "offers" : "needs"}>{registrationQuestion.label}
                   {registrationQuestion.options.length > 0 ? (
                     <select required value={responses[registrationStep - 1]} onChange={(event) =>
                       setResponses((current) => current.map((value, index) => index === registrationStep - 1 ? event.target.value : value))}>
@@ -689,8 +689,8 @@ function LaunchSpace() {
                             {m.isCurrentUser ? " · sen" : ""}
                           </strong>
                           <small className="ls-member-code">{m.publicCode}</small>
-                          {m.jobTitle && <small className="ls-member-title">{m.jobTitle}</small>}
-                          {m.intro && <details className="ls-member-intro"><summary aria-label={`${m.name} tanıtımını aç`}>{m.intro}</summary><p>{m.intro}</p></details>}
+                          {m.jobTitle && <small className="ls-member-title" data-profile-field="title">{m.jobTitle}</small>}
+                          {m.intro && <details className="ls-member-intro" data-profile-field="intro"><summary aria-label={`${m.name} tanıtımını aç`}>{m.intro}</summary><p>{m.intro}</p></details>}
                           <small>{group.rematchApprovedParticipantIds?.includes(m.participantId) ? "✓ Onayladı" : "Onay bekleniyor"}</small>
                           {m.isPhotoOwner ? (
                             <span className="ls-photo-badge">
