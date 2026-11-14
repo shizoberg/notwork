@@ -105,12 +105,12 @@ export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => v
           <aside className="ls-editor-preview" aria-label="Katılımcı önizlemesi">
             <p className="ls-eyebrow">Katılımcı önizlemesi</p>
             <div className="ls-preview-steps">
-              {["Kayıt", "Program"].map((label, index) => (
+              {["Kayıt", "Program", ...flow.questions.map((_, i) => `Soru ${i + 1}`)].map((label, index) => (
                 <button
                   key={label}
                   type="button"
-                  aria-pressed={preview === (index === 0 ? -1 : 3)}
-                  onClick={() => setPreview(index === 0 ? -1 : 3)}
+                  aria-pressed={preview === (index === 0 ? -1 : index === 1 ? 3 : index - 2)}
+                  onClick={() => setPreview(index === 0 ? -1 : index === 1 ? 3 : index - 2)}
                 >
                   {label}
                 </button>
@@ -127,6 +127,14 @@ export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => v
                 <p className="ls-flow-copy">{flow.welcomeText}</p>
                 <span className="ls-preview-choice">{flow.registerLabel}</span>
                 <span className="ls-preview-choice">İsim ve e-posta · üç soru · etkinlik onayı</span>
+              </>
+            ) : preview < 3 ? (
+              <>
+                <p className="ls-caption">{preview + 1} / {flow.questions.length}</p>
+                <h3>{flow.questions[preview]?.title}</h3>
+                <p>{flow.questions[preview]?.placeholder}</p>
+                {flow.questions[preview]?.options.map(option => <span className="ls-preview-choice" key={option}>{option}</span>)}
+                <span className="ls-preview-choice">Devam et →</span>
               </>
             ) : (
               <>

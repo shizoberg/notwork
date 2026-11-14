@@ -34,6 +34,7 @@ type MatchOverview = {
 };
 
 export function LaunchAdminPanel() {
+  const [previewKey, setPreviewKey] = useState(0);
   const [datasetId, setDatasetId] = useState<string>();
   const [overview, setOverview] = useState<MatchOverview>();
   const [matchError, setMatchError] = useState("");
@@ -104,7 +105,7 @@ export function LaunchAdminPanel() {
       .catch(() => {});
   }
   useEffect(() => {
-    if (!active || section !== "match") return;
+    if (!active || (section !== "match" && section !== "event")) return;
     let current = true;
     let pending = false;
     const refresh = async () => {
@@ -134,7 +135,7 @@ export function LaunchAdminPanel() {
   }, [active, section]);
 
   return (
-    <div className="launch-space">
+    <div className={`launch-space ls-organizer${active ? " ls-organizer-active" : ""}`}>
       <header className="ls-header">
         <span className="ls-brand">
           <NodeMark />
@@ -142,7 +143,7 @@ export function LaunchAdminPanel() {
         </span>
         <span className="ls-demo">ORGANİZATÖR</span>
       </header>
-      <main className={`ls-main ${active && section === "flow" ? "ls-main-wide" : ""}`}>
+      <main className="ls-main">
         <LaunchEventHeader flow={flow} />
         {!active ? (
           <form
@@ -178,15 +179,15 @@ export function LaunchAdminPanel() {
             </button>
           </form>
         ) : (
-          <>
+          <div className="ls-studio-layout">
             <nav className="ls-admin-tabs" aria-label="Etkinlik yönetimi">
               {(
                 [
-                  ["event", "Etkinlik", CalendarDays],
+                  ["event", "Genel bakış", CalendarDays],
                   ["flow", "Kayıt ve akış", SlidersHorizontal],
                   ["match", "Match", Network],
                   ["poll", "Anket", BarChart3],
-                  ["database", "Database", Database],
+                  ["database", "Veri setleri", Database],
                   ["announcement", "Duyuru", Megaphone],
                 ] as const
               ).map(([id, label, Icon]) => (
@@ -198,9 +199,19 @@ export function LaunchAdminPanel() {
                   <Icon size={17} /> {label}
                 </button>
               ))}
+              <a href="https://nodes-app.com/rehber" target="_blank" rel="noreferrer">Katılımcı rehberi ↗</a>
             </nav>
+            <div className="ls-studio-content">
+            <div className="ls-studio-toolbar"><span>Etkinlik stüdyosu</span><button className="ls-secondary" onClick={() => { setPreviewKey(k => k + 1); void load().catch(e => setError(e.message)); }}>Görünümü yenile</button></div>
             {section === "event" && (
               <>
+                <section className="ls-system-map" aria-label="Canlı veri akışı">
+                  <div><small>Kayıtlı</small><strong>{count ?? "—"}</strong><span>Katılımcı</span></div>
+                  <div><small>Eşleşen</small><strong>{overview ? overview.groups.reduce((n,g) => n + g.memberNames.length, 0) : "—"}</strong><span>Aktif gruplarda</span></div>
+                  <div><small>Gruplar</small><strong>{overview?.groups.length ?? "—"}</strong><span>Özel grup sohbeti</span></div>
+                  <p>Kayıt → Katılımcı havuzu → Match → Yeni tur</p>
+                  <p>Aktif veri seti: <code>{datasetId || "Yükleniyor"}</code></p>
+                </section>
                 <section className="ls-panel">
                   <p className="ls-eyebrow">Etkinlik bilgileri</p>
                   <h2>Etkinlik amacı</h2>
@@ -247,7 +258,7 @@ export function LaunchAdminPanel() {
             {section === "match" && (
               <div className="ls-panel">
                 <p className="ls-eyebrow">node.games</p>
-                <h2>notwork match</h2>
+                <h2>Nodes Match</h2>
                 <p className="ls-caption">
                   {overview?.registeredCount ?? count} kayıtlı katılımcı ·{" "}
                   {overview?.groups.length ?? 0} aktif grup
@@ -326,7 +337,7 @@ export function LaunchAdminPanel() {
                 }}
               />
             )}
-            {section === "flow" && <LaunchFlowAdmin onSaved={setFlow} />}
+            {section === "flow" && <LaunchFlowAdmin onSaved={(next) => { setFlow(next); setPreviewKey(k => k + 1); }} />}
             {section === "poll" && (
               <EventPollAdmin
                 key={datasetId}
@@ -336,7 +347,14 @@ export function LaunchAdminPanel() {
                 organizerName={flow.organizerName}
               />
             )}
-          </>
+            </div>
+            <aside className="ls-studio-phone" aria-label="Mobil katılımcı ekranı">
+              <h2>Katılımcının gördüğü ekran</h2>
+              <p>Kaydedilmiş canlı görünüm. Bu ekrandaki kayıt ve oy işlemleri seçili veri setine yazılır.</p>
+              <iframe key={previewKey} src="/launch-space" title="Katılımcı mobil önizlemesi" />
+              <a href="/launch-space" target="_blank" rel="noreferrer">Tam ekran aç ↗</a>
+            </aside>
+          </div>
         )}
         {active ? (
           <button
