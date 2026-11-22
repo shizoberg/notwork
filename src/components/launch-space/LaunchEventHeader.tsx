@@ -18,7 +18,7 @@ export function LaunchEventHeader({
           </span>
           <div>
             <h1>{flow.organizerName}</h1>
-            <p>14 Kasım · {flow.schedule[0].time.replace(":", ".")} · nodes by notwork</p>
+            <p>{flow.eventDate || "14 Kasım"} · {flow.schedule[0].time.replace(":", ".")} · nodes by notwork</p>
           </div>
         </div>
       </div>

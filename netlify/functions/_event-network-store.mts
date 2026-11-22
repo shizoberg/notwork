@@ -1,3 +1,4 @@
+import { isExperienceEvent } from "./_event-experience.mjs";
 import { matchFeedbackKey } from "./_match-quality.mjs";
 import {
   atomicState,
@@ -728,7 +729,7 @@ async function hasActiveMatch(
 
 type MatchRooms = RoomIndex<StoredActiveMatch> & { pairHistory?: Record<string, true>; rounds?: Record<string, number> };
 const emptyMatchRooms = (): MatchRooms => emptyRooms<StoredActiveMatch>();
-const launchNamesEnabled = () => getNetworkEventSlug() === "14-kasim-2026";
+const launchNamesEnabled = () => isExperienceEvent(getNetworkEventSlug());
 const pairKey = (a: string, b: string) => a < b ? `${a}:${b}` : `${b}:${a}`;
 
 function groupPairs(ids: string[]) {
@@ -1274,7 +1275,7 @@ function initialMatchLaunch(): MatchLaunchState {
   return {
     status:
       (dataset.eventId === "evt_9_ekim_2026" && dataset.mode === "live") ||
-      dataset.eventSlug === "14-kasim-2026"
+      isExperienceEvent(dataset.eventSlug)
         ? "waiting"
         : "open",
     participantIds: [],
@@ -1289,7 +1290,7 @@ export async function getMatchLaunchState(store: ReturnType<typeof getEventNetwo
 
 export function automaticMatchThreshold() {
   const dataset = getEventNetworkDatasetInfo();
-  return dataset.eventSlug === "14-kasim-2026" && dataset.mode === "live" ? 20 : 0;
+  return isExperienceEvent(dataset.eventSlug) && dataset.mode === "live" ? 20 : 0;
 }
 
 // One short worker at a time. The threshold opens the pool once; it never resets rooms.
@@ -1352,7 +1353,7 @@ export async function processMatchLaunch(store: ReturnType<typeof getEventNetwor
     rows,
     presenceMap,
     eligibleIds,
-    aiRemaining: getEventNetworkDatasetInfo().eventSlug === "14-kasim-2026" ? 1 : 0,
+    aiRemaining: isExperienceEvent(getEventNetworkDatasetInfo().eventSlug) ? 1 : 0,
   };
   for (let index = job.cursor; index < end; index++) {
     const current = participants.get(job.participantIds[index]);
@@ -1837,7 +1838,7 @@ export async function repairParticipantCodes(store: ReturnType<typeof getEventNe
         });
     }
     if (
-      !(getNetworkEventSlug() === "14-kasim-2026" && getEventNetworkDatasetInfo().mode === "demo")
+      !(isExperienceEvent(getNetworkEventSlug()) && getEventNetworkDatasetInfo().mode === "demo")
     )
       await syncMemberEventCode(
         current.profile.username,
@@ -2007,7 +2008,7 @@ export async function launchProfilePhoto(
 }
 
 export async function createLaunchRecovery(store: ReturnType<typeof getEventNetworkStore>, participantId: string) {
-  if (getEventNetworkDatasetInfo().eventSlug !== "14-kasim-2026") throw Error("Geçersiz etkinlik");
+  if (!isExperienceEvent(getEventNetworkDatasetInfo().eventSlug)) throw Error("Geçersiz etkinlik");
   if (!/^[a-zA-Z0-9_-]{1,100}$/.test(participantId)) throw Error("Geçersiz katılımcı");
   const row = await store.get(participantKey(participantId), { type: "json", consistency: "strong" }) as EventNetworkRegistration | null;
   if (!row || row.participant.status !== "registered") throw Error("Kayıt bulunamadı");

@@ -1,3 +1,4 @@
+import { hasLaunchSession } from "./_launch-admin-auth.mjs";
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { Config, Context } from "@netlify/functions";
 import {
@@ -65,8 +66,8 @@ export default async (request: Request, _context: Context) => {
 
   try {
     const input = (await request.json()) as AdminInput;
-    if (!validPassword(input.password)) return new Response("Yetkisiz erişim", { status: 401 });
     const eventIdentifier = eventIdentifierFromRequest(request, input);
+    if (!validPassword(input.password) && !await hasLaunchSession(request, eventIdentifier)) return new Response("Yetkisiz erişim", { status: 401 });
     return runWithEventRequestContext(
       eventIdentifier,
       "wordcloud",

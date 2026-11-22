@@ -1,3 +1,6 @@
+import { useExperience } from "@/lib/event-experience";
+import { ExperienceWordcloudAdmin } from "@/components/launch-space/ExperienceWordcloud";
+import { experienceAdminUrl } from "@/lib/experience-api";
 import { MatchReportAdmin } from "@/components/launch-space/MatchReportAdmin";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -35,6 +38,8 @@ type MatchOverview = {
 };
 
 export function LaunchAdminPanel() {
+  const experience = useExperience();
+  const novemberEventSlug = experience.event;
   const [previewKey, setPreviewKey] = useState(0);
   const [datasetId, setDatasetId] = useState<string>();
   const [overview, setOverview] = useState<MatchOverview>();
@@ -79,7 +84,7 @@ export function LaunchAdminPanel() {
   const [query, setQuery] = useState("");
   const [username, setUsername] = useState("");
   async function auth(action: string) {
-    const r = await fetch("/api/launch-admin", {
+    const r = await fetch(experienceAdminUrl(), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ action, username, password }),
@@ -191,7 +196,7 @@ export function LaunchAdminPanel() {
                   ["event", "Genel bakış", CalendarDays],
                   ["flow", "Kayıt ve akış", SlidersHorizontal],
                   ["match", "Match", Network],
-                  ["poll", "Anket", BarChart3],
+                  ["poll", experience.notwork ? "Wordcloud" : "Anket", BarChart3],
                   ["report", "Eşleşme raporu", BarChart3],
                   ["database", "Veri setleri", Database],
                   ["announcement", "Duyuru", Megaphone],
@@ -230,7 +235,7 @@ export function LaunchAdminPanel() {
                       </li>
                     ))}
                   </ul>
-                  <a className="ls-secondary" href="/launch-space" target="_blank" rel="noreferrer">
+                  <a className="ls-secondary" href={experience.path} target="_blank" rel="noreferrer">
                     Katılımcı ekranını aç ↗
                   </a>
                 </section>
@@ -351,7 +356,7 @@ export function LaunchAdminPanel() {
               />
             )}
             {section === "flow" && <LaunchFlowAdmin onSaved={(next) => { setFlow(next); setPreviewKey(k => k + 1); }} />}
-            {section === "poll" && (
+            {section === "poll" && (experience.notwork ? <ExperienceWordcloudAdmin event={novemberEventSlug} datasetId={datasetId} /> :
               <EventPollAdmin
                 key={datasetId}
                 event={novemberEventSlug}
@@ -364,8 +369,8 @@ export function LaunchAdminPanel() {
             <aside className="ls-studio-phone" aria-label="Mobil katılımcı ekranı">
               <h2>Katılımcının gördüğü ekran</h2>
               <p>Kaydedilmiş canlı görünüm. Bu ekrandaki kayıt ve oy işlemleri seçili veri setine yazılır.</p>
-              <iframe key={previewKey} src="/launch-space" title="Katılımcı mobil önizlemesi" />
-              <a href="/launch-space" target="_blank" rel="noreferrer">Tam ekran aç ↗</a>
+              <iframe key={previewKey} src={experience.path} title="Katılımcı mobil önizlemesi" />
+              <a href={experience.path} target="_blank" rel="noreferrer">Tam ekran aç ↗</a>
             </aside>
           </div>
         )}
@@ -388,7 +393,7 @@ export function LaunchAdminPanel() {
             {error}
           </p>
         ) : null}
-        <a href="/launch-space" className="ls-back">
+        <a href={experience.path} className="ls-back">
           Katılımcı ekranı ↗
         </a>
       </main>

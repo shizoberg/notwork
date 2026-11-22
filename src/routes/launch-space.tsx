@@ -1,3 +1,5 @@
+import { useExperience } from "@/lib/event-experience";
+import { ExperienceWordcloud } from "@/components/launch-space/ExperienceWordcloud";
 import { MatchRating } from "@/components/launch-space/MatchRating";
 import { LaunchAvatar } from "@/components/launch-space/LaunchAvatar";
 import { fetchActiveLaunchDataset, type ActiveLaunchDataset } from "@/lib/launch-dataset";
@@ -39,12 +41,9 @@ export const Route = createFileRoute("/launch-space")({
     }),
   component: LaunchSpace,
 });
-const eventSelection = { event: novemberEventSlug };
-const legacyTokenKey = getEventNetworkTokenStorageKey(eventSelection);
+
 const keySuffix = (datasetId?: string) =>
   datasetId && datasetId !== "legacy-demo" ? `:${datasetId}` : "";
-const tokenKeyFor = (datasetId?: string) => legacyTokenKey + keySuffix(datasetId);
-const draftKeyFor = (datasetId?: string) => "launch-space:draft" + keySuffix(datasetId);
 type Tab = "home" | "match" | "poll";
 export function NodeMark() {
   return (
@@ -55,7 +54,14 @@ export function NodeMark() {
     </svg>
   );
 }
-function LaunchSpace() {
+export function LaunchSpace() {
+  const experience = useExperience();
+  const novemberEventSlug = experience.event;
+  const eventSelection = {event: novemberEventSlug};
+  const legacyTokenKey = getEventNetworkTokenStorageKey(eventSelection);
+const tokenKeyFor = (datasetId?: string) => legacyTokenKey + keySuffix(datasetId);
+const draftKeyFor = (datasetId?: string) => "launch-space:draft" + keySuffix(datasetId);
+
   const [introVisible, setIntroVisible] = useState(false);
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -404,7 +410,7 @@ function LaunchSpace() {
   }
 
   useEffect(() => {
-    if (tab !== "poll" || !token) return;
+    if (experience.notwork || tab !== "poll" || !token) return;
     let current = true;
     const refresh = () => {
       if (!document.hidden)
@@ -440,7 +446,7 @@ function LaunchSpace() {
   const voteNotice = dataset?.bulletin?.vote;
   const hasCurrentVote = poll?.submitted && poll.config.questionVersion === voteNotice?.version;
   function openVotes() {
-    setVoteReminder(true);
+    setVoteReminder(!experience.notwork);
     setTab("poll");
   }
 
@@ -471,13 +477,10 @@ function LaunchSpace() {
     <div className="launch-space">
       {introVisible && <div className="ls-welcome-portal" aria-hidden="true"><div className="ls-welcome-mark"><NodeMark /><strong>nodes</strong><small>by notwork</small></div></div>}
       <header className="ls-header">
-        <a href="/launch-space" className="ls-brand">
-          <NodeMark />
-          <span>
-            nodes<small>by notwork</small>
-          </span>
+        <a href={experience.path} className="ls-brand">
+          {experience.notwork ? <img src="/brand/notwork-logo.png" alt="notwork" style={{width:72}} /> : <><NodeMark /><span>nodes<small>by notwork</small></span></>}
         </a>
-        <span className="ls-demo">launchspace</span>
+        <span className="ls-demo">{flow.organizerName}</span>
       </header>
       <main className="ls-main">
         <div className="ls-program-ticker" aria-label="Etkinlik akışı">
@@ -694,7 +697,7 @@ function LaunchSpace() {
                         <p>
                           {app === "match"
                             ? "Yeni bir gruba katıl ve sohbeti başlat."
-                            : "Firma sunumları için oyunu kullan."}
+                            : experience.notwork ? "Bir kelime paylaş, sahnedeki ortak hikâyeye katıl." : "Firma sunumları için oyunu kullan."}
                         </p>
                         <ArrowRight />
                       </button>
@@ -842,7 +845,7 @@ function LaunchSpace() {
                   </>
                 )}
               </section>
-            ) : (
+            ) : experience.notwork ? (<ExperienceWordcloud event={novemberEventSlug} token={token} datasetId={dataset?.id} />) : (
               <section className="ls-enter">
                 {!poll ? (
                   <p role="status">Anket yükleniyor…</p>

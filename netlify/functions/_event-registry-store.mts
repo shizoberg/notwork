@@ -435,6 +435,18 @@ export async function ensureEventRegistrySeeded() {
     ]);
   }
 
+  // Provision the Notwork experience once, without changing another event or its datasets.
+  if (!await store.get(slugKey("22-kasim-2026"), { consistency: "strong" })) {
+    const now = new Date().toISOString();
+    const event: NotworkEvent = {schemaVersion:1,id:"evt_22_kasim_2026", ...normalizeEventDraft({
+      slug:"22-kasim-2026",title:"notwork sahne · 22 Kasım",shortTitle:"notwork sahne",startsAt:"2026-11-22T20:00:00+03:00",endsAt:"2026-11-22T23:59:00+03:00",timezone:"Europe/Istanbul",status:"scheduled",
+      location:{name:"Rene Lokal",city:"İzmir",address:"",mapUrl:""},entry:{isOpen:true,isPrimary:false,requireRegistration:true},
+      products:{matchlab:{enabled:true,visible:true,state:"ready",dataMode:"live",label:"notwork match"},wordcloud:{enabled:true,visible:true,state:"ready",dataMode:"live",label:"Wordcloud"},five:{enabled:false,visible:false,state:"disabled",dataMode:"live"}}
+    }),revision:1,createdAt:now,updatedAt:now};
+    await store.setJSON(eventKey(event.id),event,{onlyIfNew:true});
+    await store.setJSON(slugKey(event.slug),{eventId:event.id},{onlyIfNew:true});
+  }
+
   const [existingSeptemberEvent, existingOctoberEvent] = await Promise.all([
     store.get(eventKey(septemberEventId), { type: "json", consistency: "strong" }),
     store.get(eventKey(octoberEventId), { type: "json", consistency: "strong" }),

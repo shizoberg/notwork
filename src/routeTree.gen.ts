@@ -14,7 +14,9 @@ import { Route as StartupRouteImport } from './routes/startup'
 import { Route as SponsorRouteImport } from './routes/sponsor'
 import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as NtwRouteImport } from './routes/ntw'
+import { Route as NotworkSahneRouteImport } from './routes/notwork-sahne'
 import { Route as NotworkNedirRouteImport } from './routes/notwork-nedir'
+import { Route as NotworkEtkinlikRouteImport } from './routes/notwork-etkinlik'
 import { Route as NodesRouteImport } from './routes/nodes'
 import { Route as NetworkingRouteImport } from './routes/networking'
 import { Route as NetworkStartupRouteImport } from './routes/network-startup'
@@ -39,6 +41,7 @@ import { Route as CreativeRouteImport } from './routes/creative'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CerezPolitikasiRouteImport } from './routes/cerez-politikasi'
 import { Route as AnketRouteImport } from './routes/anket'
+import { Route as AdminnotworkRouteImport } from './routes/adminnotwork'
 import { Route as AdminlaunchRouteImport } from './routes/adminlaunch'
 import { Route as AdminalaunchRouteImport } from './routes/adminalaunch'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -123,9 +126,19 @@ const NtwRoute = NtwRouteImport.update({
   path: '/ntw',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotworkSahneRoute = NotworkSahneRouteImport.update({
+  id: '/notwork-sahne',
+  path: '/notwork-sahne',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NotworkNedirRoute = NotworkNedirRouteImport.update({
   id: '/notwork-nedir',
   path: '/notwork-nedir',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotworkEtkinlikRoute = NotworkEtkinlikRouteImport.update({
+  id: '/notwork-etkinlik',
+  path: '/notwork-etkinlik',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NodesRoute = NodesRouteImport.update({
@@ -246,6 +259,11 @@ const CerezPolitikasiRoute = CerezPolitikasiRouteImport.update({
 const AnketRoute = AnketRouteImport.update({
   id: '/anket',
   path: '/anket',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminnotworkRoute = AdminnotworkRouteImport.update({
+  id: '/adminnotwork',
+  path: '/adminnotwork',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminlaunchRoute = AdminlaunchRouteImport.update({
@@ -554,6 +572,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/adminalaunch': typeof AdminalaunchRoute
   '/adminlaunch': typeof AdminlaunchRoute
+  '/adminnotwork': typeof AdminnotworkRoute
   '/anket': typeof AnketRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
@@ -578,7 +597,9 @@ export interface FileRoutesByFullPath {
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/nodes': typeof NodesRoute
+  '/notwork-etkinlik': typeof NotworkEtkinlikRoute
   '/notwork-nedir': typeof NotworkNedirRoute
+  '/notwork-sahne': typeof NotworkSahneRoute
   '/ntw': typeof NtwRoute
   '/profil': typeof ProfilRoute
   '/sponsor': typeof SponsorRoute
@@ -644,6 +665,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/adminalaunch': typeof AdminalaunchRoute
   '/adminlaunch': typeof AdminlaunchRoute
+  '/adminnotwork': typeof AdminnotworkRoute
   '/anket': typeof AnketRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
@@ -666,7 +688,9 @@ export interface FileRoutesByTo {
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/nodes': typeof NodesRoute
+  '/notwork-etkinlik': typeof NotworkEtkinlikRoute
   '/notwork-nedir': typeof NotworkNedirRoute
+  '/notwork-sahne': typeof NotworkSahneRoute
   '/ntw': typeof NtwRoute
   '/profil': typeof ProfilRoute
   '/sponsor': typeof SponsorRoute
@@ -733,6 +757,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/adminalaunch': typeof AdminalaunchRoute
   '/adminlaunch': typeof AdminlaunchRoute
+  '/adminnotwork': typeof AdminnotworkRoute
   '/anket': typeof AnketRoute
   '/cerez-politikasi': typeof CerezPolitikasiRoute
   '/community': typeof CommunityRoute
@@ -757,7 +782,9 @@ export interface FileRoutesById {
   '/network-startup': typeof NetworkStartupRoute
   '/networking': typeof NetworkingRoute
   '/nodes': typeof NodesRoute
+  '/notwork-etkinlik': typeof NotworkEtkinlikRoute
   '/notwork-nedir': typeof NotworkNedirRoute
+  '/notwork-sahne': typeof NotworkSahneRoute
   '/ntw': typeof NtwRoute
   '/profil': typeof ProfilRoute
   '/sponsor': typeof SponsorRoute
@@ -825,6 +852,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/adminalaunch'
     | '/adminlaunch'
+    | '/adminnotwork'
     | '/anket'
     | '/cerez-politikasi'
     | '/community'
@@ -849,7 +877,9 @@ export interface FileRouteTypes {
     | '/network-startup'
     | '/networking'
     | '/nodes'
+    | '/notwork-etkinlik'
     | '/notwork-nedir'
+    | '/notwork-sahne'
     | '/ntw'
     | '/profil'
     | '/sponsor'
@@ -915,6 +945,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/adminalaunch'
     | '/adminlaunch'
+    | '/adminnotwork'
     | '/anket'
     | '/cerez-politikasi'
     | '/community'
@@ -937,7 +968,9 @@ export interface FileRouteTypes {
     | '/network-startup'
     | '/networking'
     | '/nodes'
+    | '/notwork-etkinlik'
     | '/notwork-nedir'
+    | '/notwork-sahne'
     | '/ntw'
     | '/profil'
     | '/sponsor'
@@ -1003,6 +1036,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/adminalaunch'
     | '/adminlaunch'
+    | '/adminnotwork'
     | '/anket'
     | '/cerez-politikasi'
     | '/community'
@@ -1027,7 +1061,9 @@ export interface FileRouteTypes {
     | '/network-startup'
     | '/networking'
     | '/nodes'
+    | '/notwork-etkinlik'
     | '/notwork-nedir'
+    | '/notwork-sahne'
     | '/ntw'
     | '/profil'
     | '/sponsor'
@@ -1094,6 +1130,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AdminalaunchRoute: typeof AdminalaunchRoute
   AdminlaunchRoute: typeof AdminlaunchRoute
+  AdminnotworkRoute: typeof AdminnotworkRoute
   AnketRoute: typeof AnketRoute
   CerezPolitikasiRoute: typeof CerezPolitikasiRoute
   CommunityRoute: typeof CommunityRoute
@@ -1118,7 +1155,9 @@ export interface RootRouteChildren {
   NetworkStartupRoute: typeof NetworkStartupRoute
   NetworkingRoute: typeof NetworkingRoute
   NodesRoute: typeof NodesRoute
+  NotworkEtkinlikRoute: typeof NotworkEtkinlikRoute
   NotworkNedirRoute: typeof NotworkNedirRoute
+  NotworkSahneRoute: typeof NotworkSahneRoute
   NtwRoute: typeof NtwRoute
   ProfilRoute: typeof ProfilRoute
   SponsorRoute: typeof SponsorRoute
@@ -1169,11 +1208,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NtwRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notwork-sahne': {
+      id: '/notwork-sahne'
+      path: '/notwork-sahne'
+      fullPath: '/notwork-sahne'
+      preLoaderRoute: typeof NotworkSahneRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/notwork-nedir': {
       id: '/notwork-nedir'
       path: '/notwork-nedir'
       fullPath: '/notwork-nedir'
       preLoaderRoute: typeof NotworkNedirRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notwork-etkinlik': {
+      id: '/notwork-etkinlik'
+      path: '/notwork-etkinlik'
+      fullPath: '/notwork-etkinlik'
+      preLoaderRoute: typeof NotworkEtkinlikRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/nodes': {
@@ -1342,6 +1395,13 @@ declare module '@tanstack/react-router' {
       path: '/anket'
       fullPath: '/anket'
       preLoaderRoute: typeof AnketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/adminnotwork': {
+      id: '/adminnotwork'
+      path: '/adminnotwork'
+      fullPath: '/adminnotwork'
+      preLoaderRoute: typeof AdminnotworkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/adminlaunch': {
@@ -1860,6 +1920,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AdminalaunchRoute: AdminalaunchRoute,
   AdminlaunchRoute: AdminlaunchRoute,
+  AdminnotworkRoute: AdminnotworkRoute,
   AnketRoute: AnketRoute,
   CerezPolitikasiRoute: CerezPolitikasiRoute,
   CommunityRoute: CommunityRoute,
@@ -1884,7 +1945,9 @@ const rootRouteChildren: RootRouteChildren = {
   NetworkStartupRoute: NetworkStartupRoute,
   NetworkingRoute: NetworkingRoute,
   NodesRoute: NodesRoute,
+  NotworkEtkinlikRoute: NotworkEtkinlikRoute,
   NotworkNedirRoute: NotworkNedirRoute,
+  NotworkSahneRoute: NotworkSahneRoute,
   NtwRoute: NtwRoute,
   ProfilRoute: ProfilRoute,
   SponsorRoute: SponsorRoute,

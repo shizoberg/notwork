@@ -1,3 +1,4 @@
+import { isExperienceEvent } from "./_event-experience.mjs";
 import { createHmac, timingSafeEqual, createHash } from "node:crypto";
 import { getEvent } from "./_event-registry-store.mjs";
 const slug = "14-kasim-2026";
@@ -47,7 +48,7 @@ export async function hasLaunchSession(request: Request, identifier: string) {
     const claim = JSON.parse(Buffer.from(payload, "base64url").toString());
     if (claim.exp <= Date.now()) return false;
     const event = await getEvent(identifier);
-    return Boolean(event && event.slug === slug && event.id === claim.eventId);
+    return Boolean(event && isExperienceEvent(event.slug) && event.id === claim.eventId);
   } catch {
     return false;
   }

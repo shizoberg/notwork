@@ -1,4 +1,5 @@
 export const eventEntryLinks = {
+  notworkNovember: { code: "22kasim", path: "/notwork-etkinlik" },
   launchSpace: { code: "space1411", path: "/launch-space" },
 } as const;
 

@@ -1,3 +1,4 @@
+import { isExperienceEvent } from "./_event-experience.mjs";
 import { AsyncLocalStorage } from "node:async_hooks";
 
 import type {
@@ -74,7 +75,7 @@ export async function resolveEventRequestContext(
     requestedProduct: product,
     modeOverride: options.modeOverride,
     launchDataset:
-      event.slug === "14-kasim-2026" && product === "matchlab" && !options.modeOverride
+      isExperienceEvent(event.slug) && (product === "matchlab" || product === "wordcloud") && !options.modeOverride
         ? (await getLaunchDatasets(event)).active
         : undefined,
   } satisfies EventRequestContext;
@@ -101,7 +102,7 @@ export function getEventProductRuntimeContext(
   const context = requestContext.getStore();
   if (!context) return null;
   const config = context.event.products[product];
-  const launchDataset = product === "matchlab" ? context.launchDataset : undefined;
+  const launchDataset = (product === "matchlab" || product === "wordcloud") ? context.launchDataset : undefined;
   const mode =
     launchDataset?.mode ??
     (context.requestedProduct === product && context.modeOverride
@@ -111,7 +112,7 @@ export function getEventProductRuntimeContext(
     ...createEventProductNamespace(context.event, product, mode),
     ...(launchDataset
       ? {
-          keyPrefix: launchDatasetPrefix(context.event, launchDataset),
+          keyPrefix: launchDatasetPrefix(context.event, launchDataset) + (product === "wordcloud" ? "/wordcloud" : ""),
           datasetId: launchDataset.id,
         }
       : {}),

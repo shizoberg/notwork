@@ -1,3 +1,4 @@
+import { isExperienceEvent } from "./_event-experience.mjs";
 import type { getEventNetworkStore } from "./_event-network-store.mjs";
 import { getEventProductRuntimeContext } from "./_event-product-context.mjs";
 import { getLaunchDatasets, launchDatasetPrefix } from "./_launch-datasets.mjs";
@@ -16,7 +17,7 @@ async function rows(store: Store, prefix: string) {
 export async function eventMatchReport(store: Store, datasetId?: string, photoKey?: string) {
   const ctx = getEventProductRuntimeContext("matchlab");
   if (!ctx) throw Error("Etkinlik gerekli");
-  const manifest = ctx.event.slug === "14-kasim-2026" ? await getLaunchDatasets(ctx.event) : null;
+  const manifest = isExperienceEvent(ctx.event.slug) ? await getLaunchDatasets(ctx.event) : null;
   const selected = manifest ? manifest.datasets.find(d => d.id === (datasetId || manifest.active.id)) : null;
   if (manifest && !selected) throw Error("Veri seti bulunamadı");
   const prefix = selected ? launchDatasetPrefix(ctx.event, selected) : ctx.keyPrefix;

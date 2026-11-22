@@ -1,8 +1,10 @@
+import { useExperience } from "@/lib/event-experience";
 import { useEffect, useState } from "react";
 import { novemberEventSlug, pollRequest } from "@/lib/event-poll";
 import type { LaunchAnnouncement } from "@/lib/launch-dataset";
 
 export function LaunchAnnouncementAdmin() {
+  const novemberEventSlug = useExperience().event;
   const [current, setCurrent] = useState<LaunchAnnouncement | null>(null);
   const [datasetId, setDatasetId] = useState<string>();
   const [text, setText] = useState("");

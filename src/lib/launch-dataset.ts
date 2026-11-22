@@ -1,3 +1,4 @@
+import { experienceAdminUrl } from "@/lib/experience-api";
 import type { EventDataMode } from "./event-registry";
 
 export type LaunchDataset = {
@@ -20,7 +21,7 @@ export type LaunchDatasetList = {
 };
 
 export async function fetchActiveLaunchDataset(): Promise<ActiveLaunchDataset> {
-  const response = await fetch("/api/launch-admin?dataset=active", { cache: "no-store" });
+  const response = await fetch(experienceAdminUrl("dataset=active"), { cache: "no-store" });
   if (!response.ok) throw Error("Etkinlik veri seti yüklenemedi.");
   return response.json();
 }

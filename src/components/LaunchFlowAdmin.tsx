@@ -1,3 +1,4 @@
+import { experienceAdminUrl } from "@/lib/experience-api";
 import { useEffect, useState } from "react";
 import {
   defaultLaunchFlow,
@@ -27,7 +28,7 @@ export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => v
     setUploading(true);
     setError("");
     try {
-      const response = await fetch("/api/launch-admin?asset=upload", {
+      const response = await fetch(experienceAdminUrl("asset=upload"), {
         method: "POST",
         body: file,
       });
@@ -71,7 +72,7 @@ export function LaunchFlowAdmin({ onSaved }: { onSaved?: (flow: LaunchFlow) => v
           options: cleanLines(question.options),
         })),
       });
-      const response = await fetch("/api/launch-admin", {
+      const response = await fetch(experienceAdminUrl(), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "saveFlow", flow: draft }),

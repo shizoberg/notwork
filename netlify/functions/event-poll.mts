@@ -1,3 +1,4 @@
+import { isExperienceEvent } from "./_event-experience.mjs";
 import { hasLaunchSession } from "./_launch-admin-auth.mjs";
 import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { getStore } from "@netlify/blobs";
@@ -117,7 +118,7 @@ export default async (request: Request) => {
         )
           return new Response("Bu etkinlikte yanıt alımı kapalı", { status: 403 });
         const store = getStore({ name: "event-network", consistency: "strong" });
-        const launch = context.event.slug === novemberEventSlug;
+        const launch = isExperienceEvent(context.event.slug);
         if (["newPoll", "announce"].includes(action) && !launch)
           return new Response("Bu işlem yalnızca launchspace için kullanılabilir.", {
             status: 400,

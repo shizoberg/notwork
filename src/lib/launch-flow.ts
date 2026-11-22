@@ -1,7 +1,9 @@
+import { experienceAdminUrl } from "./experience-api.ts";
 export const launchQuestionKeys = ["intro", "offersDetail", "needs"] as const;
 export type LaunchApp = "match" | "poll";
 export type LaunchFlow = {
   revision: number;
+  eventDate?: string;
   organizerName: string;
   logo: string;
   cover: string;
@@ -111,6 +113,7 @@ export function validateLaunchFlow(value: LaunchFlow): LaunchFlow {
   function image(path: string | undefined, key: "logo" | "cover") {
     const fallback = defaultLaunchFlow[key];
     if (!path || path === fallback) return fallback;
+    if (["/brand/notwork-logo.png", "/events/9-ekim/rene-lokal-1-poster.jpg"].includes(path)) return path;
     const prefix = "/api/launch-admin?asset=";
     if (!path.startsWith(prefix) || !launchAssetPattern.test(path.slice(prefix.length)))
       throw Error("Geçersiz görsel. Dosyayı yeniden yükle.");
@@ -118,6 +121,7 @@ export function validateLaunchFlow(value: LaunchFlow): LaunchFlow {
   }
   return {
     revision: value.revision,
+    ...(value.eventDate ? {eventDate: line(value.eventDate, 60)} : {}),
     organizerName: line(value.organizerName ?? defaultLaunchFlow.organizerName, 60).replace(
       /launch\s+space/gi,
       "launchspace",
@@ -155,7 +159,9 @@ export function validateLaunchFlow(value: LaunchFlow): LaunchFlow {
 }
 
 export async function getLaunchFlow(): Promise<LaunchFlow> {
-  const response = await fetch("/api/launch-admin", { cache: "no-store" });
+  const response = await fetch(experienceAdminUrl(), { cache: "no-store" });
   if (!response.ok) throw Error("Etkinlik akışı yüklenemedi.");
   return { ...defaultLaunchFlow, ...(await response.json()) };
 }
+
+export const defaultNotworkFlow: LaunchFlow = { ...defaultLaunchFlow, organizerName:"notwork sahne", eventDate:"22 Kasım", logo:"/brand/notwork-logo.png", cover:"/events/9-ekim/rene-lokal-1-poster.jpg", welcomeText:"Gerçek hikâyeler, yeni insanlar ve anlamlı bağlantılar. Notwork deneyimine hoş geldin.", matchLabel:"notwork match", votesLabel:"Wordcloud", voteReminder:"", schedule:[{time:"20:00",label:"Karşılama ve interaktif Wordcloud"},{time:"20:15",label:"Başarısızlık hikâyeleri"},{time:"21:00",label:"Match ve networking"}] };

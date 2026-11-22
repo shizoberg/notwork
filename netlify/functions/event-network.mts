@@ -1,3 +1,4 @@
+import { isExperienceEvent } from "./_event-experience.mjs";
 import type { Config, Context } from "@netlify/functions";
 import { readFile } from "node:fs/promises";
 import {
@@ -98,10 +99,10 @@ export default async (request: Request, _context: Context) => {
       const database = getEventNetworkDatasetInfo();
       if (input.datasetId && input.datasetId !== database.datasetId)
         return new Response("Veri seti değişti. Sayfayı yenile.", { status: 409 });
-      const launchDemo = database.eventSlug === "14-kasim-2026" && database.mode === "demo";
+      const launchDemo = isExperienceEvent(database.eventSlug) && database.mode === "demo";
       const launchOnly =
         launchDemo ||
-        (database.eventSlug === "14-kasim-2026" &&
+        (isExperienceEvent(database.eventSlug) &&
           database.datasetId &&
           !database.datasetId.startsWith("legacy-"));
       const action = clean(input.action, 30);
@@ -113,7 +114,7 @@ export default async (request: Request, _context: Context) => {
           : null;
 
       if (action === "launchDeviceResume") {
-        if (database.eventSlug !== "14-kasim-2026") return new Response("Geçersiz etkinlik", { status: 403 });
+        if (!isExperienceEvent(database.eventSlug)) return new Response("Geçersiz etkinlik", { status: 403 });
         const cookieToken = request.headers.get("cookie")?.match(/(?:^|;\s*)launch_device=([a-f0-9-]{36})(?:;|$)/)?.[1];
         const tokens = [...new Set([clean(input.accessToken, 100), cookieToken].filter(Boolean))] as string[];
         for (const token of tokens) {
@@ -131,7 +132,7 @@ export default async (request: Request, _context: Context) => {
       }
 
       if (action === "launchSignIn" || action === "launchSignInComplete") {
-        if (database.eventSlug !== "14-kasim-2026") return new Response("Geçersiz etkinlik", { status: 403 });
+        if (!isExperienceEvent(database.eventSlug)) return new Response("Geçersiz etkinlik", { status: 403 });
         if (action === "launchSignIn") {
           return new Response("Etkinlik sırasında giriş e-postaları kapalı.", { status: 403 });
         }
@@ -139,16 +140,16 @@ export default async (request: Request, _context: Context) => {
         return registration ? json(registration) : new Response("Bağlantı geçersiz veya süresi dolmuş.", { status: 401 });
       }
       if (action === "launchProfile" || action === "launchProfileUpdate") {
-        if (database.eventSlug !== "14-kasim-2026") return new Response("Geçersiz etkinlik", { status: 403 });
+        if (!isExperienceEvent(database.eventSlug)) return new Response("Geçersiz etkinlik", { status: 403 });
         return json(await editLaunchProfile(store, input));
       }
       if (action === "launchProfilePhoto") {
-        if (database.eventSlug !== "14-kasim-2026")
+        if (!isExperienceEvent(database.eventSlug))
           return new Response("Bu alan etkinliğe özel", { status: 403 });
         return json(await launchProfilePhoto(store, input, clean((input as NetworkInput & { targetId?: string }).targetId, 100) || undefined));
       }
       if (action === "launchGuest" || action === "groupSelfie") {
-        if (database.eventSlug !== "14-kasim-2026")
+        if (!isExperienceEvent(database.eventSlug))
           return new Response("Bu işlem Launchspace’e özel", { status: 403 });
         if (action === "groupSelfie") {
           await saveLaunchGroupSelfie(store, input);
@@ -242,13 +243,13 @@ export default async (request: Request, _context: Context) => {
       if (action === "me") {
         const registration = await getRegistrationByToken(store, clean(input.accessToken, 100));
         if (!registration) return new Response("Kayıt bulunamadı", { status: 404 });
-        return json(registration, database.eventSlug === "14-kasim-2026" ? { headers: {
+        return json(registration, isExperienceEvent(database.eventSlug) ? { headers: {
           "Set-Cookie": `launch_device=${clean(input.accessToken, 100)}; Path=/api/event-products/network; HttpOnly; SameSite=Lax; Max-Age=604800${isLocalRequest(request) ? "" : "; Secure"}`,
         } } : undefined);
       }
 
       if (action === "introductionReason") {
-        if (database.eventSlug !== "14-kasim-2026")
+        if (!isExperienceEvent(database.eventSlug))
           return new Response("Bu alan etkinliğe özel", { status: 403 });
         const reason = await launchIntroductionReason(
           store, clean(input.accessToken, 100),
@@ -258,7 +259,7 @@ export default async (request: Request, _context: Context) => {
       }
 
       if (action === "people" || action === "introduce") {
-        if (database.eventSlug !== "14-kasim-2026")
+        if (!isExperienceEvent(database.eventSlug))
           return new Response("Bu alan etkinliğe özel", { status: 403 });
         if (
           action === "introduce" &&
@@ -318,7 +319,7 @@ export default async (request: Request, _context: Context) => {
 
       if (action === "seedSamples") {
         // Public demo access must never authorize resetting the hosted event dataset.
-        if (database.eventSlug === "14-kasim-2026" && !isLocalRequest(request))
+        if (isExperienceEvent(database.eventSlug) && !isLocalRequest(request))
           return new Response("Canlı etkinlik demosu buradan sıfırlanamaz", { status: 403 });
         if (!isDemoSeedAllowed(request))
           return new Response("Demo seed şu anda kapalı", { status: 403 });

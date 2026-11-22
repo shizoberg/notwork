@@ -1,3 +1,5 @@
+import { isExperienceEvent } from "./_event-experience.mjs";
+import { defaultNotworkFlow } from "../../src/lib/launch-flow.ts";
 import { createHash, randomUUID } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import type { Config, Context } from "@netlify/functions";
@@ -42,10 +44,13 @@ export default async (request: Request, context: Context) => {
   const headers = { "cache-control": "no-store, private" };
   try {
     const params = new URL(request.url).searchParams;
+    const selectedSlug = params.get("event") || launchAdminSlug;
+    if (!isExperienceEvent(selectedSlug)) return new Response("Geçersiz etkinlik", { status: 404 });
+    const defaults = selectedSlug === "22-kasim-2026" ? defaultNotworkFlow : defaultLaunchFlow;
     if (params.has("asset")) {
       const store = getStore({ name: "launchspace-brand", consistency: "strong" });
       if (request.method === "POST") {
-        if (!(await hasLaunchSession(request, launchAdminSlug)))
+        if (!(await hasLaunchSession(request, selectedSlug)))
           return new Response("Yönetici oturumu gerekli", { status: 401, headers });
         if (Number(request.headers.get("content-length")) > launchImageLimit)
           return new Response("Görsel en fazla 2 MB olabilir", { status: 413, headers });
@@ -71,7 +76,7 @@ export default async (request: Request, context: Context) => {
       });
     }
     if (request.method === "GET") {
-      const event = await getEvent(launchAdminSlug);
+      const event = await getEvent(selectedSlug);
       if (!event) return new Response("Etkinlik hazırlanıyor", { status: 503 });
       if (params.get("dataset") === "active") {
         const { active } = await getLaunchDatasets(event);
@@ -81,11 +86,11 @@ export default async (request: Request, context: Context) => {
       const store = getStore({ name: "event-network", consistency: "strong" });
       return Response.json(
         {
-          ...defaultLaunchFlow,
+          ...defaults,
           ...(await readAtomicState(
             store,
             `events/${event.id}/launch-flow.json`,
-            () => defaultLaunchFlow,
+            () => defaults,
           )),
         },
         { headers },
@@ -97,9 +102,9 @@ export default async (request: Request, context: Context) => {
     if (input.action !== "saveFlow" && raw.length > 2000)
       return new Response("İstek çok büyük", { status: 413 });
     if (["listDatasets", "createDataset", "activateDataset"].includes(input.action)) {
-      if (!(await hasLaunchSession(request, launchAdminSlug)))
+      if (!(await hasLaunchSession(request, selectedSlug)))
         return new Response("Yönetici oturumu gerekli", { status: 401, headers });
-      const event = await getEvent(launchAdminSlug);
+      const event = await getEvent(selectedSlug);
       if (!event) return new Response("Etkinlik bulunamadı", { status: 404, headers });
       try {
         return Response.json(
@@ -116,9 +121,9 @@ export default async (request: Request, context: Context) => {
       }
     }
     if (input.action === "saveFlow") {
-      if (!(await hasLaunchSession(request, launchAdminSlug)))
+      if (!(await hasLaunchSession(request, selectedSlug)))
         return new Response("Yönetici oturumu gerekli", { status: 401, headers });
-      const event = await getEvent(launchAdminSlug);
+      const event = await getEvent(selectedSlug);
       if (!event) return new Response("Etkinlik bulunamadı", { status: 404, headers });
       let flow;
       try {
@@ -159,11 +164,11 @@ export default async (request: Request, context: Context) => {
       );
     if (input.action === "me")
       return Response.json(
-        { authenticated: await hasLaunchSession(request, launchAdminSlug), event: launchAdminSlug },
+        { authenticated: await hasLaunchSession(request, selectedSlug), event: selectedSlug },
         { headers },
       );
     if (input.action !== "login") return new Response("Geçersiz işlem", { status: 400 });
-    const event = await getEvent(launchAdminSlug);
+    const event = await getEvent(selectedSlug);
     if (!event) return new Response("Etkinlik hazırlanıyor", { status: 503 });
     const ip = context.ip || "unknown";
     const key = `events/${event.id}/demo/matchlab/launch-auth/${createHash("sha256").update(ip).digest("hex")}.json`;
@@ -194,7 +199,7 @@ export default async (request: Request, context: Context) => {
       },
     );
     return Response.json(
-      { authenticated: true, event: launchAdminSlug },
+      { authenticated: true, event: selectedSlug },
       {
         headers: {
           ...headers,

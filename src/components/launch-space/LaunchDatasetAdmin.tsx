@@ -1,3 +1,4 @@
+import { experienceAdminUrl } from "@/lib/experience-api";
 import { useEffect, useState } from "react";
 import type { LaunchDataset, LaunchDatasetList } from "@/lib/launch-dataset";
 import type { EventDataMode } from "@/lib/event-registry";
@@ -6,7 +7,7 @@ async function datasetRequest(
   action: string,
   data: Record<string, unknown> = {},
 ): Promise<LaunchDatasetList> {
-  const response = await fetch("/api/launch-admin", {
+  const response = await fetch(experienceAdminUrl(), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action, ...data }),
