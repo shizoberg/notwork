@@ -46,7 +46,7 @@ export default async (request: Request, _context: Context) => {
       return new Response("Yetkisiz erişim", { status: 401 });
     if (scoped) {
       if (
-        !["recoverParticipant", "matchReport", "matchReportPhoto", "list", "matchOverview", "startMatching", "processMatching", "repairCodes"].includes(
+        !["loginMailStatus", "recoverParticipant", "matchReport", "matchReportPhoto", "list", "matchOverview", "startMatching", "processMatching", "repairCodes"].includes(
           input.action || "list",
         )
       )
@@ -67,6 +67,13 @@ export default async (request: Request, _context: Context) => {
         }
         if (input.datasetId && input.datasetId !== getEventNetworkDatasetInfo().datasetId)
           return new Response("Veri seti değişti. Sayfayı yenile.", { status: 409 });
+        if (input.action === "loginMailStatus") {
+          const {mailStore,gmailStatus}=await import("./_gmail.mjs");
+          const mail=mailStore();const rows=[];
+          for await (const page of mail.list({prefix:"outbox/",paginate:true})) for(const blob of page.blobs){const row=await mail.get(blob.key,{type:"json"}) as {id?:string;status?:string;httpStatus?:number;at?:string;startedAt?:string}|null;if(row?.id?.startsWith("event-login:"))rows.push({status:row.status,httpStatus:row.httpStatus,at:row.at||row.startedAt});}
+          const quota=await mail.list({prefix:`quota/${new Date().toISOString().slice(0,10)}/`});
+          return Response.json({gmail:await gmailStatus(),dailyUsed:quota.blobs.length,limit:Number(process.env.GMAIL_DAILY_LIMIT)||100,requests:rows},{headers:{"cache-control":"no-store, private"}});
+        }
         if (input.action === "recoverParticipant") {
           return Response.json(await createLaunchRecovery(store, input.participantId || ""), { headers: { "cache-control": "no-store, private" } });
         }

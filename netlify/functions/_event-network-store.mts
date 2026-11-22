@@ -176,6 +176,7 @@ export type NetworkAdminInput = {
   password?: string;
   action?:
     | "list"
+    | "loginMailStatus"
     | "recoverParticipant"
     | "matchReport"
     | "matchReportPhoto"
