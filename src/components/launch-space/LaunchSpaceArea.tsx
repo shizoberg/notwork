@@ -180,7 +180,8 @@ export function LaunchSpaceArea({
       .includes(query.toLocaleLowerCase("tr-TR")),
   );
   const self = people.find((person) => person.isSelf);
-  const suggested = rankNetworkRoute(people);
+  const routeReady = event !== "22-kasim-2026" || people.length >= 50;
+  const suggested = routeReady ? rankNetworkRoute(people) : [];
   const requests = people.filter((person) => person.sent || person.received);
   const formatTime = (value: string) => new Intl.DateTimeFormat("tr-TR", {
     dateStyle: "short", timeStyle: "short", timeZone: "Europe/Istanbul",
@@ -215,8 +216,8 @@ export function LaunchSpaceArea({
       <section className="ls-panel ls-route-card">
         <h3>🍪🍪 notwork rota</h3>
         <p className="ls-caption">{goal || flow.welcomeText}</p>
-        <button className="ls-secondary ls-dialog-action" onClick={() => setRouteOpen(true)}>
-          <Route size={16} /> <span>Rotanı oluşturduk tıkla</span> <ArrowRight size={15} />
+        <button className="ls-secondary ls-dialog-action" disabled={!routeReady} onClick={() => setRouteOpen(true)}>
+          <Route size={16} /> <span>{routeReady ? "Rotanı oluşturduk tıkla" : `Rotan 50 katılımcıda hazır · ${people.length}/50`}</span> <ArrowRight size={15} />
         </button>
       </section>
       {children}

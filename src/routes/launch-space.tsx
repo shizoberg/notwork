@@ -3,7 +3,7 @@ import { ExperienceWordcloud } from "@/components/launch-space/ExperienceWordclo
 import { MatchRating } from "@/components/launch-space/MatchRating";
 import { LaunchAvatar } from "@/components/launch-space/LaunchAvatar";
 import { fetchActiveLaunchDataset, type ActiveLaunchDataset } from "@/lib/launch-dataset";
-import { defaultLaunchFlow, getLaunchFlow } from "@/lib/launch-flow";
+import { defaultLaunchFlow, defaultNotworkFlow, getLaunchFlow } from "@/lib/launch-flow";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -73,7 +73,7 @@ const draftKeyFor = (datasetId?: string) => "launch-space:draft" + keySuffix(dat
     const timer = setTimeout(() => setIntroVisible(false), 1600);
     return () => clearTimeout(timer);
   }, []);
-  const [flow, setFlow] = useState(defaultLaunchFlow);
+  const [flow, setFlow] = useState(experience.notwork ? defaultNotworkFlow : defaultLaunchFlow);
 
   const [ready, setReady] = useState(false),
     [contextError, setContextError] = useState("");

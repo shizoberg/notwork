@@ -165,6 +165,7 @@ function RootComponent() {
     pathname.startsWith("/launch-space") ||
     pathname.startsWith("/notwork-etkinlik") ||
     pathname.startsWith("/notwork-sahne") ||
+    pathname === "/adminnotwork" ||
     pathname === "/adminlaunch" ||
     pathname === "/adminalaunch";
 

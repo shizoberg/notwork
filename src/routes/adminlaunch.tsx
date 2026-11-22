@@ -15,7 +15,7 @@ import {
 import { LaunchAnnouncementAdmin } from "@/components/launch-space/LaunchAnnouncementAdmin";
 import { LaunchDatasetAdmin } from "@/components/launch-space/LaunchDatasetAdmin";
 import { LaunchEventHeader } from "@/components/launch-space/LaunchEventHeader";
-import { defaultLaunchFlow, getLaunchFlow } from "@/lib/launch-flow";
+import { defaultLaunchFlow, defaultNotworkFlow, getLaunchFlow } from "@/lib/launch-flow";
 import { LaunchFlowAdmin } from "@/components/LaunchFlowAdmin";
 import { EventPollAdmin } from "@/components/EventPollAdmin";
 import { createNoIndexSeo } from "@/lib/seo";
@@ -45,7 +45,7 @@ export function LaunchAdminPanel() {
   const [overview, setOverview] = useState<MatchOverview>();
   const [matchError, setMatchError] = useState("");
   const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
+  useEffect(() => { setHydrated(true); void getLaunchFlow().then(setFlow).catch(() => {}); }, []);
   const [password, setPassword] = useState(""),
     [active, setActive] = useState(false),
     [error, setError] = useState(""),
@@ -79,7 +79,7 @@ export function LaunchAdminPanel() {
   const [section, setSection] = useState<
     "event" | "flow" | "match" | "poll" | "database" | "announcement" | "report"
   >("event");
-  const [flow, setFlow] = useState(defaultLaunchFlow);
+  const [flow, setFlow] = useState(experience.notwork ? defaultNotworkFlow : defaultLaunchFlow);
   const [recovery, setRecovery] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
   const [username, setUsername] = useState("");
@@ -149,7 +149,7 @@ export function LaunchAdminPanel() {
       <header className="ls-header">
         <span className="ls-brand">
           <NodeMark />
-          {flow.organizerName}
+          {experience.notwork ? null : flow.organizerName}
         </span>
         <span className="ls-demo">ORGANİZATÖR</span>
       </header>
