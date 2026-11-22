@@ -10,6 +10,7 @@ import {
   launchProfilePhoto,
   editLaunchProfile,
   completeLaunchSignIn,
+  requestLaunchSignIn,
   normalizeEmail,
   hashToken,
   launchIntroductionReason,
@@ -134,7 +135,8 @@ export default async (request: Request, _context: Context) => {
       if (action === "launchSignIn" || action === "launchSignInComplete") {
         if (!isExperienceEvent(database.eventSlug)) return new Response("Geçersiz etkinlik", { status: 403 });
         if (action === "launchSignIn") {
-          return new Response("Etkinlik sırasında giriş e-postaları kapalı.", { status: 403 });
+          await requestLaunchSignIn(store, clean(input.email,120), _context.ip || "unknown");
+          return json({ok:true});
         }
         const registration = await completeLaunchSignIn(store, clean(input.accessToken, 100));
         return registration ? json(registration) : new Response("Bağlantı geçersiz veya süresi dolmuş.", { status: 401 });

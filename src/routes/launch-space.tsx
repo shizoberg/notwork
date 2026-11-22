@@ -397,6 +397,14 @@ const draftKeyFor = (datasetId?: string) => "launch-space:draft" + keySuffix(dat
     setBusy(true);
     setError("");
     try {
+      if (!signInLink) {
+        try {
+          const result = await network("launchDeviceResume", {email:email.trim(),accessToken:token || localStorage.getItem(tokenKeyFor(dataset?.id)) || ""});
+          accept(result); return;
+        } catch { /* A new device proves ownership through a one-time email link. */ }
+        await network("launchSignIn", {email:email.trim()});
+        setError("Bu e-postayla kaydın varsa giriş bağlantın gönderildi. Gelen kutunu ve spam klasörünü kontrol et."); return;
+      }
       const result = signInLink
         ? await network("launchSignInComplete", { accessToken: signInLink })
         : await network("launchDeviceResume", { email: email.trim(), accessToken: token || localStorage.getItem(tokenKeyFor(dataset?.id)) || "" });
@@ -551,7 +559,7 @@ const draftKeyFor = (datasetId?: string) => "launch-space:draft" + keySuffix(dat
             <LaunchEventHeader flow={flow} />
             <form className="ls-form ls-panel ls-entry-form ls-return-form" onSubmit={recoverSession}>
               <h1>Etkinliğe geri dön</h1>
-              <p className="ls-entry-description">Kayıt olduğun cihazda e-postanı yazarak kaldığın yerden devam et.</p>
+              <p className="ls-entry-description">Kayıtlı e-postanı yaz. Yeni cihazdaysan tek kullanımlık giriş bağlantısı göndereceğiz.</p>
               {!signInLink && <label>E-posta
                 <input type="email" required autoComplete="email" placeholder="E-posta adresin" value={email}
                   onChange={(event) => setEmail(event.target.value)} />

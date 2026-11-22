@@ -2017,6 +2017,29 @@ export async function createLaunchRecovery(store: ReturnType<typeof getEventNetw
   return { path: `/launch-space#sign-in=${token}` };
 }
 
+export async function requestLaunchSignIn(store: ReturnType<typeof getEventNetworkStore>, email: string, ip: string) {
+  const normalized = normalizeEmail(clean(email, 120));
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) throw Error("Geçerli e-posta yaz.");
+  const allowed = await atomicState(store, `${getNetworkPrefix()}/sign-in-limits/${hashToken(ip)}.json`, () => ({count:0,until:0}), state => {
+    if (Date.now()>state.until) {state.count=0;state.until=Date.now()+900000;}
+    if(state.count>=10)return false;state.count++;return true;
+  });
+  if(!allowed)throw Error("Çok fazla deneme. Biraz sonra tekrar dene.");
+  const recent = await atomicState(store, `${getNetworkPrefix()}/sign-in-email/${hashToken(normalized)}.json`, () => ({at:0}), state => {
+    if(Date.now()-state.at<60000)return false;state.at=Date.now();return true;
+  });
+  if(!recent)return;
+  const index = await store.get(`${getNetworkPrefix()}/guest-email-index/${hashToken(normalized)}.json`, {type:"json",consistency:"strong"}) as {id:string}|null;
+  const row = index ? await store.get(participantKey(index.id),{type:"json",consistency:"strong"}) as EventNetworkRegistration|null : null;
+  if(!row || row.participant.status!=="registered")return;
+  const recovery = await createLaunchRecovery(store,row.participant.id);
+  const path = getNetworkEventSlug()==="22-kasim-2026" ? recovery.path.replace("/launch-space", "/notwork-etkinlik") : recovery.path;
+  const url = "https://notwork.me"+path;
+  const {sendGmailOnce}=await import("./_gmail.mjs");
+  const result=await sendGmailOnce("event-login:"+randomUUID(),{to:[normalized],subject:"notwork · etkinliğe geri dön",text:`Mevcut profilin ve eşleşmenle devam et: ${url}\nBağlantı 15 dakika geçerli ve tek kullanımlıktır. İsteği sen yapmadıysan yok say.`,html:`<p>Mevcut profilin ve eşleşmenle devam et.</p><p><a href="${url}">Etkinliğe geri dön</a></p><p>15 dakika geçerli · tek kullanımlık. İsteği sen yapmadıysan yok say.</p>`},{transactional:true});
+  if(result.status!=="accepted")throw Error("Giriş e-postası gönderilemedi. Etkinlik ekibinden girişini kurtarmasını iste.");
+}
+
 export async function completeLaunchSignIn(
   store: ReturnType<typeof getEventNetworkStore>,
   token: string,
