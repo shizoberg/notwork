@@ -9,6 +9,7 @@ import type { Config, Context } from "@netlify/functions";
 import {
   getEventNetworkDatasetInfo,
   createLaunchRecovery,
+  retryPendingLoginEmails,
   getMatchLaunchState,
   startMatchLaunch,
   processMatchLaunch,
@@ -46,7 +47,7 @@ export default async (request: Request, _context: Context) => {
       return new Response("Yetkisiz erişim", { status: 401 });
     if (scoped) {
       if (
-        !["loginMailStatus", "recoverParticipant", "matchReport", "matchReportPhoto", "list", "matchOverview", "startMatching", "processMatching", "repairCodes"].includes(
+        !["retryLoginEmails", "loginMailStatus", "recoverParticipant", "matchReport", "matchReportPhoto", "list", "matchOverview", "startMatching", "processMatching", "repairCodes"].includes(
           input.action || "list",
         )
       )
@@ -67,6 +68,7 @@ export default async (request: Request, _context: Context) => {
         }
         if (input.datasetId && input.datasetId !== getEventNetworkDatasetInfo().datasetId)
           return new Response("Veri seti değişti. Sayfayı yenile.", { status: 409 });
+        if (input.action === "retryLoginEmails") return Response.json(await retryPendingLoginEmails(store),{headers:{"cache-control":"no-store, private"}});
         if (input.action === "loginMailStatus") {
           const {mailStore,gmailStatus}=await import("./_gmail.mjs");
           const mail=mailStore();const rows=[];

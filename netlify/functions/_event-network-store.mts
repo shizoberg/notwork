@@ -176,6 +176,7 @@ export type NetworkAdminInput = {
   password?: string;
   action?:
     | "list"
+    | "retryLoginEmails"
     | "loginMailStatus"
     | "recoverParticipant"
     | "matchReport"
@@ -2030,7 +2031,14 @@ export async function requestLaunchSignIn(store: ReturnType<typeof getEventNetwo
     if(Date.now()-state.at<60000)return false;state.at=Date.now();return true;
   });
   if(!recent)return;
-  const index = await store.get(`${getNetworkPrefix()}/guest-email-index/${hashToken(normalized)}.json`, {type:"json",consistency:"strong"}) as {id:string}|null;
+  let index = await store.get(`${getNetworkPrefix()}/guest-email-index/${hashToken(normalized)}.json`, {type:"json",consistency:"strong"}) as {id:string}|null;
+  if(!index){
+    const rows=await listRegistrations(store);
+    for(const candidate of rows){
+      const contact=await store.get(`${getNetworkPrefix()}/guest-contacts/${candidate.participant.id}.json`,{type:"json",consistency:"strong"}) as {email?:string}|null;
+      if(normalizeEmail(contact?.email||candidate.profile.email)===normalized){index={id:candidate.participant.id};await store.setJSON(`${getNetworkPrefix()}/guest-email-index/${hashToken(normalized)}.json`,index);break;}
+    }
+  }
   const row = index ? await store.get(participantKey(index.id),{type:"json",consistency:"strong"}) as EventNetworkRegistration|null : null;
   if(!row || row.participant.status!=="registered")return;
   const recovery = await createLaunchRecovery(store,row.participant.id);
@@ -2039,6 +2047,24 @@ export async function requestLaunchSignIn(store: ReturnType<typeof getEventNetwo
   const {sendGmailOnce}=await import("./_gmail.mjs");
   const result=await sendGmailOnce("event-login:"+randomUUID(),{to:[normalized],subject:"notwork · etkinliğe geri dön",text:`Mevcut profilin ve eşleşmenle devam et: ${url}\nBağlantı 15 dakika geçerli ve tek kullanımlıktır. İsteği sen yapmadıysan yok say.`,html:`<p>Mevcut profilin ve eşleşmenle devam et.</p><p><a href="${url}">Etkinliğe geri dön</a></p><p>15 dakika geçerli · tek kullanımlık. İsteği sen yapmadıysan yok say.</p>`},{transactional:true});
   if(result.status!=="accepted")throw Error("Giriş e-postası gönderilemedi. Etkinlik ekibinden girişini kurtarmasını iste.");
+}
+
+export async function retryPendingLoginEmails(store: ReturnType<typeof getEventNetworkStore>) {
+  const pending=new Map<string,{key:string;expires:number}>();
+  for await(const page of store.list({prefix:`${getNetworkPrefix()}/sign-in/`,paginate:true}))for(const blob of page.blobs){
+    if(!blob.key.endsWith(".json"))continue;
+    const row=await store.get(blob.key,{type:"json",consistency:"strong"}) as {id?:string;expires?:number}|null;
+    if(!row?.id||!row.expires||row.expires<Date.now()-3600000)continue;
+    const used=await readAtomicState(store,`${blob.key}.used`,()=>({at:0}));if(used.at)continue;
+    if((pending.get(row.id)?.expires||0)<row.expires)pending.set(row.id,{key:blob.key,expires:row.expires});
+  }
+  let retried=0,failed=0;
+  for(const [id] of [...pending].slice(0,8)){
+    const contact=await store.get(`${getNetworkPrefix()}/guest-contacts/${id}.json`,{type:"json",consistency:"strong"}) as {email?:string}|null;
+    if(!contact?.email)continue;
+    try{await requestLaunchSignIn(store,contact.email,"admin-retry");retried++;}catch{failed++;}
+  }
+  return {pending:pending.size,retried,failed};
 }
 
 export async function completeLaunchSignIn(
