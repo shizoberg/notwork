@@ -2022,7 +2022,7 @@ export async function requestLaunchSignIn(store: ReturnType<typeof getEventNetwo
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) throw Error("Geçerli e-posta yaz.");
   const allowed = await atomicState(store, `${getNetworkPrefix()}/sign-in-limits/${hashToken(ip)}.json`, () => ({count:0,until:0}), state => {
     if (Date.now()>state.until) {state.count=0;state.until=Date.now()+900000;}
-    if(state.count>=10)return false;state.count++;return true;
+    if(state.count>=300)return false;state.count++;return true;
   });
   if(!allowed)throw Error("Çok fazla deneme. Biraz sonra tekrar dene.");
   const recent = await atomicState(store, `${getNetworkPrefix()}/sign-in-email/${hashToken(normalized)}.json`, () => ({at:0}), state => {
