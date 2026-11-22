@@ -664,7 +664,7 @@ const draftKeyFor = (datasetId?: string) => "launch-space:draft" + keySuffix(dat
                     <span className="ls-code">{registration.participant.publicCode}</span>
                   </div>
                   <button type="button" className="ls-secondary" disabled={busy} onClick={openProfileEditor}>Profilimi düzenle</button>
-                  {editingProfile && <form className="ls-profile-editor" onSubmit={e => { e.preventDefault(); void saveProfile(); }}>
+                  {editingProfile && <form className="ls-profile-editor ls-profile-modal" onSubmit={e => { e.preventDefault(); void saveProfile(); }}>
                     <h2>Profil bilgilerin</h2>
                     <label>Ad soyad<input required maxLength={100} value={name} onChange={e => setName(e.target.value)} autoComplete="name" /></label>
                     <label>E-posta<input type="email" maxLength={120} value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" /></label>

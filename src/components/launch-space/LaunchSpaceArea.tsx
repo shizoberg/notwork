@@ -217,7 +217,7 @@ export function LaunchSpaceArea({
         </ul>
       </details>
       <section className="ls-panel ls-route-card">
-        <h3>Etkinlik amacım</h3>
+        <h3>🍪 notwork roca · Etkinlik amacım</h3>
         <p className="ls-caption">{goal || flow.welcomeText}</p>
         <button className="ls-secondary ls-dialog-action" onClick={() => setRouteOpen(true)}>
           <Route size={16} /> <span>{flow.routeLabel}</span> <ArrowRight size={15} />

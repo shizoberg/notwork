@@ -8,9 +8,9 @@ function equal(a: string, b: string) {
     y = Buffer.from(b);
   return x.length === y.length && timingSafeEqual(x, y);
 }
-export function launchCredentials(username: unknown, password: unknown) {
-  const expected = process.env.LAUNCH_ADMIN_PASSWORD_HASH || "";
-  const account = process.env.LAUNCH_ADMIN_USERNAME || "";
+export function launchCredentials(username: unknown, password: unknown, eventSlug = slug) {
+  const expected = eventSlug === "22-kasim-2026" ? (process.env.NOTWORK_ADMIN_PASSWORD_HASH || "c230b2d9efd531e535f5a65ebb6cb54158e3f60fdd4213b0be5e62becc3653ce") : process.env.LAUNCH_ADMIN_PASSWORD_HASH || "";
+  const account = eventSlug === "22-kasim-2026" ? (process.env.NOTWORK_ADMIN_USERNAME || "notwork") : process.env.LAUNCH_ADMIN_USERNAME || "";
   return (
     typeof username === "string" &&
     typeof password === "string" &&

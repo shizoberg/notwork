@@ -113,7 +113,7 @@ export function validateLaunchFlow(value: LaunchFlow): LaunchFlow {
   function image(path: string | undefined, key: "logo" | "cover") {
     const fallback = defaultLaunchFlow[key];
     if (!path || path === fallback) return fallback;
-    if (["/brand/notwork-logo.png", "/events/9-ekim/rene-lokal-1-poster.jpg"].includes(path)) return path;
+    if (["/brand/notwork-logo.png", "/brand/notwork-event-cover.png"].includes(path)) return path;
     const prefix = "/api/launch-admin?asset=";
     if (!path.startsWith(prefix) || !launchAssetPattern.test(path.slice(prefix.length)))
       throw Error("Geçersiz görsel. Dosyayı yeniden yükle.");
@@ -164,4 +164,4 @@ export async function getLaunchFlow(): Promise<LaunchFlow> {
   return { ...defaultLaunchFlow, ...(await response.json()) };
 }
 
-export const defaultNotworkFlow: LaunchFlow = { ...defaultLaunchFlow, organizerName:"notwork sahne", eventDate:"22 Kasım", logo:"/brand/notwork-logo.png", cover:"/events/9-ekim/rene-lokal-1-poster.jpg", welcomeText:"Gerçek hikâyeler, yeni insanlar ve anlamlı bağlantılar. Notwork deneyimine hoş geldin.", matchLabel:"notwork match", votesLabel:"Wordcloud", voteReminder:"", schedule:[{time:"20:00",label:"Karşılama ve interaktif Wordcloud"},{time:"20:15",label:"Başarısızlık hikâyeleri"},{time:"21:00",label:"Match ve networking"}] };
+export const defaultNotworkFlow: LaunchFlow = { ...defaultLaunchFlow, organizerName:"notwork sahne", eventDate:"22 Kasım", logo:"/brand/notwork-logo.png", cover:"/brand/notwork-event-cover.png", welcomeText:"Gerçek hikâyeler, yeni insanlar ve anlamlı bağlantılar. Notwork deneyimine hoş geldin.", matchLabel:"notwork match", votesLabel:"Wordcloud", voteReminder:"", schedule:[{time:"20:00",label:"Karşılama ve interaktif Wordcloud"},{time:"20:15",label:"Başarısızlık hikâyeleri"},{time:"21:00",label:"Match ve networking"}] };

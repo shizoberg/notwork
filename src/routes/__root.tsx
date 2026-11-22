@@ -163,6 +163,8 @@ function RootComponent() {
     pathname === "/demo2" ||
     pathname === "/nodes" ||
     pathname.startsWith("/launch-space") ||
+    pathname.startsWith("/notwork-etkinlik") ||
+    pathname.startsWith("/notwork-sahne") ||
     pathname === "/adminlaunch" ||
     pathname === "/adminalaunch";
 
@@ -189,6 +191,7 @@ function RootComponent() {
 }
 
 function isEventExperiencePath(pathname: string) {
+  if (pathname.startsWith("/notwork-etkinlik") || pathname.startsWith("/notwork-sahne")) return true;
   return (
     pathname === "/ntw" ||
     pathname === "/etkinlikler" ||

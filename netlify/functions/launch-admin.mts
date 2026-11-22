@@ -188,7 +188,7 @@ export default async (request: Request, context: Context) => {
     );
     if (!permitted)
       return new Response("Çok fazla deneme. 15 dakika sonra tekrar dene.", { status: 429 });
-    if (!launchCredentials(input.username, input.password))
+    if (!launchCredentials(input.username, input.password, selectedSlug))
       return new Response("Kullanıcı adı veya şifre hatalı", { status: 401 });
     await atomicState(
       getStore({ name: "event-network", consistency: "strong" }),
