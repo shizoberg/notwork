@@ -2054,7 +2054,7 @@ export async function retryPendingLoginEmails(store: ReturnType<typeof getEventN
   for await(const page of store.list({prefix:`${getNetworkPrefix()}/sign-in/`,paginate:true}))for(const blob of page.blobs){
     if(!blob.key.endsWith(".json"))continue;
     const row=await store.get(blob.key,{type:"json",consistency:"strong"}) as {id?:string;expires?:number}|null;
-    if(!row?.id||!row.expires||row.expires<Date.now()-3600000)continue;
+    if(!row?.id||!row.expires||row.expires<Date.now()-86400000)continue;
     const used=await readAtomicState(store,`${blob.key}.used`,()=>({at:0}));if(used.at)continue;
     if((pending.get(row.id)?.expires||0)<row.expires)pending.set(row.id,{key:blob.key,expires:row.expires});
   }
