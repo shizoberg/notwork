@@ -1,3 +1,4 @@
+import { rankNetworkRoute } from "@/lib/network-route";
 import { LaunchAvatar } from "./LaunchAvatar";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { Check, CircleHelp, RefreshCw, Bell, ArrowRight, DoorOpen, Network, Presentation, Route, Search, Users, X } from "lucide-react";
@@ -179,12 +180,7 @@ export function LaunchSpaceArea({
       .includes(query.toLocaleLowerCase("tr-TR")),
   );
   const self = people.find((person) => person.isSelf);
-  const words = (value: string) => new Set(value.toLocaleLowerCase("tr-TR").match(/[\p{L}]{4,}/gu) || []);
-  const needs = words(self?.needs || "");
-  const score = (person: Person) => [...words(`${person.offers.join(" ")} ${person.offersDetail}`)]
-    .filter((word) => needs.has(word)).length;
-  const suggested = people.filter((person) => !person.isSelf && !person.sent)
-    .sort((a, b) => score(b) - score(a)).slice(0, 3);
+  const suggested = rankNetworkRoute(people);
   const requests = people.filter((person) => person.sent || person.received);
   const formatTime = (value: string) => new Intl.DateTimeFormat("tr-TR", {
     dateStyle: "short", timeStyle: "short", timeZone: "Europe/Istanbul",
@@ -217,10 +213,10 @@ export function LaunchSpaceArea({
         </ul>
       </details>
       <section className="ls-panel ls-route-card">
-        <h3>🍪 notwork roca · Etkinlik amacım</h3>
+        <h3>🍪🍪 notwork rota</h3>
         <p className="ls-caption">{goal || flow.welcomeText}</p>
         <button className="ls-secondary ls-dialog-action" onClick={() => setRouteOpen(true)}>
-          <Route size={16} /> <span>{flow.routeLabel}</span> <ArrowRight size={15} />
+          <Route size={16} /> <span>Rotanı oluşturduk tıkla</span> <ArrowRight size={15} />
         </button>
       </section>
       {children}
