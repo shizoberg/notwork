@@ -1,1 +1,1 @@
-export const novemberEventPhotos = ["/events/22-kasim/group-001.jpg", "/events/22-kasim/group-002.jpg", "/events/22-kasim/group-003.jpg", "/events/22-kasim/group-004.jpg", "/events/22-kasim/group-005.jpg", "/events/22-kasim/group-006.jpg"];
+export const novemberEventPhotos: string[] = [];
