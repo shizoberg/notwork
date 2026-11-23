@@ -20,6 +20,7 @@ export const Route = createFileRoute("/anket")({
 });
 
 const eventOptions = [
+  { id: "22-kasim-2026", label: "22 Kasım · Sahne" },
   { id: "17-eylul-2026", label: "17 Eylül · Fast" },
   { id: "11-ekim-2026", label: "11 Ekim · Sahne" },
   { id: "21-agustos-2026", label: "21 Ağustos · notwork" },
@@ -38,7 +39,7 @@ const followUps: Array<{ value: SurveyFollowUp; label: string; detail: string }>
 
 type Draft = PostEventSurveyInput;
 const initial: Draft = {
-  eventId: "17-eylul-2026",
+  eventId: "22-kasim-2026",
   overallRating: 0,
   connectionRating: 0,
   continuedConnectionRating: 0,

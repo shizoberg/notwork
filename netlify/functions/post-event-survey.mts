@@ -25,6 +25,7 @@ const passwordHash =
   "bffc46786cfaa3b08499a75d77b037dff9a14f362ab183f72e2ea7bcce0454ee";
 
 const events: Record<string, string> = {
+  "22-kasim-2026": "22 Kasım · Sahne",
   "17-eylul-2026": "17 Eylül · Fast",
   "11-ekim-2026": "11 Ekim · Sahne",
   "21-agustos-2026": "21 Ağustos · notwork",
