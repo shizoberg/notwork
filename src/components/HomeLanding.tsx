@@ -1,3 +1,4 @@
+import {novemberEventPhotos} from "@/lib/november-event-photos";
 import { CountryTag } from "@/components/CountryTag";
 import { munichEvent } from "@/lib/munich-event";
 import { MapPin, Ticket, MessageCircle } from "lucide-react";
@@ -96,6 +97,7 @@ export function HomeLanding({ german = false, english = false }: { german?: bool
 }
 
 const pastEvents = [
+ {id:"22-kasim-2026",date:"22 Kasım 2026",location:"Rene Lokal",title:"notwork Sahne",text:"Gerçek hikâyeler, interaktif Wordcloud ve notwork match ile yeni bağlantılar kurduğumuz buluşma.",tags:["notwork match","Wordcloud","Networking"],href:"/22-kasim",accent:"from-[#071416] via-[#6b304e] to-[#d8c6ff]"},
   {
     id: "11-ekim-2026",
     date: "11 Ekim 2026",
@@ -263,7 +265,7 @@ function Hero({ german, english }: { german: boolean; english: boolean }) {
     <section className="relative">
       <div className="mx-auto max-w-5xl px-4 pb-8 pt-5 text-center sm:px-5 sm:pb-10 sm:pt-10">
         <p className="hero-dates">
-          <span className="hero-date-pulse">{english ? "22 Nov · 4 Dec" : german ? "4. Dezember" : "22 Kasım"}</span>
+          <span className="hero-date-pulse">{english ? "4 December" : german ? "4. Dezember" : "Yeni buluşmalar yakında"}</span>
         </p>
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
 
@@ -285,12 +287,11 @@ function Hero({ german, english }: { german: boolean; english: boolean }) {
           <div className="hero-event-links hero-upcoming-links">
             {(english
               ? [
-                  { date: "22 November 2026", name: "notwork sahne", subtitle: "Stories of failure and networking", location: "Rene Lokal · Bornova, İzmir", to: "/en/22-november", flag: "🇹🇷", cta: "Get tickets" },
-                  { date: "4 December", name: "Stage", subtitle: "Munich, Germany", to: "/en/4-december", flag: "🇩🇪", cta: "Coming soon" },
+                  { date: "4 December", name: "Stage", subtitle: "Munich, Germany", location:undefined, to: "/en/4-december", flag: "🇩🇪", cta: "Coming soon" },
                 ]
               : german
-                ? [{ date: munichEvent.date, name: "Bühne", subtitle: munichEvent.city, to: munichEvent.path, flag: "🇩🇪", cta: munichEvent.status }]
-                : [{ date: "22 Kasım 2026", name: "notwork sahne", subtitle: "Başarısızlık hikâyeleri ve networking", location: "Rene Lokal · Bornova, İzmir", to: "/22-kasim", flag: "🇹🇷", cta: "Bilet al" }]
+                ? [{ date: munichEvent.date, name: "Bühne", subtitle: munichEvent.city, location:undefined, to: munichEvent.path, flag: "🇩🇪", cta: munichEvent.status }]
+                : []
             ).map(({ date, name, subtitle, location, to, flag, cta }) => (
               <Link
                 key={to}
@@ -322,7 +323,7 @@ function Hero({ german, english }: { german: boolean; english: boolean }) {
             ))}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            {english ? "Tickets for 22 November are available." : german ? "Informationen zur Anmeldung folgen." : "Biletler satışta."}
+            {english ? "Join our community for upcoming meetups." : german ? "Informationen zur Anmeldung folgen." : "Yeni buluşmalar için topluluğumuza katıl."}
           </p>
           <a
             href={WHATSAPP_CHANNEL_URL}
@@ -574,7 +575,7 @@ function PastEvents({ german, english }: { german: boolean; english: boolean }) 
             const localized = (english ? englishArchive : german ? germanArchive : {})[event.id];
             const eventReviews = reviewsByEvent[event.id] || [];
             const eventAverage = averageRating(eventReviews);
-            const eventPhoto = eventReviews.find((review) => review.photoDataUrl)?.photoDataUrl;
+            const eventPhoto = eventReviews.find((review) => review.photoDataUrl)?.photoDataUrl || (event.id === "22-kasim-2026" ? novemberEventPhotos[0] : undefined);
             const card = (
               <article className="group flex h-full min-h-[338px] w-[76vw] max-w-[290px] snap-start flex-col overflow-hidden rounded-[22px] border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-primary/60 hover:shadow-[var(--shadow-soft)] sm:min-h-[390px] sm:w-[300px] sm:max-w-[300px] sm:rounded-[24px]">
                 <div className="relative min-h-28 overflow-hidden bg-ink text-cream sm:min-h-40">

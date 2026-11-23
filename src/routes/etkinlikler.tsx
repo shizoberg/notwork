@@ -1,3 +1,4 @@
+import {novemberEventPhotos} from "@/lib/november-event-photos";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, MapPin, Search } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -60,11 +61,11 @@ const catalogEvents: EventCatalogItem[] = [
     venue: "Rene Lokal",
     title: "notwork Sahne",
     summary: "Başarısızlık hikâyeleri, interaktif WordCloud ve notwork match ile networking.",
-    participants: "Biletler satışta",
+    participants: "109 katılımcı · 6 grup fotoğrafı",
     tags: ["Rene Lokal", "WordCloud", "notwork match", "Networking"],
     href: "/22-kasim",
     accent: "from-[#071416] via-[#6b304e] to-[#d8c6ff]",
-    image: "/community/8.jpg",
+    image: novemberEventPhotos[0] || "/community/8.jpg",
     imagePosition: "center 38%",
   },
 
@@ -238,7 +239,7 @@ const catalogEvents: EventCatalogItem[] = [
   },
 ];
 
-const upcomingEventIds = new Set(["22-kasim-2026", "19-aralik-2026", munichEvent.id]);
+const upcomingEventIds = new Set(["19-aralik-2026", munichEvent.id]);
 
 export const germanCatalog: EventCatalogItem[] = [
   {

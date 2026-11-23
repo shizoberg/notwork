@@ -1,3 +1,5 @@
+import { PastEventPage } from "@/components/PastEventPage";
+import { novemberEventPhotos } from "@/lib/november-event-photos";
 import { createFileRoute } from "@tanstack/react-router";
 import { EventProductPage, type EventProductConfig } from "@/components/EventProductPage";
 import { createSeo } from "@/lib/seo";
@@ -28,27 +30,6 @@ export const eventConfig: EventProductConfig = {
 };
 
 export const Route = createFileRoute("/22-kasim")({
-  head: () =>
-    createSeo({
-      title: "22 Kasım notwork Sahne | Başarısızlık Hikâyeleri ve Networking",
-      description:
-        "22 Kasım 2026 saat 20.00’da Rene Lokal’de dört gerçek hikâye, interaktif WordCloud, notwork match ve networking. Biletini al.",
-      path: "/22-kasim",
-      type: "article",
-      structuredData: createEventStructuredData({
-        name: "notwork Sahne",
-        description:
-          "Başarısızlık hikâyeleri, interaktif WordCloud ve notwork match ile networking.",
-        path: "/22-kasim",
-        startDate: "2026-11-22T20:00:00+03:00",
-        endDate: "2026-11-22T23:30:00+03:00",
-        venueName: "Rene Lokal",
-        addressLocality: "Bornova",
-        images: ["/community/8.jpg", "/community/27.jpg"],
-        ticketUrl: eventConfig.ticketUrl!,
-        lowPrice: 600,
-        highPrice: 1100,
-      }),
-    }),
-  component: () => <EventProductPage config={eventConfig} />,
+ head:()=>createSeo({title:"22 Kasım notwork Sahne · Geçmiş etkinlik",description:"22 Kasım 2026 Rene Lokal buluşmasından grup fotoğrafları, başarısızlık hikâyeleri ve networking anları.",path:"/22-kasim",type:"article"}),
+ component:()=> <PastEventPage title="notwork sahne" date="22 Kasım 2026" venue="Rene Lokal · İzmir" photos={novemberEventPhotos} />,
 });
