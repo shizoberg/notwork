@@ -61,7 +61,7 @@ const catalogEvents: EventCatalogItem[] = [
     venue: "Rene Lokal",
     title: "notwork Sahne",
     summary: "Başarısızlık hikâyeleri, interaktif WordCloud ve notwork match ile networking.",
-    participants: "109 katılımcı · 6 grup fotoğrafı",
+    participants: "Geçmiş etkinlik",
     tags: ["Rene Lokal", "WordCloud", "notwork match", "Networking"],
     href: "/22-kasim",
     accent: "from-[#071416] via-[#6b304e] to-[#d8c6ff]",
