@@ -1,3 +1,4 @@
+import {Link} from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
 import { EventProductPage, type EventProductConfig } from "@/components/EventProductPage";
 import { germanySeo } from "@/components/germany/GermanySite";
@@ -107,5 +108,5 @@ const config: EventProductConfig = {
 export const Route = createFileRoute("/de/4-dezember")({
   head: () =>
     germanySeo(munichEvent.path, "notwork Bühne · 4. Dezember in München", config.description),
-  component: () => <EventProductPage config={config} />,
+  component: () => <main className="mx-auto max-w-3xl px-6 py-24"><h1>Aktuell keine Veranstaltungen in Deutschland</h1><Link to="/de/events">Alle Veranstaltungen</Link></main>,
 });

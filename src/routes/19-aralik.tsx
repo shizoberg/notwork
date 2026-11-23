@@ -5,6 +5,7 @@ import { eventConfig as fastConfig } from "./10-aralik";
 
 export const eventConfig: EventProductConfig = {
   ...fastConfig,
+  ticketUrl: "https://www.biletimgo.com/etkinlik/notwork-fast-hizli-networking-etkinligi-32802",
   trackingId: "notwork-fast-2026-12-19",
   imageSubtitle: "19 aralık · 20.30 · sosyal sahne · bornova",
   date: "19 Aralık 2026",

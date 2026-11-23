@@ -265,7 +265,7 @@ function Hero({ german, english }: { german: boolean; english: boolean }) {
     <section className="relative">
       <div className="mx-auto max-w-5xl px-4 pb-8 pt-5 text-center sm:px-5 sm:pb-10 sm:pt-10">
         <p className="hero-dates">
-          <span className="hero-date-pulse">{english ? "4 December" : german ? "4. Dezember" : "Yeni buluşmalar yakında"}</span>
+          <span className="hero-date-pulse">{english ? "19 December" : german ? "Deutschland" : "19 Aralık"}</span>
         </p>
         <div className="mx-auto mt-3 h-px w-10 bg-primary" />
 
@@ -285,13 +285,7 @@ function Hero({ german, english }: { german: boolean; english: boolean }) {
         <section className="hero-upcoming" aria-label={t("Sonraki etkinlikler")}>
           <p className="mt-6 text-xs text-muted-foreground">{t("Sonraki buluşmalar")}</p>
           <div className="hero-event-links hero-upcoming-links">
-            {(english
-              ? [
-                  { date: "4 December", name: "Stage", subtitle: "Munich, Germany", location:undefined, to: "/en/4-december", flag: "🇩🇪", cta: "Coming soon" },
-                ]
-              : german
-                ? [{ date: munichEvent.date, name: "Bühne", subtitle: munichEvent.city, location:undefined, to: munichEvent.path, flag: "🇩🇪", cta: munichEvent.status }]
-                : []
+            {(german ? [] : [{date:english ? "19 December 2026" : "19 Aralık 2026",name:"notwork fast",subtitle:english ? "Fast networking" : "Hızlı networking",location:"Sosyal Sahne · Folkart Time, İzmir",to:"/19-aralik",flag:"🇹🇷",cta:english ? "Get tickets" : "Bilet al"}]
             ).map(({ date, name, subtitle, location, to, flag, cta }) => (
               <Link
                 key={to}
@@ -323,7 +317,7 @@ function Hero({ german, english }: { german: boolean; english: boolean }) {
             ))}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
-            {english ? "Join our community for upcoming meetups." : german ? "Informationen zur Anmeldung folgen." : "Yeni buluşmalar için topluluğumuza katıl."}
+            {english ? "Join our community for upcoming meetups." : german ? "Aktuell sind keine Veranstaltungen in Deutschland geplant." : "Yeni buluşmalar için topluluğumuza katıl."}
           </p>
           <a
             href={WHATSAPP_CHANNEL_URL}
@@ -571,7 +565,7 @@ function PastEvents({ german, english }: { german: boolean; english: boolean }) 
 
       <div className="-mx-4 overflow-x-auto px-4 pb-3 [scrollbar-width:thin] sm:-mx-5 sm:px-5 sm:pb-4">
         <div className="flex snap-x gap-3 sm:gap-4">
-          {pastEvents.map((event) => {
+          {pastEvents.filter(event => !german || germanEventIds.has(event.id)).map((event) => {
             const localized = (english ? englishArchive : german ? germanArchive : {})[event.id];
             const eventReviews = reviewsByEvent[event.id] || [];
             const eventAverage = averageRating(eventReviews);

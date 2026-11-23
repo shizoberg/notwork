@@ -239,59 +239,13 @@ const catalogEvents: EventCatalogItem[] = [
   },
 ];
 
-const upcomingEventIds = new Set(["19-aralik-2026", munichEvent.id]);
+const upcomingEventIds = new Set(["19-aralik-2026"]);
 
-export const germanCatalog: EventCatalogItem[] = [
-  {
-    ...catalogEvents[0],
-    ...munichEvent,
-    venue: munichEvent.city,
-    title: "notwork Bühne",
-    summary:
-      "Geschichten vom Scheitern, eine interaktive WordCloud und Networking mit notwork Match.",
-    participants: munichEvent.status,
-    href: munichEvent.path,
-    tags: [munichEvent.city, "WordCloud", "notwork match", "Networking"],
-  },
-  ...catalogEvents
-    .filter((event) => germanArchive[event.id])
-    .map((event) => {
-      const translated = germanArchive[event.id];
-      return {
-        ...event,
-        date: translated.date,
-        title: translated.title,
-        summary: translated.text,
-        participants: event.participants
-          .replace("katılımcı", "Teilnehmende")
-          .replace("Sınırlı kontenjan", "Begrenzte Plätze"),
-        tags: event.tags.map(
-          (tag) =>
-            ({
-              Konuşmacılar: "Vorträge",
-              "Networking ağı": "Networking",
-              Kariyer: "Karriere",
-              Üretim: "Produktion",
-              İletişim: "Kommunikation",
-              "İş birliği": "Zusammenarbeit",
-              Deneyim: "Erfahrung",
-              Topluluk: "Community",
-              "Yeni başlangıç": "Neuanfang",
-              Dersler: "Erfahrungen",
-              Plan: "Plan",
-              Dönüşüm: "Veränderung",
-              Başlangıç: "Auftakt",
-              Tanışma: "Kennenlernen",
-            })[tag] ?? tag,
-        ),
-        href: event.href ? `/de/archiv/${event.id}` : undefined,
-      };
-    }),
-];
+export const germanCatalog: EventCatalogItem[] = [];
 
 export const englishCatalog: EventCatalogItem[] = [
   { ...catalogEvents[0], date: "22 November 2026", title: "notwork Stage", summary: "Stories of failure, an interactive word cloud and networking with notwork Match.", participants: "Tickets on sale", href: "/en/22-november" },
-  { ...germanCatalog[0], date: "4 December 2026", venue: "Munich", title: "notwork Stage", summary: "Stories of failure and networking in Munich.", href: "/en/4-december" },
+  { ...catalogEvents[1], date: "19 December 2026 · 20:30", title: "notwork Fast", summary: "Fast networking with Match and Five at Sosyal Sahne, İzmir.", href: "/19-aralik" },
   ...catalogEvents.filter((event) => englishArchive[event.id]).map((event) => ({
     ...event,
     date: englishArchive[event.id].date,
@@ -435,7 +389,7 @@ export function EventsCatalogPage({ german = false, english = false }: { german?
         ) : (
           <div className="border-b border-border py-16 text-center">
             <p className="font-display text-xl font-black">
-              {english ? "No events found." : german ? "Keine Events gefunden." : "Bu aramada etkinlik bulunamadı."}
+              {english ? "No events found." : german ? "Aktuell sind keine Veranstaltungen in Deutschland geplant." : "Bu aramada etkinlik bulunamadı."}
             </p>
             <button
               type="button"

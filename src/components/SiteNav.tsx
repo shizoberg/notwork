@@ -127,7 +127,7 @@ export function RegionSwitch({
       <>
         <DropdownMenuLabel className="flex items-center gap-2 px-3 pb-1 pt-2 text-xs text-muted-foreground">
           <Globe2 size={15} aria-hidden="true" />
-          {english ? "Language and region" : german ? "Sprache und Region" : "Dil ve bölge"}
+          {english ? "Country / region" : german ? "Land / Region" : "Ülke / bölge"}
         </DropdownMenuLabel>
         <DropdownMenuItem asChild className="min-h-11 gap-2 rounded-xl px-3">
           <Link
@@ -136,7 +136,7 @@ export function RegionSwitch({
             lang="tr"
             aria-current={german || english ? undefined : "true"}
           >
-            <span aria-hidden="true">🇹🇷</span> Türkçe
+            <span aria-hidden="true">🇹🇷</span> Türkiye
             {!german && !english && (
               <Check size={15} aria-hidden="true" className="ml-auto text-primary-deep" />
             )}
@@ -144,13 +144,13 @@ export function RegionSwitch({
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="min-h-11 gap-2 rounded-xl px-3">
           <Link to={germany} lang="de" aria-current={german ? "true" : undefined}>
-            <span aria-hidden="true">🇩🇪</span> Deutsch
+            <span aria-hidden="true">🇩🇪</span> Deutschland
             {german && <Check size={15} aria-hidden="true" className="ml-auto text-primary-deep" />}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="min-h-11 gap-2 rounded-xl px-3">
           <Link to={englishTarget} lang="en" aria-current={english ? "true" : undefined}>
-            <Globe2 size={15} aria-hidden="true" /> English
+            <Globe2 size={15} aria-hidden="true" /> International · English
             {english && <Check size={15} aria-hidden="true" className="ml-auto text-primary-deep" />}
           </Link>
         </DropdownMenuItem>
@@ -161,32 +161,32 @@ export function RegionSwitch({
     <nav
       className={`site-region-toggle ${className}`}
       data-region={pendingRegion ?? (english ? "en" : german ? "de" : "tr")}
-      aria-label={english ? "Language and region" : german ? "Sprache und Region" : "Dil ve bölge"}
+      aria-label={english ? "Country / region" : german ? "Land / Region" : "Ülke / bölge"}
     >
       <span className="site-region-thumb" aria-hidden="true" />
       <Link
         to={turkey}
         search={turkeySearch}
         lang="tr"
-        aria-label="Türkçe"
+        aria-label="Türkiye" title="Türkiye · Türkçe"
         activeOptions={{ exact: true }}
         aria-current={german || english ? undefined : "true"}
         onClick={(event) => changeRegion(event, "tr", turkey, turkeySearch)}
       >
-        TR
+        🇹🇷
       </Link>
       <Link
         to={germany}
         lang="de"
-        aria-label="Deutsch"
+        aria-label="Deutschland" title="Deutschland · Deutsch"
         activeOptions={{ exact: true }}
         aria-current={german ? "true" : undefined}
         onClick={(event) => changeRegion(event, "de", germany)}
       >
-        DE
+        🇩🇪
       </Link>
-      <Link to={englishTarget} lang="en" aria-label="English" activeOptions={{ exact: true }} aria-current={english ? "true" : undefined} onClick={(event) => changeRegion(event, "en", englishTarget)}>
-        EN
+      <Link to={englishTarget} lang="en" aria-label="International English" title="International · English" activeOptions={{ exact: true }} aria-current={english ? "true" : undefined} onClick={(event) => changeRegion(event, "en", englishTarget)}>
+        🌐
       </Link>
     </nav>
   );
@@ -407,7 +407,7 @@ function MobileSiteMenu({
           <Menu size={18} strokeWidth={1.6} aria-hidden="true" />
           {showRegion && (
             <span className="text-[0.63rem] font-bold text-primary-deep" aria-hidden="true">
-              {english ? "EN" : german ? "DE" : "TR"}
+              {english ? "🌐" : german ? "🇩🇪" : "🇹🇷"}
             </span>
           )}
         </button>
