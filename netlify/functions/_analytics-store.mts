@@ -46,6 +46,7 @@ export type DailyAnalyticsSummary = {
     october11: number;
     november22: number;
     december10: number;
+    december19: number;
   };
   pageTimeTotal: number;
   pageTimeCount: number;
@@ -158,16 +159,11 @@ function isNovember22Ticket(event: StoredAnalyticsEvent) {
   );
 }
 
+function isDecember19Ticket(event: StoredAnalyticsEvent) {
+ return event.path.includes("/19-aralik") || event.target.includes("/19-aralik") || event.label.includes("19 Aralık") || event.target.includes("hizli-networking-etkinligi-32802");
+}
 function isDecember10Ticket(event: StoredAnalyticsEvent) {
-  return (
-    event.path.includes("/19-aralik") ||
-    event.target.includes("/19-aralik") ||
-    event.label.includes("19 Aralık") ||
-    event.path.includes("/10-aralik") ||
-    event.target.includes("/10-aralik") ||
-    event.target.includes("networking-eventi-32802") ||
-    event.label.includes("10 Aralık")
-  );
+ return !isDecember19Ticket(event) && (event.path.includes("/10-aralik") || event.target.includes("/10-aralik") || event.label.includes("10 Aralık") || event.target.includes("networking-eventi-32802"));
 }
 
 export function validAnalyticsPassword(password: unknown) {
@@ -237,6 +233,7 @@ export function summarizeEvents(
   let october11 = 0;
   let november22 = 0;
   let december10 = 0;
+  let december19 = 0;
   let pageTimeTotal = 0;
   let pageTimeCount = 0;
 
@@ -296,6 +293,7 @@ export function summarizeEvents(
       if (isOctober11Ticket(event)) october11 += 1;
       if (isNovember22Ticket(event)) november22 += 1;
       if (isDecember10Ticket(event)) december10 += 1;
+      if (isDecember19Ticket(event)) december19 += 1;
     }
   }
 
@@ -307,7 +305,7 @@ export function summarizeEvents(
     skipped,
     counts,
     sessionIds: [...sessionIds],
-    ticketClicksByEvent: { july14, august21, september17, october11, november22, december10 },
+    ticketClicksByEvent: { july14, august21, september17, october11, november22, december10, december19 },
     pageTimeTotal,
     pageTimeCount,
     topPages,

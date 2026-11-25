@@ -129,6 +129,7 @@ type AnalyticsDailySummary = {
     october11?: number;
     november22?: number;
     december10?: number;
+    december19?: number;
   };
   pageTimeTotal: number;
   pageTimeCount: number;
@@ -476,8 +477,8 @@ function AdminPage() {
   const [eventDataProduct, setEventDataProduct] = useState<EventProductKey>("matchlab");
   const [eventToolsLoading, setEventToolsLoading] = useState(false);
   const [selectedToolsEventSlug, setSelectedToolsEventSlug] = useState("21-agustos-2026");
-  const [selectedEventAnalyticsPath, setSelectedEventAnalyticsPath] = useState("/22-kasim");
-  const [selectedHeatmapPath, setSelectedHeatmapPath] = useState("/");
+  const [selectedEventAnalyticsPath, setSelectedEventAnalyticsPath] = useState("/19-aralik");
+  const [selectedHeatmapPath, setSelectedHeatmapPath] = useState("/19-aralik");
   const [selectedHeatmapDevice, setSelectedHeatmapDevice] = useState<HeatmapDevice>("mobile");
   const backfillRunningRef = useRef(false);
   const eventToolsRequestIdRef = useRef(0);
@@ -1474,8 +1475,8 @@ function AdminPage() {
             />
             <Metric
               icon={Ticket}
-              label="Aralık · Fast bilet tıklaması"
-              value={report.ticketClicksByEvent.december10}
+              label="19 Aralık · Fast bilet tıklaması"
+              value={report.ticketClicksByEvent.december19}
               highlight
             />
           </div>
@@ -1543,6 +1544,13 @@ function AdminPage() {
             </div>
           </div>
 
+          {selectedEventAnalyticsPath === "/19-aralik" && <div className="mt-4 rounded-2xl border border-primary/25 bg-primary/5 p-4 text-sm">
+            <strong>19 Aralık · Fast takip kurulumu</strong>
+            <p className="mt-1 text-foreground/65">Meta: TicketButtonClick · InitiateCheckout</p>
+            <code className="block break-all text-xs">notwork-fast-2026-12-19</code>
+            <div className="mt-3 flex flex-wrap gap-3"><a href="/19-aralik" target="_blank" rel="noreferrer" className="font-bold underline">Bilet sayfasını aç ↗</a><button type="button" className="font-bold underline" onClick={() => { setSelectedHeatmapPath("/19-aralik"); setAnalyticsSection("heatmap"); }}>19 Aralık ısı haritası</button></div>
+            <p className="mt-2 text-xs text-foreground/55">Bu veriler bilet butonuna yönlenmeyi ölçer. BiletimGO’da tamamlanan satış sayısı değildir.</p>
+          </div>}
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <Metric icon={Eye} label="Sayfa görüntüleme" value={eventPageReport.pageViews} />
             <Metric icon={Users} label="Tekil oturum" value={eventPageReport.sessions} />
@@ -4730,11 +4738,12 @@ function buildReport(
       september17: totals.september17 + (summary.ticketClicksByEvent.september17 || 0),
       november22: totals.november22 + (summary.ticketClicksByEvent.november22 || 0),
       december10: totals.december10 + (summary.ticketClicksByEvent.december10 || 0),
+      december19: totals.december19 + (summary.ticketClicksByEvent.december19 || 0),
       october11:
         totals.october11 +
         (summary.ticketClicksByEvent.october11 ?? summary.ticketClicksByEvent.october9 ?? 0),
     }),
-    { july14: 0, august21: 0, september17: 0, october11: 0, november22: 0, december10: 0 },
+    { july14: 0, august21: 0, september17: 0, october11: 0, november22: 0, december10: 0, december19: 0 },
   );
   const pageTimeTotal = summaries.reduce((total, summary) => total + summary.pageTimeTotal, 0);
   const pageTimeCount = summaries.reduce((total, summary) => total + summary.pageTimeCount, 0);

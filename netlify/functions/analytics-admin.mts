@@ -35,7 +35,8 @@ export default async (request: Request, _context: Context) => {
             !summary.legacyButtonActionsByPage ||
             !summary.pageMetrics ||
             typeof summary.ticketClicksByEvent?.september17 !== "number" ||
-            typeof summary.ticketClicksByEvent?.october11 !== "number"),
+            typeof summary.ticketClicksByEvent?.october11 !== "number" ||
+            typeof summary.ticketClicksByEvent?.december19 !== "number"),
       )
       .map(({ date }) => date);
 
