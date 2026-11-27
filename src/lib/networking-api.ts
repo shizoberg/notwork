@@ -33,7 +33,7 @@ export async function listMembers(): Promise<Member[]> {
       id: String(row.id || "").trim() || `sheet-row-${index}`,
       name: String(row.name || "").trim(),
       country: memberCountry(row.country),
-      title: String(row.title || "").trim(),
+      title: String(row.jobTitle || row.title || "").replace(/(?:\d{1,2}\s+(?:Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık)(?:\s+2026)?\s*(?:katılımcısı|notwork katılımcısı)?|katılımcısı)\s*[·–-]?\s*/gi, "").trim() || "notwork üyesi",
       skills: parseSkills(String(row.skills || "")),
       email: String(row.email || "").trim() || undefined,
       instagram:

@@ -10,6 +10,7 @@ import {
   getEventNetworkDatasetInfo,
   createLaunchRecovery,
   retryPendingLoginEmails,
+  syncEventNetworkingMembers,
   getMatchLaunchState,
   startMatchLaunch,
   processMatchLaunch,
@@ -47,7 +48,7 @@ export default async (request: Request, _context: Context) => {
       return new Response("Yetkisiz erişim", { status: 401 });
     if (scoped) {
       if (
-        !["retryLoginEmails", "loginMailStatus", "recoverParticipant", "matchReport", "matchReportPhoto", "list", "matchOverview", "startMatching", "processMatching", "repairCodes"].includes(
+        !["syncNetworkingMembers", "retryLoginEmails", "loginMailStatus", "recoverParticipant", "matchReport", "matchReportPhoto", "list", "matchOverview", "startMatching", "processMatching", "repairCodes"].includes(
           input.action || "list",
         )
       )
@@ -68,6 +69,7 @@ export default async (request: Request, _context: Context) => {
         }
         if (input.datasetId && input.datasetId !== getEventNetworkDatasetInfo().datasetId)
           return new Response("Veri seti değişti. Sayfayı yenile.", { status: 409 });
+        if(input.action==="syncNetworkingMembers")return Response.json(await syncEventNetworkingMembers(store),{headers:{"cache-control":"no-store, private"}});
         if (input.action === "retryLoginEmails") return Response.json(await retryPendingLoginEmails(store),{headers:{"cache-control":"no-store, private"}});
         if (input.action === "loginMailStatus") {
           const {mailStore,gmailStatus}=await import("./_gmail.mjs");

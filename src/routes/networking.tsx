@@ -432,7 +432,7 @@ function getRecommendations(member: Member, members: Member[]) {
       if (sharedSkills.length > 0) {
         reasons.push(`Ortak alan: ${sharedSkills.slice(0, 2).join(", ")}`);
       } else if (sharedEvents.length > 0) {
-        reasons.push(`Aynı etkinlik geçmişi: ${getEventLabel(sharedEvents[0])}`);
+        reasons.push("Ortak topluluk bağlantısı");
       } else if (sharedThemes.length > 0) {
         reasons.push(`Benzer hedefler: ${sharedThemes.join(", ")}`);
       }
@@ -1373,18 +1373,7 @@ function MemberDirectoryCard({
       <div className="network-profile-card-body">
         <div className="network-profile-meta">
           <span>{german ? (germanRoleGroups[group.id] ?? group.label) : group.label}</span>
-          {badges[0] && (
-            <span>
-              {german
-                ? badges[0].label
-                    .replace("Ağustos", "August")
-                    .replace("Temmuz", "Juli")
-                    .replace("Eylül", "September")
-                    .replace("Ekim", "Oktober")
-                    .replace("katılımcıları", "Teilnehmende")
-                : badges[0].label}
-            </span>
-          )}
+
         </div>
         {contact.about ? (
           <p className="network-profile-about">{contact.about}</p>
@@ -1990,7 +1979,7 @@ function MemberDetailModal({
                           key={badge.source}
                           className="rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-primary-deep"
                         >
-                          notwork onaylı · {badge.label}
+                          notwork onaylı
                         </span>
                       ))}
                     </div>

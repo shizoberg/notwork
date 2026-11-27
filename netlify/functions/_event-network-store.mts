@@ -176,6 +176,7 @@ export type NetworkAdminInput = {
   password?: string;
   action?:
     | "list"
+    | "syncNetworkingMembers"
     | "retryLoginEmails"
     | "loginMailStatus"
     | "recoverParticipant"
@@ -2047,6 +2048,28 @@ export async function requestLaunchSignIn(store: ReturnType<typeof getEventNetwo
   const {sendGmailOnce}=await import("./_gmail.mjs");
   const result=await sendGmailOnce("event-login:"+randomUUID(),{to:[normalized],subject:"notwork · etkinliğe geri dön",text:`Mevcut profilin ve eşleşmenle devam et: ${url}\nBağlantı 15 dakika geçerli ve tek kullanımlıktır. İsteği sen yapmadıysan yok say.`,html:`<p>Mevcut profilin ve eşleşmenle devam et.</p><p><a href="${url}">Etkinliğe geri dön</a></p><p>15 dakika geçerli · tek kullanımlık. İsteği sen yapmadıysan yok say.</p>`},{transactional:true});
   if(result.status!=="accepted")throw Error("Giriş e-postası gönderilemedi. Etkinlik ekibinden girişini kurtarmasını iste.");
+}
+
+export async function syncEventNetworkingMembers(store: ReturnType<typeof getEventNetworkStore>) {
+ if(getNetworkEventSlug()!=="22-kasim-2026" || getEventNetworkDatasetInfo().mode!=="live")throw Error("Yalnızca 22 Kasım canlı kayıtları aktarılabilir");
+ const network=getStore({name:"networking-members",consistency:"strong"});
+ const existing=await getJsonRows<NetworkMemberRow>(network,"members/");
+ const emails=new Set(existing.map(r=>normalizeEmail(r.email||"")).filter(Boolean));
+ let added=0,existingCount=0,skipped=0;
+ const rows=(await listRegistrations(store)).filter(r=>r.participant.status==="registered");
+ for(const row of rows){
+  const marker=`event-imports/22-kasim-2026/${row.participant.id}.json`;
+  if(await network.get(marker,{consistency:"strong"})){existingCount++;continue;}
+  const contact=await store.get(`${getNetworkPrefix()}/guest-contacts/${row.participant.id}.json`,{type:"json",consistency:"strong"}) as {email?:string}|null;
+  const email=normalizeEmail(contact?.email||row.profile.email);
+  if(!email || /@(launchspace\.invalid|demo\.example\.org|example\.org)$/.test(email)){skipped++;continue;}
+  if(emails.has(email)){existingCount++;await network.setJSON(marker,{participantId:row.participant.id,at:new Date().toISOString(),existing:true});continue;}
+  const username=await resolveGeneralUsername(email,displayName(row),row.participant.publicCode);
+  const member={id:row.profile.id,name:displayName(row),username,country:"TR",title:row.jobTitle||row.offers.join(" · ")||"notwork üyesi",skills:row.offers.join(", "),intro:row.intro,jobTitle:row.jobTitle||"",email,instagram:"",linkedin:"",motivation:[row.intro,row.offersDetail,row.needs].filter(Boolean).join(" "),contact:"",createdAt:row.profile.createdAt,consentAt:row.profile.updatedAt};
+  await network.setJSON(generalMemberKey(username),member,{onlyIfNew:true});
+  await network.setJSON(marker,{participantId:row.participant.id,username,at:new Date().toISOString()});emails.add(email);added++;
+ }
+ return {total:rows.length,added,existing:existingCount,skipped};
 }
 
 export async function retryPendingLoginEmails(store: ReturnType<typeof getEventNetworkStore>) {
