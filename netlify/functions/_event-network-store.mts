@@ -2057,19 +2057,25 @@ export async function syncEventNetworkingMembers(store: ReturnType<typeof getEve
  const emails=new Set(existing.map(r=>normalizeEmail(r.email||"")).filter(Boolean));
  let added=0,existingCount=0,skipped=0;
  const rows=(await listRegistrations(store)).filter(r=>r.participant.status==="registered");
- for(const row of rows){
+ const listing=await network.list({prefix:"event-imports/22-kasim-2026/"});
+ const imported=new Set(listing.blobs.map(blob=>blob.key));
+ const pending=rows.filter(row=>!imported.has(`event-imports/22-kasim-2026/${row.participant.id}.json`));
+ const usernames=new Set(existing.map(row=>row.username));
+ for(const row of pending.slice(0,8)){
   const marker=`event-imports/22-kasim-2026/${row.participant.id}.json`;
-  if(await network.get(marker,{consistency:"strong"})){existingCount++;continue;}
+
   const contact=await store.get(`${getNetworkPrefix()}/guest-contacts/${row.participant.id}.json`,{type:"json",consistency:"strong"}) as {email?:string}|null;
   const email=normalizeEmail(contact?.email||row.profile.email);
   if(!email || /@(launchspace\.invalid|demo\.example\.org|example\.org)$/.test(email)){skipped++;continue;}
   if(emails.has(email)){existingCount++;await network.setJSON(marker,{participantId:row.participant.id,at:new Date().toISOString(),existing:true});continue;}
-  const username=await resolveGeneralUsername(email,displayName(row),row.participant.publicCode);
+  let username=slugify(displayName(row)) || `notwork-${row.participant.publicCode.toLowerCase()}`;
+  if(usernames.has(username))username+=`-${hashToken(email).slice(0,6)}`;
+  usernames.add(username);
   const member={id:row.profile.id,name:displayName(row),username,country:"TR",title:row.jobTitle||row.offers.join(" · ")||"notwork üyesi",skills:row.offers.join(", "),intro:row.intro,jobTitle:row.jobTitle||"",email,instagram:"",linkedin:"",motivation:[row.intro,row.offersDetail,row.needs].filter(Boolean).join(" "),contact:"",createdAt:row.profile.createdAt,consentAt:row.profile.updatedAt};
   await network.setJSON(generalMemberKey(username),member,{onlyIfNew:true});
   await network.setJSON(marker,{participantId:row.participant.id,username,at:new Date().toISOString()});emails.add(email);added++;
  }
- return {total:rows.length,added,existing:existingCount,skipped};
+ return {total:rows.length,added,existing:existingCount,skipped,remaining:Math.max(0,pending.length-8)};
 }
 
 export async function retryPendingLoginEmails(store: ReturnType<typeof getEventNetworkStore>) {
